@@ -266,15 +266,15 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
         </p>
       </section>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="flex flex-col gap-6">
         {data.resources.map((resource, index) => (
           <div
             key={index}
-            className="group flex flex-col rounded-[12px] border border-border-default bg-subtle-bg/30 p-6 transition-all hover:border-accent/40 hover:bg-subtle-bg/60 hover:shadow-sm"
+            className="group flex flex-col sm:flex-row items-start rounded-[12px] border border-border-default bg-subtle-bg/30 p-6 transition-all hover:border-accent/40 hover:bg-subtle-bg/60 hover:shadow-sm gap-6"
           >
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-[8px] bg-background border border-border-default shadow-sm p-2 overflow-hidden">
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[10px] bg-background border border-border-default shadow-sm p-3 overflow-hidden">
               {resource.logo === "X" ? (
-                <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6 fill-current text-text-primary">
+                <svg viewBox="0 0 24 24" aria-hidden="true" className="h-8 w-8 fill-current text-text-primary">
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.008 5.936H5.045z"></path>
                 </svg>
               ) : resource.logo ? (
@@ -282,36 +282,38 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
               ) : null}
             </div>
 
-            {resource.isLink === false ? (
-              <h3 className="mb-3 text-[16px] font-bold text-text-primary">
-                {resource.domain}
-              </h3>
-            ) : (
-              <a
-                href={resource.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mb-3 inline-flex items-center text-[16px] font-bold text-text-primary hover:text-accent transition-colors"
-              >
-                {resource.domain}
-                <svg
-                  className="ml-1.5 h-3.5 w-3.5 opacity-50 group-hover:opacity-100 transition-opacity"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  viewBox="0 0 24 24"
+            <div className="flex flex-col flex-1">
+              {resource.isLink === false ? (
+                <h3 className="mb-2 text-[17px] font-bold text-text-primary">
+                  {resource.domain}
+                </h3>
+              ) : (
+                <a
+                  href={resource.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mb-2 inline-flex items-center text-[17px] font-bold text-text-primary hover:text-accent transition-colors"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                  />
-                </svg>
-              </a>
-            )}
-            <p className="text-[14px] leading-relaxed text-text-secondary mt-auto">
-              {resource.description}
-            </p>
+                  {resource.domain}
+                  <svg
+                    className="ml-1.5 h-4 w-4 opacity-50 group-hover:opacity-100 transition-opacity"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    />
+                  </svg>
+                </a>
+              )}
+              <p className="text-[14px] sm:text-[15px] leading-relaxed text-text-secondary">
+                {resource.description}
+              </p>
+            </div>
           </div>
         ))}
       </div>
