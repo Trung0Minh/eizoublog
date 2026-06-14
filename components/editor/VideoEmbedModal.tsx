@@ -15,8 +15,7 @@ export function VideoEmbedModal({ onClose, onInsert }: VideoEmbedModalProps) {
   const [caption, setCaption] = useState("")
   const [url, setUrl] = useState("")
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+  function handleSubmit() {
     const trimmedUrl = url.trim()
 
     if (!trimmedUrl) {
@@ -24,6 +23,13 @@ export function VideoEmbedModal({ onClose, onInsert }: VideoEmbedModalProps) {
     }
 
     onInsert(trimmedUrl, caption.trim())
+  }
+
+  function handleKeyDown(event: React.KeyboardEvent) {
+    if (event.key === "Enter") {
+      event.preventDefault()
+      handleSubmit()
+    }
   }
 
   return (
@@ -51,7 +57,7 @@ export function VideoEmbedModal({ onClose, onInsert }: VideoEmbedModalProps) {
           </Button>
         </div>
 
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <div className="space-y-4" onKeyDown={handleKeyDown}>
           <div className="space-y-2">
             <label className="text-sm font-medium" htmlFor="video-url">
               Video URL
@@ -90,9 +96,9 @@ export function VideoEmbedModal({ onClose, onInsert }: VideoEmbedModalProps) {
             <Button onClick={onClose} type="button" variant="outline">
               Cancel
             </Button>
-            <Button type="submit">Insert</Button>
+            <Button onClick={handleSubmit} type="button">Insert</Button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   )
