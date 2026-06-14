@@ -224,7 +224,7 @@ export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps)
           {data.title}
         </h1>
         
-        <div className="mt-8 font-serif text-[17px] leading-[1.8] text-text-secondary max-w-3xl [&_.ProseMirror_p]:!mx-0 [&_.ProseMirror_ul]:!mx-0 [&_.ProseMirror_ol]:!mx-0 [&_.ProseMirror_p]:!max-w-none">
+        <div className="mt-8 font-serif text-[17px] leading-[1.8] text-text-secondary max-w-3xl [&_.post-content]:!mx-0 [&_.post-content]:!max-w-none [&_.ProseMirror_p]:!mx-0 [&_.ProseMirror_ul]:!mx-0 [&_.ProseMirror_ol]:!mx-0 [&_.ProseMirror_p]:!max-w-none">
           <PostBody content={data.body} />
         </div>
       </section>
