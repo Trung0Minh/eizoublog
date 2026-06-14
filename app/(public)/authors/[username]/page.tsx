@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 
 import { PageContainer } from "@/components/layout/PageContainer"
 import { PostList } from "@/components/posts/PostList"
+import { StaticPostContent } from "@/components/posts/StaticPostContent"
 import {
   getCachedAuthorByUsername,
   getCachedAuthorPosts,
@@ -74,14 +75,32 @@ export default async function AuthorPage({
           />
         )}
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{author.name}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight">{author.name}</h1>
+            <div className="flex items-center gap-1">
+              {author.role === "ADMIN" && (
+                <span className="rounded-md bg-red-100 px-1.5 py-0.5 text-xs font-semibold text-red-700 dark:bg-red-900/30 dark:text-red-400">Admin</span>
+              )}
+              {(author.role === "ADMIN" || author.role === "WRITER") && (
+                <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">Writer</span>
+              )}
+            </div>
+          </div>
           <p className="mt-0.5 text-sm text-muted-foreground">
             @{author.username}
           </p>
           {author.bio && (
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed">
-              {author.bio}
-            </p>
+            <div className="mt-3 max-w-2xl text-sm leading-relaxed [&_.ProseMirror]:!ml-0 [&_.ProseMirror>p]:!ml-0">
+              {(() => {
+                if (author.bio.startsWith("{")) {
+                  try {
+                    const json = JSON.parse(author.bio)
+                    return <StaticPostContent content={json} />
+                  } catch {}
+                }
+                return <p>{author.bio}</p>
+              })()}
+            </div>
           )}
         </div>
       </section>

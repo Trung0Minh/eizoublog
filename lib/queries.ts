@@ -58,6 +58,7 @@ const contributorSelect = {
   bio: true,
   name: true,
   username: true,
+  role: true,
 } satisfies Prisma.UserSelect
 
 const publicCategorySelect = {
@@ -80,6 +81,7 @@ const publicAuthorSelect = {
   id: true,
   name: true,
   username: true,
+  role: true,
 } satisfies Prisma.UserSelect
 
 const editorCategorySelect = {

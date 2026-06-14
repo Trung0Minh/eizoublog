@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { StaticPostContent } from "@/components/posts/StaticPostContent"
 
 interface AuthorBioAuthor {
   avatarUrl: string | null
@@ -41,9 +42,20 @@ export function AuthorBio({ author }: AuthorBioProps) {
         >
           {author.name}
         </Link>
-        <p className="mb-3 text-[13px] leading-[1.6] text-text-secondary">
-          {author.bio ?? fallbackBio(author.name)}
-        </p>
+        <div className="mb-3 text-[13px] leading-[1.6] text-text-secondary [&_.ProseMirror]:!ml-0 [&_.ProseMirror>p]:!ml-0 [&_.ProseMirror]:text-center md:[&_.ProseMirror]:text-left">
+          {(() => {
+            if (!author.bio) {
+              return <p>{fallbackBio(author.name)}</p>
+            }
+            if (author.bio.startsWith("{")) {
+              try {
+                const json = JSON.parse(author.bio)
+                return <StaticPostContent content={json} />
+              } catch {}
+            }
+            return <p>{author.bio}</p>
+          })()}
+        </div>
         <Link
           className="text-[13px] font-medium text-accent hover:underline"
           href={`/authors/${author.username}`}

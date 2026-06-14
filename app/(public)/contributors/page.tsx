@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 
 import { PageContainer } from "@/components/layout/PageContainer"
+import { StaticPostContent } from "@/components/posts/StaticPostContent"
 import { getCachedContributors } from "@/lib/queries"
 import { buildMetadata, getAppName } from "@/lib/seo"
 
@@ -49,14 +50,32 @@ export default async function ContributorsPage() {
               </span>
             )}
             <span>
-              <span className="block font-semibold">{contributor.name}</span>
+              <span className="flex items-center gap-2">
+                <span className="font-semibold">{contributor.name}</span>
+                <span className="flex items-center gap-1">
+                  {contributor.role === "ADMIN" && (
+                    <span className="rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700 dark:bg-red-900/30 dark:text-red-400">Admin</span>
+                  )}
+                  {(contributor.role === "ADMIN" || contributor.role === "WRITER") && (
+                    <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">Writer</span>
+                  )}
+                </span>
+              </span>
               <span className="mt-0.5 block text-sm text-muted-foreground">
                 @{contributor.username} · {contributor._count.posts} bài viết
               </span>
               {contributor.bio && (
-                <span className="mt-2 line-clamp-2 block text-sm leading-relaxed text-muted-foreground">
-                  {contributor.bio}
-                </span>
+                <div className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground [&_.ProseMirror]:!ml-0 [&_.ProseMirror>p]:!ml-0 [&_.ProseMirror]:line-clamp-2">
+                  {(() => {
+                    if (contributor.bio.startsWith("{")) {
+                      try {
+                        const json = JSON.parse(contributor.bio)
+                        return <StaticPostContent content={json} />
+                      } catch {}
+                    }
+                    return <span>{contributor.bio}</span>
+                  })()}
+                </div>
               )}
             </span>
           </Link>

@@ -1,11 +1,11 @@
 "use client"
 
-import { FormEvent, useState } from "react"
-
+import { FormEvent, useMemo, useState } from "react"
 import { AvatarUpload } from "@/components/profile/AvatarUpload"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { TiptapEditor } from "@/components/editor/TiptapEditor"
+import type { JSONContent } from "@tiptap/react"
 
 interface ProfileFormProps {
   user: {
@@ -39,6 +39,26 @@ export function ProfileForm({ user }: ProfileFormProps) {
   } | null>(null)
   const [name, setName] = useState(user.name)
   const [saving, setSaving] = useState(false)
+
+  const initialBioContent = useMemo(() => {
+    if (user.bio?.startsWith("{")) {
+      try {
+        return JSON.parse(user.bio) as JSONContent
+      } catch {}
+    }
+    if (user.bio) {
+      return {
+        type: "doc",
+        content: [
+          {
+            type: "paragraph",
+            content: [{ type: "text", text: user.bio }],
+          },
+        ],
+      } as JSONContent
+    }
+    return undefined
+  }, [user.bio])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -109,22 +129,14 @@ export function ProfileForm({ user }: ProfileFormProps) {
         </div>
 
         <div className="space-y-2">
-          <div className="flex items-center justify-between gap-3">
-            <label className="text-sm font-medium" htmlFor="profile-bio">
-              Bio
-            </label>
-            <span className="text-xs text-muted-foreground">
-              {bio.length}/500
-            </span>
+          <label className="text-sm font-medium">Bio</label>
+          <div className="rounded-md border border-border bg-background shadow-sm overflow-hidden [&_.prose-editor]:min-h-[200px] [&_.prose-editor]:p-4 [&_.prose-editor]:!ml-0 [&_.prose-editor>p]:!ml-0">
+            <TiptapEditor
+              content={initialBioContent}
+              onChange={(json) => setBio(JSON.stringify(json))}
+              placeholder="Tell readers what you write about."
+            />
           </div>
-          <Textarea
-            id="profile-bio"
-            maxLength={500}
-            onChange={(event) => setBio(event.target.value)}
-            placeholder="Tell readers what you write about."
-            rows={5}
-            value={bio}
-          />
         </div>
       </div>
 

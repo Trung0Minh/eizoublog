@@ -26,6 +26,7 @@ interface TiptapEditorProps {
   content?: JSONContent
   editable?: boolean
   onChange?: (json: JSONContent, text: string) => void
+  placeholder?: string
 }
 
 export function TiptapEditor({
@@ -33,6 +34,7 @@ export function TiptapEditor({
   content,
   editable = true,
   onChange,
+  placeholder = "Bắt đầu viết bài...",
 }: TiptapEditorProps) {
   const editor = useEditor({
     content: content ?? "",
@@ -66,7 +68,7 @@ export function TiptapEditor({
         openOnClick: false,
       }),
       Placeholder.configure({
-        placeholder: "Bắt đầu viết bài...",
+        placeholder,
       }),
       Typography,
       CharacterCount,

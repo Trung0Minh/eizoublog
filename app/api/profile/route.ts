@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma"
 
 const profileSchema = z.object({
   avatarUrl: z.string().url().nullable().optional(),
-  bio: z.string().trim().max(500).optional(),
+  bio: z.string().trim().optional(),
   name: z.string().trim().min(2).max(50),
 })
 
