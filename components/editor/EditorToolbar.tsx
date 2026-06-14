@@ -30,6 +30,7 @@ interface ToolbarButtonProps {
   disabled?: boolean
   onClick: () => void
   title: string
+  trigger?: "click" | "mousedown"
 }
 
 function ToolbarButton({
@@ -38,6 +39,7 @@ function ToolbarButton({
   disabled = false,
   onClick,
   title,
+  trigger = "mousedown",
 }: ToolbarButtonProps) {
   return (
     <button
@@ -49,9 +51,16 @@ function ToolbarButton({
         disabled ? "cursor-not-allowed opacity-40" : "",
       ].join(" ")}
       disabled={disabled}
+      onClick={(event) => {
+        if (trigger === "click") {
+          onClick()
+        }
+      }}
       onMouseDown={(event) => {
-        event.preventDefault()
-        onClick()
+        if (trigger === "mousedown") {
+          event.preventDefault()
+          onClick()
+        }
       }}
       title={title}
       type="button"
@@ -198,6 +207,7 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
         <ToolbarButton
           onClick={() => setShowVideoModal(true)}
           title="Embed video"
+          trigger="click"
         >
           <Video aria-hidden="true" className="h-[15px] w-[15px]" />
         </ToolbarButton>

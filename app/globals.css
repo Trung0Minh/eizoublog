@@ -135,7 +135,7 @@
   }
 
   .prose-editor p {
-    margin-bottom: 0.65em;
+    margin: 0;
   }
 
   .prose-editor h2 {
@@ -212,7 +212,7 @@
   }
 
   .post-content p {
-    margin-bottom: 1.2em;
+    margin: 0;
   }
 
   .post-content h2 {

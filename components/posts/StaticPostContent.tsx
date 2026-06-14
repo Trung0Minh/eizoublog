@@ -206,8 +206,14 @@ function renderNode(node: JSONContent, key: string): ReactNode {
         </ol>
       )
     }
-    case "paragraph":
-      return <p key={key}>{renderChildren(node)}</p>
+    case "paragraph": {
+      const children = renderChildren(node)
+      return (
+        <p key={key}>
+          {children.length > 0 ? children : <br />}
+        </p>
+      )
+    }
     case "spoiler":
       return <SpoilerBlock key={key}>{renderChildren(node)}</SpoilerBlock>
     case "text":
