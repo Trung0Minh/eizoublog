@@ -129,7 +129,7 @@ export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps)
 
           <div>
             <label className="block text-sm font-semibold text-text-primary mb-2">Nội dung giới thiệu</label>
-            <div className="rounded-md border border-border-default p-4 bg-background">
+            <div className="rounded-md border border-border-default p-4 md:pt-[44px] bg-background [&_.ProseMirror_p]:!mx-0 [&_.ProseMirror_ul]:!mx-0 [&_.ProseMirror_ol]:!mx-0 [&_.ProseMirror_p]:!max-w-none">
               <TiptapEditor
                 content={data.body}
                 editable={true}
@@ -224,7 +224,7 @@ export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps)
           {data.title}
         </h1>
         
-        <div className="mt-8 font-serif text-[17px] leading-[1.8] text-text-secondary max-w-3xl [&_.ProseMirror]:!mx-0 [&_.ProseMirror>p]:!mx-0 [&_.ProseMirror>p]:!max-w-none">
+        <div className="mt-8 font-serif text-[17px] leading-[1.8] text-text-secondary max-w-3xl [&_.ProseMirror_p]:!mx-0 [&_.ProseMirror_ul]:!mx-0 [&_.ProseMirror_ol]:!mx-0 [&_.ProseMirror_p]:!max-w-none">
           <PostBody content={data.body} />
         </div>
       </section>
