@@ -33,7 +33,7 @@ const defaultResources: ResourceCard[] = [
   {
     url: "https://blog.sakugabooru.com/",
     domain: "Sakugabooru Blog",
-    logo: "/logos/sakuga-blog.svg",
+    logo: "/logos/sakuga-blog.png",
     description: "Blog chuyên sâu về sakuga uy tín bậc nhất trong cộng đồng, cung cấp góc nhìn chuyên môn về hoạt hình và ngành công nghiệp anime. Đây cũng là nguồn tài liệu mà bọn mình tham khảo rất nhiều cho các bài viết.",
   },
   {
@@ -272,9 +272,9 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
             key={index}
             className="group flex flex-col sm:flex-row items-start rounded-[12px] border border-border-default bg-subtle-bg/30 p-6 transition-all hover:border-accent/40 hover:bg-subtle-bg/60 hover:shadow-sm gap-6"
           >
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[10px] bg-background border border-border-default shadow-sm p-3 overflow-hidden">
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[10px] bg-background border border-border-default shadow-sm p-1.5 overflow-hidden">
               {resource.logo === "X" ? (
-                <svg viewBox="0 0 24 24" aria-hidden="true" className="h-8 w-8 fill-current text-text-primary">
+                <svg viewBox="0 0 24 24" aria-hidden="true" className="h-10 w-10 fill-current text-text-primary">
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.008 5.936H5.045z"></path>
                 </svg>
               ) : resource.logo ? (
