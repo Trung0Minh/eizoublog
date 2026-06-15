@@ -327,6 +327,16 @@
     margin-bottom: 0.5rem;
   }
 
+  /* Fix for Tiptap react-renderer blocking clicks in the empty space of floated images */
+  .react-renderer:has(> [data-node-view-wrapper].float-left),
+  .react-renderer:has(> [data-node-view-wrapper].float-right) {
+    pointer-events: none;
+  }
+  .react-renderer > [data-node-view-wrapper].float-left,
+  .react-renderer > [data-node-view-wrapper].float-right {
+    pointer-events: auto;
+  }
+
   .image-gallery__grid {
     display: grid;
     gap: 0.5rem;

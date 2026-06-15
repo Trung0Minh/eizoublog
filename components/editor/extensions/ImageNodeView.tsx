@@ -6,12 +6,13 @@ export function ImageNodeView(props: NodeViewProps) {
 
   return (
     <NodeViewWrapper
-      className={`relative group ${
+      as="figure"
+      className={`relative group flex flex-col items-center ${
         node.attrs.align === "left"
-          ? "float-left mr-6 mb-4 mt-2 clear-left"
+          ? "float-left mr-6 mb-4 mt-2 clear-left !m-0"
           : node.attrs.align === "right"
-          ? "float-right ml-6 mb-4 mt-2 clear-right"
-          : "flex justify-center my-6 clear-both"
+          ? "float-right ml-6 mb-4 mt-2 clear-right !m-0"
+          : "justify-center my-6 clear-both"
       }`}
       style={{
         width: node.attrs.align !== "center" ? node.attrs.width : "100%",
@@ -87,30 +88,20 @@ export function ImageNodeView(props: NodeViewProps) {
         </div>
       )}
 
-      <figure
-        className={`relative flex flex-col items-center w-full ${
-          node.attrs.align === "left" || node.attrs.align === "right" ? "!m-0" : ""
+      <img
+        alt={node.attrs.alt || "Image"}
+        className={`h-auto w-full rounded-md object-contain transition-all ${
+          selected ? "ring-2 ring-accent" : ""
         }`}
-        style={{
-          width: node.attrs.align === "center" ? node.attrs.width : "100%",
-          maxWidth: "100%",
-        }}
+        src={node.attrs.src}
+      />
+      <figcaption
+        className={`mt-2 w-full text-center text-sm text-text-tertiary ${
+          props.editor.isEditable ? "min-h-[1.5rem] outline-none" : ""
+        } ${!node.attrs.showCaption && node.content.size === 0 ? "hidden" : ""}`}
       >
-        <img
-          alt={node.attrs.alt || "Image"}
-          className={`h-auto w-full rounded-md object-contain transition-all ${
-            selected ? "ring-2 ring-accent" : ""
-          }`}
-          src={node.attrs.src}
-        />
-        <figcaption
-          className={`mt-2 w-full text-center text-sm text-text-tertiary ${
-            props.editor.isEditable ? "min-h-[1.5rem] outline-none" : ""
-          } ${!node.attrs.showCaption && node.content.size === 0 ? "hidden" : ""}`}
-        >
-          <NodeViewContent />
-        </figcaption>
-      </figure>
+        <NodeViewContent />
+      </figcaption>
     </NodeViewWrapper>
   )
 }
