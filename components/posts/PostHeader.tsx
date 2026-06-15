@@ -121,8 +121,7 @@ export function PostHeader({ post }: PostHeaderProps) {
 
       {post.coverUrl && (
         <div className="mt-7">
-          <div className="relative -ml-4 w-screen overflow-hidden md:ml-0 md:w-full md:rounded-[8px]">
-            <div className="aspect-video w-full bg-subtle-bg">
+          <div className="relative -ml-4 aspect-video w-screen overflow-hidden bg-subtle-bg md:ml-0 md:w-full md:rounded-[8px]">
             <div className="absolute inset-0 overflow-hidden">
               <img
                 alt={post.coverAlt ?? post.title}
@@ -133,7 +132,6 @@ export function PostHeader({ post }: PostHeaderProps) {
                 loading="eager"
                 src={(post.coverUrl || "").split("?")[0]}
               />
-            </div>
             </div>
           </div>
           <div className="px-4 md:px-0">
