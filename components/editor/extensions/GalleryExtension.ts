@@ -8,6 +8,7 @@ import {
   serializeGalleryImages,
   type GalleryImage,
 } from "@/components/editor/gallery"
+import { isNativeVideo, toVideoEmbedUrl } from "@/components/editor/video"
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -81,27 +82,61 @@ export const GalleryExtension = Node.create({
       [
         "div",
         { class: "image-gallery__grid", style: `grid-template-columns: repeat(${columns}, minmax(0, 1fr))` },
-        ...images.map((image) => [
-          "figure",
-          { class: "image-gallery__item" },
-          [
-            "img",
-            {
-              alt: getGalleryImageAlt(image),
-              class: "image-gallery__image",
-              src: image.url,
-            },
-          ],
-          ...(image.caption
+        ...images.map((image) => {
+          const isVideoUrl = image.url.match(/\.(mp4|webm)$/i) || image.url.includes("youtube.com") || image.url.includes("youtu.be")
+          const isNative = isNativeVideo(image.url)
+
+          const mediaNode = isVideoUrl
             ? [
-                [
-                  "figcaption",
-                  { class: "image-gallery__caption" },
-                  image.caption,
-                ],
+                "div",
+                { class: "relative w-full aspect-video" },
+                isNative
+                  ? [
+                      "video",
+                      {
+                        class: "absolute inset-0 h-full w-full rounded-md object-contain bg-black/5",
+                        controls: "true",
+                        preload: "metadata",
+                        src: image.url,
+                        title: getGalleryImageAlt(image),
+                      },
+                    ]
+                  : [
+                      "iframe",
+                      {
+                        allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
+                        allowfullscreen: "true",
+                        class: "absolute inset-0 h-full w-full rounded-md",
+                        loading: "lazy",
+                        src: toVideoEmbedUrl(image.url),
+                        title: getGalleryImageAlt(image),
+                      },
+                    ],
               ]
-            : []),
-        ]),
+            : [
+                "img",
+                {
+                  alt: getGalleryImageAlt(image),
+                  class: "image-gallery__image",
+                  src: image.url,
+                },
+              ]
+
+          return [
+            "figure",
+            { class: "image-gallery__item" },
+            mediaNode,
+            ...(image.caption
+              ? [
+                  [
+                    "figcaption",
+                    { class: "image-gallery__caption" },
+                    image.caption,
+                  ],
+                ]
+              : []),
+          ]
+        }),
       ],
     ]
   },
