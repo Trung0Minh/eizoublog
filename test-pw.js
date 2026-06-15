@@ -5,17 +5,18 @@ const { chromium } = require('playwright');
   await page.setContent(`
     <style>
       .aspect-video { aspect-ratio: 16 / 9; width: 300px; background: #ccc; position: relative; }
-      .relative { position: relative; }
+      .absolute { position: absolute; }
+      .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+      .overflow-hidden { overflow: hidden; }
       .h-full { height: 100%; }
       .w-full { width: 100%; }
-      .overflow-hidden { overflow: hidden; }
     </style>
     <div class="aspect-video">
-      <div class="relative h-full w-full overflow-hidden">
+      <div class="absolute inset-0 overflow-hidden">
         <img
           src="https://picsum.photos/1000/2000"
           class="h-full w-full"
-          style="position: absolute; left: 0%; top: -127.777%; width: 100%; height: 355.555%; object-fit: fill; max-width: none; max-height: none;"
+          style="position: absolute; left: -100%; top: -100%; width: 20000%; height: 20000%; object-fit: fill; max-width: none; max-height: none;"
         />
       </div>
     </div>

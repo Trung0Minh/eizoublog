@@ -1,7 +1,8 @@
-export function getCoverStyle(url: string | null | undefined): React.CSSProperties {
+function getCoverStyle(url) {
   if (!url) return { objectFit: "cover" };
 
-  const [, query] = url.split("?");
+  const parts = url.split("?");
+  const query = parts[1];
   const params = new URLSearchParams(query || "");
 
   if (params.has("cw")) {
@@ -12,13 +13,11 @@ export function getCoverStyle(url: string | null | undefined): React.CSSProperti
 
     return {
       position: "absolute",
-      top: 0,
-      left: 0,
+      left: `${-(cx / cw) * 100}%`,
+      top: `${-(cy / ch) * 100}%`,
       width: `${(100 / cw) * 100}%`,
       height: `${(100 / ch) * 100}%`,
-      transform: `translate(-${cx}%, -${cy}%)`,
-      transformOrigin: "top left",
-      objectFit: "cover",
+      objectFit: "fill",
       maxWidth: "none",
       maxHeight: "none",
     };
@@ -44,3 +43,5 @@ export function getCoverStyle(url: string | null | undefined): React.CSSProperti
     transform: `scale(${zoom})`,
   };
 }
+
+console.log(getCoverStyle("http://example.com/image.jpg?cx=50&cy=50&cw=50&ch=50"));
