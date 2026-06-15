@@ -214,7 +214,18 @@ function CoverCropperModal({
 }) {
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(parseFloat(new URLSearchParams((value || "").split("?")[1] || "").get("zoom") || "1"))
-  const [croppedAreaPercentages, setCroppedAreaPercentages] = useState<{ x: number, y: number, width: number, height: number } | null>(null)
+  const [croppedAreaPercentages, setCroppedAreaPercentages] = useState<{ x: number, y: number, width: number, height: number } | null>(() => {
+    const params = new URLSearchParams((value || "").split("?")[1] || "");
+    if (params.has("cw")) {
+      return {
+        x: parseFloat(params.get("cx") || "0"),
+        y: parseFloat(params.get("cy") || "0"),
+        width: parseFloat(params.get("cw") || "100"),
+        height: parseFloat(params.get("ch") || "100"),
+      };
+    }
+    return null;
+  })
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {

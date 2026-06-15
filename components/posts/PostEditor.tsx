@@ -125,15 +125,21 @@ export function PostEditor({
     initialData?.tags ?? initialTags,
   )
   const [title, setTitle] = useState(initialData?.title ?? "")
-  const autosaveDraftRef = useRef({
-    content,
-    contentText,
-    excerpt,
-    title,
-  })
-
   const hasCoAuthors = coAuthorIds.length > 0
   const effectiveDraftVisibility = hasCoAuthors ? draftVisibility : "PRIVATE"
+
+  const autosaveDraftRef = useRef({
+    categoryId,
+    coAuthorIds,
+    content,
+    contentText,
+    coverAlt,
+    coverUrl,
+    draftVisibility: effectiveDraftVisibility,
+    excerpt,
+    tagIds: selectedTags.map((tag) => tag.id),
+    title,
+  })
   const isEditing = Boolean(postId)
   const canSave = title.trim().length > 0
   const autosaveHint = postId
@@ -142,12 +148,18 @@ export function PostEditor({
 
   useEffect(() => {
     autosaveDraftRef.current = {
+      categoryId,
+      coAuthorIds,
       content,
       contentText,
+      coverAlt,
+      coverUrl,
+      draftVisibility: effectiveDraftVisibility,
       excerpt,
+      tagIds: selectedTags.map((tag) => tag.id),
       title,
     }
-  }, [content, contentText, excerpt, title])
+  }, [categoryId, coAuthorIds, content, contentText, coverAlt, coverUrl, effectiveDraftVisibility, excerpt, selectedTags, title])
 
   const performAutosave = useCallback(async () => {
     if (!postId) return
@@ -155,9 +167,15 @@ export function PostEditor({
     const draft = autosaveDraftRef.current
     const response = await fetch(`/api/posts/${postId}`, {
       body: JSON.stringify({
+        categoryId: draft.categoryId || undefined,
+        coAuthorIds: draft.coAuthorIds,
         content: draft.content,
         contentText: draft.contentText,
+        coverAlt: draft.coverAlt || undefined,
+        coverUrl: draft.coverUrl || undefined,
+        draftVisibility: draft.draftVisibility,
         excerpt: draft.excerpt,
+        tagIds: draft.tagIds,
         title: draft.title,
       }),
       headers: { "Content-Type": "application/json" },
@@ -251,7 +269,7 @@ export function PostEditor({
   }
 
   function toggleCoAuthor(writerId: string) {
-    markDirty()
+    markDirtyAndAutosave()
     setCoAuthorIds((currentIds) => {
       const nextIds = currentIds.includes(writerId)
         ? currentIds.filter((id) => id !== writerId)
@@ -330,7 +348,7 @@ export function PostEditor({
                 <CoverImageUpload
                   onChange={(url) => {
                     setCoverUrl(url)
-                    markDirty()
+                    markDirtyAndAutosave()
                   }}
                   value={coverUrl}
                 />
@@ -348,7 +366,7 @@ export function PostEditor({
                       maxLength={200}
                       onChange={(event) => {
                         setCoverAlt(event.target.value)
-                        markDirty()
+                        markDirtyAndAutosave()
                       }}
                       placeholder="Mô tả ảnh bìa"
                       value={coverAlt}
@@ -369,7 +387,7 @@ export function PostEditor({
                     id="post-category"
                     onChange={(event) => {
                       setCategoryId(event.target.value)
-                      markDirty()
+                      markDirtyAndAutosave()
                     }}
                     value={categoryId}
                   >
@@ -390,7 +408,7 @@ export function PostEditor({
                 <TagInput
                   onChange={(tags) => {
                     setSelectedTags(tags)
-                    markDirty()
+                    markDirtyAndAutosave()
                   }}
                   selectedTags={selectedTags}
                 />
@@ -446,7 +464,7 @@ export function PostEditor({
                   hasCoAuthors={hasCoAuthors}
                   onChange={(value) => {
                     setDraftVisibility(value)
-                    markDirty()
+                    markDirtyAndAutosave()
                   }}
                   value={draftVisibility}
                 />
