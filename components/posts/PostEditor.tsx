@@ -137,8 +137,8 @@ export function PostEditor({
   const isEditing = Boolean(postId)
   const canSave = title.trim().length > 0
   const autosaveHint = postId
-    ? "Autosave starts after you edit title, excerpt, or body."
-    : "Save once to enable autosave for this draft."
+    ? "Tự động lưu sau khi chỉnh sửa tiêu đề, đoạn trích hoặc nội dung."
+    : "Lưu một lần để bật tự động lưu cho bản nháp này."
 
   useEffect(() => {
     autosaveDraftRef.current = {
@@ -290,14 +290,14 @@ export function PostEditor({
         <button
           aria-label={isSettingsOpen ? "Đóng cài đặt" : "Mở cài đặt"}
           className={cn(
-            "hidden lg:flex absolute top-1/2 -translate-y-1/2 z-50 h-10 w-6 items-center justify-center border border-border-default bg-subtle-bg/40 text-text-tertiary transition-colors hover:bg-subtle-bg hover:text-text-primary",
+            "hidden lg:flex absolute top-1/2 -translate-y-1/2 z-50 h-16 w-8 items-center justify-center border border-border-default shadow-md bg-background text-text-secondary transition-all hover:bg-subtle-bg hover:text-text-primary",
             isSettingsOpen
               ? "left-[320px] xl:left-[360px] rounded-r-md border-l-0"
               : "left-0 rounded-r-md border-l-0"
           )}
           onClick={() => setIsSettingsOpen(!isSettingsOpen)}
         >
-          {isSettingsOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          {isSettingsOpen ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
         </button>
         <aside
           className={cn(
