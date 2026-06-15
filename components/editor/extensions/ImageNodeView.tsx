@@ -9,9 +9,9 @@ export function ImageNodeView(props: NodeViewProps) {
       as="figure"
       className={`relative group flex flex-col items-center ${
         node.attrs.align === "left"
-          ? "float-left mr-6 mb-4 mt-2 clear-left !m-0"
+          ? "float-left mr-6 mb-4 mt-2 clear-left"
           : node.attrs.align === "right"
-          ? "float-right ml-6 mb-4 mt-2 clear-right !m-0"
+          ? "float-right ml-6 mb-4 mt-2 clear-right"
           : "justify-center my-6 clear-both"
       }`}
       style={{
