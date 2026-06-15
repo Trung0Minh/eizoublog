@@ -90,7 +90,7 @@ export function ImageNodeView(props: NodeViewProps) {
 
       <img
         alt={node.attrs.alt || "Image"}
-        className={`h-auto w-full rounded-md object-contain transition-all ${
+        className={`!m-0 h-auto w-full rounded-md object-contain transition-all ${
           selected ? "ring-2 ring-accent" : ""
         }`}
         src={node.attrs.src}
