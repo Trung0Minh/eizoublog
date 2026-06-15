@@ -153,6 +153,11 @@ model Post {
   @@map("posts")
 }
 
+enum CoAuthorStatus {
+  PENDING
+  ACCEPTED
+}
+
 enum PostStatus {
   DRAFT
   PUBLISHED
@@ -167,7 +172,8 @@ enum DraftVisibility {
 model PostAuthor {
   postId String
   userId String
-  order  Int    @default(0)
+  order  Int            @default(0)
+  status CoAuthorStatus @default(PENDING)
 
   post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

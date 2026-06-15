@@ -22,7 +22,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
     select: {
       authorId: true,
       categoryId: true,
-      coAuthors: { select: { userId: true } },
+      coAuthors: { select: { userId: true, status: true } },
       content: true,
       contentText: true,
       coverAlt: true,
@@ -49,8 +49,9 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
     notFound()
   }
 
+  const isCoAuthor = post.coAuthors.some((ca) => ca.userId === session.user.id && ca.status === "ACCEPTED")
   const canEdit =
-    session.user.role === "ADMIN" || session.user.id === post.authorId
+    session.user.role === "ADMIN" || session.user.id === post.authorId || isCoAuthor
 
   if (!canEdit) {
     notFound()

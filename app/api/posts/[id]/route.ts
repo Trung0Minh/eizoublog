@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth"
 import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
 import { canViewPost } from "@/lib/postAccess"
 import { prisma } from "@/lib/prisma"
+import { ensureUniqueSlug, generateSlug } from "@/lib/utils"
 
 class RouteError extends Error {
   constructor(
@@ -50,6 +51,7 @@ const postDetailSelect = {
     orderBy: { order: "asc" },
     select: {
       order: true,
+      status: true,
       userId: true,
       user: {
         select: {
@@ -86,11 +88,14 @@ const postDetailSelect = {
 function canManagePost({
   authorId,
   user,
+  coAuthors = [],
 }: {
   authorId: string
   user: { id: string; role: Role }
+  coAuthors?: { userId: string; status?: string }[]
 }) {
-  return user.role === "ADMIN" || user.id === authorId
+  if (user.role === "ADMIN" || user.id === authorId) return true
+  return coAuthors.some((ca) => ca.userId === user.id && ca.status === "ACCEPTED")
 }
 
 function uniqueIds(ids: string[]) {
@@ -144,7 +149,13 @@ export async function PATCH(
 
     const post = await prisma.$transaction(async (tx) => {
       const existing = await tx.post.findUnique({
-        select: { authorId: true, status: true },
+        select: {
+          authorId: true,
+          status: true,
+          id: true,
+          title: true,
+          coAuthors: { select: { userId: true, status: true } },
+        },
         where: { id },
       })
 
@@ -152,7 +163,7 @@ export async function PATCH(
         throw new RouteError("Post not found", 404)
       }
 
-      if (!canManagePost({ authorId: existing.authorId, user: activeSession.user })) {
+      if (!canManagePost({ authorId: existing.authorId, user: activeSession.user, coAuthors: existing.coAuthors })) {
         throw new RouteError("Forbidden", 403)
       }
 
@@ -178,21 +189,57 @@ export async function PATCH(
         data.excerpt !== undefined ||
         data.title !== undefined
 
+      let newSlug: string | undefined
+      if (data.title && data.title !== existing.title) {
+        const baseSlug = generateSlug(data.title) || "post"
+        newSlug = await ensureUniqueSlug(baseSlug, tx, existing.id)
+      }
+
+      if (data.coAuthorIds) {
+        const uniqueAuthorIds = uniqueIds(data.coAuthorIds)
+        const existingCoAuthors = await tx.postAuthor.findMany({
+          where: { postId: existing.id },
+        })
+
+        const toDelete = existingCoAuthors.filter(
+          (ca) => !uniqueAuthorIds.includes(ca.userId)
+        )
+        if (toDelete.length > 0) {
+          await tx.postAuthor.deleteMany({
+            where: {
+              postId: existing.id,
+              userId: { in: toDelete.map((c) => c.userId) },
+            },
+          })
+        }
+
+        for (let i = 0; i < uniqueAuthorIds.length; i++) {
+          const userId = uniqueAuthorIds[i]
+          const isExisting = existingCoAuthors.find(ca => ca.userId === userId)
+          if (isExisting) {
+            await tx.postAuthor.update({
+              where: { postId_userId: { postId: existing.id, userId } },
+              data: { order: i },
+            })
+          } else {
+            await tx.postAuthor.create({
+              data: {
+                postId: existing.id,
+                userId,
+                order: i,
+                status: "PENDING",
+              },
+            })
+          }
+        }
+      }
+
       return tx.post.update({
         data: {
           ...(data.categoryId !== undefined && {
             category: data.categoryId
               ? { connect: { id: data.categoryId } }
               : { disconnect: true },
-          }),
-          ...(data.coAuthorIds && {
-            coAuthors: {
-              create: uniqueIds(data.coAuthorIds).map((userId, order) => ({
-                order,
-                user: { connect: { id: userId } },
-              })),
-              deleteMany: {},
-            },
           }),
           ...(data.content !== undefined && {
             content: data.content as Prisma.InputJsonObject,
@@ -220,6 +267,7 @@ export async function PATCH(
             },
           }),
           ...(data.title && { title: data.title }),
+          ...(newSlug && { slug: newSlug }),
         },
         select: {
           id: true,
@@ -264,7 +312,10 @@ export async function DELETE(
 
     await prisma.$transaction(async (tx) => {
       const existing = await tx.post.findUnique({
-        select: { authorId: true },
+        select: {
+          authorId: true,
+          coAuthors: { select: { userId: true, status: true } },
+        },
         where: { id },
       })
 
@@ -272,7 +323,7 @@ export async function DELETE(
         throw new RouteError("Post not found", 404)
       }
 
-      if (!canManagePost({ authorId: existing.authorId, user: activeSession.user })) {
+      if (!canManagePost({ authorId: existing.authorId, user: activeSession.user, coAuthors: existing.coAuthors })) {
         throw new RouteError("Forbidden", 403)
       }
 

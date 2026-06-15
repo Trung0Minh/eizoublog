@@ -4,6 +4,7 @@ import { Lock } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { CoAuthorInviteActions } from "@/components/posts/CoAuthorInviteActions"
 import { getCachedWriterDashboardPosts } from "@/lib/queries"
 import { getCurrentSession } from "@/lib/session"
 import { formatDate } from "@/lib/utils"
@@ -64,21 +65,27 @@ export default async function DashboardPage() {
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              <Badge variant={post.status === "PUBLISHED" ? "default" : "secondary"}>
-                {post.status === "PUBLISHED" ? "Published" : "Draft"}
-              </Badge>
-              {post.status === "PUBLISHED" && (
-                <Button asChild size="sm" variant="ghost">
-                  <Link href={`/${post.slug}`}>
-                    View
-                  </Link>
-                </Button>
+              {post.coAuthors?.some(c => c.userId === session.user.id && c.status === "PENDING") ? (
+                <CoAuthorInviteActions postId={post.id} />
+              ) : (
+                <>
+                  <Badge variant={post.status === "PUBLISHED" ? "default" : "secondary"}>
+                    {post.status === "PUBLISHED" ? "Published" : "Draft"}
+                  </Badge>
+                  {post.status === "PUBLISHED" && (
+                    <Button asChild size="sm" variant="ghost">
+                      <Link href={`/${post.slug}`}>
+                        View
+                      </Link>
+                    </Button>
+                  )}
+                  <Button asChild size="sm" variant="outline">
+                    <Link href={`/dashboard/edit/${post.id}`} prefetch={false}>
+                      Edit
+                    </Link>
+                  </Button>
+                </>
               )}
-              <Button asChild size="sm" variant="outline">
-                <Link href={`/dashboard/edit/${post.id}`} prefetch={false}>
-                  Edit
-                </Link>
-              </Button>
             </div>
           </article>
         ))}

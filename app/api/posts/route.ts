@@ -41,6 +41,7 @@ const postListSelect = {
     orderBy: { order: "asc" },
     select: {
       order: true,
+      status: true,
       user: {
         select: { avatarUrl: true, id: true, name: true, username: true },
       },
@@ -87,7 +88,7 @@ function getVisibilityWhere(
         OR: [
           { authorId: session.user.id, status: "DRAFT" },
           {
-            coAuthors: { some: { userId: session.user.id } },
+            coAuthors: { some: { userId: session.user.id, status: "ACCEPTED" } },
             draftVisibility: "CO_AUTHORS",
             status: "DRAFT",
           },
@@ -104,7 +105,7 @@ function getVisibilityWhere(
         { status: "PUBLISHED" },
         { authorId: session.user.id, status: "DRAFT" },
         {
-          coAuthors: { some: { userId: session.user.id } },
+          coAuthors: { some: { userId: session.user.id, status: "ACCEPTED" } },
           draftVisibility: "CO_AUTHORS",
           status: "DRAFT",
         },

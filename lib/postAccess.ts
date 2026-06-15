@@ -2,7 +2,7 @@ import type { DraftVisibility, PostStatus, Role } from "@prisma/client"
 
 interface ViewablePost {
   authorId: string
-  coAuthors: { userId: string }[]
+  coAuthors: { userId?: string; user?: { id: string }; status?: string }[]
   draftVisibility: DraftVisibility
   status: PostStatus
 }
@@ -19,7 +19,10 @@ export function canViewPost(
   if (post.authorId === userId) return true
 
   if (post.draftVisibility === "CO_AUTHORS") {
-    return post.coAuthors.some((coAuthor) => coAuthor.userId === userId)
+    return post.coAuthors.some((coAuthor) => {
+      const id = coAuthor.userId || coAuthor.user?.id
+      return id === userId && coAuthor.status === "ACCEPTED"
+    })
   }
 
   return false

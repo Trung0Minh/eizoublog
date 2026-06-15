@@ -102,6 +102,8 @@ const editorWriterSelect = {
 
 const writerDashboardPostSelect = {
   _count: { select: { comments: true } },
+  authorId: true,
+  coAuthors: { select: { status: true, userId: true } },
   draftVisibility: true,
   id: true,
   publishedAt: true,
@@ -403,7 +405,10 @@ export const getCachedWriterDashboardPosts = unstable_cache(
       orderBy: { updatedAt: "desc" },
       select: writerDashboardPostSelect,
       where: {
-        authorId: userId,
+        OR: [
+          { authorId: userId },
+          { coAuthors: { some: { userId } } },
+        ],
         status: { not: "ARCHIVED" },
       },
     }),
