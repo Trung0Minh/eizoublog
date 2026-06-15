@@ -90,33 +90,100 @@ export function CoverImageUpload({ onChange, value }: CoverImageUploadProps) {
 
       {value ? (
         <div className="space-y-3">
-          <div className="group relative aspect-video w-full overflow-hidden rounded-[8px] border border-border-default bg-subtle-bg">
+          <div 
+            className="group relative aspect-video w-full overflow-hidden rounded-[8px] border border-border-default bg-subtle-bg cursor-move touch-none"
+            onPointerDown={(e) => {
+              // Ignore if clicking on buttons
+              if ((e.target as HTMLElement).closest('button')) return;
+              
+              e.currentTarget.setPointerCapture(e.pointerId);
+              e.currentTarget.dataset.isDragging = "true";
+              e.currentTarget.dataset.startX = e.clientX.toString();
+              e.currentTarget.dataset.startY = e.clientY.toString();
+              e.currentTarget.dataset.startPosX = new URLSearchParams((value || "").split("?")[1] || "").get("posX") || "50";
+              e.currentTarget.dataset.startPosY = new URLSearchParams((value || "").split("?")[1] || "").get("posY") || "50";
+            }}
+            onPointerMove={(e) => {
+              if (e.currentTarget.dataset.isDragging !== "true") return;
+              const startX = parseFloat(e.currentTarget.dataset.startX || "0");
+              const startY = parseFloat(e.currentTarget.dataset.startY || "0");
+              const startPosX = parseFloat(e.currentTarget.dataset.startPosX || "50");
+              const startPosY = parseFloat(e.currentTarget.dataset.startPosY || "50");
+              
+              const dx = e.clientX - startX;
+              const dy = e.clientY - startY;
+              
+              const rect = e.currentTarget.getBoundingClientRect();
+              
+              const zoom = parseFloat(new URLSearchParams((value || "").split("?")[1] || "").get("zoom") || "1");
+              
+              let newPosX = startPosX - (dx / rect.width) * 100 / zoom;
+              let newPosY = startPosY - (dy / rect.height) * 100 / zoom;
+              
+              newPosX = Math.max(0, Math.min(100, newPosX));
+              newPosY = Math.max(0, Math.min(100, newPosY));
+              
+              e.currentTarget.dataset.posX = newPosX.toString();
+              e.currentTarget.dataset.posY = newPosY.toString();
+              
+              const img = e.currentTarget.querySelector('img');
+              if (img) {
+                img.style.objectPosition = `${newPosX}% ${newPosY}%`;
+              }
+            }}
+            onPointerUp={(e) => {
+              if (e.currentTarget.dataset.isDragging !== "true") return;
+              e.currentTarget.dataset.isDragging = "false";
+              e.currentTarget.releasePointerCapture(e.pointerId);
+              
+              const newPosX = parseFloat(e.currentTarget.dataset.posX || "50").toFixed(1);
+              const newPosY = parseFloat(e.currentTarget.dataset.posY || "50").toFixed(1);
+              
+              const [base, query] = (value || "").split("?");
+              const params = new URLSearchParams(query || "");
+              params.set("posX", newPosX);
+              params.set("posY", newPosY);
+              onChange(`${base}?${params.toString()}`);
+            }}
+            onPointerCancel={(e) => {
+              e.currentTarget.dataset.isDragging = "false";
+              e.currentTarget.releasePointerCapture(e.pointerId);
+            }}
+          >
             <img
               alt="Ảnh bìa đã chọn"
-              className="h-full w-full object-cover"
+              className="h-full w-full object-cover pointer-events-none"
               style={{
                 objectPosition: `${new URLSearchParams((value || "").split("?")[1] || "").get("posX") || "50"}% ${new URLSearchParams((value || "").split("?")[1] || "").get("posY") || "50"}%`,
                 transform: `scale(${new URLSearchParams((value || "").split("?")[1] || "").get("zoom") || "1"})`,
               }}
               src={value.split("?")[0]}
             />
-            <button
-              className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 text-white opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100"
-              onClick={() => inputRef.current?.click()}
-              type="button"
-            >
-              <Camera aria-hidden="true" className="mb-2 h-6 w-6" />
-              <span className="text-[13px] font-medium">Thay đổi</span>
-            </button>
-            <button
-              aria-label="Xóa ảnh bìa"
-              className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black"
-              onClick={() => onChange("")}
-              type="button"
-            >
-              <X aria-hidden="true" className="h-4 w-4" />
-            </button>
+            <div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/10 pointer-events-none" />
+            <div className="absolute right-2 top-2 flex gap-2 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
+              <button
+                aria-label="Thay đổi ảnh bìa"
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black"
+                onClick={(e) => { e.stopPropagation(); inputRef.current?.click(); }}
+                type="button"
+              >
+                <Camera aria-hidden="true" className="h-4 w-4" />
+              </button>
+              <button
+                aria-label="Xóa ảnh bìa"
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black"
+                onClick={(e) => { e.stopPropagation(); onChange(""); }}
+                type="button"
+              >
+                <X aria-hidden="true" className="h-4 w-4" />
+              </button>
+            </div>
+            
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded bg-black/50 px-2 py-1 text-[10px] text-white opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 pointer-events-none">
+              Kéo để di chuyển ảnh
+            </div>
           </div>
+          
           <div className="flex flex-col gap-2 rounded-[6px] border border-border-default/50 bg-subtle-bg/30 p-3">
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-medium text-text-secondary flex justify-between" htmlFor="cover-zoom">
@@ -134,46 +201,6 @@ export function CoverImageUpload({ onChange, value }: CoverImageUploadProps) {
                   const [base, query] = (value || "").split("?")
                   const params = new URLSearchParams(query || "")
                   params.set("zoom", e.target.value)
-                  onChange(`${base}?${params.toString()}`)
-                }}
-                className="w-full accent-accent"
-              />
-            </div>
-            <div className="flex flex-col gap-1.5 mt-2">
-              <label className="text-[11px] font-medium text-text-secondary flex justify-between" htmlFor="cover-position-x">
-                <span>Căn ngang (Trái - Phải)</span>
-                <span>{new URLSearchParams((value || "").split("?")[1] || "").get("posX") || "50"}%</span>
-              </label>
-              <input
-                type="range"
-                id="cover-position-x"
-                min="0"
-                max="100"
-                value={new URLSearchParams((value || "").split("?")[1] || "").get("posX") || "50"}
-                onChange={(e) => {
-                  const [base, query] = (value || "").split("?")
-                  const params = new URLSearchParams(query || "")
-                  params.set("posX", e.target.value)
-                  onChange(`${base}?${params.toString()}`)
-                }}
-                className="w-full accent-accent"
-              />
-            </div>
-            <div className="flex flex-col gap-1.5 mt-2">
-              <label className="text-[11px] font-medium text-text-secondary flex justify-between" htmlFor="cover-position-y">
-                <span>Căn dọc (Trên - Dưới)</span>
-                <span>{new URLSearchParams((value || "").split("?")[1] || "").get("posY") || "50"}%</span>
-              </label>
-              <input
-                type="range"
-                id="cover-position-y"
-                min="0"
-                max="100"
-                value={new URLSearchParams((value || "").split("?")[1] || "").get("posY") || "50"}
-                onChange={(e) => {
-                  const [base, query] = (value || "").split("?")
-                  const params = new URLSearchParams(query || "")
-                  params.set("posY", e.target.value)
                   onChange(`${base}?${params.toString()}`)
                 }}
                 className="w-full accent-accent"

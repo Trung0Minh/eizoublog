@@ -121,10 +121,10 @@ export function ImageLightbox({
         <button
           aria-label="Zoom out"
           className="rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20 disabled:opacity-40"
-          disabled={scale <= 1}
+          disabled={scale <= 0.5}
           onClick={(event) => {
             event.stopPropagation()
-            setScale((currentScale) => Math.max(currentScale - 0.5, 1))
+            setScale((currentScale) => Math.max(currentScale - 0.5, 0.5))
           }}
           type="button"
         >
@@ -154,13 +154,14 @@ export function ImageLightbox({
           if (e.deltaY < 0) {
             setScale((s) => Math.min(s + 0.25, 4))
           } else {
+            const target = e.currentTarget;
             setScale((s) => {
-              const newScale = Math.max(s - 0.25, 1)
-              if (newScale === 1) {
-                e.currentTarget.dataset.posX = "0"
-                e.currentTarget.dataset.posY = "0"
-                const img = e.currentTarget.querySelector('img')
-                if (img) img.style.transform = `translate(0px, 0px) scale(1)`
+              const newScale = Math.max(s - 0.25, 0.5); // Allow zooming out to 0.5x
+              if (newScale <= 1) {
+                target.dataset.posX = "0"
+                target.dataset.posY = "0"
+                const img = target.querySelector('img')
+                if (img) img.style.transform = `translate(0px, 0px) scale(${newScale})`
               }
               return newScale
             })
