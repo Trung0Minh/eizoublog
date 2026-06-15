@@ -1,5 +1,5 @@
 import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/react"
-import { AlignCenter, AlignLeft, AlignRight, Maximize, Trash2, Type } from "lucide-react"
+import { AlignCenter, Maximize, Trash2 } from "lucide-react"
 
 export function ImageNodeView(props: NodeViewProps) {
   const { node, updateAttributes, selected } = props
@@ -17,16 +17,7 @@ export function ImageNodeView(props: NodeViewProps) {
       {/* Mini toolbar that appears on select/hover */}
       {props.editor.isEditable && (
         <div className={`absolute top-2 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-md border border-border-default bg-background p-1 shadow-md z-50 transition-opacity duration-200 ${selected ? 'opacity-100 visible' : 'opacity-0 invisible group-hover:opacity-100 group-hover:visible'}`}>
-          <button
-            className={`rounded p-1.5 text-sm hover:bg-subtle-bg ${
-              node.attrs.align === "left" ? "bg-subtle-bg text-text-primary" : "text-text-secondary"
-            }`}
-            onClick={() => updateAttributes({ align: "left", width: "50%" })}
-            title="Align Left"
-            type="button"
-          >
-            <AlignLeft className="h-4 w-4" />
-          </button>
+
           <button
             className={`rounded p-1.5 text-sm hover:bg-subtle-bg ${
               node.attrs.align === "center" ? "bg-subtle-bg text-text-primary" : "text-text-secondary"
@@ -37,16 +28,7 @@ export function ImageNodeView(props: NodeViewProps) {
           >
             <AlignCenter className="h-4 w-4" />
           </button>
-          <button
-            className={`rounded p-1.5 text-sm hover:bg-subtle-bg ${
-              node.attrs.align === "right" ? "bg-subtle-bg text-text-primary" : "text-text-secondary"
-            }`}
-            onClick={() => updateAttributes({ align: "right", width: "50%" })}
-            title="Align Right"
-            type="button"
-          >
-            <AlignRight className="h-4 w-4" />
-          </button>
+
           <button
             className={`rounded p-1.5 text-sm hover:bg-subtle-bg ${
               node.attrs.width === "100vw" ? "bg-subtle-bg text-text-primary" : "text-text-secondary"
@@ -57,21 +39,7 @@ export function ImageNodeView(props: NodeViewProps) {
           >
             <Maximize className="h-4 w-4" />
           </button>
-          <div className="mx-1 h-4 w-px bg-border-default" />
-          <button
-            className="rounded p-1.5 text-sm text-text-secondary hover:bg-subtle-bg"
-            onClick={() => {
-              const alt = window.prompt("Alt text for this image:", node.attrs.alt || "")
-              if (alt !== null) {
-                updateAttributes({ alt })
-              }
-            }}
-            title="Edit Alt Text"
-            type="button"
-          >
-            <Type className="h-4 w-4" />
-          </button>
-          <div className="mx-1 h-4 w-px bg-border-default" />
+
           <button
             className="rounded p-1.5 text-sm text-red-500 hover:bg-red-500/10"
             onClick={() => props.deleteNode()}
