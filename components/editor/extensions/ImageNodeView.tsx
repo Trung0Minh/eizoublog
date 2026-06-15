@@ -72,7 +72,7 @@ export function ImageNodeView(props: NodeViewProps) {
 
       <figure
         className={`relative flex flex-col items-center ${
-          node.attrs.align === "left" || node.attrs.align === "right" ? "m-4" : ""
+          node.attrs.align === "left" || node.attrs.align === "right" ? "!m-0" : ""
         }`}
         style={{ width: node.attrs.width, maxWidth: "100%" }}
       >

@@ -134,6 +134,12 @@
     max-width: 100%;
   }
 
+  .prose-editor::after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+
   .prose-editor p {
     margin: 0;
   }
@@ -209,6 +215,12 @@
     margin-left: auto;
     margin-right: auto;
     max-width: min(68ch, 100%);
+  }
+
+  .post-content .ProseMirror::after {
+    content: "";
+    display: table;
+    clear: both;
   }
 
   .post-content p {
