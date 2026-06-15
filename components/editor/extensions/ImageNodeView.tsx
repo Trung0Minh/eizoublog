@@ -13,6 +13,10 @@ export function ImageNodeView(props: NodeViewProps) {
           ? "float-right ml-6 mb-4 mt-2 clear-right"
           : "flex justify-center my-6 clear-both"
       }`}
+      style={{
+        width: node.attrs.align !== "center" ? node.attrs.width : "100%",
+        maxWidth: "100%",
+      }}
     >
       {/* Mini toolbar that appears on select/hover */}
       {props.editor.isEditable && (
@@ -84,10 +88,13 @@ export function ImageNodeView(props: NodeViewProps) {
       )}
 
       <figure
-        className={`relative flex flex-col items-center ${
+        className={`relative flex flex-col items-center w-full ${
           node.attrs.align === "left" || node.attrs.align === "right" ? "!m-0" : ""
         }`}
-        style={{ width: node.attrs.width, maxWidth: "100%" }}
+        style={{
+          width: node.attrs.align === "center" ? node.attrs.width : "100%",
+          maxWidth: "100%",
+        }}
       >
         <img
           alt={node.attrs.alt || "Image"}
