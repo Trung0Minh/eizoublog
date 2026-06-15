@@ -6,7 +6,7 @@ import { getCurrentSession } from "@/lib/session"
 
 export const metadata: Metadata = {
   robots: { follow: false, index: false },
-  title: "Dashboard",
+  title: "Bảng điều khiển",
 }
 
 export default async function DashboardLayout({
@@ -32,21 +32,21 @@ export default async function DashboardLayout({
             href="/dashboard"
             prefetch={false}
           >
-            My posts
+            Bài viết của tôi
           </Link>
           <Link
             className="whitespace-nowrap px-3 py-2 text-muted-foreground transition-colors hover:text-foreground"
             href="/dashboard/profile"
             prefetch={false}
           >
-            Edit profile
+            Chỉnh sửa hồ sơ
           </Link>
           <Link
             className="ml-auto whitespace-nowrap px-0 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
             href={`/authors/${session.user.username}`}
             target="_blank"
           >
-            View public profile
+            Xem hồ sơ công khai
           </Link>
         </nav>
       </div>

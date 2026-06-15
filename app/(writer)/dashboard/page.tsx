@@ -23,13 +23,13 @@ export default async function DashboardPage() {
       <div className="mb-8 flex items-center justify-between gap-4">
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-editorial">
-            Dashboard
+            Bảng điều khiển
           </p>
-          <h1 className="text-2xl font-bold tracking-tight">My Posts</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Bài viết của tôi</h1>
         </div>
         <Button asChild>
           <Link href="/dashboard/new" prefetch={false}>
-            New post
+            Bài viết mới
           </Link>
         </Button>
       </div>
@@ -44,24 +44,23 @@ export default async function DashboardPage() {
               <h2 className="truncate font-medium">{post.title}</h2>
               <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
                 {post.status === "PUBLISHED" && post.publishedAt
-                  ? `Published ${formatDate(post.publishedAt)}`
+                  ? `Đã xuất bản ${formatDate(post.publishedAt)}`
                   : (
                     <>
                       {post.draftVisibility === "PRIVATE" && (
                         <Lock aria-hidden="true" className="h-3 w-3" />
                       )}
                       <span>
-                        Draft ·{" "}
+                        Bản nháp ·{" "}
                         {post.draftVisibility === "PRIVATE"
-                          ? "Private"
-                          : "Shared with co-authors"}{" "}
-                        · Updated {formatDate(post.updatedAt)}
+                          ? "Riêng tư"
+                          : "Đã chia sẻ với đồng tác giả"}{" "}
+                        · Đã cập nhật {formatDate(post.updatedAt)}
                       </span>
                     </>
                   )}
                 {" · "}
-                {post._count.comments} comment
-                {post._count.comments === 1 ? "" : "s"}
+                {post._count.comments} bình luận
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
@@ -70,18 +69,18 @@ export default async function DashboardPage() {
               ) : (
                 <>
                   <Badge variant={post.status === "PUBLISHED" ? "default" : "secondary"}>
-                    {post.status === "PUBLISHED" ? "Published" : "Draft"}
+                    {post.status === "PUBLISHED" ? "Đã xuất bản" : "Bản nháp"}
                   </Badge>
                   {post.status === "PUBLISHED" && (
                     <Button asChild size="sm" variant="ghost">
                       <Link href={`/${post.slug}`}>
-                        View
+                        Xem
                       </Link>
                     </Button>
                   )}
                   <Button asChild size="sm" variant="outline">
                     <Link href={`/dashboard/edit/${post.id}`} prefetch={false}>
-                      Edit
+                      Chỉnh sửa
                     </Link>
                   </Button>
                 </>
@@ -92,13 +91,13 @@ export default async function DashboardPage() {
 
         {posts.length === 0 && (
           <div className="rounded-[8px] border border-dashed p-8 text-center text-sm text-muted-foreground">
-            No posts yet.{" "}
+            Chưa có bài viết nào.{" "}
             <Link
               className="font-medium text-editorial hover:underline"
               href="/dashboard/new"
               prefetch={false}
             >
-              Write your first post.
+              Viết bài đầu tiên của bạn.
             </Link>
           </div>
         )}
