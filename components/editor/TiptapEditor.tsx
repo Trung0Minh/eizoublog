@@ -8,7 +8,7 @@ import Placeholder from "@tiptap/extension-placeholder"
 import Typography from "@tiptap/extension-typography"
 import { EditorContent, useEditor, type JSONContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
-import GlobalDragHandle from "tiptap-extension-global-drag-handle"
+
 import { common, createLowlight } from "lowlight"
 
 import { BubbleMenuComponent } from "@/components/editor/BubbleMenu"
