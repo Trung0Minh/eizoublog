@@ -13,8 +13,8 @@ export function VideoNodeView(props: NodeViewProps) {
 
   return (
     <NodeViewWrapper className={`relative my-6 group ${selected ? 'ring-2 ring-accent rounded-md' : ''}`}>
-      {selected && editor.isEditable && (
-        <div className="absolute -top-12 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-md border border-border-default bg-background p-1 shadow-md z-10">
+      {props.editor.isEditable && (
+        <div className={`absolute -top-12 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-md border border-border-default bg-background p-1 shadow-md z-50 transition-opacity duration-200 ${selected ? 'opacity-100 visible' : 'opacity-0 invisible group-hover:opacity-100 group-hover:visible'}`}>
           <button
             className="rounded p-1.5 text-sm text-red-500 hover:bg-red-500/10"
             onClick={() => deleteNode()}

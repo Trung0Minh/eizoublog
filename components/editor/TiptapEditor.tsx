@@ -54,10 +54,6 @@ export function TiptapEditor({
         codeBlock: false,
         heading: false,
       }),
-      GlobalDragHandle.configure({
-        dragHandleWidth: 20,
-        scrollTreshold: 100,
-      }),
       HeadingWithIdExtension,
       CustomImageExtension,
       GalleryExtension,
