@@ -45,7 +45,7 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
       data-type="image-gallery"
     >
       {editor.isEditable && (
-        <div className="absolute -top-12 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-md border border-border-default bg-background p-1 shadow-md z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-200">
+        <div className="absolute top-2 left-2 flex items-center gap-1 rounded-md border border-border-default bg-background p-1 shadow-md z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-200">
           <span className="px-2 text-xs font-medium text-text-secondary">Columns:</span>
           {[1, 2, 3, 4].map((col) => (
             <button

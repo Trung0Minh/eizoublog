@@ -170,17 +170,17 @@ export function MediaUpload({
     try {
       const urls = await uploadFiles(files, (percent) => setUploadProgress(percent))
 
-      const imageFiles = files.filter(f => f.type.startsWith("image/"))
-      const videoFiles = files.filter(f => f.type.startsWith("video/"))
+      const mediaFiles = files.filter(f => f.type.startsWith("image/") || f.type.startsWith("video/"))
 
-      if (onInsertVideo) {
-        videoFiles.forEach((f) => onInsertVideo(urls[files.indexOf(f)]))
-      }
-
-      if (imageFiles.length > 1 && onInsertGallery) {
-        onInsertGallery(imageFiles.map(f => ({ url: urls[files.indexOf(f)], caption: "", alt: "" })))
-      } else if (imageFiles.length === 1) {
-        onInsertSingle(urls[files.indexOf(imageFiles[0])], "")
+      if (mediaFiles.length > 1 && onInsertGallery) {
+        onInsertGallery(mediaFiles.map(f => ({ url: urls[files.indexOf(f)], caption: "", alt: "" })))
+      } else if (mediaFiles.length === 1) {
+        const file = mediaFiles[0]
+        if (file.type.startsWith("video/") && onInsertVideo) {
+          onInsertVideo(urls[files.indexOf(file)])
+        } else {
+          onInsertSingle(urls[files.indexOf(file)], "")
+        }
       }
     } catch (error) {
       window.alert(error instanceof Error ? error.message : "Upload failed")
