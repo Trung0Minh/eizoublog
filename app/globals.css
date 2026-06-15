@@ -305,12 +305,14 @@
     margin-top: 0;
   }
 
-  /* Editor view consecutive galleries (Tiptap wraps them) */
-  *:has(> .image-gallery):has(+ *:has(> .image-gallery)) > .image-gallery {
-    margin-bottom: 0.5rem;
-  }
-  *:has(> .image-gallery) + *:has(> .image-gallery) > .image-gallery {
+  /* Editor view consecutive galleries */
+  .react-renderer:has(.image-gallery) + .react-renderer:has(.image-gallery) .image-gallery,
+  .node-imageGallery + .node-imageGallery .image-gallery {
     margin-top: 0;
+  }
+  .react-renderer:has(.image-gallery):has(+ .react-renderer:has(.image-gallery)) .image-gallery,
+  .node-imageGallery:has(+ .node-imageGallery) .image-gallery {
+    margin-bottom: 0.5rem;
   }
 
   .image-gallery__grid {

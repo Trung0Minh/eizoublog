@@ -119,13 +119,13 @@ function renderImageGallery(node: JSONContent, key: string) {
 
   return (
     <div className="image-gallery" data-type="image-gallery" key={key}>
-      <div className="image-gallery__grid" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
-        {images.map((image) => {
+      <div className="image-gallery__grid" style={{ gridTemplateColumns: `repeat(${Math.min(columns, images.length)}, minmax(0, 1fr))` }}>
+        {images.map((image, index) => {
           const isVideoUrl = image.url.match(/\.(mp4|webm)$/i) || image.url.includes("youtube.com") || image.url.includes("youtu.be")
           const isNative = isNativeVideo(image.url)
 
           return (
-            <figure className="image-gallery__item" key={image.url}>
+            <figure className="image-gallery__item" key={image.url + index}>
               {isVideoUrl ? (
                 <div className="relative w-full h-full aspect-video">
                   {isNative ? (
