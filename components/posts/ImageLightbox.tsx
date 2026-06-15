@@ -147,14 +147,23 @@ export function ImageLightbox({
       ) : null}
 
       <div
-        className="flex max-h-[80vh] max-w-[90vw] items-center justify-center overflow-auto no-scrollbar cursor-grab active:cursor-grabbing"
+        className="flex h-full w-full items-center justify-center overflow-hidden touch-none"
         onClick={(event) => event.stopPropagation()}
         onWheel={(e) => {
           e.stopPropagation()
           if (e.deltaY < 0) {
             setScale((s) => Math.min(s + 0.25, 4))
           } else {
-            setScale((s) => Math.max(s - 0.25, 1))
+            setScale((s) => {
+              const newScale = Math.max(s - 0.25, 1)
+              if (newScale === 1) {
+                e.currentTarget.dataset.posX = "0"
+                e.currentTarget.dataset.posY = "0"
+                const img = e.currentTarget.querySelector('img')
+                if (img) img.style.transform = `translate(0px, 0px) scale(1)`
+              }
+              return newScale
+            })
           }
         }}
         onPointerDown={(e) => {
@@ -169,10 +178,17 @@ export function ImageLightbox({
           if (e.currentTarget.dataset.isDragging !== "true") return;
           const startX = parseFloat(e.currentTarget.dataset.startX || "0");
           const startY = parseFloat(e.currentTarget.dataset.startY || "0");
-          const scrollLeft = parseFloat(e.currentTarget.dataset.scrollLeft || "0");
-          const scrollTop = parseFloat(e.currentTarget.dataset.scrollTop || "0");
-          e.currentTarget.scrollLeft = scrollLeft - (e.clientX - startX);
-          e.currentTarget.scrollTop = scrollTop - (e.clientY - startY);
+          const startPosX = parseFloat(e.currentTarget.dataset.startPosX || "0");
+          const startPosY = parseFloat(e.currentTarget.dataset.startPosY || "0");
+          const newX = startPosX + (e.clientX - startX);
+          const newY = startPosY + (e.clientY - startY);
+          e.currentTarget.dataset.posX = newX.toString();
+          e.currentTarget.dataset.posY = newY.toString();
+          
+          const img = e.currentTarget.querySelector('img');
+          if (img) {
+            img.style.transform = `translate(${newX}px, ${newY}px) scale(${scale})`;
+          }
         }}
         onPointerUp={(e) => {
           e.currentTarget.dataset.isDragging = "false";
@@ -185,20 +201,12 @@ export function ImageLightbox({
       >
         <img
           alt={current.alt || "Expanded post image"}
-          className="max-h-[80vh] max-w-full select-none rounded object-contain transition-all duration-200"
+          className="max-h-[80vh] max-w-[90vw] select-none rounded object-contain transition-transform duration-100 ease-linear"
           draggable={false}
           src={current.src}
-          style={
-            scale > 1
-              ? {
-                  zoom: scale,
-                  maxHeight: "none",
-                  maxWidth: "none",
-                }
-              : {
-                  zoom: 1,
-                }
-          }
+          style={{
+            transform: `translate(0px, 0px) scale(${scale})`,
+          }}
         />
       </div>
 

@@ -94,7 +94,10 @@ export function CoverImageUpload({ onChange, value }: CoverImageUploadProps) {
             <img
               alt="Ảnh bìa đã chọn"
               className="h-full w-full object-cover"
-              style={{ objectPosition: `50% ${new URLSearchParams((value || "").split("?")[1] || "").get("posY") || "50"}%` }}
+              style={{
+                objectPosition: `${new URLSearchParams((value || "").split("?")[1] || "").get("posX") || "50"}% ${new URLSearchParams((value || "").split("?")[1] || "").get("posY") || "50"}%`,
+                transform: `scale(${new URLSearchParams((value || "").split("?")[1] || "").get("zoom") || "1"})`,
+              }}
               src={value.split("?")[0]}
             />
             <button
@@ -114,25 +117,68 @@ export function CoverImageUpload({ onChange, value }: CoverImageUploadProps) {
               <X aria-hidden="true" className="h-4 w-4" />
             </button>
           </div>
-          <div className="flex flex-col gap-1.5 rounded-[6px] border border-border-default/50 bg-subtle-bg/30 p-3">
-            <label className="text-[11px] font-medium text-text-secondary flex justify-between" htmlFor="cover-position">
-              <span>Căn chỉnh ảnh dọc</span>
-              <span>{new URLSearchParams((value || "").split("?")[1] || "").get("posY") || "50"}%</span>
-            </label>
-            <input
-              type="range"
-              id="cover-position"
-              min="0"
-              max="100"
-              value={new URLSearchParams((value || "").split("?")[1] || "").get("posY") || "50"}
-              onChange={(e) => {
-                const [base, query] = (value || "").split("?")
-                const params = new URLSearchParams(query || "")
-                params.set("posY", e.target.value)
-                onChange(`${base}?${params.toString()}`)
-              }}
-              className="w-full accent-accent"
-            />
+          <div className="flex flex-col gap-2 rounded-[6px] border border-border-default/50 bg-subtle-bg/30 p-3">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-medium text-text-secondary flex justify-between" htmlFor="cover-zoom">
+                <span>Thu phóng (Zoom)</span>
+                <span>{new URLSearchParams((value || "").split("?")[1] || "").get("zoom") || "1"}x</span>
+              </label>
+              <input
+                type="range"
+                id="cover-zoom"
+                min="1"
+                max="3"
+                step="0.1"
+                value={new URLSearchParams((value || "").split("?")[1] || "").get("zoom") || "1"}
+                onChange={(e) => {
+                  const [base, query] = (value || "").split("?")
+                  const params = new URLSearchParams(query || "")
+                  params.set("zoom", e.target.value)
+                  onChange(`${base}?${params.toString()}`)
+                }}
+                className="w-full accent-accent"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5 mt-2">
+              <label className="text-[11px] font-medium text-text-secondary flex justify-between" htmlFor="cover-position-x">
+                <span>Căn ngang (Trái - Phải)</span>
+                <span>{new URLSearchParams((value || "").split("?")[1] || "").get("posX") || "50"}%</span>
+              </label>
+              <input
+                type="range"
+                id="cover-position-x"
+                min="0"
+                max="100"
+                value={new URLSearchParams((value || "").split("?")[1] || "").get("posX") || "50"}
+                onChange={(e) => {
+                  const [base, query] = (value || "").split("?")
+                  const params = new URLSearchParams(query || "")
+                  params.set("posX", e.target.value)
+                  onChange(`${base}?${params.toString()}`)
+                }}
+                className="w-full accent-accent"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5 mt-2">
+              <label className="text-[11px] font-medium text-text-secondary flex justify-between" htmlFor="cover-position-y">
+                <span>Căn dọc (Trên - Dưới)</span>
+                <span>{new URLSearchParams((value || "").split("?")[1] || "").get("posY") || "50"}%</span>
+              </label>
+              <input
+                type="range"
+                id="cover-position-y"
+                min="0"
+                max="100"
+                value={new URLSearchParams((value || "").split("?")[1] || "").get("posY") || "50"}
+                onChange={(e) => {
+                  const [base, query] = (value || "").split("?")
+                  const params = new URLSearchParams(query || "")
+                  params.set("posY", e.target.value)
+                  onChange(`${base}?${params.toString()}`)
+                }}
+                className="w-full accent-accent"
+              />
+            </div>
           </div>
         </div>
       ) : (

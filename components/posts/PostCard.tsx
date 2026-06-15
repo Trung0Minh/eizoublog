@@ -70,14 +70,19 @@ export function PostCard({ post }: PostCardProps) {
       {post.coverUrl && (
         <Link className="mb-4 block overflow-hidden rounded-[6px] border border-border-default/40" href={`/${post.slug}`}>
           <div className="relative aspect-video w-full overflow-hidden bg-subtle-bg dark:brightness-[0.9]">
-            <img
-              alt={post.coverAlt ?? post.title}
-              className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
-              style={{ objectPosition: `50% ${new URLSearchParams((post.coverUrl || "").split("?")[1] || "").get("posY") || "50"}%` }}
-              decoding="async"
-              loading="lazy"
-              src={(post.coverUrl || "").split("?")[0]}
-            />
+            <div className="h-full w-full transition-transform duration-500 ease-out group-hover:scale-[1.02]">
+              <img
+                alt={post.coverAlt ?? post.title}
+                className="h-full w-full object-cover"
+                style={{
+                  objectPosition: `${new URLSearchParams((post.coverUrl || "").split("?")[1] || "").get("posX") || "50"}% ${new URLSearchParams((post.coverUrl || "").split("?")[1] || "").get("posY") || "50"}%`,
+                  transform: `scale(${new URLSearchParams((post.coverUrl || "").split("?")[1] || "").get("zoom") || "1"})`,
+                }}
+                decoding="async"
+                loading="lazy"
+                src={(post.coverUrl || "").split("?")[0]}
+              />
+            </div>
           </div>
         </Link>
       )}
