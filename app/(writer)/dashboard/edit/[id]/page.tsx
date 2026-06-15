@@ -66,6 +66,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
       initialData={{
         categoryId: post.categoryId,
         coAuthorIds: post.coAuthors.map(({ userId }) => userId),
+        authorId: post.authorId,
         content: post.content as JSONContent,
         contentText: post.contentText,
         coverAlt: post.coverAlt,

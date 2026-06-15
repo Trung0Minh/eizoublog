@@ -297,8 +297,20 @@
     width: 100%;
   }
 
+  /* Published view consecutive galleries */
+  .image-gallery:has(+ .image-gallery) {
+    margin-bottom: 0.5rem;
+  }
   .image-gallery + .image-gallery {
-    margin-top: 0.5rem;
+    margin-top: 0;
+  }
+
+  /* Editor view consecutive galleries (Tiptap wraps them) */
+  *:has(> .image-gallery):has(+ *:has(> .image-gallery)) > .image-gallery {
+    margin-bottom: 0.5rem;
+  }
+  *:has(> .image-gallery) + *:has(> .image-gallery) > .image-gallery {
+    margin-top: 0;
   }
 
   .image-gallery__grid {

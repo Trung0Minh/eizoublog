@@ -400,7 +400,7 @@ export function PostEditor({
                   selectedTags={selectedTags}
                 />
 
-                {availableWriters.length > 0 && (
+                {availableWriters.length > 0 && (!initialData || currentUserId === initialData.authorId) && (
                   <div className="space-y-2">
                     <div className="text-[12px] font-semibold text-text-secondary">
                       Đồng tác giả
