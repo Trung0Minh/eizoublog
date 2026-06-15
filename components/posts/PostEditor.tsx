@@ -286,7 +286,7 @@ export function PostEditor({
         titlePreview={title}
       />
 
-      <main className="relative mt-12 flex min-h-0 flex-1 overflow-hidden bg-background">
+      <main className="relative mt-12 flex min-h-0 flex-1 overflow-hidden bg-subtle-bg/10 dark:bg-black/40">
         <button
           aria-label={isSettingsOpen ? "Đóng cài đặt" : "Mở cài đặt"}
           className={cn(

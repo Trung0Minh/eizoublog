@@ -16,6 +16,7 @@ import {
   GalleryExtension,
   HeadingWithIdExtension,
   SpoilerExtension,
+  TrailingNodeExtension,
   VideoEmbedExtension,
 } from "@/components/editor/extensions"
 
@@ -80,6 +81,7 @@ export function TiptapEditor({
         lowlight,
       }),
       SpoilerExtension,
+      TrailingNodeExtension,
       VideoEmbedExtension,
     ],
     immediatelyRender: false,
