@@ -63,13 +63,13 @@ export function VideoEmbedModal({ onClose, onInsert }: VideoEmbedModalProps) {
               Video URL
             </label>
             <p className="text-xs text-muted-foreground">
-              Supports YouTube links such as https://youtube.com/watch?v=...
+              Supports YouTube, Discord, and direct .mp4/.webm links
             </p>
             <Input
               autoFocus
               id="video-url"
               onChange={(event) => setUrl(event.target.value)}
-              placeholder="https://youtube.com/watch?v=..."
+              placeholder="https://..."
               required
               type="url"
               value={url}
