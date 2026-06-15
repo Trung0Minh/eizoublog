@@ -1,6 +1,7 @@
 import Link from "next/link"
 
 import { formatDate } from "@/lib/utils"
+import { getCoverStyle } from "@/lib/cover-style"
 
 export interface PostCardPost {
   _count: { comments: number }
@@ -70,13 +71,11 @@ export function PostCard({ post }: PostCardProps) {
       {post.coverUrl && (
         <Link className="mb-4 block overflow-hidden rounded-[6px] border border-border-default/40" href={`/${post.slug}`}>
           <div className="relative aspect-video w-full overflow-hidden bg-subtle-bg dark:brightness-[0.9]">
-            <div className="h-full w-full transition-transform duration-500 ease-out group-hover:scale-[1.02]">
+            <div className="relative h-full w-full overflow-hidden transition-transform duration-500 ease-out group-hover:scale-[1.02]">
               <img
                 alt={post.coverAlt ?? post.title}
-                className="h-full w-full object-cover"
-                style={{
-                  transform: `scale(${new URLSearchParams((post.coverUrl || "").split("?")[1] || "").get("zoom") || "1"}) translate(${new URLSearchParams((post.coverUrl || "").split("?")[1] || "").get("tx") || "0"}%, ${new URLSearchParams((post.coverUrl || "").split("?")[1] || "").get("ty") || "0"}%)`,
-                }}
+                className="h-full w-full"
+                style={getCoverStyle(post.coverUrl)}
                 decoding="async"
                 loading="lazy"
                 src={(post.coverUrl || "").split("?")[0]}

@@ -1,6 +1,7 @@
 import Link from "next/link"
 
 import { formatDate } from "@/lib/utils"
+import { getCoverStyle } from "@/lib/cover-style"
 
 interface HeaderAuthor {
   avatarUrl: string | null
@@ -122,17 +123,17 @@ export function PostHeader({ post }: PostHeaderProps) {
         <div className="mt-7">
           <div className="relative -ml-4 w-screen overflow-hidden md:ml-0 md:w-full md:rounded-[8px]">
             <div className="aspect-video w-full bg-subtle-bg">
+            <div className="relative h-full w-full overflow-hidden">
               <img
                 alt={post.coverAlt ?? post.title}
-                className="h-full w-full object-cover"
-                style={{
-                  transform: `scale(${new URLSearchParams((post.coverUrl || "").split("?")[1] || "").get("zoom") || "1"}) translate(${new URLSearchParams((post.coverUrl || "").split("?")[1] || "").get("tx") || "0"}%, ${new URLSearchParams((post.coverUrl || "").split("?")[1] || "").get("ty") || "0"}%)`,
-                }}
+                className="h-full w-full"
+                style={getCoverStyle(post.coverUrl)}
                 decoding="async"
                 fetchPriority="high"
                 loading="eager"
                 src={(post.coverUrl || "").split("?")[0]}
               />
+            </div>
             </div>
           </div>
           <div className="px-4 md:px-0">

@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useRef, useState, useEffect } from "react"
 import { Camera, Crop, ImagePlus, Loader2, X } from "lucide-react"
 
 interface CoverImageUploadProps {
@@ -92,14 +92,14 @@ export function CoverImageUpload({ onChange, value }: CoverImageUploadProps) {
       {value ? (
         <div className="space-y-3">
           <div className="group relative aspect-video w-full overflow-hidden rounded-[8px] border border-border-default bg-subtle-bg">
-            <img
-              alt="Ảnh bìa đã chọn"
-              className="h-full w-full object-cover"
-              style={{
-                transform: `scale(${new URLSearchParams((value || "").split("?")[1] || "").get("zoom") || "1"}) translate(${new URLSearchParams((value || "").split("?")[1] || "").get("tx") || "0"}%, ${new URLSearchParams((value || "").split("?")[1] || "").get("ty") || "0"}%)`,
-              }}
-              src={value.split("?")[0]}
-            />
+            <div className="relative overflow-hidden w-full h-full">
+              <img
+                alt="Ảnh bìa đã chọn"
+                className="h-full w-full"
+                style={getCoverStyle(value)}
+                src={value.split("?")[0]}
+              />
+            </div>
             <div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/10 pointer-events-none" />
             
             <div className="absolute right-2 top-2 z-10 flex gap-2 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
@@ -199,6 +199,10 @@ export function CoverImageUpload({ onChange, value }: CoverImageUploadProps) {
   )
 }
 
+import { createPortal } from "react-dom"
+import Cropper from "react-easy-crop"
+import { getCoverStyle } from "@/lib/cover-style"
+
 function CoverCropperModal({
   value,
   onClose,
@@ -208,18 +212,36 @@ function CoverCropperModal({
   onClose: () => void
   onConfirm: (url: string) => void
 }) {
-  const [zoom, setZoom] = useState(parseFloat(new URLSearchParams((value || "").split("?")[1] || "").get("zoom") || "1"));
-  
-  // Legacy fallback
-  const legacyPosX = parseFloat(new URLSearchParams((value || "").split("?")[1] || "").get("posX") || "50");
-  const legacyPosY = parseFloat(new URLSearchParams((value || "").split("?")[1] || "").get("posY") || "50");
-  
-  // New translate coordinates
-  const initialTx = parseFloat(new URLSearchParams((value || "").split("?")[1] || "").get("tx") || ((legacyPosX - 50) * -1).toString());
-  const initialTy = parseFloat(new URLSearchParams((value || "").split("?")[1] || "").get("ty") || ((legacyPosY - 50) * -1).toString());
+  const [crop, setCrop] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(parseFloat(new URLSearchParams((value || "").split("?")[1] || "").get("zoom") || "1"))
+  const [croppedAreaPercentages, setCroppedAreaPercentages] = useState<{ x: number, y: number, width: number, height: number } | null>(null)
+  const [mounted, setMounted] = useState(false)
 
-  return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/90 p-4">
+  useEffect(() => {
+    setMounted(true)
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = ""
+    }
+  }, [])
+
+  const [initialCroppedAreaPercentages] = useState(() => {
+    const params = new URLSearchParams((value || "").split("?")[1] || "");
+    if (params.has("cw")) {
+      return {
+        x: parseFloat(params.get("cx") || "0"),
+        y: parseFloat(params.get("cy") || "0"),
+        width: parseFloat(params.get("cw") || "100"),
+        height: parseFloat(params.get("ch") || "100"),
+      };
+    }
+    return undefined;
+  });
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-black/90 p-4">
       <button
         aria-label="Đóng"
         className="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
@@ -234,72 +256,22 @@ function CoverCropperModal({
         <p className="text-sm">Kéo để di chuyển, cuộn chuột để thu phóng</p>
       </div>
 
-      <div 
-        className="relative w-full max-w-3xl aspect-video overflow-hidden rounded-lg bg-black/50 cursor-move touch-none shadow-2xl ring-1 ring-white/20"
-        onWheel={(e) => {
-          e.stopPropagation()
-          if (e.deltaY < 0) {
-            setZoom((s) => Math.min(s + 0.1, 3))
-          } else {
-            setZoom((s) => Math.max(s - 0.1, 1))
-          }
-        }}
-        onPointerDown={(e) => {
-          if ((e.target as HTMLElement).closest('button')) return;
-          e.currentTarget.setPointerCapture(e.pointerId);
-          e.currentTarget.dataset.isDragging = "true";
-          e.currentTarget.dataset.startX = e.clientX.toString();
-          e.currentTarget.dataset.startY = e.clientY.toString();
-          if (!e.currentTarget.dataset.tx) e.currentTarget.dataset.tx = initialTx.toString();
-          if (!e.currentTarget.dataset.ty) e.currentTarget.dataset.ty = initialTy.toString();
-          e.currentTarget.dataset.startTx = e.currentTarget.dataset.tx;
-          e.currentTarget.dataset.startTy = e.currentTarget.dataset.ty;
-        }}
-        onPointerMove={(e) => {
-          if (e.currentTarget.dataset.isDragging !== "true") return;
-          const startX = parseFloat(e.currentTarget.dataset.startX || "0");
-          const startY = parseFloat(e.currentTarget.dataset.startY || "0");
-          const startTx = parseFloat(e.currentTarget.dataset.startTx || "0");
-          const startTy = parseFloat(e.currentTarget.dataset.startTy || "0");
-          
-          const dx = e.clientX - startX;
-          const dy = e.clientY - startY;
-          
-          const rect = e.currentTarget.getBoundingClientRect();
-          
-          // dx is in screen pixels. Translate % is based on unscaled element size (rect.width).
-          // And we want to move it IN THE SAME DIRECTION as the mouse.
-          let newTx = startTx + (dx / (rect.width * zoom)) * 100;
-          let newTy = startTy + (dy / (rect.height * zoom)) * 100;
-          
-          // Loose clamp to prevent dragging image completely off screen
-          newTx = Math.max(-50, Math.min(50, newTx));
-          newTy = Math.max(-50, Math.min(50, newTy));
-          
-          e.currentTarget.dataset.tx = newTx.toString();
-          e.currentTarget.dataset.ty = newTy.toString();
-          
-          const img = e.currentTarget.querySelector('img');
-          if (img) {
-            img.style.transform = `scale(${zoom}) translate(${newTx}%, ${newTy}%)`;
-          }
-        }}
-        onPointerUp={(e) => {
-          e.currentTarget.dataset.isDragging = "false";
-          e.currentTarget.releasePointerCapture(e.pointerId);
-        }}
-        onPointerCancel={(e) => {
-          e.currentTarget.dataset.isDragging = "false";
-          e.currentTarget.releasePointerCapture(e.pointerId);
-        }}
-      >
-        <img
-          alt="Ảnh bìa"
-          className="h-full w-full object-cover pointer-events-none"
-          style={{
-            transform: `scale(${zoom}) translate(${initialTx}%, ${initialTy}%)`,
+      <div className="relative w-full max-w-3xl aspect-video overflow-hidden rounded-lg bg-black/50 shadow-2xl ring-1 ring-white/20">
+        <Cropper
+          image={value.split("?")[0]}
+          crop={crop}
+          zoom={zoom}
+          aspect={16 / 9}
+          initialCroppedAreaPercentages={initialCroppedAreaPercentages}
+          onCropChange={setCrop}
+          onCropComplete={(_, croppedAreaPercentages) => {
+            setCroppedAreaPercentages(croppedAreaPercentages)
           }}
-          src={value.split("?")[0]}
+          onZoomChange={setZoom}
+          showGrid={false}
+          style={{
+            containerStyle: { background: "transparent" },
+          }}
         />
         
         <div className="absolute inset-0 pointer-events-none border border-white/20" />
@@ -314,25 +286,34 @@ function CoverCropperModal({
         </button>
         <button
           className="rounded-md bg-accent px-6 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-accent/90"
-          onClick={(e) => {
-            const container = e.currentTarget.parentElement?.previousElementSibling as HTMLElement;
-            const finalTx = parseFloat(container?.dataset.tx || initialTx.toString()).toFixed(1);
-            const finalTy = parseFloat(container?.dataset.ty || initialTy.toString()).toFixed(1);
+          onClick={() => {
+            if (!croppedAreaPercentages) {
+              onClose();
+              return;
+            }
             
             const [base, query] = (value || "").split("?");
             const params = new URLSearchParams(query || "");
-            params.set("tx", finalTx);
-            params.set("ty", finalTy);
+            
+            params.set("cx", croppedAreaPercentages.x.toFixed(2));
+            params.set("cy", croppedAreaPercentages.y.toFixed(2));
+            params.set("cw", croppedAreaPercentages.width.toFixed(2));
+            params.set("ch", croppedAreaPercentages.height.toFixed(2));
             params.set("zoom", zoom.toFixed(2));
+            
             // Remove legacy params
+            params.delete("tx");
+            params.delete("ty");
             params.delete("posX");
             params.delete("posY");
+            
             onConfirm(`${base}?${params.toString()}`);
           }}
         >
           Xác nhận
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
