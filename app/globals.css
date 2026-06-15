@@ -212,9 +212,7 @@
   }
 
   .post-content .ProseMirror > :where(p, ul, ol, h2, h3, blockquote, hr) {
-    margin-left: auto;
-    margin-right: auto;
-    max-width: min(68ch, 100%);
+    /* Text flows to the full width of the container to align with full-width or floated images */
   }
 
   .post-content .ProseMirror::after {
