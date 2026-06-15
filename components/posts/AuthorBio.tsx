@@ -18,7 +18,7 @@ function fallbackBio(authorName: string) {
 
 export function AuthorBio({ author }: AuthorBioProps) {
   return (
-    <section className="mt-12 flex flex-col items-center gap-5 rounded-[8px] border border-border-default bg-subtle-bg p-5 text-center md:mt-16 md:flex-row md:items-start md:p-6 md:text-left">
+    <section className="flex flex-col items-center gap-5 rounded-[8px] border border-border-default bg-subtle-bg p-5 text-center md:flex-row md:items-start md:p-6 md:text-left">
       {author.avatarUrl ? (
         <img
           alt={author.name}

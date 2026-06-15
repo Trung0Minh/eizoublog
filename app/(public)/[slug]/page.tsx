@@ -105,9 +105,11 @@ export default async function PostPage({ params }: PostPageProps) {
           <article className="min-w-0 flex-1 max-w-[720px]">
             <PostHeader post={post} />
             <PostBody content={content} />
-            {[post.author, ...post.coAuthors.map(c => c.user)].map(author => (
-              <AuthorBio key={author.username} author={author} />
-            ))}
+            <div className="mt-12 md:mt-16 flex flex-col gap-4">
+              {[post.author, ...post.coAuthors.map(c => c.user)].map(author => (
+                <AuthorBio key={author.username} author={author} />
+              ))}
+            </div>
             <CommentSection
               initialComments={post.comments}
               postId={post.id}
