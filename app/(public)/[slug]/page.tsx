@@ -105,7 +105,9 @@ export default async function PostPage({ params }: PostPageProps) {
           <article className="min-w-0 flex-1 max-w-[720px]">
             <PostHeader post={post} />
             <PostBody content={content} />
-            <AuthorBio author={post.author} />
+            {[post.author, ...post.coAuthors.map(c => c.user)].map(author => (
+              <AuthorBio key={author.username} author={author} />
+            ))}
             <CommentSection
               initialComments={post.comments}
               postId={post.id}
