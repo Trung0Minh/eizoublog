@@ -1,6 +1,7 @@
 import { Extension } from "@tiptap/core"
 import { Plugin, PluginKey } from "@tiptap/pm/state"
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function nodeEqualsType({ types, node }: { types: any, node: any }) {
   return (
     (Array.isArray(types) && types.includes(node.type)) ||

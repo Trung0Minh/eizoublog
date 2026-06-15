@@ -24,7 +24,7 @@ interface ResourcesData {
 }
 
 interface ResourcesClientProps {
-  initialPage: { content: any } | null
+  initialPage: { content: unknown } | null
   isAdmin: boolean
   appName: string
 }
@@ -182,7 +182,7 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-text-secondary mb-1">Đường dẫn Logo (hoặc chữ "X")</label>
+                        <label className="block text-xs font-medium text-text-secondary mb-1">Đường dẫn Logo (hoặc chữ &quot;X&quot;)</label>
                         <Input 
                           value={resource.logo}
                           onChange={(e) => {

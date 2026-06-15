@@ -10,7 +10,7 @@ export async function getAboutPage() {
   return page
 }
 
-export async function updateAboutPage(content: any, contentText: string) {
+export async function updateAboutPage(content: unknown, contentText: string) {
   const session = await auth()
   if (session?.user?.role !== "ADMIN") {
     throw new Error("Unauthorized")

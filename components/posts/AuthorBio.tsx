@@ -48,10 +48,13 @@ export function AuthorBio({ author }: AuthorBioProps) {
               return <p>{fallbackBio(author.name)}</p>
             }
             if (author.bio.startsWith("{")) {
+              let json: unknown = null
               try {
-                const json = JSON.parse(author.bio)
-                return <StaticPostContent content={json} />
+                json = JSON.parse(author.bio)
               } catch {}
+              if (json) {
+                return <StaticPostContent content={json} />
+              }
             }
             return <p>{author.bio}</p>
           })()}

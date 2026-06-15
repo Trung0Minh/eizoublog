@@ -113,7 +113,7 @@ function uploadFiles(
 
       // 2. Upload files tracking overall progress
       const totalSize = files.reduce((acc, f) => acc + f.size, 0)
-      let uploadedSizes = new Array(files.length).fill(0)
+      const uploadedSizes = new Array(files.length).fill(0)
       
       const uploadPromises = files.map((file, i) => {
         return new Promise<string>((resolveUpload, rejectUpload) => {

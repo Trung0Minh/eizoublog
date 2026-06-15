@@ -229,6 +229,7 @@ function CoverCropperModal({
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true)
     document.body.style.overflow = "hidden"
     return () => {
