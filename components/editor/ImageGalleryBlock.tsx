@@ -1,7 +1,7 @@
 "use client"
 
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react"
-import { ArrowLeft, ArrowRight, Trash2, Type } from "lucide-react"
+import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Trash2, Type } from "lucide-react"
 
 import {
   getGalleryImageAlt,
@@ -30,7 +30,7 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
     }
   }
 
-  function moveImage(index: number, direction: -1 | 1) {
+  function moveImage(index: number, direction: number) {
     if (index + direction < 0 || index + direction >= images.length) return
     const newImages = [...images]
     const temp = newImages[index]
@@ -74,16 +74,34 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
                       className="rounded p-1.5 text-sm text-text-secondary hover:bg-subtle-bg disabled:opacity-30 disabled:cursor-not-allowed"
                       disabled={index === 0}
                       onClick={() => moveImage(index, -1)}
-                      title="Move Left/Up"
+                      title="Move Left"
                       type="button"
                     >
                       <ArrowLeft className="h-4 w-4" />
                     </button>
                     <button
                       className="rounded p-1.5 text-sm text-text-secondary hover:bg-subtle-bg disabled:opacity-30 disabled:cursor-not-allowed"
+                      disabled={index - columns < 0}
+                      onClick={() => moveImage(index, -columns)}
+                      title="Move Up"
+                      type="button"
+                    >
+                      <ArrowUp className="h-4 w-4" />
+                    </button>
+                    <button
+                      className="rounded p-1.5 text-sm text-text-secondary hover:bg-subtle-bg disabled:opacity-30 disabled:cursor-not-allowed"
+                      disabled={index + columns >= images.length}
+                      onClick={() => moveImage(index, columns)}
+                      title="Move Down"
+                      type="button"
+                    >
+                      <ArrowDown className="h-4 w-4" />
+                    </button>
+                    <button
+                      className="rounded p-1.5 text-sm text-text-secondary hover:bg-subtle-bg disabled:opacity-30 disabled:cursor-not-allowed"
                       disabled={index === images.length - 1}
                       onClick={() => moveImage(index, 1)}
-                      title="Move Right/Down"
+                      title="Move Right"
                       type="button"
                     >
                       <ArrowRight className="h-4 w-4" />
