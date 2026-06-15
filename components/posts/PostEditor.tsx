@@ -37,8 +37,8 @@ interface InitialPostData {
   contentText: string | null
   coverAlt: string | null
   coverUrl: string | null
-  draftVisibility: "PRIVATE" | "CO_AUTHORS"
   excerpt: string | null
+  authorId?: string
   id: string
   status: "DRAFT" | "PUBLISHED"
   tags: TagOption[]
@@ -113,9 +113,6 @@ export function PostEditor({
   const [contentText, setContentText] = useState(initialData?.contentText ?? "")
   const [coverAlt, setCoverAlt] = useState(initialData?.coverAlt ?? "")
   const [coverUrl, setCoverUrl] = useState(initialData?.coverUrl ?? "")
-  const [draftVisibility, setDraftVisibility] = useState<
-    "PRIVATE" | "CO_AUTHORS"
-  >(initialData?.draftVisibility ?? "PRIVATE")
   const [error, setError] = useState("")
   const [excerpt, setExcerpt] = useState(initialData?.excerpt ?? "")
   const [isDirty, setIsDirty] = useState(false)
@@ -125,8 +122,6 @@ export function PostEditor({
     initialData?.tags ?? initialTags,
   )
   const [title, setTitle] = useState(initialData?.title ?? "")
-  const hasCoAuthors = coAuthorIds.length > 0
-  const effectiveDraftVisibility = hasCoAuthors ? draftVisibility : "PRIVATE"
 
   const autosaveDraftRef = useRef({
     categoryId,
@@ -135,7 +130,6 @@ export function PostEditor({
     contentText,
     coverAlt,
     coverUrl,
-    draftVisibility: effectiveDraftVisibility,
     excerpt,
     tagIds: selectedTags.map((tag) => tag.id),
     title,
@@ -154,12 +148,11 @@ export function PostEditor({
       contentText,
       coverAlt,
       coverUrl,
-      draftVisibility: effectiveDraftVisibility,
       excerpt,
       tagIds: selectedTags.map((tag) => tag.id),
       title,
     }
-  }, [categoryId, coAuthorIds, content, contentText, coverAlt, coverUrl, effectiveDraftVisibility, excerpt, selectedTags, title])
+  }, [categoryId, coAuthorIds, content, contentText, coverAlt, coverUrl, excerpt, selectedTags, title])
 
   const performAutosave = useCallback(async () => {
     if (!postId) return
@@ -173,7 +166,6 @@ export function PostEditor({
         contentText: draft.contentText,
         coverAlt: draft.coverAlt || undefined,
         coverUrl: draft.coverUrl || undefined,
-        draftVisibility: draft.draftVisibility,
         excerpt: draft.excerpt,
         tagIds: draft.tagIds,
         title: draft.title,
@@ -219,7 +211,6 @@ export function PostEditor({
       contentText,
       coverAlt: coverAlt || undefined,
       coverUrl: coverUrl || undefined,
-      draftVisibility: effectiveDraftVisibility,
       excerpt,
       status,
       tagIds: selectedTags.map((tag) => tag.id),
@@ -274,10 +265,6 @@ export function PostEditor({
       const nextIds = currentIds.includes(writerId)
         ? currentIds.filter((id) => id !== writerId)
         : [...currentIds, writerId]
-
-      if (nextIds.length === 0) {
-        setDraftVisibility("PRIVATE")
-      }
 
       return nextIds
     })
@@ -450,7 +437,7 @@ export function PostEditor({
                     >
                       <option value="">Thêm đồng tác giả...</option>
                       {availableWriters
-                        .filter((writer) => !coAuthorIds.includes(writer.id))
+                        .filter((writer) => !coAuthorIds.includes(writer.id) && writer.id !== (initialData?.authorId ?? currentUserId))
                         .map((writer) => (
                           <option key={writer.id} value={writer.id}>
                             {writer.name}
@@ -460,14 +447,6 @@ export function PostEditor({
                   </div>
                 )}
 
-                <DraftVisibilityToggle
-                  hasCoAuthors={hasCoAuthors}
-                  onChange={(value) => {
-                    setDraftVisibility(value)
-                    markDirtyAndAutosave()
-                  }}
-                  value={draftVisibility}
-                />
           </div>
         </aside>
 

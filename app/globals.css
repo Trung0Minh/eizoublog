@@ -293,8 +293,12 @@
 
   .image-gallery {
     font-family: var(--font-inter), system-ui, sans-serif;
-    margin: 2rem auto;
+    margin: 1.5rem auto;
     width: 100%;
+  }
+
+  .image-gallery + .image-gallery {
+    margin-top: 0.5rem;
   }
 
   .image-gallery__grid {

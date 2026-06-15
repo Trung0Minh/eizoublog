@@ -70,7 +70,6 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
         contentText: post.contentText,
         coverAlt: post.coverAlt,
         coverUrl: post.coverUrl,
-        draftVisibility: post.draftVisibility,
         excerpt: post.excerpt,
         id: post.id,
         status: post.status,

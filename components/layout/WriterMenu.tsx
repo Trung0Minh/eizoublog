@@ -98,6 +98,7 @@ function WriterAvatar({
 
 export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
   const [loadedUser, setLoadedUser] = useState<WriterMenuUser | null>(null)
+  const [pendingInvites, setPendingInvites] = useState(0)
 
   useEffect(() => {
     if (user !== undefined) return
@@ -106,12 +107,23 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
 
     async function loadSession() {
       try {
-        const response = await fetch("/api/auth/session")
-        if (!response.ok) return
+        const [sessionRes, invitesRes] = await Promise.all([
+          fetch("/api/auth/session"),
+          fetch("/api/user/pending-invites-count")
+        ])
+        
+        if (sessionRes.ok) {
+          const result: unknown = await sessionRes.json()
+          if (isMounted) {
+            setLoadedUser(getSessionUser(result))
+          }
+        }
 
-        const result: unknown = await response.json()
-        if (isMounted) {
-          setLoadedUser(getSessionUser(result))
+        if (invitesRes.ok) {
+          const result = await invitesRes.json()
+          if (isMounted && typeof result.count === "number") {
+            setPendingInvites(result.count)
+          }
         }
       } catch {
         if (isMounted) {
@@ -135,9 +147,13 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label="Mở menu tác giả"
-        className="inline-flex h-8 items-center gap-1.5 rounded-full px-1.5 text-sm font-medium text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="relative inline-flex h-8 items-center gap-1.5 rounded-full px-1.5 text-sm font-medium text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <WriterAvatar className="h-6 w-6" user={menuUser} />
+        {pendingInvites > 0 && (
+          <span className="absolute right-4 top-0.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white outline outline-2 outline-background ring-2 ring-background">
+          </span>
+        )}
         <ChevronDown aria-hidden="true" className="h-3.5 w-3.5" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
@@ -152,9 +168,16 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/dashboard" prefetch={false}>
-            <FileText aria-hidden="true" />
-            Bài viết của tôi
+          <Link href="/dashboard" prefetch={false} className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileText aria-hidden="true" />
+              Bài viết của tôi
+            </div>
+            {pendingInvites > 0 && (
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white">
+                {pendingInvites}
+              </span>
+            )}
           </Link>
         </DropdownMenuItem>
         {menuUser.role === "ADMIN" && (

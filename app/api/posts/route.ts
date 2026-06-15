@@ -89,7 +89,6 @@ function getVisibilityWhere(
           { authorId: session.user.id, status: "DRAFT" },
           {
             coAuthors: { some: { userId: session.user.id, status: "ACCEPTED" } },
-            draftVisibility: "CO_AUTHORS",
             status: "DRAFT",
           },
         ],
@@ -106,7 +105,6 @@ function getVisibilityWhere(
         { authorId: session.user.id, status: "DRAFT" },
         {
           coAuthors: { some: { userId: session.user.id, status: "ACCEPTED" } },
-          draftVisibility: "CO_AUTHORS",
           status: "DRAFT",
         },
       ],

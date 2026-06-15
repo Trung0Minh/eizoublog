@@ -18,12 +18,8 @@ export function canViewPost(
   if (!userId) return false
   if (post.authorId === userId) return true
 
-  if (post.draftVisibility === "CO_AUTHORS") {
-    return post.coAuthors.some((coAuthor) => {
-      const id = coAuthor.userId || coAuthor.user?.id
-      return id === userId && coAuthor.status === "ACCEPTED"
-    })
-  }
-
-  return false
+  return post.coAuthors.some((coAuthor) => {
+    const id = coAuthor.userId || coAuthor.user?.id
+    return id === userId && coAuthor.status === "ACCEPTED"
+  })
 }
