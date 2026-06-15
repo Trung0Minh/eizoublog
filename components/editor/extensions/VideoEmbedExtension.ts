@@ -1,7 +1,9 @@
 import { mergeAttributes, Node } from "@tiptap/core"
+import { ReactNodeViewRenderer } from "@tiptap/react"
 import type { DOMOutputSpec } from "@tiptap/pm/model"
 
 import { isNativeVideo, toVideoEmbedUrl } from "@/components/editor/video"
+import { VideoNodeView } from "./VideoNodeView"
 
 export { isNativeVideo, toVideoEmbedUrl } from "@/components/editor/video"
 
@@ -88,5 +90,9 @@ export const VideoEmbedExtension = Node.create({
       }),
       ...children,
     ]
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(VideoNodeView)
   },
 })

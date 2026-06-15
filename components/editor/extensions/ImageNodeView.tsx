@@ -1,5 +1,5 @@
 import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/react"
-import { AlignCenter, AlignLeft, AlignRight, Maximize, Type } from "lucide-react"
+import { AlignCenter, AlignLeft, AlignRight, Maximize, Trash2, Type } from "lucide-react"
 
 export function ImageNodeView(props: NodeViewProps) {
   const { node, updateAttributes, selected } = props
@@ -70,6 +70,15 @@ export function ImageNodeView(props: NodeViewProps) {
             type="button"
           >
             <Type className="h-4 w-4" />
+          </button>
+          <div className="mx-1 h-4 w-px bg-border-default" />
+          <button
+            className="rounded p-1.5 text-sm text-red-500 hover:bg-red-500/10"
+            onClick={() => props.deleteNode()}
+            title="Delete Image"
+            type="button"
+          >
+            <Trash2 className="h-4 w-4" />
           </button>
         </div>
       )}

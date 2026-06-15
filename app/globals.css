@@ -439,3 +439,32 @@
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Tiptap Global Drag Handle */
+.drag-handle {
+  align-items: center;
+  border-radius: 4px;
+  color: var(--text-tertiary);
+  cursor: grab;
+  display: flex;
+  height: 24px;
+  justify-content: center;
+  position: absolute;
+  transition: background-color 150ms ease;
+  width: 24px;
+  z-index: 50;
+}
+
+.drag-handle:hover {
+  background-color: var(--subtle-bg);
+}
+
+.drag-handle::after {
+  content: "⋮⋮";
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -1.5px;
+  line-height: 1;
+  margin-top: -2px;
+}

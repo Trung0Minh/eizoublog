@@ -13,7 +13,6 @@ import { common, createLowlight } from "lowlight"
 
 import { BubbleMenuComponent } from "@/components/editor/BubbleMenu"
 import { EditorToolbar } from "@/components/editor/EditorToolbar"
-import { FloatingMenuComponent } from "@/components/editor/FloatingMenu"
 import {
   CustomImageExtension,
   GalleryExtension,
@@ -105,7 +104,6 @@ export function TiptapEditor({
         <>
           <EditorToolbar editor={editor} />
           <BubbleMenuComponent editor={editor} />
-          <FloatingMenuComponent editor={editor} />
         </>
       )}
 
