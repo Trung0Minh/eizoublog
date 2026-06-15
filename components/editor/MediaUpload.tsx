@@ -79,25 +79,80 @@ function getUploadUrls(value: unknown) {
   return []
 }
 
-async function uploadFiles(files: readonly File[]) {
-  const form = new FormData()
-  files.forEach((file) => form.append("file", file))
-  form.append("folder", "content-images")
+function uploadFiles(
+  files: readonly File[],
+  onProgress: (percent: number) => void,
+): Promise<string[]> {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // 1. Get presigned URLs
+      const metadata = files.map((f) => ({ name: f.name, size: f.size, type: f.type }))
+      const res = await fetch("/api/upload/presigned", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ folder: "content-images", files: metadata })
+      })
+      const presignResult: unknown = await res.json()
+      
+      if (!res.ok) {
+        throw new Error(getUploadError(presignResult))
+      }
 
-  const response = await fetch("/api/upload", { body: form, method: "POST" })
-  const result: unknown = await response.json()
+      let presignedData: Array<{ uploadUrl: string, publicUrl: string }> = []
+      if (
+        typeof presignResult === "object" &&
+        presignResult !== null &&
+        "data" in presignResult &&
+        typeof presignResult.data === "object" &&
+        presignResult.data !== null &&
+        "files" in presignResult.data &&
+        Array.isArray(presignResult.data.files)
+      ) {
+        presignedData = presignResult.data.files
+      }
 
-  if (!response.ok) {
-    throw new Error(getUploadError(result))
-  }
+      if (presignedData.length !== files.length) {
+        throw new Error("Failed to get presigned URLs")
+      }
 
-  const urls = getUploadUrls(result)
+      // 2. Upload files tracking overall progress
+      const totalSize = files.reduce((acc, f) => acc + f.size, 0)
+      let uploadedSizes = new Array(files.length).fill(0)
+      
+      const uploadPromises = files.map((file, i) => {
+        return new Promise<string>((resolveUpload, rejectUpload) => {
+          const xhr = new XMLHttpRequest()
+          xhr.open("PUT", presignedData[i].uploadUrl)
+          xhr.setRequestHeader("Content-Type", file.type)
 
-  if (urls.length !== files.length) {
-    throw new Error("Upload failed")
-  }
+          xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+              uploadedSizes[i] = event.loaded
+              const currentTotal = uploadedSizes.reduce((a, b) => a + b, 0)
+              const percent = Math.round((currentTotal / totalSize) * 100)
+              onProgress(percent)
+            }
+          }
 
-  return urls
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolveUpload(presignedData[i].publicUrl)
+            } else {
+              rejectUpload(new Error("Failed to upload to storage"))
+            }
+          }
+
+          xhr.onerror = () => rejectUpload(new Error("Upload failed due to network error"))
+          xhr.send(file)
+        })
+      })
+
+      const finalUrls = await Promise.all(uploadPromises)
+      resolve(finalUrls)
+    } catch (err) {
+      reject(err instanceof Error ? err : new Error("Upload failed"))
+    }
+  })
 }
 
 export function MediaUpload({
@@ -107,7 +162,7 @@ export function MediaUpload({
 }: MediaUploadProps) {
   const [previews, setPreviews] = useState<UploadedImage[]>([])
   const [showPreview, setShowPreview] = useState(false)
-  const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   async function handleChange(event: ChangeEvent<HTMLInputElement>) {
@@ -116,10 +171,10 @@ export function MediaUpload({
       return
     }
 
-    setUploading(true)
+    setUploadProgress(0)
 
     try {
-      const urls = await uploadFiles(files)
+      const urls = await uploadFiles(files, (percent) => setUploadProgress(percent))
 
       if (files.length === 1) {
         if (files[0].type.startsWith("video/") && onInsertVideo) {
@@ -157,7 +212,7 @@ export function MediaUpload({
     } catch (error) {
       window.alert(error instanceof Error ? error.message : "Upload failed")
     } finally {
-      setUploading(false)
+      setUploadProgress(null)
       if (inputRef.current) {
         inputRef.current.value = ""
       }
@@ -188,8 +243,8 @@ export function MediaUpload({
   return (
     <>
       <button
-        className="flex h-[30px] w-[30px] items-center justify-center rounded-[5px] text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary disabled:opacity-40"
-        disabled={uploading}
+        className="relative flex h-[30px] w-[30px] overflow-hidden items-center justify-center rounded-[5px] text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary disabled:opacity-40"
+        disabled={uploadProgress !== null}
         onMouseDown={(event) => {
           event.preventDefault()
           inputRef.current?.click()
@@ -197,8 +252,14 @@ export function MediaUpload({
         title="Insert media"
         type="button"
       >
-        {uploading ? (
-          <Loader2 aria-hidden="true" className="h-[15px] w-[15px] animate-spin" />
+        {uploadProgress !== null ? (
+          <>
+            <div 
+              className="absolute bottom-0 left-0 bg-accent/20 transition-all duration-200" 
+              style={{ height: `${uploadProgress}%`, width: '100%' }}
+            />
+            <span className="relative z-10 text-[10px] font-bold text-accent">{uploadProgress}%</span>
+          </>
         ) : (
           <ImageIcon aria-hidden="true" className="h-[15px] w-[15px]" />
         )}

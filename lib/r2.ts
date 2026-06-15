@@ -1,4 +1,5 @@
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 
 interface UploadToR2Options {
   body: Buffer
@@ -59,4 +60,22 @@ export async function uploadToR2({
   )
 
   return `${config.publicUrl.replace(/\/$/, "")}/${key}`
+}
+
+export async function getPresignedUploadUrl({
+  contentType,
+  key,
+}: Omit<UploadToR2Options, "body">): Promise<{ uploadUrl: string; publicUrl: string }> {
+  const config = getR2Config()
+  const client = createR2Client(config)
+  const command = new PutObjectCommand({
+    Bucket: config.bucketName,
+    ContentType: contentType,
+    Key: key,
+  })
+
+  const uploadUrl = await getSignedUrl(client, command, { expiresIn: 3600 })
+  const publicUrl = `${config.publicUrl.replace(/\/$/, "")}/${key}`
+
+  return { uploadUrl, publicUrl }
 }

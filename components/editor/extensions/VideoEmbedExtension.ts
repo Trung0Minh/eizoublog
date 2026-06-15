@@ -68,7 +68,7 @@ export const VideoEmbedExtension = Node.create({
       [
         "div",
         { class: "relative w-full aspect-video" },
-        [mediaNode],
+        mediaNode,
       ],
     ]
 
