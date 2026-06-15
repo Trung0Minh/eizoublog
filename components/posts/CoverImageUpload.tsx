@@ -92,7 +92,7 @@ export function CoverImageUpload({ onChange, value }: CoverImageUploadProps) {
       {value ? (
         <div className="space-y-3">
           <div className="group relative aspect-video w-full overflow-hidden rounded-[8px] border border-border-default bg-subtle-bg">
-            <div className="relative overflow-hidden w-full h-full">
+            <div className="absolute inset-0 overflow-hidden">
               <img
                 alt="Ảnh bìa đã chọn"
                 className="h-full w-full"

@@ -71,7 +71,7 @@ export function PostCard({ post }: PostCardProps) {
       {post.coverUrl && (
         <Link className="mb-4 block overflow-hidden rounded-[6px] border border-border-default/40" href={`/${post.slug}`}>
           <div className="relative aspect-video w-full overflow-hidden bg-subtle-bg dark:brightness-[0.9]">
-            <div className="relative h-full w-full overflow-hidden transition-transform duration-500 ease-out group-hover:scale-[1.02]">
+            <div className="absolute inset-0 overflow-hidden transition-transform duration-500 ease-out group-hover:scale-[1.02]">
               <img
                 alt={post.coverAlt ?? post.title}
                 className="h-full w-full"

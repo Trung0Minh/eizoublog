@@ -123,7 +123,7 @@ export function PostHeader({ post }: PostHeaderProps) {
         <div className="mt-7">
           <div className="relative -ml-4 w-screen overflow-hidden md:ml-0 md:w-full md:rounded-[8px]">
             <div className="aspect-video w-full bg-subtle-bg">
-            <div className="relative h-full w-full overflow-hidden">
+            <div className="absolute inset-0 overflow-hidden">
               <img
                 alt={post.coverAlt ?? post.title}
                 className="h-full w-full"
