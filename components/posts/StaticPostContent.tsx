@@ -5,7 +5,7 @@ import {
   getGalleryImageAlt,
   parseGalleryImages,
 } from "@/components/editor/gallery"
-import { toVideoEmbedUrl } from "@/components/editor/video"
+import { isNativeVideo, toVideoEmbedUrl } from "@/components/editor/video"
 import { SpoilerBlock } from "@/components/posts/SpoilerBlock"
 import { generateSlug } from "@/lib/utils"
 
@@ -149,14 +149,24 @@ function renderVideoEmbed(node: JSONContent, key: string) {
   return (
     <figure className="my-6" data-type="video-embed" key={key}>
       <div className="relative aspect-video w-full">
-        <iframe
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          className="absolute inset-0 h-full w-full rounded-md"
-          loading="lazy"
-          src={toVideoEmbedUrl(rawUrl)}
-          title={caption || "Embedded video"}
-        />
+        {isNativeVideo(rawUrl) ? (
+          <video
+            className="absolute inset-0 h-full w-full rounded-md object-contain bg-black/5"
+            controls
+            preload="metadata"
+            src={rawUrl}
+            title={caption || "Embedded video"}
+          />
+        ) : (
+          <iframe
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="absolute inset-0 h-full w-full rounded-md"
+            loading="lazy"
+            src={toVideoEmbedUrl(rawUrl)}
+            title={caption || "Embedded video"}
+          />
+        )}
       </div>
       {caption ? <figcaption className="media-caption">{caption}</figcaption> : null}
     </figure>

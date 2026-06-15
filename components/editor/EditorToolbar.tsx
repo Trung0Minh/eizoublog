@@ -203,6 +203,16 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
           onInsertSingle={(url, alt) =>
             editor.chain().focus().setImage({ alt, src: url }).run()
           }
+          onInsertVideo={(url) =>
+            editor
+              .chain()
+              .focus()
+              .insertContent({
+                attrs: { caption: "", url },
+                type: "videoEmbed",
+              })
+              .run()
+          }
         />
         <ToolbarButton
           onClick={() => setShowVideoModal(true)}

@@ -8,6 +8,8 @@ const ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
   "image/png",
   "image/webp",
+  "video/mp4",
+  "video/webm",
 ])
 const MAX_BYTES_IMAGE = 5 * 1024 * 1024
 const MAX_BYTES_GIF = 10 * 1024 * 1024
@@ -16,7 +18,10 @@ const MIME_EXTENSION: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
+  "video/mp4": "mp4",
+  "video/webm": "webm",
 }
+const MAX_BYTES_VIDEO = 100 * 1024 * 1024
 
 function getFileExtension(file: File) {
   const parts = file.name.split(".")
@@ -42,15 +47,23 @@ function getFolder(value: FormDataEntryValue | null) {
 function validateFile(file: File) {
   if (!ALLOWED_MIME_TYPES.has(file.type)) {
     return Response.json(
-      { error: "Only JPEG, PNG, GIF, and WebP images are allowed" },
+      { error: "Only JPEG, PNG, GIF, WebP images and MP4, WebM videos are allowed" },
       { status: 400 },
     )
   }
 
-  const maxBytes = file.type === "image/gif" ? MAX_BYTES_GIF : MAX_BYTES_IMAGE
+  let maxBytes = MAX_BYTES_IMAGE
+  let limit = 5
+
+  if (file.type === "image/gif") {
+    maxBytes = MAX_BYTES_GIF
+    limit = 10
+  } else if (file.type.startsWith("video/")) {
+    maxBytes = MAX_BYTES_VIDEO
+    limit = 100
+  }
 
   if (file.size > maxBytes) {
-    const limit = file.type === "image/gif" ? 10 : 5
 
     return Response.json(
       { error: `File must be ${limit} MB or smaller` },

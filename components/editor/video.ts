@@ -9,3 +9,12 @@ export function toVideoEmbedUrl(raw: string): string {
 
   return raw
 }
+
+export function isNativeVideo(raw: string): boolean {
+  try {
+    const urlWithoutQuery = raw.split("?")[0]
+    return /\.(mp4|webm|ogg)$/i.test(urlWithoutQuery)
+  } catch {
+    return false
+  }
+}

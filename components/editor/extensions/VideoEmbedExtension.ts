@@ -1,9 +1,9 @@
 import { mergeAttributes, Node } from "@tiptap/core"
 import type { DOMOutputSpec } from "@tiptap/pm/model"
 
-import { toVideoEmbedUrl } from "@/components/editor/video"
+import { isNativeVideo, toVideoEmbedUrl } from "@/components/editor/video"
 
-export { toVideoEmbedUrl } from "@/components/editor/video"
+export { isNativeVideo, toVideoEmbedUrl } from "@/components/editor/video"
 
 export const VideoEmbedExtension = Node.create({
   addAttributes() {
@@ -39,11 +39,19 @@ export const VideoEmbedExtension = Node.create({
     const caption =
       typeof node.attrs.caption === "string" ? node.attrs.caption : ""
 
-    const children: DOMOutputSpec[] = [
-      [
-        "div",
-        { class: "relative w-full aspect-video" },
-        [
+    const isNative = isNativeVideo(rawUrl)
+    const mediaNode: DOMOutputSpec = isNative
+      ? [
+          "video",
+          {
+            class: "absolute inset-0 h-full w-full rounded-md object-contain bg-black/5",
+            controls: "true",
+            preload: "metadata",
+            src: rawUrl,
+            title: caption || "Embedded video",
+          },
+        ]
+      : [
           "iframe",
           {
             allow:
@@ -54,7 +62,13 @@ export const VideoEmbedExtension = Node.create({
             src: toVideoEmbedUrl(rawUrl),
             title: caption || "Embedded video",
           },
-        ],
+        ]
+
+    const children: DOMOutputSpec[] = [
+      [
+        "div",
+        { class: "relative w-full aspect-video" },
+        [mediaNode],
       ],
     ]
 

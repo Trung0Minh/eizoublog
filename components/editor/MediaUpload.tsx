@@ -9,11 +9,12 @@ import {
 } from "@/components/editor/ImagePreviewModal"
 import type { GalleryImage } from "@/components/editor/gallery"
 
-const ACCEPTED_TYPES = "image/jpeg,image/png,image/gif,image/webp"
+const ACCEPTED_TYPES = "image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm"
 
 interface MediaUploadProps {
   onInsertGallery: (images: GalleryImage[]) => void
   onInsertSingle: (url: string, alt: string) => void
+  onInsertVideo?: (url: string) => void
 }
 
 function getUploadError(value: unknown) {
@@ -102,6 +103,7 @@ async function uploadFiles(files: readonly File[]) {
 export function MediaUpload({
   onInsertGallery,
   onInsertSingle,
+  onInsertVideo,
 }: MediaUploadProps) {
   const [previews, setPreviews] = useState<UploadedImage[]>([])
   const [showPreview, setShowPreview] = useState(false)
@@ -120,19 +122,35 @@ export function MediaUpload({
       const urls = await uploadFiles(files)
 
       if (files.length === 1) {
+        if (files[0].type.startsWith("video/") && onInsertVideo) {
+          onInsertVideo(urls[0])
+          return
+        }
+
         const alt =
           window.prompt("Alt text for this image (leave blank to skip):") ?? ""
         onInsertSingle(urls[0], alt)
         return
       }
 
+      const imageFiles = files.filter(f => f.type.startsWith("image/"))
+      const videoFiles = files.filter(f => f.type.startsWith("video/"))
+
+      if (onInsertVideo) {
+        videoFiles.forEach((f, i) => onInsertVideo(urls[files.indexOf(f)]))
+      }
+
+      if (imageFiles.length === 0) {
+        return
+      }
+
       setPreviews(
-        files.map((file, index) => ({
+        imageFiles.map((file, index) => ({
           alt: "",
           caption: "",
           file,
           id: `${file.name}-${file.lastModified}-${index}`,
-          url: urls[index],
+          url: urls[files.indexOf(file)],
         })),
       )
       setShowPreview(true)
@@ -176,7 +194,7 @@ export function MediaUpload({
           event.preventDefault()
           inputRef.current?.click()
         }}
-        title="Insert image(s) or GIF"
+        title="Insert media"
         type="button"
       >
         {uploading ? (
