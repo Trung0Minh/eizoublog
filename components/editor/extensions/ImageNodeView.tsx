@@ -1,5 +1,5 @@
 import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/react"
-import { AlignCenter, AlignLeft, AlignRight, Maximize, Trash2 } from "lucide-react"
+import { AlignCenter, AlignLeft, AlignRight, Maximize, Trash2, Type } from "lucide-react"
 
 export function ImageNodeView(props: NodeViewProps) {
   const { node, updateAttributes, selected } = props
@@ -59,6 +59,19 @@ export function ImageNodeView(props: NodeViewProps) {
             <Maximize className="h-4 w-4" />
           </button>
 
+          <div className="mx-1 h-4 w-px bg-border-default" />
+          <button
+            className={`rounded p-1.5 text-sm hover:bg-subtle-bg ${
+              node.attrs.showCaption ? "bg-subtle-bg text-text-primary" : "text-text-secondary"
+            }`}
+            onClick={() => updateAttributes({ showCaption: !node.attrs.showCaption })}
+            title="Toggle Caption"
+            type="button"
+          >
+            <Type className="h-4 w-4" />
+          </button>
+          <div className="mx-1 h-4 w-px bg-border-default" />
+
           <button
             className="rounded p-1.5 text-sm text-red-500 hover:bg-red-500/10"
             onClick={() => props.deleteNode()}
@@ -86,7 +99,7 @@ export function ImageNodeView(props: NodeViewProps) {
         <figcaption
           className={`mt-2 w-full text-center text-sm text-text-tertiary ${
             props.editor.isEditable ? "min-h-[1.5rem] outline-none" : ""
-          }`}
+          } ${!node.attrs.showCaption && node.content.size === 0 ? "hidden" : ""}`}
         >
           <NodeViewContent />
         </figcaption>

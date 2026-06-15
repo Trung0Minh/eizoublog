@@ -23,6 +23,7 @@ export const CustomImageExtension = Node.create({
       alt: { default: null },
       align: { default: "center" },
       width: { default: "100%" },
+      showCaption: { default: false },
     }
   },
 
