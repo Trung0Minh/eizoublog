@@ -275,7 +275,7 @@ function CoverCropperModal({
           aspect={16 / 9}
           initialCroppedAreaPercentages={initialCroppedAreaPercentages}
           onCropChange={setCrop}
-          onCropComplete={(_, croppedAreaPercentages) => {
+          onCropComplete={(croppedAreaPercentages) => {
             setCroppedAreaPercentages(croppedAreaPercentages)
           }}
           onZoomChange={setZoom}
