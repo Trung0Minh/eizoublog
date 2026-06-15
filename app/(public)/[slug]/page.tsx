@@ -101,8 +101,8 @@ export default async function PostPage({ params }: PostPageProps) {
         className="flex justify-center pb-20 pt-8 md:pt-12"
         size="wide"
       >
-        <div className="flex w-full max-w-[720px] flex-col gap-[48px] xl:max-w-[968px] xl:flex-row">
-          <article className="min-w-0 flex-1 max-w-[720px]">
+        <div className="flex w-full max-w-[800px] flex-col gap-[48px] xl:max-w-[1048px] xl:flex-row">
+          <article className="min-w-0 flex-1 max-w-[800px]">
             <PostHeader post={post} />
             <PostBody content={content} />
             <div className="mt-12 md:mt-16 flex flex-col gap-4">

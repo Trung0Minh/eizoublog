@@ -94,11 +94,28 @@ function renderImage(node: JSONContent, key: string) {
   }
 
   const caption = getNodeText(node)
+  const align = stringAttr(attrs, "align") || "center"
+  const width = stringAttr(attrs, "width") || "100%"
+
+  const alignClass = align === "left"
+    ? "float-left mr-6 mb-4 mt-2 clear-left"
+    : align === "right"
+    ? "float-right ml-6 mb-4 mt-2 clear-right"
+    : "justify-center my-6 clear-both"
 
   return (
-    <figure className="my-6" data-type="image" key={key}>
+    <figure 
+      className={`relative flex flex-col items-center ${alignClass}`} 
+      data-type="image" 
+      key={key}
+      style={{
+        width: align !== "center" ? width : "100%",
+        maxWidth: "100%",
+      }}
+    >
       <img
         alt={stringAttr(attrs, "alt") || caption || ""}
+        className="!m-0 h-auto w-full rounded-md object-contain"
         decoding="async"
         loading="lazy"
         src={src}
