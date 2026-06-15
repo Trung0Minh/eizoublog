@@ -8,10 +8,12 @@ import Placeholder from "@tiptap/extension-placeholder"
 import Typography from "@tiptap/extension-typography"
 import { EditorContent, useEditor, type JSONContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
+import GlobalDragHandle from "tiptap-extension-global-drag-handle"
 import { common, createLowlight } from "lowlight"
 
 import { BubbleMenuComponent } from "@/components/editor/BubbleMenu"
 import { EditorToolbar } from "@/components/editor/EditorToolbar"
+import { FloatingMenuComponent } from "@/components/editor/FloatingMenu"
 import {
   CustomImageExtension,
   GalleryExtension,
@@ -53,6 +55,10 @@ export function TiptapEditor({
         codeBlock: false,
         heading: false,
       }),
+      GlobalDragHandle.configure({
+        dragHandleWidth: 20,
+        scrollTreshold: 100,
+      }),
       HeadingWithIdExtension,
       CustomImageExtension,
       GalleryExtension,
@@ -90,12 +96,16 @@ export function TiptapEditor({
     return null
   }
 
+  const words = editor.storage.characterCount.words()
+  const readingTime = Math.max(1, Math.ceil(words / 200))
+
   return (
     <div className="relative w-full">
       {editable && (
         <>
           <EditorToolbar editor={editor} />
           <BubbleMenuComponent editor={editor} />
+          <FloatingMenuComponent editor={editor} />
         </>
       )}
 
@@ -104,10 +114,11 @@ export function TiptapEditor({
       <EditorContent editor={editor} />
 
       {editable && (
-        <p className="mt-2 text-right text-xs text-text-tertiary">
-          {editor.storage.characterCount.characters().toLocaleString()}{" "}
-          ký tự
-        </p>
+        <div className="mt-2 flex items-center justify-end gap-3 text-xs text-text-tertiary">
+          <span>{words.toLocaleString()} từ</span>
+          <span>{editor.storage.characterCount.characters().toLocaleString()} ký tự</span>
+          <span>~{readingTime} phút đọc</span>
+        </div>
       )}
     </div>
   )

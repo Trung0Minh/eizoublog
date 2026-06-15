@@ -46,12 +46,12 @@ export const CustomImageExtension = Node.create({
     return {
       setImage:
         (options: { src: string; alt?: string }) =>
-        ({ commands }: any) => {
+        ({ commands }) => {
           return commands.insertContent({
             type: this.name,
             attrs: options,
           })
         },
-    } as any
+    }
   },
 })

@@ -1,7 +1,7 @@
-import { NodeViewContent, NodeViewWrapper } from "@tiptap/react"
-import { AlignCenter, AlignLeft, AlignRight, Maximize } from "lucide-react"
+import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/react"
+import { AlignCenter, AlignLeft, AlignRight, Maximize, Type } from "lucide-react"
 
-export function ImageNodeView(props: any) {
+export function ImageNodeView(props: NodeViewProps) {
   const { node, updateAttributes, selected } = props
 
   return (
@@ -56,6 +56,20 @@ export function ImageNodeView(props: any) {
             type="button"
           >
             <Maximize className="h-4 w-4" />
+          </button>
+          <div className="mx-1 h-4 w-px bg-border-default" />
+          <button
+            className="rounded p-1.5 text-sm text-text-secondary hover:bg-subtle-bg"
+            onClick={() => {
+              const alt = window.prompt("Alt text for this image:", node.attrs.alt || "")
+              if (alt !== null) {
+                updateAttributes({ alt })
+              }
+            }}
+            title="Edit Alt Text"
+            type="button"
+          >
+            <Type className="h-4 w-4" />
           </button>
         </div>
       )}

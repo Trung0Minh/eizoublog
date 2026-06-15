@@ -3,16 +3,12 @@
 import { ImageIcon, Loader2 } from "lucide-react"
 import { ChangeEvent, useRef, useState } from "react"
 
-import {
-  ImagePreviewModal,
-  type UploadedImage,
-} from "@/components/editor/ImagePreviewModal"
 import type { GalleryImage } from "@/components/editor/gallery"
 
 const ACCEPTED_TYPES = "image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm"
 
 interface MediaUploadProps {
-  onInsertGallery: (images: GalleryImage[]) => void
+  onInsertGallery?: (images: GalleryImage[]) => void
   onInsertSingle: (url: string, alt: string) => void
   onInsertVideo?: (url: string) => void
 }
@@ -160,8 +156,6 @@ export function MediaUpload({
   onInsertSingle,
   onInsertVideo,
 }: MediaUploadProps) {
-  const [previews, setPreviews] = useState<UploadedImage[]>([])
-  const [showPreview, setShowPreview] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<number | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -176,39 +170,14 @@ export function MediaUpload({
     try {
       const urls = await uploadFiles(files, (percent) => setUploadProgress(percent))
 
-      if (files.length === 1) {
-        if (files[0].type.startsWith("video/") && onInsertVideo) {
-          onInsertVideo(urls[0])
-          return
-        }
-
-        const alt =
-          window.prompt("Alt text for this image (leave blank to skip):") ?? ""
-        onInsertSingle(urls[0], alt)
-        return
-      }
-
       const imageFiles = files.filter(f => f.type.startsWith("image/"))
       const videoFiles = files.filter(f => f.type.startsWith("video/"))
 
       if (onInsertVideo) {
-        videoFiles.forEach((f, i) => onInsertVideo(urls[files.indexOf(f)]))
+        videoFiles.forEach((f) => onInsertVideo(urls[files.indexOf(f)]))
       }
 
-      if (imageFiles.length === 0) {
-        return
-      }
-
-      setPreviews(
-        imageFiles.map((file, index) => ({
-          alt: "",
-          caption: "",
-          file,
-          id: `${file.name}-${file.lastModified}-${index}`,
-          url: urls[files.indexOf(file)],
-        })),
-      )
-      setShowPreview(true)
+      imageFiles.forEach((f) => onInsertSingle(urls[files.indexOf(f)], ""))
     } catch (error) {
       window.alert(error instanceof Error ? error.message : "Upload failed")
     } finally {
@@ -217,27 +186,6 @@ export function MediaUpload({
         inputRef.current.value = ""
       }
     }
-  }
-
-  function handleConfirm(
-    images: UploadedImage[],
-    mode: "individual" | "gallery",
-  ) {
-    setShowPreview(false)
-    setPreviews([])
-
-    if (mode === "individual") {
-      images.forEach((image) => onInsertSingle(image.url, image.alt))
-      return
-    }
-
-    onInsertGallery(
-      images.map((image) => ({
-        alt: image.alt,
-        caption: image.caption,
-        url: image.url,
-      })),
-    )
   }
 
   return (
@@ -272,16 +220,6 @@ export function MediaUpload({
         ref={inputRef}
         type="file"
       />
-      {showPreview ? (
-        <ImagePreviewModal
-          images={previews}
-          onClose={() => {
-            setShowPreview(false)
-            setPreviews([])
-          }}
-          onConfirm={handleConfirm}
-        />
-      ) : null}
     </>
   )
 }
