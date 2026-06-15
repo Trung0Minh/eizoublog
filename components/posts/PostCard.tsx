@@ -66,16 +66,17 @@ export function PostCard({ post }: PostCardProps) {
     post.tags.length > 0 ? post.tags.map(({ tag }) => tag) : fallbackTags
 
   return (
-    <article className="group flex flex-col">
+    <article className="group flex flex-col rounded-xl border border-border-default/60 bg-subtle-bg/20 p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all hover:border-border-default hover:bg-subtle-bg/40 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] sm:p-5">
       {post.coverUrl && (
-        <Link className="mb-4 block overflow-hidden rounded-[6px]" href={`/${post.slug}`}>
+        <Link className="mb-4 block overflow-hidden rounded-[6px] border border-border-default/40" href={`/${post.slug}`}>
           <div className="relative aspect-video w-full overflow-hidden bg-subtle-bg dark:brightness-[0.9]">
             <img
               alt={post.coverAlt ?? post.title}
               className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+              style={{ objectPosition: `50% ${new URLSearchParams((post.coverUrl || "").split("?")[1] || "").get("posY") || "50"}%` }}
               decoding="async"
               loading="lazy"
-              src={post.coverUrl}
+              src={(post.coverUrl || "").split("?")[0]}
             />
           </div>
         </Link>

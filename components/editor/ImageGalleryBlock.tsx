@@ -41,7 +41,7 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
 
   return (
     <NodeViewWrapper
-      className={`image-gallery group ${selected ? "ring-2 ring-accent rounded-md" : ""}`}
+      className={`image-gallery relative group ${selected ? "ring-2 ring-accent rounded-md" : ""}`}
       data-type="image-gallery"
     >
       {editor.isEditable && (

@@ -125,10 +125,11 @@ export function PostHeader({ post }: PostHeaderProps) {
               <img
                 alt={post.coverAlt ?? post.title}
                 className="h-full w-full object-cover"
+                style={{ objectPosition: `50% ${new URLSearchParams((post.coverUrl || "").split("?")[1] || "").get("posY") || "50"}%` }}
                 decoding="async"
                 fetchPriority="high"
                 loading="eager"
-                src={post.coverUrl}
+                src={(post.coverUrl || "").split("?")[0]}
               />
             </div>
           </div>

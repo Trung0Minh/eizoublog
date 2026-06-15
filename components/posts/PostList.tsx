@@ -25,8 +25,8 @@ export function PostList({
   }
 
   return (
-    <div className="flex flex-col gap-10 md:gap-14">
-      <div className="flex flex-col gap-10 md:gap-14">
+    <div className="flex flex-col gap-6 md:gap-8">
+      <div className="flex flex-col gap-6 md:gap-8">
         {posts.map((post) => (
           <PostCard key={post.slug} post={post} />
         ))}

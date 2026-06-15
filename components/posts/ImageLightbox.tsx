@@ -147,18 +147,58 @@ export function ImageLightbox({
       ) : null}
 
       <div
-        className="flex max-h-[80vh] max-w-[90vw] items-center justify-center overflow-hidden"
+        className="flex max-h-[80vh] max-w-[90vw] items-center justify-center overflow-auto no-scrollbar cursor-grab active:cursor-grabbing"
         onClick={(event) => event.stopPropagation()}
+        onWheel={(e) => {
+          e.stopPropagation()
+          if (e.deltaY < 0) {
+            setScale((s) => Math.min(s + 0.25, 4))
+          } else {
+            setScale((s) => Math.max(s - 0.25, 1))
+          }
+        }}
+        onPointerDown={(e) => {
+          e.currentTarget.setPointerCapture(e.pointerId);
+          e.currentTarget.dataset.isDragging = "true";
+          e.currentTarget.dataset.startX = e.clientX.toString();
+          e.currentTarget.dataset.startY = e.clientY.toString();
+          e.currentTarget.dataset.scrollLeft = e.currentTarget.scrollLeft.toString();
+          e.currentTarget.dataset.scrollTop = e.currentTarget.scrollTop.toString();
+        }}
+        onPointerMove={(e) => {
+          if (e.currentTarget.dataset.isDragging !== "true") return;
+          const startX = parseFloat(e.currentTarget.dataset.startX || "0");
+          const startY = parseFloat(e.currentTarget.dataset.startY || "0");
+          const scrollLeft = parseFloat(e.currentTarget.dataset.scrollLeft || "0");
+          const scrollTop = parseFloat(e.currentTarget.dataset.scrollTop || "0");
+          e.currentTarget.scrollLeft = scrollLeft - (e.clientX - startX);
+          e.currentTarget.scrollTop = scrollTop - (e.clientY - startY);
+        }}
+        onPointerUp={(e) => {
+          e.currentTarget.dataset.isDragging = "false";
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        }}
+        onPointerCancel={(e) => {
+          e.currentTarget.dataset.isDragging = "false";
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        }}
       >
         <img
           alt={current.alt || "Expanded post image"}
-          className="max-h-[80vh] max-w-full select-none rounded object-contain"
+          className="max-h-[80vh] max-w-full select-none rounded object-contain transition-all duration-200"
           draggable={false}
           src={current.src}
-          style={{
-            transform: `scale(${scale})`,
-            transition: "transform 200ms ease",
-          }}
+          style={
+            scale > 1
+              ? {
+                  zoom: scale,
+                  maxHeight: "none",
+                  maxWidth: "none",
+                }
+              : {
+                  zoom: 1,
+                }
+          }
         />
       </div>
 

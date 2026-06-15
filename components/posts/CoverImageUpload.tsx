@@ -89,28 +89,51 @@ export function CoverImageUpload({ onChange, value }: CoverImageUploadProps) {
       </label>
 
       {value ? (
-        <div className="group relative aspect-video w-full overflow-hidden rounded-[8px] border border-border-default bg-subtle-bg">
-          <img
-            alt="Ảnh bìa đã chọn"
-            className="h-full w-full object-cover"
-            src={value}
-          />
-          <button
-            className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 text-white opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100"
-            onClick={() => inputRef.current?.click()}
-            type="button"
-          >
-            <Camera aria-hidden="true" className="mb-2 h-6 w-6" />
-            <span className="text-[13px] font-medium">Thay đổi</span>
-          </button>
-          <button
-            aria-label="Xóa ảnh bìa"
-            className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black"
-            onClick={() => onChange("")}
-            type="button"
-          >
-            <X aria-hidden="true" className="h-4 w-4" />
-          </button>
+        <div className="space-y-3">
+          <div className="group relative aspect-video w-full overflow-hidden rounded-[8px] border border-border-default bg-subtle-bg">
+            <img
+              alt="Ảnh bìa đã chọn"
+              className="h-full w-full object-cover"
+              style={{ objectPosition: `50% ${new URLSearchParams((value || "").split("?")[1] || "").get("posY") || "50"}%` }}
+              src={value.split("?")[0]}
+            />
+            <button
+              className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 text-white opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100"
+              onClick={() => inputRef.current?.click()}
+              type="button"
+            >
+              <Camera aria-hidden="true" className="mb-2 h-6 w-6" />
+              <span className="text-[13px] font-medium">Thay đổi</span>
+            </button>
+            <button
+              aria-label="Xóa ảnh bìa"
+              className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black"
+              onClick={() => onChange("")}
+              type="button"
+            >
+              <X aria-hidden="true" className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="flex flex-col gap-1.5 rounded-[6px] border border-border-default/50 bg-subtle-bg/30 p-3">
+            <label className="text-[11px] font-medium text-text-secondary flex justify-between" htmlFor="cover-position">
+              <span>Căn chỉnh ảnh dọc</span>
+              <span>{new URLSearchParams((value || "").split("?")[1] || "").get("posY") || "50"}%</span>
+            </label>
+            <input
+              type="range"
+              id="cover-position"
+              min="0"
+              max="100"
+              value={new URLSearchParams((value || "").split("?")[1] || "").get("posY") || "50"}
+              onChange={(e) => {
+                const [base, query] = (value || "").split("?")
+                const params = new URLSearchParams(query || "")
+                params.set("posY", e.target.value)
+                onChange(`${base}?${params.toString()}`)
+              }}
+              className="w-full accent-accent"
+            />
+          </div>
         </div>
       ) : (
         <button
