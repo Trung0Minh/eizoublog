@@ -177,7 +177,11 @@ export function MediaUpload({
         videoFiles.forEach((f) => onInsertVideo(urls[files.indexOf(f)]))
       }
 
-      imageFiles.forEach((f) => onInsertSingle(urls[files.indexOf(f)], ""))
+      if (imageFiles.length > 1 && onInsertGallery) {
+        onInsertGallery(imageFiles.map(f => ({ url: urls[files.indexOf(f)], caption: "", alt: "" })))
+      } else if (imageFiles.length === 1) {
+        onInsertSingle(urls[files.indexOf(imageFiles[0])], "")
+      }
     } catch (error) {
       window.alert(error instanceof Error ? error.message : "Upload failed")
     } finally {
