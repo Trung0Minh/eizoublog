@@ -11,6 +11,7 @@ import StarterKit from "@tiptap/starter-kit"
 import { common, createLowlight } from "lowlight"
 
 import { BubbleMenuComponent } from "@/components/editor/BubbleMenu"
+import { FloatingMenuComponent } from "@/components/editor/FloatingMenuComponent"
 import { EditorToolbar } from "@/components/editor/EditorToolbar"
 import {
   GalleryExtension,
@@ -100,6 +101,7 @@ export function TiptapEditor({
         <>
           <EditorToolbar editor={editor} />
           <BubbleMenuComponent editor={editor} />
+          <FloatingMenuComponent editor={editor} />
         </>
       )}
 
