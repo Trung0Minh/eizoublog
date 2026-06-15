@@ -2,7 +2,7 @@
 
 import CharacterCount from "@tiptap/extension-character-count"
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight"
-import Image from "@tiptap/extension-image"
+
 import Link from "@tiptap/extension-link"
 import Placeholder from "@tiptap/extension-placeholder"
 import Typography from "@tiptap/extension-typography"
@@ -14,6 +14,7 @@ import { BubbleMenuComponent } from "@/components/editor/BubbleMenu"
 import { FloatingMenuComponent } from "@/components/editor/FloatingMenuComponent"
 import { EditorToolbar } from "@/components/editor/EditorToolbar"
 import {
+  CustomImageExtension,
   GalleryExtension,
   HeadingWithIdExtension,
   SpoilerExtension,
@@ -54,12 +55,7 @@ export function TiptapEditor({
         heading: false,
       }),
       HeadingWithIdExtension,
-      Image.configure({
-        allowBase64: false,
-        HTMLAttributes: {
-          class: "h-auto max-w-full rounded-md",
-        },
-      }),
+      CustomImageExtension,
       GalleryExtension,
       Link.configure({
         HTMLAttributes: {
