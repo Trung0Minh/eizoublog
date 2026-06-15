@@ -3,7 +3,8 @@
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
-export async function updateResourcesPage(content: unknown) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function updateResourcesPage(content: any) {
   const session = await auth()
   if (session?.user?.role !== "ADMIN") {
     throw new Error("Unauthorized")

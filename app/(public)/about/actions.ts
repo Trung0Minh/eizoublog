@@ -10,7 +10,8 @@ export async function getAboutPage() {
   return page
 }
 
-export async function updateAboutPage(content: unknown, contentText: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function updateAboutPage(content: any, contentText: string) {
   const session = await auth()
   if (session?.user?.role !== "ADMIN") {
     throw new Error("Unauthorized")

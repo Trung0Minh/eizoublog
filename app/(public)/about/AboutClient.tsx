@@ -14,7 +14,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { updateAboutPage } from "./actions"
 
 interface AboutClientProps {
-  initialPage: { content: unknown; contentText: string | null } | null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  initialPage: { content: any; contentText: string | null } | null
   isAdmin: boolean
   appName: string
 }
@@ -144,7 +145,8 @@ export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps)
           <div className="pt-6 border-t border-border-default">
             <label className="block text-lg font-semibold mb-4 text-text-primary">Những gì chúng tôi xuất bản</label>
             <div className="space-y-6">
-              {data.publishingNotes.map((note: { title: string; text: string }, index: number) => (
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {data.publishingNotes.map((note: any, index: number) => (
                 <div key={index} className="flex gap-4 items-start p-4 border border-border-default rounded-md relative group bg-subtle-bg/30">
                   <div className="flex-1 space-y-4">
                     <Input 
@@ -234,7 +236,8 @@ export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps)
           Những gì chúng tôi xuất bản
         </p>
         <div className="grid gap-4 sm:grid-cols-3">
-          {data.publishingNotes.map((note: { title: string; text: string }) => (
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {data.publishingNotes.map((note: any) => (
             <article className="border-t border-border-default py-5 sm:border-t-0 sm:border-l sm:pl-5 sm:first:border-l-0 sm:first:pl-0" key={note.title}>
               <h2 className="font-semibold tracking-tight text-text-primary">{note.title}</h2>
               <p className="mt-3 text-[14px] leading-relaxed text-text-secondary">

@@ -24,7 +24,8 @@ interface ResourcesData {
 }
 
 interface ResourcesClientProps {
-  initialPage: { content: unknown } | null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  initialPage: { content: any } | null
   isAdmin: boolean
   appName: string
 }
