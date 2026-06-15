@@ -96,8 +96,7 @@ export function CoverImageUpload({ onChange, value }: CoverImageUploadProps) {
               alt="Ảnh bìa đã chọn"
               className="h-full w-full object-cover"
               style={{
-                objectPosition: `${new URLSearchParams((value || "").split("?")[1] || "").get("posX") || "50"}% ${new URLSearchParams((value || "").split("?")[1] || "").get("posY") || "50"}%`,
-                transform: `scale(${new URLSearchParams((value || "").split("?")[1] || "").get("zoom") || "1"})`,
+                transform: `scale(${new URLSearchParams((value || "").split("?")[1] || "").get("zoom") || "1"}) translate(${new URLSearchParams((value || "").split("?")[1] || "").get("tx") || "0"}%, ${new URLSearchParams((value || "").split("?")[1] || "").get("ty") || "0"}%)`,
               }}
               src={value.split("?")[0]}
             />
@@ -210,8 +209,14 @@ function CoverCropperModal({
   onConfirm: (url: string) => void
 }) {
   const [zoom, setZoom] = useState(parseFloat(new URLSearchParams((value || "").split("?")[1] || "").get("zoom") || "1"));
-  const initialPosX = parseFloat(new URLSearchParams((value || "").split("?")[1] || "").get("posX") || "50");
-  const initialPosY = parseFloat(new URLSearchParams((value || "").split("?")[1] || "").get("posY") || "50");
+  
+  // Legacy fallback
+  const legacyPosX = parseFloat(new URLSearchParams((value || "").split("?")[1] || "").get("posX") || "50");
+  const legacyPosY = parseFloat(new URLSearchParams((value || "").split("?")[1] || "").get("posY") || "50");
+  
+  // New translate coordinates
+  const initialTx = parseFloat(new URLSearchParams((value || "").split("?")[1] || "").get("tx") || ((legacyPosX - 50) * -1).toString());
+  const initialTy = parseFloat(new URLSearchParams((value || "").split("?")[1] || "").get("ty") || ((legacyPosY - 50) * -1).toString());
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/90 p-4">
@@ -245,35 +250,38 @@ function CoverCropperModal({
           e.currentTarget.dataset.isDragging = "true";
           e.currentTarget.dataset.startX = e.clientX.toString();
           e.currentTarget.dataset.startY = e.clientY.toString();
-          if (!e.currentTarget.dataset.posX) e.currentTarget.dataset.posX = initialPosX.toString();
-          if (!e.currentTarget.dataset.posY) e.currentTarget.dataset.posY = initialPosY.toString();
-          e.currentTarget.dataset.startPosX = e.currentTarget.dataset.posX;
-          e.currentTarget.dataset.startPosY = e.currentTarget.dataset.posY;
+          if (!e.currentTarget.dataset.tx) e.currentTarget.dataset.tx = initialTx.toString();
+          if (!e.currentTarget.dataset.ty) e.currentTarget.dataset.ty = initialTy.toString();
+          e.currentTarget.dataset.startTx = e.currentTarget.dataset.tx;
+          e.currentTarget.dataset.startTy = e.currentTarget.dataset.ty;
         }}
         onPointerMove={(e) => {
           if (e.currentTarget.dataset.isDragging !== "true") return;
           const startX = parseFloat(e.currentTarget.dataset.startX || "0");
           const startY = parseFloat(e.currentTarget.dataset.startY || "0");
-          const startPosX = parseFloat(e.currentTarget.dataset.startPosX || "50");
-          const startPosY = parseFloat(e.currentTarget.dataset.startPosY || "50");
+          const startTx = parseFloat(e.currentTarget.dataset.startTx || "0");
+          const startTy = parseFloat(e.currentTarget.dataset.startTy || "0");
           
           const dx = e.clientX - startX;
           const dy = e.clientY - startY;
           
           const rect = e.currentTarget.getBoundingClientRect();
           
-          let newPosX = startPosX - (dx / rect.width) * 100 / zoom;
-          let newPosY = startPosY - (dy / rect.height) * 100 / zoom;
+          // dx is in screen pixels. Translate % is based on unscaled element size (rect.width).
+          // And we want to move it IN THE SAME DIRECTION as the mouse.
+          let newTx = startTx + (dx / (rect.width * zoom)) * 100;
+          let newTy = startTy + (dy / (rect.height * zoom)) * 100;
           
-          newPosX = Math.max(0, Math.min(100, newPosX));
-          newPosY = Math.max(0, Math.min(100, newPosY));
+          // Loose clamp to prevent dragging image completely off screen
+          newTx = Math.max(-50, Math.min(50, newTx));
+          newTy = Math.max(-50, Math.min(50, newTy));
           
-          e.currentTarget.dataset.posX = newPosX.toString();
-          e.currentTarget.dataset.posY = newPosY.toString();
+          e.currentTarget.dataset.tx = newTx.toString();
+          e.currentTarget.dataset.ty = newTy.toString();
           
           const img = e.currentTarget.querySelector('img');
           if (img) {
-            img.style.objectPosition = `${newPosX}% ${newPosY}%`;
+            img.style.transform = `scale(${zoom}) translate(${newTx}%, ${newTy}%)`;
           }
         }}
         onPointerUp={(e) => {
@@ -289,8 +297,7 @@ function CoverCropperModal({
           alt="Ảnh bìa"
           className="h-full w-full object-cover pointer-events-none"
           style={{
-            objectPosition: `${initialPosX}% ${initialPosY}%`,
-            transform: `scale(${zoom})`,
+            transform: `scale(${zoom}) translate(${initialTx}%, ${initialTy}%)`,
           }}
           src={value.split("?")[0]}
         />
@@ -309,14 +316,17 @@ function CoverCropperModal({
           className="rounded-md bg-accent px-6 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-accent/90"
           onClick={(e) => {
             const container = e.currentTarget.parentElement?.previousElementSibling as HTMLElement;
-            const finalX = parseFloat(container?.dataset.posX || initialPosX.toString()).toFixed(1);
-            const finalY = parseFloat(container?.dataset.posY || initialPosY.toString()).toFixed(1);
+            const finalTx = parseFloat(container?.dataset.tx || initialTx.toString()).toFixed(1);
+            const finalTy = parseFloat(container?.dataset.ty || initialTy.toString()).toFixed(1);
             
             const [base, query] = (value || "").split("?");
             const params = new URLSearchParams(query || "");
-            params.set("posX", finalX);
-            params.set("posY", finalY);
+            params.set("tx", finalTx);
+            params.set("ty", finalTy);
             params.set("zoom", zoom.toFixed(2));
+            // Remove legacy params
+            params.delete("posX");
+            params.delete("posY");
             onConfirm(`${base}?${params.toString()}`);
           }}
         >

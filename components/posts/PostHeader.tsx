@@ -126,8 +126,7 @@ export function PostHeader({ post }: PostHeaderProps) {
                 alt={post.coverAlt ?? post.title}
                 className="h-full w-full object-cover"
                 style={{
-                  objectPosition: `${new URLSearchParams((post.coverUrl || "").split("?")[1] || "").get("posX") || "50"}% ${new URLSearchParams((post.coverUrl || "").split("?")[1] || "").get("posY") || "50"}%`,
-                  transform: `scale(${new URLSearchParams((post.coverUrl || "").split("?")[1] || "").get("zoom") || "1"})`,
+                  transform: `scale(${new URLSearchParams((post.coverUrl || "").split("?")[1] || "").get("zoom") || "1"}) translate(${new URLSearchParams((post.coverUrl || "").split("?")[1] || "").get("tx") || "0"}%, ${new URLSearchParams((post.coverUrl || "").split("?")[1] || "").get("ty") || "0"}%)`,
                 }}
                 decoding="async"
                 fetchPriority="high"
