@@ -93,20 +93,25 @@ function renderImage(node: JSONContent, key: string) {
     return null
   }
 
+  const caption = getNodeText(node)
+
   return (
-    <img
-      alt={stringAttr(attrs, "alt") ?? ""}
-      decoding="async"
-      key={key}
-      loading="lazy"
-      src={src}
-      title={stringAttr(attrs, "title")}
-    />
+    <figure className="my-6" data-type="image" key={key}>
+      <img
+        alt={stringAttr(attrs, "alt") || caption || ""}
+        decoding="async"
+        loading="lazy"
+        src={src}
+      />
+      {caption ? <figcaption className="media-caption">{caption}</figcaption> : null}
+    </figure>
   )
 }
 
 function renderImageGallery(node: JSONContent, key: string) {
-  const images = parseGalleryImages(attrsFor(node).images)
+  const attrs = attrsFor(node)
+  const images = parseGalleryImages(attrs.images)
+  const columns = numberAttr(attrs, "columns") || 2
 
   if (images.length === 0) {
     return null
@@ -114,23 +119,51 @@ function renderImageGallery(node: JSONContent, key: string) {
 
   return (
     <div className="image-gallery" data-type="image-gallery" key={key}>
-      <div className="image-gallery__grid">
-        {images.map((image) => (
-          <figure className="image-gallery__item" key={image.url}>
-            <img
-              alt={getGalleryImageAlt(image)}
-              className="image-gallery__image"
-              decoding="async"
-              loading="lazy"
-              src={image.url}
-            />
-            {image.caption ? (
-              <figcaption className="image-gallery__caption">
-                {image.caption}
-              </figcaption>
-            ) : null}
-          </figure>
-        ))}
+      <div className="image-gallery__grid" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+        {images.map((image) => {
+          const isVideoUrl = image.url.match(/\.(mp4|webm)$/i) || image.url.includes("youtube.com") || image.url.includes("youtu.be")
+          const isNative = isNativeVideo(image.url)
+
+          return (
+            <figure className="image-gallery__item" key={image.url}>
+              {isVideoUrl ? (
+                <div className="relative w-full h-full aspect-video">
+                  {isNative ? (
+                    <video
+                      className="absolute inset-0 h-full w-full rounded-md object-contain bg-black/5"
+                      controls
+                      preload="metadata"
+                      src={image.url}
+                      title={getGalleryImageAlt(image)}
+                    />
+                  ) : (
+                    <iframe
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="absolute inset-0 h-full w-full rounded-md"
+                      loading="lazy"
+                      src={toVideoEmbedUrl(image.url)}
+                      title={getGalleryImageAlt(image)}
+                    />
+                  )}
+                </div>
+              ) : (
+                <img
+                  alt={getGalleryImageAlt(image)}
+                  className="image-gallery__image"
+                  decoding="async"
+                  loading="lazy"
+                  src={image.url}
+                />
+              )}
+              {image.caption ? (
+                <figcaption className="image-gallery__caption">
+                  {image.caption}
+                </figcaption>
+              ) : null}
+            </figure>
+          )
+        })}
       </div>
     </div>
   )
@@ -203,6 +236,7 @@ function renderNode(node: JSONContent, key: string): ReactNode {
     case "horizontalRule":
       return <hr key={key} />
     case "image":
+    case "customImage":
       return renderImage(node, key)
     case "imageGallery":
       return renderImageGallery(node, key)

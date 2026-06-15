@@ -96,7 +96,7 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
 
   return (
     <div>
-      <div className="no-scrollbar sticky top-0 z-10 mb-6 flex min-h-11 flex-wrap items-center gap-0.5 overflow-x-auto bg-background pb-2 md:-mt-9 md:border-b md:border-border-default/50 md:pt-4">
+      <div className="no-scrollbar sticky top-[53px] md:top-[57px] z-10 mb-6 flex min-h-11 flex-wrap items-center gap-0.5 overflow-x-auto bg-background pb-2 md:-mt-9 md:border-b md:border-border-default/50 md:pt-4">
         <ToolbarButton
           active={editor.isActive("bold")}
           onClick={() => editor.chain().focus().toggleBold().run()}

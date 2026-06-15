@@ -13,6 +13,7 @@ import { isNativeVideo, toVideoEmbedUrl } from "@/components/editor/video"
 
 export function ImageGalleryBlock({ node, updateAttributes, editor, selected, deleteNode }: NodeViewProps) {
   const images = parseGalleryImages(node.attrs.images)
+  const columns = node.attrs.columns || 2
 
   function updateImage(index: number, newImage: Partial<GalleryImage>) {
     const newImages = [...images]
@@ -43,8 +44,24 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
       className={`image-gallery group ${selected ? "ring-2 ring-accent rounded-md" : ""}`}
       data-type="image-gallery"
     >
+      {editor.isEditable && (
+        <div className="absolute -top-12 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-md border border-border-default bg-background p-1 shadow-md z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-200">
+          <span className="px-2 text-xs font-medium text-text-secondary">Columns:</span>
+          {[1, 2, 3, 4].map((col) => (
+            <button
+              key={col}
+              type="button"
+              className={`flex h-6 w-6 items-center justify-center rounded text-sm ${columns === col ? "bg-subtle-bg text-text-primary" : "text-text-secondary hover:bg-subtle-bg"}`}
+              onClick={() => updateAttributes({ columns: col })}
+            >
+              {col}
+            </button>
+          ))}
+        </div>
+      )}
+
       {images.length > 0 ? (
-        <div className="image-gallery__grid">
+        <div className="image-gallery__grid" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
           {images.map((image, index) => {
             const isVideoUrl = image.url.match(/\.(mp4|webm)$/i) || image.url.includes("youtube.com") || image.url.includes("youtu.be")
             const isNative = isNativeVideo(image.url)

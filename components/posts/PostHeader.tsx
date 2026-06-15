@@ -73,6 +73,12 @@ export function PostHeader({ post }: PostHeaderProps) {
         {post.title}
       </h1>
 
+      {post.excerpt && (
+        <p className="mt-[-10px] mb-5 text-[17px] leading-[1.5] text-text-secondary md:text-[19px]">
+          {post.excerpt}
+        </p>
+      )}
+
       <div className="mt-5 flex items-center gap-3 text-[13px] text-text-secondary">
         <div className="flex -space-x-2.5">
           {authors.slice(0, 3).map((author) => (

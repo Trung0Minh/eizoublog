@@ -33,6 +33,13 @@ export const GalleryExtension = Node.create({
           "data-images": attributes.images,
         }),
       },
+      columns: {
+        default: 2,
+        parseHTML: (element) => parseInt(element.getAttribute("data-columns") || "2", 10),
+        renderHTML: (attributes) => ({
+          "data-columns": attributes.columns,
+        }),
+      },
     }
   },
 
@@ -42,7 +49,7 @@ export const GalleryExtension = Node.create({
         (images) =>
         ({ commands }) =>
           commands.insertContent({
-            attrs: { images: serializeGalleryImages(images) },
+            attrs: { images: serializeGalleryImages(images), columns: 2 },
             type: this.name,
           }),
     }
@@ -58,19 +65,22 @@ export const GalleryExtension = Node.create({
 
   renderHTML({ HTMLAttributes, node }) {
     const images = parseGalleryImages(node.attrs.images)
+    const columns = node.attrs.columns || 2
     const renderedAttributes = { ...HTMLAttributes }
     delete renderedAttributes.images
+    delete renderedAttributes.columns
 
     return [
       "div",
       mergeAttributes(renderedAttributes, {
         "data-images": serializeGalleryImages(images),
+        "data-columns": columns,
         "data-type": "image-gallery",
         class: "image-gallery",
       }),
       [
         "div",
-        { class: "image-gallery__grid" },
+        { class: "image-gallery__grid", style: `grid-template-columns: repeat(${columns}, minmax(0, 1fr))` },
         ...images.map((image) => [
           "figure",
           { class: "image-gallery__item" },
