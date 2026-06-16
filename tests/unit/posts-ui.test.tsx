@@ -8,6 +8,11 @@ const routerMocks = vi.hoisted(() => ({
   refresh: vi.fn(),
 }))
 
+const queriesMocks = vi.hoisted(() => ({
+  getCachedPublishedPosts: vi.fn(),
+  getCachedSidebarData: vi.fn(),
+}))
+
 vi.mock("next/link", () => ({
   default: ({
     prefetch,
@@ -18,6 +23,14 @@ vi.mock("next/link", () => ({
 }))
 vi.mock("next/navigation", () => ({
   useRouter: () => routerMocks,
+}))
+vi.mock("@/lib/queries", () => ({
+  getCachedPublishedPosts: queriesMocks.getCachedPublishedPosts,
+  getCachedSidebarData: queriesMocks.getCachedSidebarData,
+}))
+vi.mock("@/lib/seo", () => ({
+  buildMetadata: vi.fn(),
+  getAppUrl: vi.fn(() => "https://example.com"),
 }))
 vi.mock("@/components/editor/TiptapEditor", () => ({
   TiptapEditor: ({
@@ -690,5 +703,42 @@ describe("PostEditor", () => {
       draftVisibility: "CO_AUTHORS",
       status: "DRAFT",
     })
+  })
+})
+
+import HomePage, { HomePostList } from "@/app/(public)/page"
+
+describe("HomePage sorting UI", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queriesMocks.getCachedSidebarData.mockResolvedValue({
+      categories: [],
+      recentPosts: [],
+    })
+    queriesMocks.getCachedPublishedPosts.mockResolvedValue({
+      posts: [],
+      total: 0,
+    })
+  })
+
+  it("renders homepage sorting tabs correctly and passes sort parameter to query", async () => {
+    const elementLatest = await HomePostList({ page: 1, sort: "latest" })
+    const { unmount } = render(elementLatest)
+
+    expect(screen.getByRole("tab", { name: "Mới nhất" })).toHaveAttribute("aria-selected", "true")
+    expect(screen.getByRole("tab", { name: "Cũ nhất" })).toHaveAttribute("aria-selected", "false")
+    expect(screen.getByRole("tab", { name: "Nhiều bình luận" })).toHaveAttribute("aria-selected", "false")
+    
+    expect(queriesMocks.getCachedPublishedPosts).toHaveBeenCalledWith(1, 10, "latest")
+
+    unmount()
+
+    const elementComments = await HomePostList({ page: 2, sort: "comments" })
+    render(elementComments)
+
+    expect(screen.getByRole("tab", { name: "Mới nhất" })).toHaveAttribute("aria-selected", "false")
+    expect(screen.getByRole("tab", { name: "Nhiều bình luận" })).toHaveAttribute("aria-selected", "true")
+    
+    expect(queriesMocks.getCachedPublishedPosts).toHaveBeenCalledWith(2, 10, "comments")
   })
 })
