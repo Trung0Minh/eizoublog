@@ -14,6 +14,12 @@ import { isNativeVideo, toVideoEmbedUrl } from "@/components/editor/video"
 export function ImageGalleryBlock({ node, updateAttributes, editor, selected, deleteNode }: NodeViewProps) {
   const images = parseGalleryImages(node.attrs.images)
   const columns = node.attrs.columns || 2
+  const hasVisibleCaption = images.some(
+    (image) =>
+      editor.isEditable
+        ? image.showCaption
+        : image.caption && image.showCaption !== false,
+  )
 
   function updateImage(index: number, newImage: Partial<GalleryImage>) {
     const newImages = [...images]
@@ -65,6 +71,7 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
           {images.map((image, index) => {
             const isNative = isNativeVideo(image.url)
             const isVideoUrl = isNative || image.url.includes("youtube.com") || image.url.includes("youtu.be")
+            const showCaption = image.caption && image.showCaption !== false
 
             return (
               <figure className="image-gallery__item relative group/item" key={image.url + index}>
@@ -171,11 +178,21 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
                         onKeyDown={(e) => e.stopPropagation()}
                       />
                     </figcaption>
+                  ) : hasVisibleCaption ? (
+                    <figcaption
+                      aria-hidden="true"
+                      className="image-gallery__caption image-gallery__caption--placeholder !mt-1"
+                    />
                   ) : null
-                ) : image.showCaption !== false && image.caption ? (
+                ) : showCaption ? (
                   <figcaption className="image-gallery__caption !mt-1">
                     {image.caption}
                   </figcaption>
+                ) : hasVisibleCaption ? (
+                  <figcaption
+                    aria-hidden="true"
+                    className="image-gallery__caption image-gallery__caption--placeholder !mt-1"
+                  />
                 ) : null}
               </figure>
             )

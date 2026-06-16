@@ -104,4 +104,41 @@ describe("GalleryExtension", () => {
     expect(html).toContain("After the cut")
     editor.destroy()
   })
+
+  it("reserves gallery caption slots for mixed-caption media", () => {
+    const editor = new Editor({
+      content: {
+        content: [
+          {
+            attrs: {
+              images: JSON.stringify([
+                {
+                  alt: "Captionless clip",
+                  caption: "",
+                  showCaption: false,
+                  url: "https://cdn.example.com/captionless.mp4",
+                },
+                {
+                  alt: "Captioned clip",
+                  caption: "Visible clip caption",
+                  showCaption: true,
+                  url: "https://cdn.example.com/captioned.webm",
+                },
+              ]),
+            },
+            type: "imageGallery",
+          },
+        ],
+        type: "doc",
+      },
+      extensions: [StarterKit, GalleryExtension],
+    })
+
+    const html = editor.getHTML()
+
+    expect(html.match(/<figcaption/g)).toHaveLength(2)
+    expect(html).toContain('aria-hidden="true"')
+    expect(html).toContain("Visible clip caption")
+    editor.destroy()
+  })
 })

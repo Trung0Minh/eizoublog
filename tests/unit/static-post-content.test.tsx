@@ -58,6 +58,41 @@ describe("StaticPostContent", () => {
     expect(screen.queryByText("Hidden gallery caption")).not.toBeInTheDocument()
   })
 
+  it("reserves caption slots across mixed-caption gallery rows", () => {
+    const content: JSONContent = {
+      content: [
+        {
+          attrs: {
+            images: JSON.stringify([
+              {
+                alt: "Captionless frame",
+                caption: "",
+                showCaption: false,
+                url: "https://cdn.example.com/captionless.mp4",
+              },
+              {
+                alt: "Captioned frame",
+                caption: "Visible gallery caption",
+                showCaption: true,
+                url: "https://cdn.example.com/captioned.webm",
+              },
+            ]),
+          },
+          type: "imageGallery",
+        },
+      ],
+      type: "doc",
+    }
+
+    const { container } = render(<StaticPostContent content={content} />)
+
+    const captions = container.querySelectorAll(".image-gallery__caption")
+    expect(captions).toHaveLength(2)
+    expect(captions[0]).toHaveAttribute("aria-hidden", "true")
+    expect(captions[0]).toHaveTextContent("")
+    expect(captions[1]).toHaveTextContent("Visible gallery caption")
+  })
+
   it("hides video captions when caption visibility is disabled", () => {
     const content: JSONContent = {
       content: [

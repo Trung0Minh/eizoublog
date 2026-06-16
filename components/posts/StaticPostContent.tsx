@@ -141,12 +141,17 @@ function renderImageGallery(node: JSONContent, key: string) {
     return null
   }
 
+  const hasVisibleCaption = images.some(
+    (image) => image.caption && image.showCaption !== false,
+  )
+
   return (
     <div className="image-gallery" data-type="image-gallery" key={key}>
       <div className="image-gallery__grid" style={{ gridTemplateColumns: `repeat(${Math.min(columns, images.length)}, minmax(0, 1fr))` }}>
         {images.map((image, index) => {
           const isNative = isNativeVideo(image.url)
           const isVideoUrl = isNative || image.url.includes("youtube.com") || image.url.includes("youtu.be")
+          const showCaption = image.caption && image.showCaption !== false
 
           return (
             <figure className="image-gallery__item" key={image.url + index}>
@@ -180,10 +185,15 @@ function renderImageGallery(node: JSONContent, key: string) {
                   src={image.url}
                 />
               )}
-              {image.caption && image.showCaption !== false ? (
+              {showCaption ? (
                 <figcaption className="image-gallery__caption">
                   {image.caption}
                 </figcaption>
+              ) : hasVisibleCaption ? (
+                <figcaption
+                  aria-hidden="true"
+                  className="image-gallery__caption image-gallery__caption--placeholder"
+                />
               ) : null}
             </figure>
           )

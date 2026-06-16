@@ -67,6 +67,9 @@ export const GalleryExtension = Node.create({
   renderHTML({ HTMLAttributes, node }) {
     const images = parseGalleryImages(node.attrs.images)
     const columns = node.attrs.columns || 2
+    const hasVisibleCaption = images.some(
+      (image) => image.caption && image.showCaption !== false,
+    )
     const renderedAttributes = { ...HTMLAttributes }
     delete renderedAttributes.images
     delete renderedAttributes.columns
@@ -85,6 +88,7 @@ export const GalleryExtension = Node.create({
         ...images.map((image) => {
           const isVideoUrl = image.url.match(/\.(mp4|webm)$/i) || image.url.includes("youtube.com") || image.url.includes("youtu.be")
           const isNative = isNativeVideo(image.url)
+          const showCaption = image.caption && image.showCaption !== false
 
           const mediaNode = isVideoUrl
             ? [
@@ -126,12 +130,23 @@ export const GalleryExtension = Node.create({
             "figure",
             { class: "image-gallery__item" },
             mediaNode,
-            ...(image.caption && image.showCaption !== false
+            ...(showCaption
               ? [
                   [
                     "figcaption",
                     { class: "image-gallery__caption" },
                     image.caption,
+                  ],
+                ]
+              : hasVisibleCaption
+              ? [
+                  [
+                    "figcaption",
+                    {
+                      "aria-hidden": "true",
+                      class:
+                        "image-gallery__caption image-gallery__caption--placeholder",
+                    },
                   ],
                 ]
               : []),
