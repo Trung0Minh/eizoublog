@@ -63,8 +63,8 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
       {images.length > 0 ? (
         <div className="image-gallery__grid" style={{ gridTemplateColumns: `repeat(${Math.min(columns, images.length)}, minmax(0, 1fr))` }}>
           {images.map((image, index) => {
-            const isVideoUrl = image.url.match(/\.(mp4|webm)$/i) || image.url.includes("youtube.com") || image.url.includes("youtu.be")
             const isNative = isNativeVideo(image.url)
+            const isVideoUrl = isNative || image.url.includes("youtube.com") || image.url.includes("youtu.be")
 
             return (
               <figure className="image-gallery__item relative group/item" key={image.url + index}>

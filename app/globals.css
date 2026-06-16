@@ -265,7 +265,7 @@
     padding: 1em 1.5em;
   }
 
-  .post-content figure:not(.float-left):not(.float-right) {
+  .post-content .ProseMirror > figure:not(.float-left):not(.float-right) {
     margin: 2em auto;
     max-width: 100%;
   }
