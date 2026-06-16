@@ -92,13 +92,13 @@ describe("cached Prisma query helpers", () => {
     mocks.prisma.post.findMany.mockResolvedValue([{ slug: "essay" }])
     mocks.prisma.post.count.mockResolvedValue(1)
 
+    // Test default sorting (latest)
     await expect(getCachedPublishedPosts(2, 10)).resolves.toEqual({
       posts: [{ slug: "essay" }],
       total: 1,
     })
 
-    expect(mocks.prisma.$transaction).not.toHaveBeenCalled()
-    expect(mocks.prisma.post.findMany).toHaveBeenCalledWith(
+    expect(mocks.prisma.post.findMany).toHaveBeenLastCalledWith(
       expect.objectContaining({
         orderBy: [{ publishedAt: "desc" }, { updatedAt: "desc" }],
         skip: 10,
@@ -106,6 +106,23 @@ describe("cached Prisma query helpers", () => {
         where: { status: "PUBLISHED" },
       }),
     )
+
+    // Test comments sorting
+    await expect(getCachedPublishedPosts(1, 10, "comments")).resolves.toEqual({
+      posts: [{ slug: "essay" }],
+      total: 1,
+    })
+
+    expect(mocks.prisma.post.findMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        orderBy: [{ comments: { _count: "desc" } }, { publishedAt: "desc" }],
+        skip: 0,
+        take: 10,
+        where: { status: "PUBLISHED" },
+      }),
+    )
+
+    expect(mocks.prisma.$transaction).not.toHaveBeenCalled()
     const select = mocks.prisma.post.findMany.mock.calls[0]?.[0].select
     expect(select.author.select).not.toHaveProperty("email")
     expect(mocks.cacheEntries).toContainEqual({

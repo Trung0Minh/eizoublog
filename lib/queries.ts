@@ -328,9 +328,19 @@ async function getPublishedPostListByWhere(
   where: Prisma.PostWhereInput,
   page: number,
   pageSize: number,
+  sort: "latest" | "oldest" | "comments" = "latest",
 ) {
+  let orderBy: Prisma.PostOrderByWithRelationInput | Prisma.PostOrderByWithRelationInput[]
+  if (sort === "oldest") {
+    orderBy = [{ publishedAt: "asc" }, { updatedAt: "asc" }]
+  } else if (sort === "comments") {
+    orderBy = [{ comments: { _count: "desc" } }, { publishedAt: "desc" }]
+  } else {
+    orderBy = [{ publishedAt: "desc" }, { updatedAt: "desc" }]
+  }
+
   const posts = await prisma.post.findMany({
-    orderBy: [{ publishedAt: "desc" }, { updatedAt: "desc" }],
+    orderBy,
     select: publishedPostListSelect,
     skip: (page - 1) * pageSize,
     take: pageSize,
@@ -342,9 +352,9 @@ async function getPublishedPostListByWhere(
 }
 
 export const getCachedPublishedPosts = unstable_cache(
-  async (page: number, pageSize: number) => {
+  async (page: number, pageSize: number, sort: "latest" | "oldest" | "comments" = "latest") => {
     const where = { status: "PUBLISHED" } satisfies Prisma.PostWhereInput
-    return getPublishedPostListByWhere(where, page, pageSize)
+    return getPublishedPostListByWhere(where, page, pageSize, sort)
   },
   ["published-posts"],
   { revalidate: 60, tags: ["posts"] },
