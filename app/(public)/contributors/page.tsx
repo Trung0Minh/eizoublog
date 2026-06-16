@@ -6,6 +6,10 @@ import { StaticPostContent } from "@/components/posts/StaticPostContent"
 import { getCachedContributors } from "@/lib/queries"
 import { buildMetadata, getAppName } from "@/lib/seo"
 
+interface ContributorsPageProps {
+  searchParams: Promise<{ sort?: string }>
+}
+
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
     canonicalPath: "/contributors",
@@ -14,23 +18,79 @@ export async function generateMetadata(): Promise<Metadata> {
   })
 }
 
-export default async function ContributorsPage() {
+function parseSort(sort?: string): "role" | "posts" {
+  if (sort === "posts") {
+    return sort
+  }
+  return "role"
+}
+
+export default async function ContributorsPage({ searchParams }: ContributorsPageProps) {
+  const { sort: sortParam } = await searchParams
+  const sort = parseSort(sortParam)
+  
   const contributors = await getCachedContributors()
+
+  const sortedContributors = [...contributors].sort((a, b) => {
+    if (sort === "posts") {
+      const postsDiff = b._count.posts - a._count.posts
+      if (postsDiff !== 0) return postsDiff
+    }
+
+    // Default sorting: Role (ADMIN > WRITER), then Name alphabetically
+    if (a.role === "ADMIN" && b.role === "WRITER") return -1
+    if (a.role === "WRITER" && b.role === "ADMIN") return 1
+
+    return a.name.localeCompare(b.name, "vi", { sensitivity: "base" })
+  })
+
+  const sortOptions: { value: "role" | "posts"; label: string }[] = [
+    { value: "role", label: "Mặc định (Vai trò)" },
+    { value: "posts", label: "Nhiều bài viết nhất" },
+  ]
 
   return (
     <PageContainer>
-      <section className="mb-10 border-b pb-8">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-editorial">
-          Người đóng góp
-        </p>
-        <h1 className="text-[32px] font-bold leading-tight tracking-tight">Tác giả</h1>
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-          Những người được mời viết phân tích, đánh giá và ghi chú sản xuất cho ấn phẩm này.
-        </p>
+      <section className="mb-8 border-b pb-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="mb-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-editorial">
+              Người đóng góp
+            </p>
+            <h1 className="text-[32px] font-bold leading-tight tracking-tight">Tác giả</h1>
+            <p className="mt-2.5 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+              Những người được mời viết phân tích, đánh giá và ghi chú sản xuất cho ấn phẩm này.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <span className="text-xs font-medium text-text-tertiary">Sắp xếp:</span>
+            <div className="flex rounded-md border border-border-default bg-subtle-bg/30 p-0.5" role="tablist" aria-label="Sắp xếp tác giả">
+              {sortOptions.map((option) => {
+                const isActive = sort === option.value
+                const queryStr = option.value !== "role" ? `?sort=${option.value}` : "/contributors"
+                return (
+                  <Link
+                    href={queryStr}
+                    key={option.value}
+                    role="tab"
+                    aria-selected={isActive}
+                    className={`rounded-[4px] px-2.5 py-1 text-[11px] font-semibold tracking-wide transition-all ${
+                      isActive
+                        ? "bg-background text-editorial shadow-sm border border-border-default/60"
+                        : "text-text-secondary hover:text-text-primary border border-transparent"
+                    }`}
+                  >
+                    {option.label}
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        </div>
       </section>
 
       <div className="flex flex-col gap-5">
-        {contributors.map((contributor) => (
+        {sortedContributors.map((contributor) => (
           <div
             className="flex flex-col sm:flex-row items-start gap-5 rounded-[12px] border border-border-default bg-subtle-bg/30 p-6 transition-all hover:border-accent/40 hover:bg-subtle-bg/60 hover:shadow-sm"
             key={contributor.username}
