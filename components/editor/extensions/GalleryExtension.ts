@@ -126,7 +126,7 @@ export const GalleryExtension = Node.create({
             "figure",
             { class: "image-gallery__item" },
             mediaNode,
-            ...(image.caption
+            ...(image.caption && image.showCaption !== false
               ? [
                   [
                     "figcaption",

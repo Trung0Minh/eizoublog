@@ -12,7 +12,7 @@ export function ImageNodeView(props: NodeViewProps) {
           ? "float-left mr-6 mb-4 mt-2 clear-left"
           : node.attrs.align === "right"
           ? "float-right ml-6 mb-4 mt-2 clear-right"
-          : "justify-center my-6 clear-both"
+          : "justify-center my-2 clear-both"
       }`}
       style={{
         width: node.attrs.align !== "center" ? node.attrs.width : "100%",
@@ -96,9 +96,9 @@ export function ImageNodeView(props: NodeViewProps) {
         src={node.attrs.src}
       />
       <figcaption
-        className={`mt-2 w-full text-center text-sm text-text-tertiary ${
+        className={`mt-1 w-full text-center text-sm text-text-tertiary ${
           props.editor.isEditable ? "min-h-[1.5rem] outline-none" : ""
-        } ${!node.attrs.showCaption && node.content.size === 0 ? "hidden" : ""}`}
+        } ${!node.attrs.showCaption ? "hidden" : ""}`}
       >
         <NodeViewContent />
       </figcaption>

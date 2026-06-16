@@ -2,6 +2,7 @@ export interface GalleryImage {
   alt: string
   caption: string
   url: string
+  showCaption?: boolean
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -37,6 +38,7 @@ export function parseGalleryImages(value: unknown): GalleryImage[] {
         alt: typeof item.alt === "string" ? item.alt : "",
         caption: typeof item.caption === "string" ? item.caption : "",
         url: item.url,
+        showCaption: typeof item.showCaption === "boolean" ? item.showCaption : !!(typeof item.caption === "string" && item.caption),
       },
     ]
   })
@@ -48,6 +50,7 @@ export function serializeGalleryImages(images: readonly GalleryImage[]) {
       alt: image.alt,
       caption: image.caption,
       url: image.url,
+      showCaption: image.showCaption,
     })),
   )
 }

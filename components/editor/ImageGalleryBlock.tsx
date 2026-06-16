@@ -108,15 +108,11 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
                     </button>
                     <div className="mx-1 h-4 w-px bg-border-default" />
                     <button
-                      className="rounded p-1.5 text-sm text-text-secondary hover:bg-subtle-bg"
-                      onClick={() => {
-                        const caption = window.prompt("Caption for this media:", image.caption || "")
-                        if (caption !== null) {
-                          const alt = window.prompt("Alt text (leave empty to reuse caption):", image.alt || caption || "")
-                          updateImage(index, { alt: alt !== null ? alt : image.alt, caption })
-                        }
-                      }}
-                      title="Edit Alt/Caption"
+                      className={`rounded p-1.5 text-sm hover:bg-subtle-bg ${
+                        image.showCaption ? "bg-subtle-bg text-text-primary" : "text-text-secondary"
+                      }`}
+                      onClick={() => updateImage(index, { showCaption: !image.showCaption })}
+                      title="Toggle Caption"
                       type="button"
                     >
                       <Type className="h-4 w-4" />
@@ -163,8 +159,20 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
                   />
                 )}
 
-                {image.caption ? (
-                  <figcaption className="image-gallery__caption">
+                {editor.isEditable ? (
+                  <figcaption
+                    className={`image-gallery__caption !mt-1 ${!image.showCaption ? "hidden" : ""}`}
+                  >
+                    <input
+                      className="w-full bg-transparent text-center outline-none border-none placeholder:text-text-tertiary/50"
+                      placeholder="Write a caption..."
+                      value={image.caption}
+                      onChange={(e) => updateImage(index, { caption: e.target.value })}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    />
+                  </figcaption>
+                ) : image.showCaption !== false && image.caption ? (
+                  <figcaption className="image-gallery__caption !mt-1">
                     {image.caption}
                   </figcaption>
                 ) : null}
