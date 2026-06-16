@@ -1,25 +1,22 @@
 import { getActiveSession } from "@/lib/authz"
-import { prisma } from "@/lib/prisma"
+import { getNotificationCounts } from "@/lib/notifications"
 
 export async function GET() {
   const activeSession = await getActiveSession(["ADMIN", "WRITER"])
 
   if (!activeSession) {
-    return Response.json({ count: 0 }, { status: 200 })
+    return Response.json({ data: { count: 0 } }, { status: 200 })
   }
 
   try {
-    const count = await prisma.postAuthor.count({
-      where: {
-        userId: activeSession.user.id,
-        status: "PENDING",
-        post: { status: { not: "ARCHIVED" } },
-      },
-    })
+    const counts = await getNotificationCounts(activeSession.user)
 
-    return Response.json({ count }, { status: 200 })
+    return Response.json(
+      { data: { count: counts.pendingInvites } },
+      { status: 200 },
+    )
   } catch (error) {
     console.error("[GET /api/user/pending-invites-count]", error)
-    return Response.json({ count: 0 }, { status: 200 })
+    return Response.json({ data: { count: 0 } }, { status: 200 })
   }
 }

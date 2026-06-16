@@ -1,27 +1,17 @@
-import { auth } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
+import { getNotificationCounts } from "@/lib/notifications"
 
 export async function GET() {
   try {
-    const session = await auth()
+    const activeSession = await getActiveSession(["ADMIN", "WRITER"])
 
-    if (!session?.user?.id) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 })
+    if (!activeSession) {
+      return unauthorizedResponse()
     }
 
-    const count = await prisma.comment.count({
-      where: {
-        post: {
-          authorId: session.user.id,
-        },
-        authorEmail: {
-          not: session.user.email,
-        },
-        isRead: false,
-      },
-    })
+    const counts = await getNotificationCounts(activeSession.user)
 
-    return Response.json({ count })
+    return Response.json({ data: { count: counts.unreadComments } })
   } catch (error) {
     console.error("[GET /api/user/unread-comments-count]", error)
     return Response.json({ error: "Internal error" }, { status: 500 })

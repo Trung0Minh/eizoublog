@@ -1,30 +1,17 @@
-import { auth } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
+import { markUnreadCommentsRead } from "@/lib/notifications"
 
 export async function POST() {
   try {
-    const session = await auth()
+    const activeSession = await getActiveSession(["ADMIN", "WRITER"])
 
-    if (!session?.user?.id) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 })
+    if (!activeSession) {
+      return unauthorizedResponse()
     }
 
-    await prisma.comment.updateMany({
-      where: {
-        post: {
-          authorId: session.user.id,
-        },
-        authorEmail: {
-          not: session.user.email,
-        },
-        isRead: false,
-      },
-      data: {
-        isRead: true,
-      },
-    })
+    const result = await markUnreadCommentsRead(activeSession.user)
 
-    return Response.json({ success: true })
+    return Response.json({ data: { count: result.count, success: true } })
   } catch (error) {
     console.error("[POST /api/user/mark-comments-read]", error)
     return Response.json({ error: "Internal error" }, { status: 500 })

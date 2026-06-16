@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ChevronDown, FileText, LogOut, Shield, User } from "lucide-react"
+import { Bell, ChevronDown, FileText, LogOut, Shield, User } from "lucide-react"
 import type { Role } from "@prisma/client"
 import Link from "next/link"
 import { signOut } from "next-auth/react"
@@ -96,6 +96,31 @@ function WriterAvatar({
   )
 }
 
+function readCount(value: unknown) {
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "data" in value &&
+    typeof value.data === "object" &&
+    value.data !== null &&
+    "count" in value.data &&
+    typeof value.data.count === "number"
+  ) {
+    return value.data.count
+  }
+
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "count" in value &&
+    typeof value.count === "number"
+  ) {
+    return value.count
+  }
+
+  return 0
+}
+
 export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
   const [loadedUser, setLoadedUser] = useState<WriterMenuUser | null>(null)
   const [pendingInvites, setPendingInvites] = useState(0)
@@ -108,30 +133,12 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
 
     async function loadSession() {
       try {
-        const [sessionRes, invitesRes, commentsRes] = await Promise.all([
-          fetch("/api/auth/session"),
-          fetch("/api/user/pending-invites-count"),
-          fetch("/api/user/unread-comments-count"),
-        ])
+        const sessionRes = await fetch("/api/auth/session")
         
         if (sessionRes.ok) {
           const result: unknown = await sessionRes.json()
           if (isMounted) {
             setLoadedUser(getSessionUser(result))
-          }
-        }
-
-        if (invitesRes.ok) {
-          const result = await invitesRes.json()
-          if (isMounted && typeof result.count === "number") {
-            setPendingInvites(result.count)
-          }
-        }
-
-        if (commentsRes.ok) {
-          const result = await commentsRes.json()
-          if (isMounted && typeof result.count === "number") {
-            setUnreadComments(result.count)
           }
         }
       } catch {
@@ -150,19 +157,48 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
 
   const menuUser = user !== undefined ? user : loadedUser
 
-  if (!menuUser) return null
+  useEffect(() => {
+    if (!menuUser) return
 
-  const handleOpenChange = (open: boolean) => {
-    if (open && unreadComments > 0) {
-      setUnreadComments(0)
-      fetch("/api/user/mark-comments-read", { method: "POST" }).catch(console.error)
+    let isMounted = true
+
+    async function loadNotificationCounts() {
+      try {
+        const [invitesRes, commentsRes] = await Promise.all([
+          fetch("/api/user/pending-invites-count"),
+          fetch("/api/user/unread-comments-count"),
+        ])
+
+        const [invitesResult, commentsResult] = await Promise.all([
+          invitesRes.ok ? invitesRes.json() : Promise.resolve(null),
+          commentsRes.ok ? commentsRes.json() : Promise.resolve(null),
+        ])
+
+        if (isMounted) {
+          setPendingInvites(readCount(invitesResult))
+          setUnreadComments(readCount(commentsResult))
+        }
+      } catch {
+        if (isMounted) {
+          setPendingInvites(0)
+          setUnreadComments(0)
+        }
+      }
     }
-  }
+
+    void loadNotificationCounts()
+
+    return () => {
+      isMounted = false
+    }
+  }, [menuUser])
+
+  if (!menuUser) return null
 
   const totalNotifications = pendingInvites + unreadComments
 
   return (
-    <DropdownMenu onOpenChange={handleOpenChange}>
+    <DropdownMenu>
       <DropdownMenuTrigger
         aria-label="Mở menu tác giả"
         className="relative inline-flex h-8 items-center gap-1.5 rounded-full px-1.5 text-sm font-medium text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -190,6 +226,18 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
             <div className="flex items-center gap-2">
               <FileText aria-hidden="true" />
               Bài viết của tôi
+            </div>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link
+            href="/dashboard/notifications"
+            prefetch={false}
+            className="flex items-center justify-between"
+          >
+            <div className="flex items-center gap-2">
+              <Bell aria-hidden="true" />
+              Thông báo
             </div>
             {totalNotifications > 0 && (
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white">
