@@ -41,7 +41,7 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
 
   return (
     <NodeViewWrapper
-      className={`image-gallery relative group ${selected ? "ring-2 ring-accent rounded-md" : ""}`}
+      className={`image-gallery !my-2 relative group ${selected ? "ring-2 ring-accent rounded-md" : ""}`}
       data-type="image-gallery"
     >
       {editor.isEditable && (
@@ -129,7 +129,7 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
                 )}
                 
                 {isVideoUrl ? (
-                  <div className="relative w-full h-full aspect-video">
+                  <div className="relative w-full aspect-video">
                     {isNative ? (
                       <video
                         className="absolute inset-0 h-full w-full rounded-md object-contain bg-black/5"
@@ -160,17 +160,18 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
                 )}
 
                 {editor.isEditable ? (
-                  <figcaption
-                    className={`image-gallery__caption !mt-1 ${!image.showCaption ? "hidden" : ""}`}
-                  >
-                    <input
-                      className="w-full bg-transparent text-center outline-none border-none placeholder:text-text-tertiary/50"
-                      placeholder="Write a caption..."
-                      value={image.caption}
-                      onChange={(e) => updateImage(index, { caption: e.target.value })}
-                      onKeyDown={(e) => e.stopPropagation()}
-                    />
-                  </figcaption>
+                  image.showCaption ? (
+                    <figcaption className="image-gallery__caption !mt-1">
+                      <input
+                        autoFocus
+                        className="w-full bg-transparent text-center outline-none border-none placeholder:text-text-tertiary/50"
+                        placeholder="Write a caption..."
+                        value={image.caption}
+                        onChange={(e) => updateImage(index, { caption: e.target.value })}
+                        onKeyDown={(e) => e.stopPropagation()}
+                      />
+                    </figcaption>
+                  ) : null
                 ) : image.showCaption !== false && image.caption ? (
                   <figcaption className="image-gallery__caption !mt-1">
                     {image.caption}

@@ -1,8 +1,10 @@
 import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/react"
+import { useRef } from "react"
 import { AlignCenter, AlignLeft, AlignRight, Maximize, Trash2, Type } from "lucide-react"
 
 export function ImageNodeView(props: NodeViewProps) {
   const { node, updateAttributes, selected } = props
+  const captionRef = useRef<HTMLElement>(null)
 
   return (
     <NodeViewWrapper
@@ -69,7 +71,17 @@ export function ImageNodeView(props: NodeViewProps) {
             className={`rounded p-1.5 text-sm hover:bg-subtle-bg ${
               node.attrs.showCaption ? "bg-subtle-bg text-text-primary" : "text-text-secondary"
             }`}
-            onClick={() => updateAttributes({ showCaption: !node.attrs.showCaption })}
+            onClick={() => {
+              const nextState = !node.attrs.showCaption;
+              updateAttributes({ showCaption: nextState });
+              if (nextState) {
+                setTimeout(() => {
+                  const editable = captionRef.current?.querySelector('[contenteditable]') as HTMLElement;
+                  if (editable) editable.focus();
+                  else captionRef.current?.focus();
+                }, 50);
+              }
+            }}
             title="Toggle Caption"
             type="button"
           >
@@ -96,6 +108,7 @@ export function ImageNodeView(props: NodeViewProps) {
         src={node.attrs.src}
       />
       <figcaption
+        ref={captionRef}
         className={`mt-1 w-full text-center text-sm text-text-tertiary ${
           props.editor.isEditable ? "min-h-[1.5rem] outline-none" : ""
         } ${!node.attrs.showCaption ? "hidden" : ""}`}

@@ -19,7 +19,7 @@ export const VideoEmbedExtension = Node.create({
         }),
       },
       showCaption: {
-        default: false,
+        default: null,
         parseHTML: (element) => element.getAttribute("data-show-caption") === "true",
         renderHTML: (attributes) => ({
           "data-show-caption": attributes.showCaption ? "true" : "false",
@@ -47,7 +47,7 @@ export const VideoEmbedExtension = Node.create({
     const rawUrl = typeof node.attrs.url === "string" ? node.attrs.url : ""
     const caption =
       typeof node.attrs.caption === "string" ? node.attrs.caption : ""
-    const showCaption = node.attrs.showCaption === true
+    const showCaption = node.attrs.showCaption !== false && node.attrs.showCaption !== "false"
 
     const isNative = isNativeVideo(rawUrl)
     const mediaNode: DOMOutputSpec = isNative
