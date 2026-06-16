@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { Lock } from "lucide-react"
+import { Eye, Lock, Pencil } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -81,19 +81,32 @@ export default async function DashboardPage() {
                       {post.status === "PUBLISHED" ? "Đã xuất bản" : "Bản nháp"}
                     </Badge>
                     {post.status === "PUBLISHED" && (
-                      <Button asChild size="sm" variant="ghost">
-                        <Link href={`/${post.slug}`}>
-                          Xem
+                      <Button asChild size="icon" variant="ghost">
+                        <Link
+                          aria-label={`Xem ${post.title}`}
+                          href={`/${post.slug}`}
+                          title={`Xem ${post.title}`}
+                        >
+                          <Eye aria-hidden="true" className="h-4 w-4" />
                         </Link>
                       </Button>
                     )}
-                    <Button asChild size="sm" variant="outline">
-                      <Link href={`/dashboard/edit/${post.id}`} prefetch={false}>
-                        Chỉnh sửa
+                    <Button asChild size="icon" variant="outline">
+                      <Link
+                        aria-label={`Chỉnh sửa ${post.title}`}
+                        href={`/dashboard/edit/${post.id}`}
+                        prefetch={false}
+                        title={`Chỉnh sửa ${post.title}`}
+                      >
+                        <Pencil aria-hidden="true" className="h-4 w-4" />
                       </Link>
                     </Button>
                     {isOwner && (
-                      <PostOwnerActions postId={post.id} status={post.status} />
+                      <PostOwnerActions
+                        postId={post.id}
+                        status={post.status}
+                        title={post.title}
+                      />
                     )}
                   </>
                 )}

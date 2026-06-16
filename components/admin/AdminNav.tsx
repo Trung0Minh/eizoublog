@@ -2,10 +2,9 @@
 
 import {
   BarChart3,
-  ChevronDown,
+  FolderTree,
   FileText,
   LayoutDashboard,
-  LogOut,
   Mail,
   Menu,
   MessageSquare,
@@ -23,6 +22,7 @@ import { cn } from "@/lib/utils"
 const ADMIN_LINKS = [
   { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/admin/posts", icon: FileText, label: "Posts" },
+  { href: "/admin/content", icon: FolderTree, label: "Content" },
   { href: "/admin/writers", icon: Users, label: "Writers" },
   { href: "/admin/comments", icon: MessageSquare, label: "Comments" },
   { href: "/admin/newsletter", icon: Mail, label: "Newsletter" },

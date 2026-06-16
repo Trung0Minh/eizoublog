@@ -1,6 +1,7 @@
 "use client"
 
 import type { PostStatus } from "@prisma/client"
+import { Archive, RotateCcw } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
@@ -11,9 +12,10 @@ type ActionStatus = "idle" | "withdrawing" | "archiving"
 interface PostOwnerActionsProps {
   postId: string
   status: PostStatus
+  title: string
 }
 
-export function PostOwnerActions({ postId, status }: PostOwnerActionsProps) {
+export function PostOwnerActions({ postId, status, title }: PostOwnerActionsProps) {
   const router = useRouter()
   const [actionStatus, setActionStatus] = useState<ActionStatus>("idle")
 
@@ -54,23 +56,27 @@ export function PostOwnerActions({ postId, status }: PostOwnerActionsProps) {
     <>
       {status === "PUBLISHED" && (
         <Button
+          aria-label={`Rút bài ${title}`}
           disabled={actionStatus !== "idle"}
           onClick={() => void updateStatus("DRAFT")}
-          size="sm"
+          size="icon"
+          title={`Rút bài ${title}`}
           type="button"
           variant="outline"
         >
-          {actionStatus === "withdrawing" ? "Đang rút..." : "Rút bài"}
+          <RotateCcw aria-hidden="true" className="h-4 w-4" />
         </Button>
       )}
       <Button
+        aria-label={`Lưu trữ ${title}`}
         disabled={actionStatus !== "idle"}
         onClick={() => void updateStatus("ARCHIVED")}
-        size="sm"
+        size="icon"
+        title={`Lưu trữ ${title}`}
         type="button"
         variant="destructive"
       >
-        {actionStatus === "archiving" ? "Đang lưu trữ..." : "Lưu trữ"}
+        <Archive aria-hidden="true" className="h-4 w-4" />
       </Button>
     </>
   )

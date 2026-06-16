@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Pencil, Save, X, Plus, Trash2 } from "lucide-react"
+import { ArrowDown, ArrowUp, Pencil, Plus, Save, Trash2, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -89,6 +89,16 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
 
   const [data, setData] = useState<ResourcesData>(initialData)
 
+  function moveResource(index: number, direction: -1 | 1) {
+    const targetIndex = index + direction
+    if (targetIndex < 0 || targetIndex >= data.resources.length) return
+
+    const newResources = [...data.resources]
+    const [resource] = newResources.splice(index, 1)
+    newResources.splice(targetIndex, 0, resource)
+    setData({ ...data, resources: newResources })
+  }
+
   async function handleSave() {
     setIsSaving(true)
     try {
@@ -154,6 +164,30 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
             <div className="space-y-6">
               {data.resources.map((resource, index) => (
                 <div key={index} className="flex gap-4 items-start p-4 border border-border-default rounded-md relative group bg-subtle-bg/30">
+                  <div className="flex shrink-0 flex-col gap-1 pt-1">
+                    <Button
+                      aria-label={`Di chuyển ${resource.domain || `nguồn ${index + 1}`} lên`}
+                      disabled={index === 0}
+                      onClick={() => moveResource(index, -1)}
+                      size="icon"
+                      title="Di chuyển lên"
+                      type="button"
+                      variant="outline"
+                    >
+                      <ArrowUp aria-hidden="true" className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      aria-label={`Di chuyển ${resource.domain || `nguồn ${index + 1}`} xuống`}
+                      disabled={index === data.resources.length - 1}
+                      onClick={() => moveResource(index, 1)}
+                      size="icon"
+                      title="Di chuyển xuống"
+                      type="button"
+                      variant="outline"
+                    >
+                      <ArrowDown aria-hidden="true" className="h-4 w-4" />
+                    </Button>
+                  </div>
                   <div className="grid grid-cols-2 gap-4 flex-1">
                     <div className="space-y-4">
                       <div>

@@ -53,8 +53,7 @@ describe("admin client components", () => {
     vi.unstubAllGlobals()
   })
 
-  it("renders admin navigation and signs out", async () => {
-    const user = userEvent.setup()
+  it("renders admin navigation", () => {
     render(<AdminNav />)
 
     expect(screen.getByRole("link", { name: /posts/i })).toHaveAttribute(
@@ -64,6 +63,10 @@ describe("admin client components", () => {
     expect(screen.getByRole("link", { name: /analytics/i })).toHaveAttribute(
       "href",
       "/admin/analytics",
+    )
+    expect(screen.getByRole("link", { name: /content/i })).toHaveAttribute(
+      "href",
+      "/admin/content",
     )
     expect(screen.getByRole("link", { name: /posts/i })).toHaveAttribute(
       "aria-current",
@@ -78,10 +81,7 @@ describe("admin client components", () => {
       "/",
     )
 
-    await user.click(screen.getByRole("button", { name: "A" }))
-    await user.click(await screen.findByRole("menuitem", { name: /sign out/i }))
-
-    expect(signOutMock).toHaveBeenCalledWith({ callbackUrl: "/" })
+    expect(screen.getByRole("button", { name: /open admin menu/i })).toBeVisible()
   })
 
   it("deletes posts through the shared posts API and refreshes", async () => {
@@ -251,6 +251,7 @@ describe("admin client components", () => {
             email: "writer@example.com",
             id: "writer-1",
             name: "Mina",
+            role: "WRITER",
             username: "mina",
           },
         ]}
@@ -267,6 +268,37 @@ describe("admin client components", () => {
     await waitFor(() => {
       expect(routerMocks.refresh).toHaveBeenCalled()
     })
+  })
+
+  it("shows real admin and writer roles in the writers table", () => {
+    render(
+      <WritersTable
+        writers={[
+          {
+            _count: { posts: 1 },
+            createdAt: new Date("2026-01-01T00:00:00Z"),
+            email: "admin@example.com",
+            id: "admin-1",
+            name: "Admin",
+            role: "ADMIN",
+            username: "admin",
+          },
+          {
+            _count: { posts: 0 },
+            createdAt: new Date("2026-01-02T00:00:00Z"),
+            email: "writer@example.com",
+            id: "writer-1",
+            name: "Writer",
+            role: "WRITER",
+            username: "writer",
+          },
+        ]}
+      />,
+    )
+
+    expect(screen.getAllByText("Admin")).toHaveLength(2)
+    expect(screen.getAllByText("Writer")).toHaveLength(2)
+    expect(screen.queryByText("Editor")).not.toBeInTheDocument()
   })
 
   it("renders pending invites with creator and expiry dates", () => {

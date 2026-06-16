@@ -1,5 +1,6 @@
 "use client"
 
+import type { Role } from "@prisma/client"
 import { Mail, MoreHorizontal, ShieldOff } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -12,6 +13,7 @@ interface Writer {
   email: string
   id: string
   name: string
+  role: Role
   username: string
 }
 
@@ -89,7 +91,12 @@ export function WritersTable({ writers }: { writers: Writer[] }) {
               "#9f1239",
               "#15803d",
             ]
-            const role = index === 0 ? "Editor" : "Writer"
+            const role =
+              writer.role === "ADMIN"
+                ? "Admin"
+                : writer.role === "REVOKED"
+                  ? "Revoked"
+                  : "Writer"
 
             return (
               <div

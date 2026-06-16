@@ -127,6 +127,7 @@ const adminWriterSelect = {
   email: true,
   id: true,
   name: true,
+  role: true,
   username: true,
 } satisfies Prisma.UserSelect
 
