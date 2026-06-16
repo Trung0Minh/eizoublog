@@ -33,6 +33,11 @@ function numberAttr(
   return typeof value === "number" ? value : undefined
 }
 
+function captionIsVisible(attrs: Record<string, unknown>) {
+  const value = attrs.showCaption
+  return value !== false && value !== "false"
+}
+
 function getNodeText(node: JSONContent): string {
   if (node.type === "text") {
     return node.text ?? ""
@@ -120,7 +125,9 @@ function renderImage(node: JSONContent, key: string) {
         loading="lazy"
         src={src}
       />
-      {caption ? <figcaption className="media-caption">{caption}</figcaption> : null}
+      {caption && captionIsVisible(attrs) ? (
+        <figcaption className="media-caption">{caption}</figcaption>
+      ) : null}
     </figure>
   )
 }
@@ -173,7 +180,7 @@ function renderImageGallery(node: JSONContent, key: string) {
                   src={image.url}
                 />
               )}
-              {image.caption ? (
+              {image.caption && image.showCaption !== false ? (
                 <figcaption className="image-gallery__caption">
                   {image.caption}
                 </figcaption>
@@ -218,7 +225,9 @@ function renderVideoEmbed(node: JSONContent, key: string) {
           />
         )}
       </div>
-      {caption ? <figcaption className="media-caption">{caption}</figcaption> : null}
+      {caption && captionIsVisible(attrs) ? (
+        <figcaption className="media-caption">{caption}</figcaption>
+      ) : null}
     </figure>
   )
 }
