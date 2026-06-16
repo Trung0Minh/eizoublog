@@ -64,12 +64,12 @@ function CommentBubble({
           )}
           {role === "ADMIN" && (
             <span className="rounded-[4px] bg-red-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-600 dark:text-red-400">
-              Admin
+              ADMIN
             </span>
           )}
-          {role === "WRITER" && !isPostAuthor && (
-            <span className="rounded-[4px] bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
-              Writer
+          {role === "WRITER" && (
+            <span className="rounded-[4px] bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+              WRITER
             </span>
           )}
           <time
