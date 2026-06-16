@@ -27,7 +27,7 @@ function getApiError(value: unknown) {
     return value.error
   }
 
-  return "Something went wrong"
+  return "Đã xảy ra lỗi"
 }
 
 export function ProfileForm({ user }: ProfileFormProps) {
@@ -81,10 +81,10 @@ export function ProfileForm({ user }: ProfileFormProps) {
         throw new Error(getApiError(result))
       }
 
-      setMessage({ text: "Profile updated successfully.", type: "success" })
+      setMessage({ text: "Cập nhật hồ sơ thành công.", type: "success" })
     } catch (saveError) {
       setMessage({
-        text: saveError instanceof Error ? saveError.message : "Save failed",
+        text: saveError instanceof Error ? saveError.message : "Lưu hồ sơ thất bại",
         type: "error",
       })
     } finally {
@@ -108,14 +108,14 @@ export function ProfileForm({ user }: ProfileFormProps) {
       )}
 
       <section className="rounded-[8px] border p-4 sm:p-5">
-        <label className="mb-3 block text-sm font-medium">Avatar</label>
+        <label className="mb-3 block text-sm font-medium">Ảnh đại diện</label>
         <AvatarUpload name={name} onChange={setAvatarUrl} value={avatarUrl} />
       </section>
 
       <div className="grid gap-5">
         <div className="space-y-2">
           <label className="text-sm font-medium" htmlFor="profile-name">
-            Display name
+            Tên hiển thị
           </label>
           <Input
             autoComplete="name"
@@ -129,12 +129,13 @@ export function ProfileForm({ user }: ProfileFormProps) {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Bio</label>
+          <label className="text-sm font-medium">Giới thiệu</label>
           <div className="rounded-md border border-border bg-background shadow-sm overflow-hidden [&_.prose-editor]:min-h-[200px] [&_.prose-editor]:p-4 [&_.prose-editor]:!ml-0 [&_.prose-editor>p]:!ml-0">
             <TiptapEditor
               content={initialBioContent}
               onChange={(json) => setBio(JSON.stringify(json))}
-              placeholder="Tell readers what you write about."
+              placeholder="Chia sẻ với độc giả về những chủ đề bạn viết."
+              ariaLabel="Giới thiệu"
             />
           </div>
         </div>
@@ -143,7 +144,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
       <div className="grid gap-5 border-t pt-6 sm:grid-cols-2">
         <div className="space-y-2">
           <label className="text-sm font-medium" htmlFor="profile-username">
-            Username
+            Tên người dùng
           </label>
           <Input
             disabled
@@ -152,7 +153,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
             value={`@${user.username}`}
           />
           <p className="text-xs text-muted-foreground">
-            This is part of your public profile URL.
+            Đây là một phần của URL hồ sơ công khai của bạn.
           </p>
         </div>
 
@@ -162,13 +163,13 @@ export function ProfileForm({ user }: ProfileFormProps) {
           </label>
           <Input disabled id="profile-email" readOnly value={user.email} />
           <p className="text-xs text-muted-foreground">
-            Email is tied to your login account.
+            Email được liên kết với tài khoản đăng nhập của bạn.
           </p>
         </div>
       </div>
 
       <Button className="w-full sm:w-auto" disabled={saving || !name.trim()}>
-        {saving ? "Saving..." : "Save changes"}
+        {saving ? "Đang lưu..." : "Lưu thay đổi"}
       </Button>
     </form>
   )

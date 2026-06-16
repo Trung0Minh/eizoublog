@@ -6,7 +6,7 @@ import { getCachedProfileUser } from "@/lib/queries"
 import { getCurrentSession } from "@/lib/session"
 
 export const metadata: Metadata = {
-  title: "Edit Profile",
+  title: "Chỉnh sửa hồ sơ",
   robots: { follow: false, index: false },
 }
 
@@ -27,11 +27,11 @@ export default async function ProfilePage() {
     <main className="mx-auto w-full max-w-2xl px-4 py-8 sm:py-10 md:px-6 lg:px-8">
       <div className="mb-8">
         <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-editorial">
-          Writer settings
+          Cài đặt tác giả
         </p>
-        <h1 className="text-2xl font-bold tracking-tight">Edit profile</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Chỉnh sửa hồ sơ</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          Keep your public writer profile current for readers and co-authors.
+          Cập nhật hồ sơ tác giả công khai của bạn cho độc giả và các đồng tác giả.
         </p>
       </div>
 

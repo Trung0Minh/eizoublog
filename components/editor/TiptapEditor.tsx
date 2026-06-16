@@ -30,6 +30,7 @@ interface TiptapEditorProps {
   editable?: boolean
   onChange?: (json: JSONContent, text: string) => void
   placeholder?: string
+  ariaLabel?: string
 }
 
 export function TiptapEditor({
@@ -38,6 +39,7 @@ export function TiptapEditor({
   editable = true,
   onChange,
   placeholder = "Bắt đầu viết bài...",
+  ariaLabel,
 }: TiptapEditorProps) {
   const editor = useEditor({
     content: content ?? "",
@@ -47,6 +49,7 @@ export function TiptapEditor({
         class: editable
           ? "prose-editor min-h-[420px] focus:outline-none"
           : "prose prose-lg dark:prose-invert max-w-none focus:outline-none",
+        ...(ariaLabel && { "aria-label": ariaLabel }),
       },
     },
     extensions: [

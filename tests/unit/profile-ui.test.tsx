@@ -5,6 +5,41 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { AvatarUpload } from "@/components/profile/AvatarUpload"
 import { ProfileForm } from "@/components/profile/ProfileForm"
 
+vi.mock("@/components/editor/TiptapEditor", () => ({
+  TiptapEditor: ({
+    content,
+    onChange,
+    placeholder,
+    ariaLabel,
+  }: {
+    content?: any
+    onChange?: (json: any) => void
+    placeholder?: string
+    ariaLabel?: string
+  }) => (
+    <textarea
+      aria-label={ariaLabel}
+      placeholder={placeholder}
+      defaultValue={content ? (typeof content === "string" ? content : JSON.stringify(content)) : ""}
+      onChange={(e) => onChange?.({
+        type: "doc",
+        content: [
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: e.target.value
+              }
+            ]
+          }
+        ]
+      })}
+      role="textbox"
+    />
+  ),
+}))
+
 describe("ProfileForm", () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -43,26 +78,39 @@ describe("ProfileForm", () => {
       />,
     )
 
-    expect(screen.getByRole("textbox", { name: "Username" })).toBeDisabled()
+    expect(screen.getByRole("textbox", { name: "Tên người dùng" })).toBeDisabled()
     expect(screen.getByRole("textbox", { name: "Email" })).toBeDisabled()
 
-    await user.clear(screen.getByRole("textbox", { name: "Display name" }))
+    await user.clear(screen.getByRole("textbox", { name: "Tên hiển thị" }))
     await user.type(
-      screen.getByRole("textbox", { name: "Display name" }),
+      screen.getByRole("textbox", { name: "Tên hiển thị" }),
       "Mina Revised",
     )
-    await user.clear(screen.getByRole("textbox", { name: "Bio" }))
+    await user.clear(screen.getByRole("textbox", { name: "Giới thiệu" }))
     await user.type(
-      screen.getByRole("textbox", { name: "Bio" }),
+      screen.getByRole("textbox", { name: "Giới thiệu" }),
       "Production notes and layout analysis.",
     )
-    await user.click(screen.getByRole("button", { name: "Save changes" }))
+    await user.click(screen.getByRole("button", { name: "Lưu thay đổi" }))
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith("/api/profile", {
         body: JSON.stringify({
           avatarUrl: null,
-          bio: "Production notes and layout analysis.",
+          bio: JSON.stringify({
+            type: "doc",
+            content: [
+              {
+                type: "paragraph",
+                content: [
+                  {
+                    type: "text",
+                    text: "Production notes and layout analysis.",
+                  },
+                ],
+              },
+            ],
+          }),
           name: "Mina Revised",
         }),
         headers: { "Content-Type": "application/json" },
@@ -70,7 +118,7 @@ describe("ProfileForm", () => {
       })
     })
     expect(
-      await screen.findByText("Profile updated successfully."),
+      await screen.findByText("Cập nhật hồ sơ thành công."),
     ).toBeInTheDocument()
   })
 })
@@ -98,7 +146,7 @@ describe("AvatarUpload", () => {
     render(<AvatarUpload name="Mina Writer" onChange={onChange} value="" />)
 
     await user.upload(
-      screen.getByLabelText("Upload avatar"),
+      screen.getByLabelText("Tải ảnh đại diện lên"),
       new File(["png"], "avatar.png", { type: "image/png" }),
     )
 

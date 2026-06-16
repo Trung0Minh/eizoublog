@@ -21,7 +21,7 @@ function getApiError(value: unknown) {
     return value.error
   }
 
-  return "Failed to upload avatar"
+  return "Tải ảnh đại diện lên thất bại"
 }
 
 function getUploadUrl(value: unknown) {
@@ -78,7 +78,7 @@ export function AvatarUpload({ name, onChange, value }: AvatarUploadProps) {
 
       const url = getUploadUrl(result)
       if (!url) {
-        throw new Error("Upload response did not include a URL")
+        throw new Error("Phản hồi tải lên không chứa URL ảnh")
       }
 
       onChange(url)
@@ -86,7 +86,7 @@ export function AvatarUpload({ name, onChange, value }: AvatarUploadProps) {
       setError(
         uploadError instanceof Error
           ? uploadError.message
-          : "Failed to upload avatar",
+          : "Tải ảnh đại diện lên thất bại",
       )
     } finally {
       setUploading(false)
@@ -109,7 +109,7 @@ export function AvatarUpload({ name, onChange, value }: AvatarUploadProps) {
           </div>
         )}
         <button
-          aria-label="Change avatar"
+          aria-label="Thay đổi ảnh đại diện"
           className="absolute inset-0 flex items-center justify-center bg-background/70 opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           disabled={uploading}
           onClick={() => inputRef.current?.click()}
@@ -132,7 +132,7 @@ export function AvatarUpload({ name, onChange, value }: AvatarUploadProps) {
             type="button"
             variant="outline"
           >
-            {uploading ? "Uploading..." : "Upload new avatar"}
+            {uploading ? "Đang tải lên..." : "Tải ảnh đại diện mới"}
           </Button>
           {value && (
             <Button
@@ -142,16 +142,16 @@ export function AvatarUpload({ name, onChange, value }: AvatarUploadProps) {
               variant="ghost"
             >
               <X aria-hidden="true" className="mr-1 h-3.5 w-3.5" />
-              Remove
+              Xóa
             </Button>
           )}
         </div>
         <p className="text-xs text-muted-foreground">
-          JPEG, PNG, GIF, or WebP. Images are shown as a circle.
+          JPEG, PNG, GIF hoặc WebP. Ảnh được hiển thị dưới dạng hình tròn.
         </p>
         <input
           accept="image/jpeg,image/png,image/gif,image/webp"
-          aria-label="Upload avatar"
+          aria-label="Tải ảnh đại diện lên"
           className="sr-only"
           onChange={(event) => {
             const file = event.target.files?.[0]
