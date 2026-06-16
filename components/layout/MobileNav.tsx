@@ -34,7 +34,7 @@ export function MobileNav({ links, user }: MobileNavProps) {
     <Sheet onOpenChange={setOpen} open={open}>
       <SheetTrigger asChild>
         <Button
-          aria-label="Open navigation menu"
+          aria-label="Mở menu điều hướng"
           className="h-8 w-8 rounded-full text-text-secondary hover:bg-subtle-bg hover:text-text-primary md:hidden"
           size="icon"
           type="button"
@@ -44,9 +44,9 @@ export function MobileNav({ links, user }: MobileNavProps) {
         </Button>
       </SheetTrigger>
       <SheetContent className="flex w-[280px] flex-col border-border-default bg-background px-6 py-6" side="right">
-        <SheetTitle className="sr-only">Navigation menu</SheetTitle>
+        <SheetTitle className="sr-only">Menu điều hướng</SheetTitle>
         <SheetDescription className="sr-only">
-          Browse publication pages and search posts.
+          Duyệt các trang ấn phẩm và tìm kiếm bài viết.
         </SheetDescription>
         <div className="mb-8 flex items-center justify-between pr-8">
           <span className="text-[16px] font-bold tracking-tight">
@@ -87,7 +87,7 @@ export function MobileNav({ links, user }: MobileNavProps) {
                 prefetch={false}
               >
                 <FileText aria-hidden="true" className="h-4 w-4" />
-                My posts
+                Bài viết của tôi
               </Link>
               {menuUser.role === "ADMIN" && (
                 <Link
@@ -97,7 +97,7 @@ export function MobileNav({ links, user }: MobileNavProps) {
                   prefetch={false}
                 >
                   <Shield aria-hidden="true" className="h-4 w-4" />
-                  Admin panel
+                  Quản trị
                 </Link>
               )}
               <Link
@@ -107,7 +107,7 @@ export function MobileNav({ links, user }: MobileNavProps) {
                 prefetch={false}
               >
                 <User aria-hidden="true" className="h-4 w-4" />
-                Edit profile
+                Sửa hồ sơ
               </Link>
               <Link
                 className="flex min-h-9 items-center gap-2 text-sm text-text-secondary transition-colors hover:text-text-primary"
@@ -115,7 +115,7 @@ export function MobileNav({ links, user }: MobileNavProps) {
                 onClick={() => setOpen(false)}
               >
                 <User aria-hidden="true" className="h-4 w-4" />
-                View public profile
+                Hồ sơ công khai
               </Link>
               <Button
                 className="min-h-9 justify-start gap-2 px-0 text-accent hover:bg-transparent hover:text-accent/80"
@@ -124,7 +124,7 @@ export function MobileNav({ links, user }: MobileNavProps) {
                 variant="ghost"
               >
                 <LogOut aria-hidden="true" className="h-4 w-4" />
-                Sign out
+                Đăng xuất
               </Button>
             </div>
           </div>
