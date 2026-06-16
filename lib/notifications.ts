@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client"
+import type { NotificationType, Prisma } from "@prisma/client"
 
 import { prisma } from "@/lib/prisma"
 
@@ -65,6 +65,13 @@ export const notificationInviteSelect = {
   postId: true,
 } satisfies Prisma.PostAuthorSelect
 
+export const notificationEventSelect = {
+  createdAt: true,
+  data: true,
+  id: true,
+  type: true,
+} satisfies Prisma.NotificationSelect
+
 export type NotificationComment = Prisma.CommentGetPayload<{
   select: typeof notificationCommentSelect
 }>
@@ -73,21 +80,40 @@ export type NotificationInvite = Prisma.PostAuthorGetPayload<{
   select: typeof notificationInviteSelect
 }>
 
+export type NotificationEvent = Prisma.NotificationGetPayload<{
+  select: typeof notificationEventSelect
+}>
+
+interface CoAuthorResponseNotificationInput {
+  actorName: string
+  actorUsername: string
+  postAuthorId: string
+  postId: string
+  postSlug: string
+  postTitle: string
+  type: Extract<
+    NotificationType,
+    "COAUTHOR_ACCEPTED" | "COAUTHOR_DECLINED"
+  >
+}
+
 export async function getNotificationCounts(user: NotificationUser) {
-  const [unreadComments, pendingInvites] = await Promise.all([
+  const [unreadComments, pendingInvites, responseEvents] = await Promise.all([
     prisma.comment.count({ where: unreadCommentWhere(user) }),
     prisma.postAuthor.count({ where: pendingInviteWhere(user) }),
+    prisma.notification.count({ where: { readAt: null, userId: user.id } }),
   ])
 
   return {
     pendingInvites,
-    total: unreadComments + pendingInvites,
+    responseEvents,
+    total: unreadComments + pendingInvites + responseEvents,
     unreadComments,
   }
 }
 
 export async function getNotifications(user: NotificationUser) {
-  const [unreadComments, pendingInvites] = await Promise.all([
+  const [unreadComments, pendingInvites, responseEvents] = await Promise.all([
     prisma.comment.findMany({
       orderBy: { createdAt: "desc" },
       select: notificationCommentSelect,
@@ -99,14 +125,49 @@ export async function getNotifications(user: NotificationUser) {
       select: notificationInviteSelect,
       where: pendingInviteWhere(user),
     }),
+    prisma.notification.findMany({
+      orderBy: { createdAt: "desc" },
+      select: notificationEventSelect,
+      take: 25,
+      where: { readAt: null, userId: user.id },
+    }),
   ])
 
-  return { pendingInvites, unreadComments }
+  return { pendingInvites, responseEvents, unreadComments }
 }
 
 export async function markUnreadCommentsRead(user: NotificationUser) {
   return prisma.comment.updateMany({
     data: { isRead: true },
     where: unreadCommentWhere(user),
+  })
+}
+
+export async function markNotificationsRead(userId: string) {
+  return prisma.notification.updateMany({
+    data: { readAt: new Date() },
+    where: { readAt: null, userId },
+  })
+}
+
+export async function createCoAuthorResponseNotification(
+  input: CoAuthorResponseNotificationInput,
+) {
+  if (input.postAuthorId === "") {
+    return null
+  }
+
+  return prisma.notification.create({
+    data: {
+      data: {
+        actorName: input.actorName,
+        actorUsername: input.actorUsername,
+        postId: input.postId,
+        postSlug: input.postSlug,
+        postTitle: input.postTitle,
+      },
+      type: input.type,
+      userId: input.postAuthorId,
+    },
   })
 }

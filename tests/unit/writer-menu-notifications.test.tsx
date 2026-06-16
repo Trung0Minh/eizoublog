@@ -31,11 +31,22 @@ describe("WriterMenu notifications", () => {
       .spyOn(globalThis, "fetch")
       .mockImplementation(async (input) => {
         const url = String(input)
-        if (url === "/api/user/pending-invites-count") {
-          return new Response(JSON.stringify({ data: { count: 2 } }))
-        }
-        if (url === "/api/user/unread-comments-count") {
-          return new Response(JSON.stringify({ data: { count: 3 } }))
+        if (url === "/api/user/notifications") {
+          return new Response(
+            JSON.stringify({
+              data: {
+                counts: {
+                  pendingInvites: 2,
+                  responseEvents: 1,
+                  total: 6,
+                  unreadComments: 3,
+                },
+                pendingInvites: [],
+                responseEvents: [],
+                unreadComments: [],
+              },
+            }),
+          )
         }
         return new Response(JSON.stringify({ data: { count: 0 } }))
       })
@@ -53,12 +64,7 @@ describe("WriterMenu notifications", () => {
       )
 
       await waitFor(() => {
-        expect(fetchMock).toHaveBeenCalledWith(
-          "/api/user/pending-invites-count",
-        )
-        expect(fetchMock).toHaveBeenCalledWith(
-          "/api/user/unread-comments-count",
-        )
+        expect(fetchMock).toHaveBeenCalledWith("/api/user/notifications")
       })
 
       await userEvent.click(
@@ -69,7 +75,7 @@ describe("WriterMenu notifications", () => {
         "href",
         "/dashboard/notifications",
       )
-      expect(screen.getByText("5")).toBeInTheDocument()
+      expect(screen.getByText("6")).toBeInTheDocument()
     } finally {
       fetchMock.mockRestore()
     }

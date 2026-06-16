@@ -11,15 +11,23 @@ const mocks = vi.hoisted(() => ({
       count: vi.fn(),
       findMany: vi.fn(),
     },
+    notification: {
+      count: vi.fn(),
+      create: vi.fn(),
+      findMany: vi.fn(),
+      updateMany: vi.fn(),
+    },
   },
 }))
 
 vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }))
 
 import {
+  createCoAuthorResponseNotification,
   getNotificationCounts,
   getNotifications,
   markUnreadCommentsRead,
+  markNotificationsRead,
 } from "@/lib/notifications"
 
 describe("notification queries", () => {
@@ -28,12 +36,17 @@ describe("notification queries", () => {
     mocks.prisma.comment.count.mockResolvedValue(0)
     mocks.prisma.comment.findMany.mockResolvedValue([])
     mocks.prisma.comment.updateMany.mockResolvedValue({ count: 0 })
+    mocks.prisma.notification.count.mockResolvedValue(0)
+    mocks.prisma.notification.create.mockResolvedValue({ id: "notification-1" })
+    mocks.prisma.notification.findMany.mockResolvedValue([])
+    mocks.prisma.notification.updateMany.mockResolvedValue({ count: 0 })
     mocks.prisma.postAuthor.count.mockResolvedValue(0)
     mocks.prisma.postAuthor.findMany.mockResolvedValue([])
   })
 
   it("counts unread comments on authored and accepted co-authored posts", async () => {
     mocks.prisma.comment.count.mockResolvedValue(3)
+    mocks.prisma.notification.count.mockResolvedValue(4)
     mocks.prisma.postAuthor.count.mockResolvedValue(2)
 
     await expect(
@@ -41,7 +54,12 @@ describe("notification queries", () => {
         email: "mina@example.com",
         id: "writer-1",
       }),
-    ).resolves.toEqual({ pendingInvites: 2, total: 5, unreadComments: 3 })
+    ).resolves.toEqual({
+      pendingInvites: 2,
+      responseEvents: 4,
+      total: 9,
+      unreadComments: 3,
+    })
 
     expect(mocks.prisma.comment.count).toHaveBeenCalledWith({
       where: {
@@ -81,7 +99,18 @@ describe("notification queries", () => {
       },
       postId: "post-1",
     }
+    const responseEvent = {
+      createdAt: new Date("2026-06-16T05:00:00Z"),
+      data: {
+        actorName: "Ken",
+        postId: "post-1",
+        postTitle: "Shared Draft",
+      },
+      id: "notification-1",
+      type: "COAUTHOR_ACCEPTED",
+    }
     mocks.prisma.comment.findMany.mockResolvedValue([comment])
+    mocks.prisma.notification.findMany.mockResolvedValue([responseEvent])
     mocks.prisma.postAuthor.findMany.mockResolvedValue([invite])
 
     await expect(
@@ -91,6 +120,7 @@ describe("notification queries", () => {
       }),
     ).resolves.toEqual({
       pendingInvites: [invite],
+      responseEvents: [responseEvent],
       unreadComments: [comment],
     })
 
@@ -103,6 +133,13 @@ describe("notification queries", () => {
     expect(mocks.prisma.postAuthor.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         orderBy: { post: { updatedAt: "desc" } },
+      }),
+    )
+    expect(mocks.prisma.notification.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: { createdAt: "desc" },
+        take: 25,
+        where: { readAt: null, userId: "writer-2" },
       }),
     )
   })
@@ -134,6 +171,45 @@ describe("notification queries", () => {
           status: { not: "ARCHIVED" },
         },
         status: "APPROVED",
+      },
+    })
+  })
+
+  it("marks durable response notifications read", async () => {
+    mocks.prisma.notification.updateMany.mockResolvedValue({ count: 2 })
+
+    await expect(markNotificationsRead("writer-1")).resolves.toEqual({
+      count: 2,
+    })
+
+    expect(mocks.prisma.notification.updateMany).toHaveBeenCalledWith({
+      data: { readAt: expect.any(Date) },
+      where: { readAt: null, userId: "writer-1" },
+    })
+  })
+
+  it("creates co-author response notifications for post authors", async () => {
+    await createCoAuthorResponseNotification({
+      actorName: "Ken",
+      actorUsername: "ken",
+      postAuthorId: "writer-1",
+      postId: "post-1",
+      postSlug: "shared-draft",
+      postTitle: "Shared Draft",
+      type: "COAUTHOR_DECLINED",
+    })
+
+    expect(mocks.prisma.notification.create).toHaveBeenCalledWith({
+      data: {
+        data: {
+          actorName: "Ken",
+          actorUsername: "ken",
+          postId: "post-1",
+          postSlug: "shared-draft",
+          postTitle: "Shared Draft",
+        },
+        type: "COAUTHOR_DECLINED",
+        userId: "writer-1",
       },
     })
   })

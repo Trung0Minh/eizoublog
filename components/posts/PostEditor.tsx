@@ -30,9 +30,17 @@ interface WriterOption {
   username: string
 }
 
+type CoAuthorStatus = "PENDING" | "ACCEPTED" | "DECLINED"
+
+interface CoAuthorState {
+  status: CoAuthorStatus
+  userId: string
+}
+
 interface InitialPostData {
   categoryId: string | null
   coAuthorIds: string[]
+  coAuthors?: CoAuthorState[]
   content: JSONContent
   contentText: string | null
   coverAlt: string | null
@@ -122,6 +130,12 @@ export function PostEditor({
     initialData?.tags ?? initialTags,
   )
   const [title, setTitle] = useState(initialData?.title ?? "")
+  const coAuthorStatusById = new Map(
+    initialData?.coAuthors?.map((coAuthor) => [
+      coAuthor.userId,
+      coAuthor.status,
+    ]) ?? [],
+  )
 
   const autosaveDraftRef = useRef({
     categoryId,
@@ -272,6 +286,40 @@ export function PostEditor({
 
   const availableWriters = writers.filter((writer) => writer.id !== currentUserId)
 
+  function getCoAuthorStatus(writerId: string) {
+    return coAuthorStatusById.get(writerId) ?? "PENDING"
+  }
+
+  function getCoAuthorStatusLabel(writerId: string) {
+    if (!postId || !coAuthorStatusById.has(writerId)) {
+      return "Chưa gửi"
+    }
+
+    switch (getCoAuthorStatus(writerId)) {
+      case "ACCEPTED":
+        return "Đã chấp nhận"
+      case "DECLINED":
+        return "Đã từ chối"
+      case "PENDING":
+        return "Đang chờ"
+    }
+  }
+
+  function getCoAuthorStatusClass(writerId: string) {
+    if (!postId || !coAuthorStatusById.has(writerId)) {
+      return "border-border-default bg-subtle-bg text-text-tertiary"
+    }
+
+    switch (getCoAuthorStatus(writerId)) {
+      case "ACCEPTED":
+        return "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+      case "DECLINED":
+        return "border-destructive/30 bg-destructive/10 text-destructive"
+      case "PENDING":
+        return "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+    }
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 flex flex-col bg-background text-text-primary"
@@ -419,11 +467,34 @@ export function PostEditor({
                             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#7b5ea7] text-[12px] font-semibold text-white">
                               {writer.name.charAt(0)}
                             </span>
-                            {writer.name}
+                            <span>{writer.name}</span>
+                            <span
+                              className={cn(
+                                "rounded-full border px-2 py-0.5 text-[11px] font-medium",
+                                getCoAuthorStatusClass(writer.id),
+                              )}
+                            >
+                              {getCoAuthorStatusLabel(writer.id)}
+                            </span>
                             <X aria-hidden="true" className="h-3.5 w-3.5 text-text-tertiary" />
                           </button>
                         ))}
                     </div>
+                    <p className="text-[12px] leading-relaxed text-text-tertiary">
+                      Chọn đồng tác giả rồi bấm lưu để gửi lời mời. Trạng thái sẽ cập nhật khi họ phản hồi.
+                    </p>
+                    {coAuthorIds.length > 0 && (
+                      <button
+                        className="inline-flex h-9 items-center justify-center rounded-[5px] border border-border-default bg-background px-3 text-[13px] font-medium text-text-primary transition-colors hover:bg-subtle-bg disabled:cursor-not-allowed disabled:opacity-50"
+                        disabled={!canSave || isPending}
+                        onClick={() =>
+                          startTransition(() => void savePost("DRAFT"))
+                        }
+                        type="button"
+                      >
+                        {postId ? "Gửi / cập nhật lời mời" : "Lưu nháp và gửi lời mời"}
+                      </button>
+                    )}
                     <select
                       aria-label="Thêm đồng tác giả"
                       className="h-9 w-full rounded-[5px] border border-border-default bg-background px-2.5 py-2 text-[13px] text-text-secondary outline-none transition-colors focus:border-accent"

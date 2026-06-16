@@ -20,6 +20,7 @@ export function MarkCommentsReadButton({ disabled }: { disabled?: boolean }) {
         throw new Error("Failed to mark comments read")
       }
 
+      window.dispatchEvent(new Event("notifications:changed"))
       router.refresh()
     } catch {
       setPending(false)

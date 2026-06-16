@@ -121,9 +121,41 @@ function readCount(value: unknown) {
   return 0
 }
 
+function readNotificationCounts(value: unknown) {
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "data" in value &&
+    typeof value.data === "object" &&
+    value.data !== null &&
+    "counts" in value.data &&
+    typeof value.data.counts === "object" &&
+    value.data.counts !== null
+  ) {
+    const counts = value.data.counts
+    return {
+      pendingInvites:
+        "pendingInvites" in counts && typeof counts.pendingInvites === "number"
+          ? counts.pendingInvites
+          : 0,
+      responseEvents:
+        "responseEvents" in counts && typeof counts.responseEvents === "number"
+          ? counts.responseEvents
+          : 0,
+      unreadComments:
+        "unreadComments" in counts && typeof counts.unreadComments === "number"
+          ? counts.unreadComments
+          : 0,
+    }
+  }
+
+  return null
+}
+
 export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
   const [loadedUser, setLoadedUser] = useState<WriterMenuUser | null>(null)
   const [pendingInvites, setPendingInvites] = useState(0)
+  const [responseEvents, setResponseEvents] = useState(0)
   const [unreadComments, setUnreadComments] = useState(0)
 
   useEffect(() => {
@@ -164,38 +196,39 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
 
     async function loadNotificationCounts() {
       try {
-        const [invitesRes, commentsRes] = await Promise.all([
-          fetch("/api/user/pending-invites-count"),
-          fetch("/api/user/unread-comments-count"),
-        ])
-
-        const [invitesResult, commentsResult] = await Promise.all([
-          invitesRes.ok ? invitesRes.json() : Promise.resolve(null),
-          commentsRes.ok ? commentsRes.json() : Promise.resolve(null),
-        ])
+        const response = await fetch("/api/user/notifications")
+        const result = response.ok ? await response.json() : null
+        const counts = readNotificationCounts(result)
 
         if (isMounted) {
-          setPendingInvites(readCount(invitesResult))
-          setUnreadComments(readCount(commentsResult))
+          setPendingInvites(counts?.pendingInvites ?? readCount(result))
+          setResponseEvents(counts?.responseEvents ?? 0)
+          setUnreadComments(counts?.unreadComments ?? 0)
         }
       } catch {
         if (isMounted) {
           setPendingInvites(0)
+          setResponseEvents(0)
           setUnreadComments(0)
         }
       }
     }
 
     void loadNotificationCounts()
+    window.addEventListener("notifications:changed", loadNotificationCounts)
 
     return () => {
       isMounted = false
+      window.removeEventListener(
+        "notifications:changed",
+        loadNotificationCounts,
+      )
     }
   }, [menuUser])
 
   if (!menuUser) return null
 
-  const totalNotifications = pendingInvites + unreadComments
+  const totalNotifications = pendingInvites + responseEvents + unreadComments
 
   return (
     <DropdownMenu>

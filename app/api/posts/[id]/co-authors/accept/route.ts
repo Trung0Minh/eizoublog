@@ -1,6 +1,7 @@
 import { revalidateTag } from "next/cache"
 
 import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
+import { createCoAuthorResponseNotification } from "@/lib/notifications"
 import { prisma } from "@/lib/prisma"
 
 export async function POST(
@@ -17,6 +18,17 @@ export async function POST(
     const { id } = await params
 
     const existing = await prisma.postAuthor.findUnique({
+      select: {
+        post: {
+          select: {
+            authorId: true,
+            id: true,
+            slug: true,
+            title: true,
+          },
+        },
+        status: true,
+      },
       where: {
         postId_userId: {
           postId: id,
@@ -40,6 +52,21 @@ export async function POST(
         status: "ACCEPTED",
       },
     })
+
+    if (
+      existing.status !== "ACCEPTED" &&
+      existing.post.authorId !== activeSession.user.id
+    ) {
+      await createCoAuthorResponseNotification({
+        actorName: activeSession.user.name,
+        actorUsername: activeSession.user.username,
+        postAuthorId: existing.post.authorId,
+        postId: existing.post.id,
+        postSlug: existing.post.slug,
+        postTitle: existing.post.title,
+        type: "COAUTHOR_ACCEPTED",
+      })
+    }
 
     revalidateTag("posts", "max")
 

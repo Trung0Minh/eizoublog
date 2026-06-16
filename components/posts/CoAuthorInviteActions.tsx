@@ -15,6 +15,7 @@ export function CoAuthorInviteActions({ postId }: { postId: string }) {
     try {
       const res = await fetch(`/api/posts/${postId}/co-authors/accept`, { method: "POST" })
       if (!res.ok) throw new Error()
+      window.dispatchEvent(new Event("notifications:changed"))
       router.refresh()
     } catch {
       alert("Failed to accept invitation")
@@ -27,6 +28,7 @@ export function CoAuthorInviteActions({ postId }: { postId: string }) {
     try {
       const res = await fetch(`/api/posts/${postId}/co-authors/decline`, { method: "POST" })
       if (!res.ok) throw new Error()
+      window.dispatchEvent(new Event("notifications:changed"))
       router.refresh()
     } catch {
       alert("Failed to decline invitation")

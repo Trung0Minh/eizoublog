@@ -419,7 +419,11 @@ export const getCachedWriterDashboardPosts = unstable_cache(
       where: {
         OR: [
           { authorId: userId },
-          { coAuthors: { some: { userId } } },
+          {
+            coAuthors: {
+              some: { status: { in: ["ACCEPTED", "PENDING"] }, userId },
+            },
+          },
         ],
         status: { not: "ARCHIVED" },
       },

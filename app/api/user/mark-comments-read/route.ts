@@ -1,5 +1,8 @@
 import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
-import { markUnreadCommentsRead } from "@/lib/notifications"
+import {
+  markNotificationsRead,
+  markUnreadCommentsRead,
+} from "@/lib/notifications"
 
 export async function POST() {
   try {
@@ -9,9 +12,17 @@ export async function POST() {
       return unauthorizedResponse()
     }
 
-    const result = await markUnreadCommentsRead(activeSession.user)
+    const [comments, notifications] = await Promise.all([
+      markUnreadCommentsRead(activeSession.user),
+      markNotificationsRead(activeSession.user.id),
+    ])
 
-    return Response.json({ data: { count: result.count, success: true } })
+    return Response.json({
+      data: {
+        count: comments.count + notifications.count,
+        success: true,
+      },
+    })
   } catch (error) {
     console.error("[POST /api/user/mark-comments-read]", error)
     return Response.json({ error: "Internal error" }, { status: 500 })
