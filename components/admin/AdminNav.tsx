@@ -8,6 +8,7 @@ import {
   Mail,
   Menu,
   MessageSquare,
+  Trophy,
   Users,
   X,
 } from "lucide-react"
@@ -23,6 +24,7 @@ const ADMIN_LINKS = [
   { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/admin/posts", icon: FileText, label: "Posts" },
   { href: "/admin/content", icon: FolderTree, label: "Content" },
+  { href: "/admin/events", icon: Trophy, label: "Events" },
   { href: "/admin/writers", icon: Users, label: "Writers" },
   { href: "/admin/comments", icon: MessageSquare, label: "Comments" },
   { href: "/admin/newsletter", icon: Mail, label: "Newsletter" },

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Bell, ChevronDown, FileText, LogOut, Shield, User } from "lucide-react"
+import { Bell, ChevronDown, FileText, LogOut, PartyPopper, Shield, User } from "lucide-react"
 import type { Role } from "@prisma/client"
 import Link from "next/link"
 import { signOut } from "next-auth/react"
@@ -260,6 +260,12 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
               <FileText aria-hidden="true" />
               Bài viết của tôi
             </div>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/dashboard/events" prefetch={false}>
+            <PartyPopper aria-hidden="true" />
+            Sự kiện viết
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>

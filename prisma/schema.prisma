@@ -30,6 +30,9 @@ model User {
   passwordResets  PasswordResetToken[]
   comments        Comment[]
   notifications   Notification[]
+  awardEventsCreated AwardEvent[] @relation("AwardEventCreatedBy")
+  awardEventRooms    AwardEventRoom[]
+  awardEventComments AwardEventRoomComment[]
 
   @@index([username])
   @@index([role, createdAt(sort: Desc)])
@@ -143,6 +146,7 @@ model Post {
   category        Category?                @relation(fields: [categoryId], references: [id])
   tags            PostTag[]
   comments        Comment[]
+  finalAwardEvent AwardEvent? @relation("AwardEventFinalPost")
   searchVector    Unsupported("tsvector")? @map("search_vector")
 
   @@index([slug])
@@ -172,6 +176,106 @@ enum DraftVisibility {
   CO_AUTHORS
 }
 
+model AwardEvent {
+  id          String           @id @default(cuid())
+  title       String
+  slug        String           @unique
+  intro       Json?
+  introText   String?          @db.Text
+  coverUrl    String?
+  coverAlt    String?
+  status      AwardEventStatus @default(DRAFT)
+  openedAt    DateTime?
+  closedAt    DateTime?
+  publishedAt DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  createdById String
+  finalPostId String?          @unique
+  categoryId  String?
+
+  createdBy User       @relation("AwardEventCreatedBy", fields: [createdById], references: [id])
+  finalPost Post?      @relation("AwardEventFinalPost", fields: [finalPostId], references: [id])
+  category  Category?  @relation(fields: [categoryId], references: [id])
+  rooms     AwardEventRoom[]
+  tags      AwardEventTag[]
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([createdById])
+  @@index([categoryId])
+  @@map("award_events")
+}
+
+enum AwardEventStatus {
+  DRAFT
+  OPEN
+  CLOSED
+  PUBLISHED
+  ARCHIVED
+}
+
+model AwardEventRoom {
+  id          String                   @id @default(cuid())
+  eventId     String
+  writerId    String
+  writerIntro String?                  @db.Text
+  content     Json
+  contentText String?                  @db.Text
+  visibility  AwardEventRoomVisibility @default(PRIVATE)
+  status      AwardEventRoomStatus     @default(DRAFT)
+  order       Int                      @default(0)
+  excludedAt  DateTime?
+  submittedAt DateTime?
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+
+  event    AwardEvent              @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  writer   User                    @relation(fields: [writerId], references: [id], onDelete: Cascade)
+  comments AwardEventRoomComment[]
+
+  @@unique([eventId, writerId])
+  @@index([eventId, status, order])
+  @@index([writerId, updatedAt(sort: Desc)])
+  @@map("award_event_rooms")
+}
+
+enum AwardEventRoomStatus {
+  DRAFT
+  SUBMITTED
+}
+
+enum AwardEventRoomVisibility {
+  PRIVATE
+  PARTICIPANTS
+}
+
+model AwardEventRoomComment {
+  id        String   @id @default(cuid())
+  roomId    String
+  authorId  String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  room   AwardEventRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  author User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt(sort: Desc)])
+  @@index([authorId, createdAt(sort: Desc)])
+  @@map("award_event_room_comments")
+}
+
+model AwardEventTag {
+  eventId String
+  tagId   String
+
+  event AwardEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  tag   Tag        @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, tagId])
+  @@index([tagId])
+  @@map("award_event_tags")
+}
+
 model PostAuthor {
   postId String
   userId String
@@ -196,6 +300,7 @@ model Category {
   parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children    Category[] @relation("CategoryHierarchy")
   posts       Post[]
+  awardEvents AwardEvent[]
 
   @@index([slug])
   @@index([parentId, name])
@@ -208,6 +313,7 @@ model Tag {
   slug      String    @unique
   createdAt DateTime  @default(now())
   posts     PostTag[]
+  awardEvents AwardEventTag[]
 
   @@index([slug])
   @@map("tags")
