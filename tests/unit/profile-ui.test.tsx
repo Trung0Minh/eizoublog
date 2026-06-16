@@ -12,8 +12,8 @@ vi.mock("@/components/editor/TiptapEditor", () => ({
     placeholder,
     ariaLabel,
   }: {
-    content?: any
-    onChange?: (json: any) => void
+    content?: unknown
+    onChange?: (json: unknown) => void
     placeholder?: string
     ariaLabel?: string
   }) => (
