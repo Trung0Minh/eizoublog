@@ -58,7 +58,7 @@ function CommentBubble({
             {comment.authorName}
           </span>
           {isPostAuthor && (
-            <span className="rounded-[4px] bg-accent/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent">
+            <span className="rounded-[4px] bg-zinc-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
               Tác giả
             </span>
           )}

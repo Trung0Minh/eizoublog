@@ -57,10 +57,10 @@ export default async function ContributorsPage() {
                 </Link>
                 <div className="flex items-center gap-1">
                   {contributor.role === "ADMIN" && (
-                    <span className="rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700 dark:bg-red-900/30 dark:text-red-400">Admin</span>
+                    <span className="rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700 dark:bg-red-900/30 dark:text-red-400">ADMIN</span>
                   )}
-                  {(contributor.role === "ADMIN" || contributor.role === "WRITER") && (
-                    <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">Writer</span>
+                  {contributor.role === "WRITER" && (
+                    <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">WRITER</span>
                   )}
                 </div>
               </div>
