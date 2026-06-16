@@ -56,6 +56,7 @@ import { TableOfContents } from "@/components/posts/TableOfContents"
 import { TagInput, type TagOption } from "@/components/posts/TagInput"
 
 const post = {
+  id: "post-1",
   _count: { comments: 2 },
   author: {
     avatarUrl: null,

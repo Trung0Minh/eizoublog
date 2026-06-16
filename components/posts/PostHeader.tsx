@@ -11,6 +11,7 @@ interface HeaderAuthor {
 }
 
 export interface PostHeaderPost {
+  id: string
   _count?: { comments: number }
   author: HeaderAuthor
   category: { name: string; slug: string } | null
@@ -25,6 +26,7 @@ export interface PostHeaderPost {
 
 interface PostHeaderProps {
   post: PostHeaderPost
+  canEdit?: boolean
 }
 
 function Avatar({ author }: { author: HeaderAuthor }) {
@@ -46,7 +48,9 @@ function Avatar({ author }: { author: HeaderAuthor }) {
   )
 }
 
-export function PostHeader({ post }: PostHeaderProps) {
+import { Pencil } from "lucide-react"
+
+export function PostHeader({ post, canEdit }: PostHeaderProps) {
   const authors = [post.author, ...post.coAuthors.map(({ user }) => user)]
   const fallbackTags = [
     { name: "Animation Analysis", slug: "animation-analysis" },
@@ -80,43 +84,55 @@ export function PostHeader({ post }: PostHeaderProps) {
         </p>
       )}
 
-      <div className="mt-5 flex items-center gap-3 text-[13px] text-text-secondary">
-        <div className="flex -space-x-2.5">
-          {authors.slice(0, 3).map((author) => (
-            <Avatar author={author} key={author.username} />
-          ))}
-        </div>
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span>
-            {authors.map((author, index) => (
-              <span key={author.username}>
-                {index > 0 && ", "}
-                <Link
-                  className="text-[14px] font-medium text-text-primary transition-colors hover:text-accent"
-                  href={`/authors/${author.username}`}
-                >
-                  {author.name}
-                </Link>
-              </span>
+      <div className="mt-5 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between text-[13px] text-text-secondary">
+        <div className="flex items-center gap-3">
+          <div className="flex -space-x-2.5">
+            {authors.slice(0, 3).map((author) => (
+              <Avatar author={author} key={author.username} />
             ))}
-          </span>
-          {post.publishedAt && (
-            <>
-              <span className="hidden md:inline" aria-hidden="true">·</span>
-              <time className="w-full md:w-auto text-text-secondary" dateTime={new Date(post.publishedAt).toISOString()}>
-                {formatDate(post.publishedAt)}
-              </time>
-            </>
-          )}
-          {post._count && (
-            <>
-              <span className="hidden md:inline" aria-hidden="true">·</span>
-              <span className="text-text-tertiary">
-                {post._count.comments} bình luận
-              </span>
-            </>
-          )}
+          </div>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span>
+              {authors.map((author, index) => (
+                <span key={author.username}>
+                  {index > 0 && ", "}
+                  <Link
+                    className="text-[14px] font-medium text-text-primary transition-colors hover:text-accent"
+                    href={`/authors/${author.username}`}
+                  >
+                    {author.name}
+                  </Link>
+                </span>
+              ))}
+            </span>
+            {post.publishedAt && (
+              <>
+                <span className="hidden md:inline" aria-hidden="true">·</span>
+                <time className="w-full md:w-auto text-text-secondary" dateTime={new Date(post.publishedAt).toISOString()}>
+                  {formatDate(post.publishedAt)}
+                </time>
+              </>
+            )}
+            {post._count && (
+              <>
+                <span className="hidden md:inline" aria-hidden="true">·</span>
+                <span className="text-text-tertiary">
+                  {post._count.comments} bình luận
+                </span>
+              </>
+            )}
+          </div>
         </div>
+
+        {canEdit && (
+          <Link
+            href={`/dashboard/edit/${post.id}`}
+            className="flex items-center gap-1.5 rounded-md border border-border-default px-3 py-1.5 text-xs font-medium text-text-primary transition-colors hover:bg-subtle-bg"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+            Edit Post
+          </Link>
+        )}
       </div>
 
       {post.coverUrl && (

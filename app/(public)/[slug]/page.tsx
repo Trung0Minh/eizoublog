@@ -10,6 +10,7 @@ import { PostHeader } from "@/components/posts/PostHeader"
 import { PostJsonLd } from "@/components/posts/PostJsonLd"
 import { PostReadTracker } from "@/components/posts/PostReadTracker"
 import { TableOfContents } from "@/components/posts/TableOfContents"
+import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import {
   getCachedPublishedPost,
@@ -82,6 +83,10 @@ export default async function PostPage({ params }: PostPageProps) {
     notFound()
   }
 
+  const session = await auth()
+  const authors = [post.author.username, ...post.coAuthors.map(c => c.user.username)]
+  const canEdit = Boolean(session?.user?.username && authors.includes(session.user.username))
+
   const content = post.content as JSONContent
 
   return (
@@ -103,7 +108,7 @@ export default async function PostPage({ params }: PostPageProps) {
       >
         <div className="flex w-full max-w-[800px] flex-col gap-[48px] xl:max-w-[1048px] xl:flex-row">
           <article className="min-w-0 flex-1 max-w-[800px]">
-            <PostHeader post={post} />
+            <PostHeader post={post} canEdit={canEdit} />
             <PostBody content={content} />
             <div className="mt-12 md:mt-16 flex flex-col gap-4">
               {[post.author, ...post.coAuthors.map(c => c.user)].map(author => (
