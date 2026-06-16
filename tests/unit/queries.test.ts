@@ -226,7 +226,17 @@ describe("cached Prisma query helpers", () => {
       expect.objectContaining({
         orderBy: { updatedAt: "desc" },
         where: {
-          authorId: "writer-1",
+          OR: [
+            { authorId: "writer-1" },
+            {
+              coAuthors: {
+                some: {
+                  status: { in: ["ACCEPTED", "PENDING"] },
+                  userId: "writer-1",
+                },
+              },
+            },
+          ],
           status: { not: "ARCHIVED" },
         },
       }),

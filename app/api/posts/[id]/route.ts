@@ -95,7 +95,19 @@ function canManagePost({
   coAuthors?: { userId: string; status?: string }[]
 }) {
   if (user.role === "ADMIN" || user.id === authorId) return true
-  return coAuthors.some((ca) => ca.userId === user.id && ca.status === "ACCEPTED")
+  return coAuthors.some(
+    (ca) => ca.userId === user.id && ca.status === "ACCEPTED",
+  )
+}
+
+function canPerformOwnerAction({
+  authorId,
+  user,
+}: {
+  authorId: string
+  user: { id: string; role: Role }
+}) {
+  return user.role === "ADMIN" || user.id === authorId
 }
 
 function uniqueIds(ids: string[]) {
@@ -163,13 +175,36 @@ export async function PATCH(
         throw new RouteError("Post not found", 404)
       }
 
-      if (!canManagePost({ authorId: existing.authorId, user: activeSession.user, coAuthors: existing.coAuthors })) {
+      if (
+        !canManagePost({
+          authorId: existing.authorId,
+          coAuthors: existing.coAuthors,
+          user: activeSession.user,
+        })
+      ) {
+        throw new RouteError("Forbidden", 403)
+      }
+
+      const canUseOwnerActions = canPerformOwnerAction({
+        authorId: existing.authorId,
+        user: activeSession.user,
+      })
+
+      if (
+        existing.status === "ARCHIVED" &&
+        activeSession.user.role !== "ADMIN"
+      ) {
+        throw new RouteError("Forbidden", 403)
+      }
+
+      if (data.status === "ARCHIVED" && !canUseOwnerActions) {
         throw new RouteError("Forbidden", 403)
       }
 
       if (
-        (existing.status === "ARCHIVED" || data.status === "ARCHIVED") &&
-        activeSession.user.role !== "ADMIN"
+        data.status === "DRAFT" &&
+        existing.status === "PUBLISHED" &&
+        !canUseOwnerActions
       ) {
         throw new RouteError("Forbidden", 403)
       }
@@ -177,6 +212,8 @@ export async function PATCH(
       let publishedAt: Date | null | undefined
       if (data.status === "PUBLISHED" && existing.status === "DRAFT") {
         publishedAt = new Date()
+      } else if (data.status === "ARCHIVED") {
+        publishedAt = null
       } else if (
         data.status === "DRAFT" &&
         (existing.status === "PUBLISHED" || existing.status === "ARCHIVED")
@@ -323,7 +360,10 @@ export async function DELETE(
         throw new RouteError("Post not found", 404)
       }
 
-      if (!canManagePost({ authorId: existing.authorId, user: activeSession.user, coAuthors: existing.coAuthors })) {
+      if (!canPerformOwnerAction({
+        authorId: existing.authorId,
+        user: activeSession.user,
+      })) {
         throw new RouteError("Forbidden", 403)
       }
 

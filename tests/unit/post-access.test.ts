@@ -25,14 +25,18 @@ describe("canViewPost", () => {
     expect(canViewPost(privateDraft, "writer-1", "WRITER")).toBe(true)
   })
 
-  it("hides private drafts from co-authors", () => {
+  it("hides private drafts from unaccepted co-authors", () => {
     expect(canViewPost(privateDraft, "writer-2", "WRITER")).toBe(false)
   })
 
-  it("allows listed co-authors to view shared drafts", () => {
+  it("allows accepted co-authors to view drafts", () => {
     expect(
       canViewPost(
-        { ...privateDraft, draftVisibility: "CO_AUTHORS" },
+        {
+          ...privateDraft,
+          coAuthors: [{ status: "ACCEPTED", userId: "writer-2" }],
+          draftVisibility: "CO_AUTHORS",
+        },
         "writer-2",
         "WRITER",
       ),

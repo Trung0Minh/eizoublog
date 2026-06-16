@@ -51,11 +51,18 @@ export default async function NotificationsPage() {
             Theo dõi lời mời cộng tác và bình luận mới trên bài viết của bạn.
           </p>
         </div>
-        <Button asChild variant="outline">
-          <Link href="/dashboard" prefetch={false}>
-            Bài viết của tôi
-          </Link>
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <MarkCommentsReadButton
+            disabled={
+              unreadComments.length === 0 && responseEvents.length === 0
+            }
+          />
+          <Button asChild variant="outline">
+            <Link href="/dashboard" prefetch={false}>
+              Bài viết của tôi
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-8">
@@ -112,9 +119,10 @@ export default async function NotificationsPage() {
             {responseEvents.map((event) => {
               const data = isRecord(event.data) ? event.data : {}
               const actorName = stringValue(data.actorName) || "Một đồng tác giả"
-              const postSlug = stringValue(data.postSlug)
+              const postId = stringValue(data.postId)
               const postTitle = stringValue(data.postTitle) || "bài viết"
               const accepted = event.type === "COAUTHOR_ACCEPTED"
+              const postHref = postId ? `/dashboard/edit/${postId}` : ""
 
               return (
                 <article
@@ -128,10 +136,10 @@ export default async function NotificationsPage() {
                       </span>{" "}
                       {accepted ? "đã chấp nhận" : "đã từ chối"} lời mời cộng tác
                       cho{" "}
-                      {postSlug ? (
+                      {postHref ? (
                         <Link
                           className="font-medium text-editorial hover:underline"
-                          href={`/${postSlug}`}
+                          href={postHref}
                         >
                           {postTitle}
                         </Link>
@@ -145,9 +153,9 @@ export default async function NotificationsPage() {
                       {formatDate(event.createdAt)}
                     </p>
                   </div>
-                  {postSlug && (
+                  {postHref && (
                     <Button asChild size="sm" variant="outline">
-                      <Link href={`/${postSlug}`}>Xem</Link>
+                      <Link href={postHref}>Xem</Link>
                     </Button>
                   )}
                 </article>
@@ -171,11 +179,9 @@ export default async function NotificationsPage() {
               />
               Bình luận mới
             </h2>
-            <MarkCommentsReadButton
-              disabled={
-                unreadComments.length === 0 && responseEvents.length === 0
-              }
-            />
+            <span className="text-xs text-text-tertiary">
+              {unreadComments.length} bình luận
+            </span>
           </div>
 
           <div className="divide-y rounded-[8px] border">

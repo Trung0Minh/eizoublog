@@ -35,7 +35,7 @@ export function MarkCommentsReadButton({ disabled }: { disabled?: boolean }) {
       type="button"
       variant="outline"
     >
-      {pending ? "Đang đánh dấu..." : "Đánh dấu đã đọc"}
+      {pending ? "Đang đánh dấu..." : "Đánh dấu tất cả đã đọc"}
     </Button>
   )
 }

@@ -40,11 +40,21 @@ describe("DashboardPage", () => {
   it("excludes archived posts from the writer dashboard", async () => {
     render(await DashboardPage())
 
-    expect(screen.getByText("My Posts")).toBeVisible()
+    expect(screen.getByText("Bài viết của tôi")).toBeVisible()
     expect(mocks.prisma.post.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
-          authorId: "writer-1",
+          OR: [
+            { authorId: "writer-1" },
+            {
+              coAuthors: {
+                some: {
+                  status: { in: ["ACCEPTED", "PENDING"] },
+                  userId: "writer-1",
+                },
+              },
+            },
+          ],
           status: { not: "ARCHIVED" },
         },
       }),

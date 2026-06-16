@@ -1,15 +1,6 @@
 import { render, screen } from "@testing-library/react"
-import type { AnchorHTMLAttributes } from "react"
 import { describe, expect, it, vi } from "vitest"
 
-vi.mock("next/link", () => ({
-  default: ({
-    prefetch,
-    ...props
-  }: AnchorHTMLAttributes<HTMLAnchorElement> & { prefetch?: boolean }) => (
-    <a data-prefetch={String(prefetch)} {...props} />
-  ),
-}))
 vi.mock("next/navigation", () => ({
   redirect: vi.fn(),
 }))
@@ -24,11 +15,14 @@ vi.mock("@/lib/auth", () => ({
 import DashboardLayout from "@/app/(writer)/dashboard/layout"
 
 describe("DashboardLayout", () => {
-  it("keeps dashboard navigation horizontally scrollable on small screens", async () => {
+  it("renders the page body without duplicate dashboard navigation", async () => {
     render(await DashboardLayout({ children: <p>Dashboard body</p> }))
 
+    expect(screen.getByText("Dashboard body")).toBeVisible()
     expect(
-      screen.getByRole("navigation", { name: "Dashboard navigation" }),
-    ).toHaveClass("overflow-x-auto", "whitespace-nowrap")
+      screen.queryByRole("navigation", { name: "Dashboard navigation" }),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByText("Chỉnh sửa hồ sơ")).not.toBeInTheDocument()
+    expect(screen.queryByText("Xem hồ sơ công khai")).not.toBeInTheDocument()
   })
 })

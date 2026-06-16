@@ -158,8 +158,7 @@ describe("posts API", () => {
             { status: "PUBLISHED" },
             { authorId: "writer-1", status: "DRAFT" },
             {
-              coAuthors: { some: { userId: "writer-1" } },
-              draftVisibility: "CO_AUTHORS",
+              coAuthors: { some: { status: "ACCEPTED", userId: "writer-1" } },
               status: "DRAFT",
             },
           ],
@@ -349,7 +348,7 @@ describe("single post API", () => {
     })
     mocks.prisma.post.findUnique.mockResolvedValue({
       authorId: "writer-1",
-      coAuthors: [{ userId: "writer-2" }],
+      coAuthors: [{ status: "ACCEPTED", userId: "writer-2" }],
       draftVisibility: "CO_AUTHORS",
       id: "post-1",
       status: "DRAFT",
@@ -452,6 +451,112 @@ describe("single post API", () => {
     expect(mocks.revalidateTag).toHaveBeenCalledWith("posts", "max")
   })
 
+  it("lets post authors withdraw published posts to drafts", async () => {
+    mocks.auth.mockResolvedValue({
+      user: { id: "writer-1", role: "WRITER" },
+    })
+    mocks.prisma.post.findUnique.mockResolvedValue({
+      authorId: "writer-1",
+      coAuthors: [],
+      status: "PUBLISHED",
+    })
+    mocks.prisma.post.update.mockResolvedValue({
+      id: "post-1",
+      slug: "published-post",
+      status: "DRAFT",
+      updatedAt: new Date("2026-06-16T00:00:00Z"),
+    })
+
+    const response = await PATCH(
+      jsonRequest(
+        "https://example.test/api/posts/post-1",
+        { status: "DRAFT" },
+        "PATCH",
+      ),
+      routeContext("post-1"),
+    )
+
+    expect(response.status).toBe(200)
+    expect(mocks.prisma.post.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          publishedAt: null,
+          status: "DRAFT",
+        }),
+        where: { id: "post-1" },
+      }),
+    )
+  })
+
+  it("lets post authors archive their own posts from the dashboard", async () => {
+    mocks.auth.mockResolvedValue({
+      user: { id: "writer-1", role: "WRITER" },
+    })
+    mocks.prisma.post.findUnique.mockResolvedValue({
+      authorId: "writer-1",
+      coAuthors: [],
+      status: "PUBLISHED",
+    })
+    mocks.prisma.post.update.mockResolvedValue({
+      id: "post-1",
+      slug: "published-post",
+      status: "ARCHIVED",
+      updatedAt: new Date("2026-06-16T00:00:00Z"),
+    })
+
+    const response = await PATCH(
+      jsonRequest(
+        "https://example.test/api/posts/post-1",
+        { status: "ARCHIVED" },
+        "PATCH",
+      ),
+      routeContext("post-1"),
+    )
+
+    expect(response.status).toBe(200)
+    expect(mocks.prisma.post.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          publishedAt: null,
+          status: "ARCHIVED",
+        }),
+        where: { id: "post-1" },
+      }),
+    )
+  })
+
+  it("forbids accepted co-authors from withdrawing or archiving posts", async () => {
+    mocks.auth.mockResolvedValue({
+      user: { id: "writer-2", role: "WRITER" },
+    })
+    mocks.prisma.post.findUnique.mockResolvedValue({
+      authorId: "writer-1",
+      coAuthors: [{ status: "ACCEPTED", userId: "writer-2" }],
+      status: "PUBLISHED",
+    })
+
+    const withdrawResponse = await PATCH(
+      jsonRequest(
+        "https://example.test/api/posts/post-1",
+        { status: "DRAFT" },
+        "PATCH",
+      ),
+      routeContext("post-1"),
+    )
+    const archiveResponse = await PATCH(
+      jsonRequest(
+        "https://example.test/api/posts/post-1",
+        { status: "ARCHIVED" },
+        "PATCH",
+      ),
+      routeContext("post-1"),
+    )
+
+    expect(withdrawResponse.status).toBe(403)
+    expect(archiveResponse.status).toBe(403)
+    expect(mocks.prisma.post.update).not.toHaveBeenCalled()
+  })
+
   it("updates draft visibility and records autosave timestamps", async () => {
     mocks.auth.mockResolvedValue({
       user: { id: "writer-1", role: "WRITER" },
@@ -500,6 +605,25 @@ describe("single post API", () => {
       user: { id: "writer-2", role: "WRITER" },
     })
     mocks.prisma.post.findUnique.mockResolvedValue({ authorId: "writer-1" })
+
+    const response = await DELETE(
+      new Request("https://example.test/api/posts/post-1"),
+      routeContext("post-1"),
+    )
+
+    expect(response.status).toBe(403)
+    await expect(response.json()).resolves.toEqual({ error: "Forbidden" })
+    expect(mocks.prisma.post.delete).not.toHaveBeenCalled()
+  })
+
+  it("forbids accepted co-authors from deleting posts", async () => {
+    mocks.auth.mockResolvedValue({
+      user: { id: "writer-2", role: "WRITER" },
+    })
+    mocks.prisma.post.findUnique.mockResolvedValue({
+      authorId: "writer-1",
+      coAuthors: [{ status: "ACCEPTED", userId: "writer-2" }],
+    })
 
     const response = await DELETE(
       new Request("https://example.test/api/posts/post-1"),
