@@ -28,7 +28,7 @@ describe("UnsubscribePage", () => {
     })
     const html = renderToStaticMarkup(page)
 
-    expect(html).toContain("Invalid link")
+    expect(html).toContain("Liên kết không hợp lệ")
     expect(mocks.findUnique).not.toHaveBeenCalled()
   })
 
@@ -40,7 +40,7 @@ describe("UnsubscribePage", () => {
     })
     const html = renderToStaticMarkup(page)
 
-    expect(html).toContain("Invalid link")
+    expect(html).toContain("Liên kết không hợp lệ")
     expect(mocks.findUnique).toHaveBeenCalledWith({
       select: { status: true, token: true },
       where: { token: "missing-token" },
@@ -58,7 +58,7 @@ describe("UnsubscribePage", () => {
     })
     const html = renderToStaticMarkup(page)
 
-    expect(html).toContain("You&#x27;ve been unsubscribed")
+    expect(html).toContain("Bạn đã được hủy đăng ký")
     expect(mocks.update).toHaveBeenCalledWith({
       data: { status: "UNSUBSCRIBED", unsubscribedAt: expect.any(Date) },
       select: { token: true },
@@ -77,7 +77,7 @@ describe("UnsubscribePage", () => {
     })
     const html = renderToStaticMarkup(page)
 
-    expect(html).toContain("Already unsubscribed")
+    expect(html).toContain("Đã hủy đăng ký")
     expect(mocks.update).not.toHaveBeenCalled()
   })
 })

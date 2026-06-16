@@ -25,13 +25,13 @@ describe("NewsletterForm", () => {
     render(<NewsletterForm />)
 
     expect(
-      screen.getByText("Get notified when new posts are published."),
+      screen.getByText("Nhận thông báo khi có bài viết mới."),
     ).toBeInTheDocument()
     expect(
-      screen.getByRole("textbox", { name: "Email address" }),
+      screen.getByRole("textbox", { name: "Địa chỉ email" }),
     ).toBeRequired()
     expect(
-      screen.getByRole("button", { name: "Subscribe" }),
+      screen.getByRole("button", { name: "Đăng ký" }),
     ).toBeInTheDocument()
   })
 
@@ -48,10 +48,10 @@ describe("NewsletterForm", () => {
     render(<NewsletterForm />)
 
     await user.type(
-      screen.getByRole("textbox", { name: "Email address" }),
+      screen.getByRole("textbox", { name: "Địa chỉ email" }),
       "Reader@Example.com",
     )
-    await user.click(screen.getByRole("button", { name: "Subscribe" }))
+    await user.click(screen.getByRole("button", { name: "Đăng ký" }))
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith("/api/newsletter/subscribe", {
@@ -66,7 +66,7 @@ describe("NewsletterForm", () => {
     expect(analyticsMocks.trackEvent).toHaveBeenCalledWith(
       "newsletter_subscribed",
     )
-    expect(screen.getByRole("textbox", { name: "Email address" })).toHaveValue(
+    expect(screen.getByRole("textbox", { name: "Địa chỉ email" })).toHaveValue(
       "",
     )
   })
@@ -83,15 +83,15 @@ describe("NewsletterForm", () => {
     render(<NewsletterForm />)
 
     await user.type(
-      screen.getByRole("textbox", { name: "Email address" }),
+      screen.getByRole("textbox", { name: "Địa chỉ email" }),
       "reader@example.com",
     )
-    await user.click(screen.getByRole("button", { name: "Subscribe" }))
+    await user.click(screen.getByRole("button", { name: "Đăng ký" }))
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Email service unavailable",
     )
-    expect(screen.getByRole("textbox", { name: "Email address" })).toHaveValue(
+    expect(screen.getByRole("textbox", { name: "Địa chỉ email" })).toHaveValue(
       "reader@example.com",
     )
   })

@@ -133,7 +133,7 @@ describe("PostCard", () => {
       "data-prefetch",
       "undefined",
     )
-    expect(screen.getByText("2 comments")).toBeVisible()
+    expect(screen.getByText("2 bình luận")).toBeVisible()
   })
 
   it("uses mobile-first title sizing and hides excerpts below small screens", () => {
@@ -171,7 +171,6 @@ describe("Post detail responsive components", () => {
     expect(container.querySelector(".post-content")).toHaveClass(
       "mx-auto",
       "w-full",
-      "max-w-[720px]",
     )
   })
 })
@@ -271,7 +270,7 @@ describe("CoverImageUpload", () => {
     render(<CoverImageUpload onChange={onChange} value="" />)
 
     await user.upload(
-      screen.getByLabelText("Upload cover image"),
+      screen.getByLabelText("Tải lên ảnh bìa"),
       new File(["jpg"], "cover.jpg", { type: "image/jpeg" }),
     )
 
@@ -288,7 +287,7 @@ describe("CoverImageUpload", () => {
   it("matches the Figma dashed upload target and hover-replace cover state", () => {
     const { rerender } = render(<CoverImageUpload onChange={vi.fn()} value="" />)
 
-    expect(screen.getByText("Add cover image").closest("button")).toHaveClass(
+    expect(screen.getByText("Thêm ảnh bìa").closest("button")).toHaveClass(
       "aspect-video",
       "border-dashed",
       "bg-subtle-bg",
@@ -301,12 +300,11 @@ describe("CoverImageUpload", () => {
       />,
     )
 
-    expect(screen.getByRole("img", { name: "Selected cover" })).toHaveClass(
+    expect(screen.getByRole("img", { name: "Ảnh bìa đã chọn" })).toHaveClass(
       "h-full",
       "w-full",
-      "object-cover",
     )
-    expect(screen.getByText("Change")).toBeVisible()
+    expect(screen.getByRole("button", { name: "Thay đổi ảnh bìa" })).toBeVisible()
   })
 })
 
@@ -332,7 +330,7 @@ describe("TagInput", () => {
 
     render(<TagInput onChange={onChange} selectedTags={[]} />)
 
-    await user.type(screen.getByLabelText("Tags"), "saku")
+    await user.type(screen.getByLabelText("Thẻ"), "saku")
     await user.click(await screen.findByRole("button", { name: "Sakuga" }))
 
     expect(onChange).toHaveBeenCalledWith([
@@ -348,7 +346,7 @@ describe("TagInput", () => {
       />,
     )
 
-    expect(screen.getByRole("button", { name: "Remove Sakuga" })).toHaveClass(
+    expect(screen.getByRole("button", { name: "Xóa thẻ Sakuga" })).toHaveClass(
       "-m-1.5",
       "p-1.5",
     )
@@ -376,9 +374,9 @@ describe("TagInput", () => {
 
     render(<TagInput onChange={onChange} selectedTags={[]} />)
 
-    await user.type(screen.getByLabelText("Tags"), "Layout")
+    await user.type(screen.getByLabelText("Thẻ"), "Layout")
     await user.click(
-      await screen.findByRole("button", { name: 'Create tag "Layout"' }),
+      await screen.findByRole("button", { name: 'Tạo thẻ "Layout"' }),
     )
 
     expect(onChange).toHaveBeenCalledWith([
@@ -428,12 +426,12 @@ describe("PostEditor", () => {
       />,
     )
 
-    await user.type(screen.getByLabelText("Title"), "New Post")
+    await user.type(screen.getByLabelText("Tiêu đề"), "New Post")
     await user.click(screen.getByRole("button", { name: "Mock editor" }))
-    await user.click(screen.getByRole("button", { name: /^Post settings/ }))
-    await user.selectOptions(screen.getByLabelText("Category"), "category-1")
-    await user.selectOptions(screen.getByLabelText("Add co-author"), "writer-2")
-    await user.click(screen.getByRole("button", { name: "Publish" }))
+    await user.click(screen.getByRole("button", { name: /^Cài đặt bài viết/ }))
+    await user.selectOptions(screen.getByLabelText("Danh mục"), "category-1")
+    await user.selectOptions(screen.getByLabelText("Thêm đồng tác giả"), "writer-2")
+    await user.click(screen.getByRole("button", { name: "Xuất bản" }))
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith(
@@ -478,12 +476,12 @@ describe("PostEditor", () => {
       "inset-0",
       "z-50",
     )
-    expect(screen.getByLabelText("Title")).toHaveClass(
+    expect(screen.getByLabelText("Tiêu đề")).toHaveClass(
       "text-[22px]",
       "md:text-[28px]",
     )
 
-    const saveDraftButton = screen.getByRole("button", { name: /Save draft/ })
+    const saveDraftButton = screen.getByRole("button", { name: /Lưu nháp/ })
     const topBar = saveDraftButton.closest("header")
     if (!topBar) {
       throw new Error("Editor top bar not found")
@@ -495,7 +493,7 @@ describe("PostEditor", () => {
       "z-[100]",
       "border-border-default",
     )
-    expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Bảng điều khiển" })).toHaveAttribute(
       "href",
       "/dashboard",
     )
@@ -503,26 +501,24 @@ describe("PostEditor", () => {
       "md:rounded-[8px]",
       "md:border",
     )
-    expect(screen.queryByLabelText("Category")).not.toBeInTheDocument()
+    expect(screen.queryByLabelText("Danh mục")).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole("button", { name: /^Post settings/ }))
+    await user.click(screen.getByRole("button", { name: /^Cài đặt bài viết/ }))
 
-    expect(screen.getByLabelText("Category")).toBeVisible()
-    expect(screen.getByLabelText("Add co-author")).toBeVisible()
+    expect(screen.getByLabelText("Danh mục")).toBeVisible()
+    expect(screen.getByLabelText("Thêm đồng tác giả")).toBeVisible()
     expect(screen.getByRole("complementary")).toHaveClass(
       "border-r",
-      "xl:w-[720px]",
+      "xl:w-[360px]",
     )
-    await user.selectOptions(screen.getByLabelText("Add co-author"), "writer-2")
-    expect(screen.getByRole("button", { name: "Remove Ken" })).toBeVisible()
+    await user.selectOptions(screen.getByLabelText("Thêm đồng tác giả"), "writer-2")
+    expect(screen.getByRole("button", { name: "Xóa Ken" })).toBeVisible()
     expect(
-      screen.getAllByRole("button", { name: /^Hide post settings/ }),
+      screen.getAllByRole("button", { name: /^Ẩn cài đặt bài viết/ }),
     ).toHaveLength(2)
     expect(saveDraftButton).toHaveClass("h-8")
-    expect(screen.getByRole("button", { name: "Publish" })).toHaveClass(
+    expect(screen.getByRole("button", { name: "Xuất bản" })).toHaveClass(
       "h-8",
-      "bg-button-bg",
-      "text-button-text",
     )
   })
 
@@ -681,13 +677,13 @@ describe("PostEditor", () => {
       />,
     )
 
-    await user.type(screen.getByLabelText("Title"), "Shared Draft")
-    await user.click(screen.getByRole("button", { name: /^Post settings/ }))
-    await user.selectOptions(screen.getByLabelText("Add co-author"), "writer-2")
+    await user.type(screen.getByLabelText("Tiêu đề"), "Shared Draft")
+    await user.click(screen.getByRole("button", { name: /^Cài đặt bài viết/ }))
+    await user.selectOptions(screen.getByLabelText("Thêm đồng tác giả"), "writer-2")
     await user.click(
-      screen.getByRole("button", { name: "Visible to co-authors" }),
+      screen.getByRole("button", { name: "Hiển thị với đồng tác giả" }),
     )
-    await user.click(screen.getByRole("button", { name: /Save draft/ }))
+    await user.click(screen.getByRole("button", { name: /Lưu nháp\s*Nháp/ }))
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith(

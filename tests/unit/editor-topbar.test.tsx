@@ -32,14 +32,14 @@ describe("EditorTopBar", () => {
       />,
     )
 
-    expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Bảng điều khiển" })).toHaveAttribute(
       "href",
       "/dashboard",
     )
     expect(screen.getByText("Saved")).toBeVisible()
 
-    await user.click(screen.getByRole("button", { name: /Save draft/ }))
-    await user.click(screen.getByRole("button", { name: "Publish" }))
+    await user.click(screen.getByRole("button", { name: /Lưu nháp/ }))
+    await user.click(screen.getByRole("button", { name: "Xuất bản" }))
 
     expect(onSaveDraft).toHaveBeenCalledTimes(1)
     expect(onPublish).toHaveBeenCalledTimes(1)
@@ -58,10 +58,10 @@ describe("EditorTopBar", () => {
       />,
     )
 
-    expect(screen.getByRole("button", { name: /Save draft/ })).toBeDisabled()
-    expect(screen.getByRole("button", { name: "Update" })).toBeDisabled()
+    expect(screen.getByRole("button", { name: /Lưu nháp/ })).toBeDisabled()
+    expect(screen.getByRole("button", { name: "Cập nhật" })).toBeDisabled()
     expect(
-      screen.getByText("Add a title to enable saving and publishing."),
+      screen.getByText("Thêm tiêu đề để có thể lưu và xuất bản."),
     ).toBeVisible()
   })
 })

@@ -45,6 +45,7 @@ interface InitialPostData {
   contentText: string | null
   coverAlt: string | null
   coverUrl: string | null
+  draftVisibility?: "PRIVATE" | "CO_AUTHORS"
   excerpt: string | null
   authorId?: string
   id: string
@@ -130,6 +131,9 @@ export function PostEditor({
     initialData?.tags ?? initialTags,
   )
   const [title, setTitle] = useState(initialData?.title ?? "")
+  const [draftVisibility, setDraftVisibility] = useState<"PRIVATE" | "CO_AUTHORS">(
+    initialData?.draftVisibility ?? "PRIVATE",
+  )
   const coAuthorStatusById = new Map(
     initialData?.coAuthors?.map((coAuthor) => [
       coAuthor.userId,
@@ -144,6 +148,7 @@ export function PostEditor({
     contentText,
     coverAlt,
     coverUrl,
+    draftVisibility,
     excerpt,
     tagIds: selectedTags.map((tag) => tag.id),
     title,
@@ -162,11 +167,12 @@ export function PostEditor({
       contentText,
       coverAlt,
       coverUrl,
+      draftVisibility,
       excerpt,
       tagIds: selectedTags.map((tag) => tag.id),
       title,
     }
-  }, [categoryId, coAuthorIds, content, contentText, coverAlt, coverUrl, excerpt, selectedTags, title])
+  }, [categoryId, coAuthorIds, content, contentText, coverAlt, coverUrl, draftVisibility, excerpt, selectedTags, title])
 
   const performAutosave = useCallback(async () => {
     if (!postId) return
@@ -180,6 +186,7 @@ export function PostEditor({
         contentText: draft.contentText,
         coverAlt: draft.coverAlt || undefined,
         coverUrl: draft.coverUrl || undefined,
+        draftVisibility: draft.draftVisibility,
         excerpt: draft.excerpt,
         tagIds: draft.tagIds,
         title: draft.title,
@@ -218,6 +225,9 @@ export function PostEditor({
   async function savePost(status: "DRAFT" | "PUBLISHED") {
     setError("")
 
+    const hasCoAuthors = coAuthorIds.length > 0
+    const effectiveDraftVisibility = hasCoAuthors ? draftVisibility : "PRIVATE"
+
     const payload = {
       categoryId: categoryId || undefined,
       coAuthorIds,
@@ -225,6 +235,7 @@ export function PostEditor({
       contentText,
       coverAlt: coverAlt || undefined,
       coverUrl: coverUrl || undefined,
+      draftVisibility: effectiveDraftVisibility,
       excerpt,
       status,
       tagIds: selectedTags.map((tag) => tag.id),
@@ -279,6 +290,10 @@ export function PostEditor({
       const nextIds = currentIds.includes(writerId)
         ? currentIds.filter((id) => id !== writerId)
         : [...currentIds, writerId]
+
+      if (nextIds.length === 0) {
+        setDraftVisibility("PRIVATE")
+      }
 
       return nextIds
     })
@@ -359,166 +374,178 @@ export function PostEditor({
           )}
           id="post-settings-panel"
         >
-          <div className="mb-6 flex items-center justify-between gap-4 lg:mb-8">
-            <div>
-              <h2 className="text-[13px] font-bold uppercase tracking-widest text-text-primary">
-                Cài đặt bài viết
-              </h2>
-              <p className="mt-1.5 text-[12px] leading-relaxed text-text-secondary">
-                Ảnh bìa, phân loại, cộng tác viên, và quyền truy cập bản nháp.
-              </p>
-            </div>
-            <button
-              aria-label="Ẩn cài đặt bài viết"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-text-tertiary transition-colors hover:bg-subtle-bg hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              onClick={() => setIsSettingsOpen(false)}
-              type="button"
-            >
-              <X aria-hidden="true" className="h-4 w-4" />
-            </button>
-          </div>
+          {isSettingsOpen && (
+            <>
+              <div className="mb-6 flex items-center justify-between gap-4 lg:mb-8">
+                <div>
+                  <h2 className="text-[13px] font-bold uppercase tracking-widest text-text-primary">
+                    Cài đặt bài viết
+                  </h2>
+                  <p className="mt-1.5 text-[12px] leading-relaxed text-text-secondary">
+                    Ảnh bìa, phân loại, cộng tác viên, và quyền truy cập bản nháp.
+                  </p>
+                </div>
+                <button
+                  aria-label="Ẩn cài đặt bài viết"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-text-tertiary transition-colors hover:bg-subtle-bg hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  onClick={() => setIsSettingsOpen(false)}
+                  type="button"
+                >
+                  <X aria-hidden="true" className="h-4 w-4" />
+                </button>
+              </div>
 
-          <div className="flex flex-col gap-6">
-            <div className="flex flex-col gap-2">
-                <CoverImageUpload
-                  onChange={(url) => {
-                    setCoverUrl(url)
-                    markDirtyAndAutosave()
-                  }}
-                  value={coverUrl}
-                />
-                {coverUrl && (
-                  <div className="mt-4 space-y-2">
-                    <label
-                      className="text-[12px] font-semibold text-text-secondary"
-                      htmlFor="cover-alt"
-                    >
-                      Cover alt text
-                    </label>
-                    <input
-                      className="h-10 w-full rounded-[5px] border border-border-default bg-background px-3 py-2 text-[13px] text-text-primary outline-none transition-colors placeholder:text-text-tertiary focus:border-accent"
-                      id="cover-alt"
-                      maxLength={200}
-                      onChange={(event) => {
-                        setCoverAlt(event.target.value)
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-2">
+                    <CoverImageUpload
+                      onChange={(url) => {
+                        setCoverUrl(url)
                         markDirtyAndAutosave()
                       }}
-                      placeholder="Mô tả ảnh bìa"
-                      value={coverAlt}
+                      value={coverUrl}
                     />
-                  </div>
-                )}
-            </div>
-
-            <div className="space-y-2">
-                  <label
-                    className="text-[12px] font-semibold text-text-secondary"
-                    htmlFor="post-category"
-                  >
-                    Danh mục
-                  </label>
-                  <select
-                    className="h-9 w-full rounded-[5px] border border-border-default bg-background px-2.5 py-2 text-[13px] text-text-primary outline-none transition-colors focus:border-accent"
-                    id="post-category"
-                    onChange={(event) => {
-                      setCategoryId(event.target.value)
-                      markDirtyAndAutosave()
-                    }}
-                    value={categoryId}
-                  >
-                    <option value="">Không có danh mục</option>
-                    {categories.map((category) => (
-                      <optgroup key={category.id} label={category.name}>
-                        <option value={category.id}>{category.name}</option>
-                        {category.children.map((child) => (
-                          <option key={child.id} value={child.id}>
-                            {child.name}
-                          </option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
+                    {coverUrl && (
+                      <div className="mt-4 space-y-2">
+                        <label
+                          className="text-[12px] font-semibold text-text-secondary"
+                          htmlFor="cover-alt"
+                        >
+                          Cover alt text
+                        </label>
+                        <input
+                          className="h-10 w-full rounded-[5px] border border-border-default bg-background px-3 py-2 text-[13px] text-text-primary outline-none transition-colors placeholder:text-text-tertiary focus:border-accent"
+                          id="cover-alt"
+                          maxLength={200}
+                          onChange={(event) => {
+                            setCoverAlt(event.target.value)
+                            markDirtyAndAutosave()
+                          }}
+                          placeholder="Mô tả ảnh bìa"
+                          value={coverAlt}
+                        />
+                      </div>
+                    )}
                 </div>
 
-                <TagInput
-                  onChange={(tags) => {
-                    setSelectedTags(tags)
-                    markDirtyAndAutosave()
-                  }}
-                  selectedTags={selectedTags}
-                />
-
-                {availableWriters.length > 0 && (!initialData || currentUserId === initialData.authorId) && (
-                  <div className="space-y-2">
-                    <div className="text-[12px] font-semibold text-text-secondary">
-                      Đồng tác giả
+                <div className="space-y-2">
+                      <label
+                        className="text-[12px] font-semibold text-text-secondary"
+                        htmlFor="post-category"
+                      >
+                        Danh mục
+                      </label>
+                      <select
+                        className="h-9 w-full rounded-[5px] border border-border-default bg-background px-2.5 py-2 text-[13px] text-text-primary outline-none transition-colors focus:border-accent"
+                        id="post-category"
+                        onChange={(event) => {
+                          setCategoryId(event.target.value)
+                          markDirtyAndAutosave()
+                        }}
+                        value={categoryId}
+                      >
+                        <option value="">Không có danh mục</option>
+                        {categories.map((category) => (
+                          <optgroup key={category.id} label={category.name}>
+                            <option value={category.id}>{category.name}</option>
+                            {category.children.map((child) => (
+                              <option key={child.id} value={child.id}>
+                                {child.name}
+                              </option>
+                            ))}
+                          </optgroup>
+                        ))}
+                      </select>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {availableWriters
-                        .filter((writer) => coAuthorIds.includes(writer.id))
-                        .map((writer) => (
+
+                    <TagInput
+                      onChange={(tags) => {
+                        setSelectedTags(tags)
+                        markDirtyAndAutosave()
+                      }}
+                      selectedTags={selectedTags}
+                    />
+
+                    {availableWriters.length > 0 && (!initialData || currentUserId === initialData.authorId) && (
+                      <div className="space-y-2">
+                        <div className="text-[12px] font-semibold text-text-secondary">
+                          Đồng tác giả
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {availableWriters
+                            .filter((writer) => coAuthorIds.includes(writer.id))
+                            .map((writer) => (
+                              <button
+                                aria-label={`Xóa ${writer.name}`}
+                                className="inline-flex h-9 items-center gap-2 rounded-[5px] border border-border-default bg-background px-3 text-[13px] text-text-secondary transition-colors hover:bg-subtle-bg"
+                                key={writer.id}
+                                onClick={() => toggleCoAuthor(writer.id)}
+                                type="button"
+                              >
+                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#7b5ea7] text-[12px] font-semibold text-white">
+                                  {writer.name.charAt(0)}
+                                </span>
+                                <span>{writer.name}</span>
+                                <span
+                                  className={cn(
+                                    "rounded-full border px-2 py-0.5 text-[11px] font-medium",
+                                    getCoAuthorStatusClass(writer.id),
+                                  )}
+                                >
+                                  {getCoAuthorStatusLabel(writer.id)}
+                                </span>
+                                <X aria-hidden="true" className="h-3.5 w-3.5 text-text-tertiary" />
+                              </button>
+                            ))}
+                        </div>
+                        <p className="text-[12px] leading-relaxed text-text-tertiary">
+                          Chọn đồng tác giả rồi bấm lưu để gửi lời mời. Trạng thái sẽ cập nhật khi họ phản hồi.
+                        </p>
+                        {coAuthorIds.length > 0 && (
                           <button
-                            aria-label={`Xóa ${writer.name}`}
-                            className="inline-flex h-9 items-center gap-2 rounded-[5px] border border-border-default bg-background px-3 text-[13px] text-text-secondary transition-colors hover:bg-subtle-bg"
-                            key={writer.id}
-                            onClick={() => toggleCoAuthor(writer.id)}
+                            className="inline-flex h-9 items-center justify-center rounded-[5px] border border-border-default bg-background px-3 text-[13px] font-medium text-text-primary transition-colors hover:bg-subtle-bg disabled:cursor-not-allowed disabled:opacity-50"
+                            disabled={!canSave || isPending}
+                            onClick={() =>
+                              startTransition(() => void savePost("DRAFT"))
+                            }
                             type="button"
                           >
-                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#7b5ea7] text-[12px] font-semibold text-white">
-                              {writer.name.charAt(0)}
-                            </span>
-                            <span>{writer.name}</span>
-                            <span
-                              className={cn(
-                                "rounded-full border px-2 py-0.5 text-[11px] font-medium",
-                                getCoAuthorStatusClass(writer.id),
-                              )}
-                            >
-                              {getCoAuthorStatusLabel(writer.id)}
-                            </span>
-                            <X aria-hidden="true" className="h-3.5 w-3.5 text-text-tertiary" />
+                            {postId ? "Gửi / cập nhật lời mời" : "Lưu nháp và gửi lời mời"}
                           </button>
-                        ))}
-                    </div>
-                    <p className="text-[12px] leading-relaxed text-text-tertiary">
-                      Chọn đồng tác giả rồi bấm lưu để gửi lời mời. Trạng thái sẽ cập nhật khi họ phản hồi.
-                    </p>
-                    {coAuthorIds.length > 0 && (
-                      <button
-                        className="inline-flex h-9 items-center justify-center rounded-[5px] border border-border-default bg-background px-3 text-[13px] font-medium text-text-primary transition-colors hover:bg-subtle-bg disabled:cursor-not-allowed disabled:opacity-50"
-                        disabled={!canSave || isPending}
-                        onClick={() =>
-                          startTransition(() => void savePost("DRAFT"))
-                        }
-                        type="button"
-                      >
-                        {postId ? "Gửi / cập nhật lời mời" : "Lưu nháp và gửi lời mời"}
-                      </button>
+                        )}
+                        <select
+                          aria-label="Thêm đồng tác giả"
+                          className="h-9 w-full rounded-[5px] border border-border-default bg-background px-2.5 py-2 text-[13px] text-text-secondary outline-none transition-colors focus:border-accent"
+                          onChange={(event) => {
+                            if (event.target.value) {
+                              toggleCoAuthor(event.target.value)
+                              event.target.value = ""
+                            }
+                          }}
+                          value=""
+                        >
+                          <option value="">Thêm đồng tác giả...</option>
+                          {availableWriters
+                            .filter((writer) => !coAuthorIds.includes(writer.id) && writer.id !== (initialData?.authorId ?? currentUserId))
+                            .map((writer) => (
+                              <option key={writer.id} value={writer.id}>
+                                {writer.name}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
                     )}
-                    <select
-                      aria-label="Thêm đồng tác giả"
-                      className="h-9 w-full rounded-[5px] border border-border-default bg-background px-2.5 py-2 text-[13px] text-text-secondary outline-none transition-colors focus:border-accent"
-                      onChange={(event) => {
-                        if (event.target.value) {
-                          toggleCoAuthor(event.target.value)
-                          event.target.value = ""
-                        }
-                      }}
-                      value=""
-                    >
-                      <option value="">Thêm đồng tác giả...</option>
-                      {availableWriters
-                        .filter((writer) => !coAuthorIds.includes(writer.id) && writer.id !== (initialData?.authorId ?? currentUserId))
-                        .map((writer) => (
-                          <option key={writer.id} value={writer.id}>
-                            {writer.name}
-                          </option>
-                        ))}
-                    </select>
-                  </div>
-                )}
 
-          </div>
+                    <DraftVisibilityToggle
+                      hasCoAuthors={coAuthorIds.length > 0}
+                      onChange={(value) => {
+                        setDraftVisibility(value)
+                        markDirtyAndAutosave()
+                      }}
+                      value={draftVisibility}
+                    />
+                  </div>
+            </>
+          )}
         </aside>
 
         <div className="min-w-0 flex-1 overflow-y-auto">

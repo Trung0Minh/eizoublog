@@ -51,7 +51,7 @@ describe("SearchBar", () => {
     render(<SearchBar />)
 
     await user.type(
-      screen.getByRole("searchbox", { name: "Search posts" }),
+      screen.getByRole("searchbox", { name: "Tìm kiếm bài viết" }),
       "frieren",
     )
 
@@ -62,7 +62,7 @@ describe("SearchBar", () => {
       await screen.findByRole("link", { name: /Frieren and memory/ }),
     ).toHaveAttribute("href", "/frieren-memory")
     expect(
-      screen.getByRole("link", { name: /See all results/ }),
+      screen.getByRole("link", { name: /Xem tất cả kết quả cho/ }),
     ).toHaveAttribute("href", "/search?q=frieren")
   })
 
@@ -80,7 +80,7 @@ describe("SearchBar", () => {
     render(<SearchBar />)
 
     await user.type(
-      screen.getByRole("searchbox", { name: "Search posts" }),
+      screen.getByRole("searchbox", { name: "Tìm kiếm bài viết" }),
       "ufota{Enter}",
     )
 

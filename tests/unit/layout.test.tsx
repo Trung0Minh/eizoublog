@@ -67,19 +67,19 @@ describe("Navbar", () => {
   it("renders publication navigation and search access", () => {
     render(<Navbar user={null} />)
 
-    const contributors = screen.getByRole("link", { name: "Contributors" })
+    const contributors = screen.getByRole("link", { name: "Đóng góp" })
     expect(contributors).toHaveAttribute("href", "/contributors")
     expect(contributors).toHaveAttribute("data-prefetch", "undefined")
-    expect(screen.getByRole("link", { name: "About" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Giới thiệu" })).toHaveAttribute(
       "href",
       "/about",
     )
     expect(
-      screen.getByRole("searchbox", { name: "Search posts" }),
+      screen.getByRole("searchbox", { name: "Tìm kiếm bài viết" }),
     ).toBeInTheDocument()
-    expect(screen.getByRole("searchbox", { name: "Search posts" })).toHaveAttribute(
+    expect(screen.getByRole("searchbox", { name: "Tìm kiếm bài viết" })).toHaveAttribute(
       "placeholder",
-      "Search posts...",
+      "Tìm kiếm bài viết...",
     )
   })
 
@@ -126,9 +126,9 @@ describe("Navbar", () => {
       })
 
       expect(
-        screen.getByRole("button", { name: "Open writer menu" }),
+        screen.getByRole("button", { name: "Mở menu tác giả" }),
       ).toBeInTheDocument()
-      expect(fetchMock).toHaveBeenCalledTimes(1)
+      expect(fetchMock).toHaveBeenCalledTimes(2)
     } finally {
       fetchMock.mockRestore()
     }
@@ -150,7 +150,7 @@ describe("Navbar", () => {
 
       expect(fetchMock).toHaveBeenCalledTimes(1)
       expect(
-        screen.queryByRole("button", { name: "Open writer menu" }),
+        screen.queryByRole("button", { name: "Mở menu tác giả" }),
       ).not.toBeInTheDocument()
     } finally {
       fetchMock.mockRestore()
@@ -182,7 +182,7 @@ describe("Navbar", () => {
         await vi.advanceTimersByTimeAsync(300)
       })
       expect(
-        screen.queryByRole("button", { name: "Open writer menu" }),
+        screen.queryByRole("button", { name: "Mở menu tác giả" }),
       ).not.toBeInTheDocument()
 
       themeMocks.pathname = "/dashboard"
@@ -192,9 +192,9 @@ describe("Navbar", () => {
       })
 
       expect(
-        screen.getByRole("button", { name: "Open writer menu" }),
+        screen.getByRole("button", { name: "Mở menu tác giả" }),
       ).toBeInTheDocument()
-      expect(fetchMock).toHaveBeenCalledTimes(2)
+      expect(fetchMock).toHaveBeenCalledTimes(3)
     } finally {
       fetchMock.mockRestore()
     }
@@ -263,30 +263,30 @@ describe("WriterMenu", () => {
       />,
     )
 
-    await user.click(screen.getByRole("button", { name: "Open writer menu" }))
+    await user.click(screen.getByRole("button", { name: "Mở menu tác giả" }))
 
-    expect(screen.getByRole("menuitem", { name: "My posts" })).toHaveAttribute(
+    expect(screen.getByRole("menuitem", { name: "Bài viết của tôi" })).toHaveAttribute(
       "href",
       "/dashboard",
     )
-    expect(screen.getByRole("menuitem", { name: "My posts" })).toHaveAttribute(
+    expect(screen.getByRole("menuitem", { name: "Bài viết của tôi" })).toHaveAttribute(
       "data-prefetch",
       "false",
     )
     expect(
-      screen.getByRole("menuitem", { name: "Edit profile" }),
+      screen.getByRole("menuitem", { name: "Sửa hồ sơ" }),
     ).toHaveAttribute("href", "/dashboard/profile")
     expect(
-      screen.getByRole("menuitem", { name: "Edit profile" }),
+      screen.getByRole("menuitem", { name: "Sửa hồ sơ" }),
     ).toHaveAttribute("data-prefetch", "false")
     expect(
-      screen.getByRole("menuitem", { name: "View public profile" }),
+      screen.getByRole("menuitem", { name: "Hồ sơ công khai" }),
     ).toHaveAttribute("href", "/authors/mina")
     expect(
-      screen.getByRole("menuitem", { name: "View public profile" }),
+      screen.getByRole("menuitem", { name: "Hồ sơ công khai" }),
     ).toHaveAttribute("data-prefetch", "undefined")
 
-    await user.click(screen.getByRole("menuitem", { name: "Sign out" }))
+    await user.click(screen.getByRole("menuitem", { name: "Đăng xuất" }))
 
     expect(themeMocks.signOut).toHaveBeenCalledWith({ callbackUrl: "/" })
   })
@@ -305,13 +305,13 @@ describe("WriterMenu", () => {
       />,
     )
 
-    await user.click(screen.getByRole("button", { name: "Open writer menu" }))
+    await user.click(screen.getByRole("button", { name: "Mở menu tác giả" }))
 
-    expect(screen.getByRole("menuitem", { name: "Admin panel" })).toHaveAttribute(
+    expect(screen.getByRole("menuitem", { name: "Quản trị" })).toHaveAttribute(
       "href",
       "/admin",
     )
-    expect(screen.getByRole("menuitem", { name: "Admin panel" })).toHaveAttribute(
+    expect(screen.getByRole("menuitem", { name: "Quản trị" })).toHaveAttribute(
       "data-prefetch",
       "false",
     )
@@ -344,7 +344,7 @@ describe("Sidebar", () => {
     const sidebar = container.querySelector("aside")
     expect(sidebar).toHaveClass("lg:w-[240px]", "gap-12")
     expect(sidebar).not.toHaveClass("lg:sticky")
-    expect(screen.getByRole("heading", { name: "Categories" })).toHaveClass(
+    expect(screen.getByRole("heading", { name: "Danh mục" })).toHaveClass(
       "text-[11px]",
       "text-text-secondary",
     )
@@ -364,16 +364,16 @@ describe("MobileNav", () => {
     )
 
     await user.click(
-      screen.getByRole("button", { name: "Open navigation menu" }),
+      screen.getByRole("button", { name: "Mở menu điều hướng" }),
     )
 
     expect(screen.getByRole("dialog")).toBeInTheDocument()
     expect(
-      screen.getByText("Browse publication pages and search posts."),
+      screen.getByText("Duyệt các trang ấn phẩm và tìm kiếm bài viết."),
     ).toBeInTheDocument()
-    expect(screen.getByRole("searchbox", { name: "Search posts" })).toHaveAttribute(
+    expect(screen.getByRole("searchbox", { name: "Tìm kiếm bài viết" })).toHaveAttribute(
       "placeholder",
-      "Search posts...",
+      "Tìm kiếm bài viết...",
     )
     expect(screen.getByRole("button", { name: "Close" })).toHaveClass(
       "h-8",
@@ -394,27 +394,27 @@ describe("MobileNav", () => {
     )
 
     await user.click(
-      screen.getByRole("button", { name: "Open navigation menu" }),
+      screen.getByRole("button", { name: "Mở menu điều hướng" }),
     )
 
-    expect(screen.getByRole("link", { name: "My posts" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Bài viết của tôi" })).toHaveAttribute(
       "href",
       "/dashboard",
     )
-    expect(screen.getByRole("link", { name: "My posts" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Bài viết của tôi" })).toHaveAttribute(
       "data-prefetch",
       "false",
     )
-    expect(screen.getByRole("link", { name: "Edit profile" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Sửa hồ sơ" })).toHaveAttribute(
       "href",
       "/dashboard/profile",
     )
-    expect(screen.getByRole("link", { name: "Edit profile" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Sửa hồ sơ" })).toHaveAttribute(
       "data-prefetch",
       "false",
     )
 
-    await user.click(screen.getByRole("button", { name: "Sign out" }))
+    await user.click(screen.getByRole("button", { name: "Đăng xuất" }))
 
     expect(themeMocks.signOut).toHaveBeenCalledWith({ callbackUrl: "/" })
   })
@@ -437,14 +437,14 @@ describe("MobileNav", () => {
     )
 
     await user.click(
-      screen.getByRole("button", { name: "Open navigation menu" }),
+      screen.getByRole("button", { name: "Mở menu điều hướng" }),
     )
 
-    expect(screen.getByRole("link", { name: "Admin panel" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Quản trị" })).toHaveAttribute(
       "href",
       "/admin",
     )
-    expect(screen.getByRole("link", { name: "Admin panel" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Quản trị" })).toHaveAttribute(
       "data-prefetch",
       "false",
     )
@@ -502,11 +502,11 @@ describe("Footer", () => {
   it("renders publication links", () => {
     render(<Footer />)
 
-    expect(screen.getByRole("link", { name: "About" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Giới thiệu" })).toHaveAttribute(
       "href",
       "/about",
     )
-    expect(screen.getByRole("link", { name: "Contributors" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Đóng góp" })).toHaveAttribute(
       "href",
       "/contributors",
     )

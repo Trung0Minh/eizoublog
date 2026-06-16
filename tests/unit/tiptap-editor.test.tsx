@@ -18,6 +18,7 @@ const useEditorMock = vi.hoisted(() => {
       storage: {
         characterCount: {
           characters: () => 0,
+          words: () => 0,
         },
       },
     }
