@@ -27,7 +27,7 @@ export interface OrderedAwardEventRoom {
 }
 
 export const emptyAwardEventDoc: JSONContent = {
-  content: [],
+  content: [{ type: "paragraph" }],
   type: "doc",
 }
 

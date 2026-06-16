@@ -3,6 +3,7 @@ import type { JSONContent } from "@tiptap/react"
 
 import {
   buildAwardEventPostContent,
+  emptyAwardEventDoc,
   shuffleAwardEventRooms,
 } from "@/lib/awardEvents"
 
@@ -17,6 +18,13 @@ const doc = (...content: JSONContent[]): JSONContent => ({
 })
 
 describe("buildAwardEventPostContent", () => {
+  it("uses a Tiptap-valid empty document for new event rooms", () => {
+    expect(emptyAwardEventDoc).toEqual({
+      content: [{ type: "paragraph" }],
+      type: "doc",
+    })
+  })
+
   it("builds one public article from submitted rooms in saved order", () => {
     const content = buildAwardEventPostContent({
       eventIntro: doc(paragraph("A noisy year-end table of personal picks.")),

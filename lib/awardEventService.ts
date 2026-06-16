@@ -97,6 +97,14 @@ export function normalizeAwardEventContent(content: unknown): JSONContent {
     "type" in content &&
     content.type === "doc"
   ) {
+    if (
+      !("content" in content) ||
+      !Array.isArray(content.content) ||
+      content.content.length === 0
+    ) {
+      return emptyAwardEventDoc
+    }
+
     return content as JSONContent
   }
 
