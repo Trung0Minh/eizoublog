@@ -35,8 +35,17 @@ export const CustomImageExtension = Node.create({
     ]
   },
 
-  renderHTML({ HTMLAttributes }) {
-    return ["figure", mergeAttributes(HTMLAttributes, { "data-type": "image" }), 0]
+  renderHTML({ HTMLAttributes, node }) {
+    const showCaption = node.attrs.showCaption === true || node.attrs.showCaption === "true"
+    return [
+      "figure",
+      mergeAttributes(HTMLAttributes, { "data-type": "image" }),
+      [
+        "figcaption",
+        { class: `mt-1 w-full text-center text-sm text-text-tertiary ${!showCaption ? "hidden" : ""}`.trim() },
+        0,
+      ],
+    ]
   },
 
   addNodeView() {
