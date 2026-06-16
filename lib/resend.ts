@@ -1,3 +1,4 @@
+import { PostCommentEmail } from "@/emails/PostCommentEmail"
 import { Resend } from "resend"
 
 import { CommentReplyEmail } from "@/emails/CommentReplyEmail"
@@ -176,6 +177,48 @@ export async function sendNewsletterBroadcast({
       unsubscribeUrl,
     }),
     subject,
+    to,
+  })
+
+  if (error) {
+    throw new Error(`Resend error: ${error.message}`)
+  }
+}
+
+
+interface SendPostCommentEmailOptions {
+  postTitle: string
+  postUrl: string
+  commenterName: string
+  commentContent: string
+  to: string
+  toName: string
+}
+
+export async function sendPostCommentEmail({
+  postTitle,
+  postUrl,
+  commenterName,
+  commentContent,
+  to,
+  toName,
+}: SendPostCommentEmailOptions) {
+  const from = process.env.RESEND_FROM_EMAIL
+
+  if (!from) {
+    throw new Error("Resend email environment variables are not configured")
+  }
+
+  const { error } = await resend.emails.send({
+    from,
+    react: PostCommentEmail({
+      postTitle,
+      postUrl,
+      commenterName,
+      commentContent,
+      toName,
+    }),
+    subject: `New comment on your post "${postTitle}"`,
     to,
   })
 

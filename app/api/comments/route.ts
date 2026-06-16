@@ -2,7 +2,7 @@ import { revalidateTag } from "next/cache"
 import { ZodError, z } from "zod"
 
 import { prisma } from "@/lib/prisma"
-import { sendCommentReplyEmail } from "@/lib/resend"
+import { sendCommentReplyEmail, sendPostCommentEmail } from "@/lib/resend"
 import { auth } from "@/lib/auth"
 
 class RouteError extends Error {
@@ -59,7 +59,18 @@ export async function POST(request: Request) {
     }
 
     const post = await prisma.post.findUnique({
-      select: { id: true, slug: true, title: true },
+      select: { 
+        id: true, 
+        slug: true, 
+        title: true,
+        author: {
+          select: {
+            email: true,
+            name: true,
+            id: true
+          }
+        }
+      },
       where: { id: data.postId, status: "PUBLISHED" },
     })
 
@@ -145,6 +156,32 @@ export async function POST(request: Request) {
         } catch (error) {
           console.error(
             "[POST /api/comments] Failed to send reply email:",
+            error,
+          )
+        }
+      }
+    }
+
+    const shouldSendPostAuthorEmail = 
+      post.author.email.toLowerCase() !== authorEmail.toLowerCase() &&
+      !(parent && parent.notifyReply && parent.authorEmail.toLowerCase() === post.author.email.toLowerCase())
+
+    if (shouldSendPostAuthorEmail) {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL
+
+      if (appUrl) {
+        try {
+          await sendPostCommentEmail({
+            postTitle: post.title,
+            postUrl: `${appUrl}/${post.slug}#comment-${comment.id}`,
+            commenterName: authorName,
+            commentContent: data.content,
+            to: post.author.email,
+            toName: post.author.name,
+          })
+        } catch (error) {
+          console.error(
+            "[POST /api/comments] Failed to send post author email:",
             error,
           )
         }

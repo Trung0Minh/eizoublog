@@ -99,6 +99,7 @@ function WriterAvatar({
 export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
   const [loadedUser, setLoadedUser] = useState<WriterMenuUser | null>(null)
   const [pendingInvites, setPendingInvites] = useState(0)
+  const [unreadComments, setUnreadComments] = useState(0)
 
   useEffect(() => {
     if (user !== undefined) return
@@ -107,9 +108,10 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
 
     async function loadSession() {
       try {
-        const [sessionRes, invitesRes] = await Promise.all([
+        const [sessionRes, invitesRes, commentsRes] = await Promise.all([
           fetch("/api/auth/session"),
-          fetch("/api/user/pending-invites-count")
+          fetch("/api/user/pending-invites-count"),
+          fetch("/api/user/unread-comments-count"),
         ])
         
         if (sessionRes.ok) {
@@ -123,6 +125,13 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
           const result = await invitesRes.json()
           if (isMounted && typeof result.count === "number") {
             setPendingInvites(result.count)
+          }
+        }
+
+        if (commentsRes.ok) {
+          const result = await commentsRes.json()
+          if (isMounted && typeof result.count === "number") {
+            setUnreadComments(result.count)
           }
         }
       } catch {
@@ -143,14 +152,23 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
 
   if (!menuUser) return null
 
+  const handleOpenChange = (open: boolean) => {
+    if (open && unreadComments > 0) {
+      setUnreadComments(0)
+      fetch("/api/user/mark-comments-read", { method: "POST" }).catch(console.error)
+    }
+  }
+
+  const totalNotifications = pendingInvites + unreadComments
+
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger
         aria-label="Mở menu tác giả"
         className="relative inline-flex h-8 items-center gap-1.5 rounded-full px-1.5 text-sm font-medium text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <WriterAvatar className="h-6 w-6" user={menuUser} />
-        {pendingInvites > 0 && (
+        {totalNotifications > 0 && (
           <span className="absolute right-4 top-0.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white outline outline-2 outline-background ring-2 ring-background">
           </span>
         )}
@@ -173,9 +191,9 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
               <FileText aria-hidden="true" />
               Bài viết của tôi
             </div>
-            {pendingInvites > 0 && (
+            {totalNotifications > 0 && (
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white">
-                {pendingInvites}
+                {totalNotifications}
               </span>
             )}
           </Link>

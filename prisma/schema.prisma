@@ -233,6 +233,7 @@ model Comment {
   content     String        @db.Text
   status      CommentStatus @default(APPROVED)
   notifyReply Boolean       @default(true)
+  isRead      Boolean       @default(false)
   createdAt   DateTime      @default(now())
   post        Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
   parent      Comment?      @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
