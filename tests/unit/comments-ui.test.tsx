@@ -15,6 +15,7 @@ import { CommentSection } from "@/components/comments/CommentSection"
 import type { CommentWithReplies } from "@/types"
 
 const topComment: CommentWithReplies = {
+  author: null,
   authorName: "Mina",
   content: "<script>alert(1)</script>",
   createdAt: new Date("2024-04-01T00:00:00Z"),
@@ -23,6 +24,7 @@ const topComment: CommentWithReplies = {
   postId: "post-1",
   replies: [
     {
+      author: null,
       authorName: "Ken",
       content: "A direct reply.",
       createdAt: new Date("2024-04-02T00:00:00Z"),
@@ -65,15 +67,15 @@ describe("CommentForm", () => {
       />,
     )
 
-    expect(screen.getByText("Not shown publicly")).toBeVisible()
+    expect(screen.getByText("Không hiển thị công khai")).toBeVisible()
 
-    await user.type(screen.getByLabelText("Name *"), "Mina")
+    await user.type(screen.getByLabelText("Tên *"), "Mina")
     await user.type(screen.getByLabelText("Email *"), "mina@example.com")
     await user.type(
-      screen.getByLabelText("Comment *"),
+      screen.getByLabelText("Bình luận *"),
       "This changed my read of the scene.",
     )
-    await user.click(screen.getByRole("button", { name: "Post comment" }))
+    await user.click(screen.getByRole("button", { name: "Đăng bình luận" }))
 
     await waitFor(() => {
       expect(onSuccess).toHaveBeenCalledWith(
@@ -83,7 +85,7 @@ describe("CommentForm", () => {
         }),
       )
     })
-    expect(await screen.findByText("Comment posted.")).toBeVisible()
+    expect(await screen.findByText("Đã đăng bình luận.")).toBeVisible()
     expect(analyticsMocks.trackEvent).toHaveBeenCalledWith(
       "comment_submitted",
       { postSlug: "frieren-memory" },
@@ -103,13 +105,13 @@ describe("CommentForm", () => {
   it("stacks identity fields and full-width actions on mobile", () => {
     render(<CommentForm onSuccess={vi.fn()} postId="post-1" />)
 
-    const identityGrid = screen.getByLabelText("Name *").closest(".grid")
+    const identityGrid = screen.getByLabelText("Tên *").closest(".grid")
     if (!identityGrid) {
       throw new Error("Identity grid not found")
     }
 
     expect(identityGrid).toHaveClass("grid-cols-1", "md:grid-cols-2")
-    expect(screen.getByRole("button", { name: "Post comment" })).toHaveClass(
+    expect(screen.getByRole("button", { name: "Đăng bình luận" })).toHaveClass(
       "h-[38px]",
       "px-5",
       "bg-button-bg",
@@ -132,15 +134,15 @@ describe("CommentSection", () => {
       />,
     )
 
-    expect(screen.getByRole("heading", { name: "Comments" })).toBeVisible()
-    expect(screen.getByText("2 comments")).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Bình luận" })).toBeVisible()
+    expect(screen.getByText("2 bình luận")).toBeVisible()
     expect(screen.getByText("<script>alert(1)</script>")).toBeVisible()
     expect(container.querySelector("script")).toBeNull()
     expect(screen.queryByText(/@example\.com/)).not.toBeInTheDocument()
     expect(
-      screen.getByRole("button", { name: "Reply to Mina's comment" }),
+      screen.getByRole("button", { name: "Trả lời bình luận của Mina" }),
     ).toHaveClass("text-[12px]", "text-text-tertiary")
-    expect(screen.getByText("2 comments")).toHaveClass("text-text-secondary")
+    expect(screen.getByText("2 bình luận")).toHaveClass("text-text-secondary")
   })
 
   it("adds a successful reply under the selected parent comment", async () => {
@@ -149,7 +151,8 @@ describe("CommentSection", () => {
       new Response(
         JSON.stringify({
           data: {
-            authorName: "Rei",
+            author: null,
+            authorName: "Ryu",
             content: "That is the line I noticed too.",
             createdAt: new Date("2024-04-03T00:00:00Z"),
             id: "reply-2",
@@ -172,27 +175,27 @@ describe("CommentSection", () => {
     )
 
     await user.click(
-      screen.getByRole("button", { name: "Reply to Mina's comment" }),
+      screen.getByRole("button", { name: "Trả lời bình luận của Mina" }),
     )
 
-    const replyForm = screen.getByRole("form", { name: "Reply to Mina" })
-    await user.type(within(replyForm).getByLabelText("Name *"), "Rei")
+    const replyForm = screen.getByRole("form", { name: "Trả lời Mina" })
+    await user.type(within(replyForm).getByLabelText("Tên *"), "Rei")
     await user.type(
       within(replyForm).getByLabelText("Email *"),
       "rei@example.com",
     )
     await user.type(
-      within(replyForm).getByLabelText("Comment *"),
+      within(replyForm).getByLabelText("Bình luận *"),
       "That is the line I noticed too.",
     )
-    await user.click(within(replyForm).getByRole("button", { name: "Post reply" }))
+    await user.click(within(replyForm).getByRole("button", { name: "Đăng trả lời" }))
 
     expect(
       await screen.findByText("That is the line I noticed too."),
     ).toBeVisible()
     await waitFor(() => {
       expect(
-        screen.queryByRole("form", { name: "Reply to Mina" }),
+        screen.queryByRole("form", { name: "Trả lời Mina" }),
       ).not.toBeInTheDocument()
     })
 

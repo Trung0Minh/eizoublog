@@ -15,6 +15,7 @@ interface CommentFormProps {
   parentId?: string
   postId: string
   postSlug?: string
+  isAuthenticated?: boolean
 }
 
 interface CommentResponse {
@@ -29,6 +30,7 @@ export function CommentForm({
   parentId,
   postId,
   postSlug,
+  isAuthenticated,
 }: CommentFormProps) {
   const id = useId()
   const [authorEmail, setAuthorEmail] = useState("")
@@ -102,44 +104,46 @@ export function CommentForm({
           </p>
         )}
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="space-y-1.5">
-            <label
-              className="text-[13px] font-medium text-text-primary"
-              htmlFor={`${id}-comment-name`}
-            >
-              Tên *
-            </label>
-            <Input
-              autoComplete="name"
-              id={`${id}-comment-name`}
-              maxLength={80}
-              onChange={(event) => setAuthorName(event.target.value)}
-              required
-              value={authorName}
-            />
+        {!isAuthenticated && (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="space-y-1.5">
+              <label
+                className="text-[13px] font-medium text-text-primary"
+                htmlFor={`${id}-comment-name`}
+              >
+                Tên *
+              </label>
+              <Input
+                autoComplete="name"
+                id={`${id}-comment-name`}
+                maxLength={80}
+                onChange={(event) => setAuthorName(event.target.value)}
+                required
+                value={authorName}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label
+                className="text-[13px] font-medium text-text-primary"
+                htmlFor={`${id}-comment-email`}
+              >
+                Email *
+              </label>
+              <Input
+                autoComplete="email"
+                id={`${id}-comment-email`}
+                inputMode="email"
+                onChange={(event) => setAuthorEmail(event.target.value)}
+                required
+                type="email"
+                value={authorEmail}
+              />
+              <p className="text-[11px] text-text-tertiary">
+                Không hiển thị công khai
+              </p>
+            </div>
           </div>
-          <div className="space-y-1.5">
-            <label
-              className="text-[13px] font-medium text-text-primary"
-              htmlFor={`${id}-comment-email`}
-            >
-              Email *
-            </label>
-            <Input
-              autoComplete="email"
-              id={`${id}-comment-email`}
-              inputMode="email"
-              onChange={(event) => setAuthorEmail(event.target.value)}
-              required
-              type="email"
-              value={authorEmail}
-            />
-            <p className="text-[11px] text-text-tertiary">
-              Không hiển thị công khai
-            </p>
-          </div>
-        </div>
+        )}
 
         <div className="space-y-1.5">
             <label

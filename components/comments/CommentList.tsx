@@ -13,6 +13,8 @@ interface CommentListProps {
   onReply: (comment: CommentWithReplies) => void
   postId: string
   postSlug?: string
+  isAuthenticated?: boolean
+  postAuthorUsernames?: string[]
 }
 
 function getInitial(name: string) {
@@ -31,10 +33,16 @@ function avatarColor(name: string) {
 
 function CommentBubble({
   comment,
+  isReply,
+  postAuthorUsernames = [],
 }: {
   comment: PublicComment
   isReply?: boolean
+  postAuthorUsernames?: string[]
 }) {
+  const isPostAuthor = comment.author?.username && postAuthorUsernames.includes(comment.author.username)
+  const role = comment.author?.role
+
   return (
     <div className="flex gap-3">
       <div
@@ -49,6 +57,21 @@ function CommentBubble({
           <span className="text-[13px] font-semibold text-text-primary">
             {comment.authorName}
           </span>
+          {isPostAuthor && (
+            <span className="rounded-[4px] bg-accent/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent">
+              Tác giả
+            </span>
+          )}
+          {role === "ADMIN" && (
+            <span className="rounded-[4px] bg-red-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-600 dark:text-red-400">
+              Admin
+            </span>
+          )}
+          {role === "WRITER" && !isPostAuthor && (
+            <span className="rounded-[4px] bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+              Writer
+            </span>
+          )}
           <time
             className="text-[12px] text-text-tertiary"
             dateTime={new Date(comment.createdAt).toISOString()}
@@ -69,11 +92,15 @@ function CommentThread({
   onReply,
   postId,
   postSlug,
+  isAuthenticated,
+  postAuthorUsernames,
 }: {
   comment: CommentWithReplies
   onReply: (comment: CommentWithReplies) => void
   postId: string
   postSlug?: string
+  isAuthenticated?: boolean
+  postAuthorUsernames?: string[]
 }) {
   const [isReplying, setIsReplying] = useState(false)
 
@@ -87,7 +114,7 @@ function CommentThread({
       className="scroll-mt-24 border-t border-border-default pt-6 first:border-t-0 first:pt-0"
       id={`comment-${comment.id}`}
     >
-      <CommentBubble comment={comment} />
+      <CommentBubble comment={comment} postAuthorUsernames={postAuthorUsernames} />
       <div className="mt-3 pl-11">
         <Button
           aria-label={`Trả lời bình luận của ${comment.authorName}`}
@@ -110,6 +137,7 @@ function CommentThread({
             parentId={comment.id}
             postId={postId}
             postSlug={postSlug}
+            isAuthenticated={isAuthenticated}
           />
         </div>
       )}
@@ -122,7 +150,7 @@ function CommentThread({
               id={`comment-${reply.id}`}
               key={reply.id}
             >
-              <CommentBubble comment={reply} isReply />
+              <CommentBubble comment={reply} isReply postAuthorUsernames={postAuthorUsernames} />
             </article>
           ))}
         </div>
@@ -136,6 +164,8 @@ export function CommentList({
   onReply,
   postId,
   postSlug,
+  isAuthenticated,
+  postAuthorUsernames = [],
 }: CommentListProps) {
   return (
     <div className="space-y-6">
@@ -146,6 +176,8 @@ export function CommentList({
           onReply={onReply}
           postId={postId}
           postSlug={postSlug}
+          isAuthenticated={isAuthenticated}
+          postAuthorUsernames={postAuthorUsernames}
         />
       ))}
     </div>

@@ -3,6 +3,7 @@ import { ZodError, z } from "zod"
 
 import { prisma } from "@/lib/prisma"
 import { sendCommentReplyEmail } from "@/lib/resend"
+import { auth } from "@/lib/auth"
 
 class RouteError extends Error {
   constructor(
@@ -14,8 +15,8 @@ class RouteError extends Error {
 }
 
 const createCommentSchema = z.object({
-  authorEmail: z.string().trim().email(),
-  authorName: z.string().trim().min(1).max(80),
+  authorEmail: z.string().trim().email().optional().or(z.literal("")),
+  authorName: z.string().trim().max(80).optional().or(z.literal("")),
   content: z.string().trim().min(1).max(2000),
   notifyReply: z.boolean().default(true),
   parentId: z.string().min(1).optional(),
@@ -23,6 +24,12 @@ const createCommentSchema = z.object({
 })
 
 const publicCommentSelect = {
+  author: {
+    select: {
+      role: true,
+      username: true,
+    },
+  },
   authorName: true,
   content: true,
   createdAt: true,
@@ -34,7 +41,22 @@ const publicCommentSelect = {
 
 export async function POST(request: Request) {
   try {
+    const session = await auth()
     const data = createCommentSchema.parse(await request.json())
+
+    let authorEmail = data.authorEmail || ""
+    let authorName = data.authorName || ""
+    let authorId = undefined
+
+    if (session?.user?.email && session?.user?.name) {
+      authorEmail = session.user.email
+      authorName = session.user.name
+      authorId = session.user.id
+    }
+
+    if (!authorEmail || !authorName) {
+      throw new RouteError("Name and email are required for guests", 400)
+    }
 
     const post = await prisma.post.findUnique({
       select: { id: true, slug: true, title: true },
@@ -47,6 +69,7 @@ export async function POST(request: Request) {
 
     let parent:
       | {
+          author: { role: string; username: string | null } | null
           authorEmail: string
           authorName: string
           id: string
@@ -59,6 +82,12 @@ export async function POST(request: Request) {
     if (data.parentId) {
       parent = await prisma.comment.findUnique({
         select: {
+          author: {
+            select: {
+              role: true,
+              username: true,
+            },
+          },
           authorEmail: true,
           authorName: true,
           id: true,
@@ -84,8 +113,9 @@ export async function POST(request: Request) {
 
     const comment = await prisma.comment.create({
       data: {
-        authorEmail: data.authorEmail,
-        authorName: data.authorName,
+        authorEmail,
+        authorName,
+        authorId,
         content: data.content,
         notifyReply: data.notifyReply,
         parentId: data.parentId ?? null,
@@ -98,7 +128,7 @@ export async function POST(request: Request) {
     if (
       parent &&
       parent.notifyReply &&
-      parent.authorEmail.toLowerCase() !== data.authorEmail.toLowerCase()
+      parent.authorEmail.toLowerCase() !== authorEmail.toLowerCase()
     ) {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL
 
@@ -107,7 +137,7 @@ export async function POST(request: Request) {
           await sendCommentReplyEmail({
             postTitle: post.title,
             postUrl: `${appUrl}/${post.slug}#comment-${comment.id}`,
-            repliedByName: data.authorName,
+            repliedByName: authorName,
             replyContent: data.content,
             to: parent.authorEmail,
             toName: parent.authorName,

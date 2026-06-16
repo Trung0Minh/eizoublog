@@ -170,6 +170,12 @@ export const publishedPostDetailSelect = {
   comments: {
     orderBy: { createdAt: "asc" },
     select: {
+      author: {
+        select: {
+          role: true,
+          username: true,
+        },
+      },
       authorName: true,
       content: true,
       createdAt: true,
@@ -179,6 +185,12 @@ export const publishedPostDetailSelect = {
       replies: {
         orderBy: { createdAt: "asc" },
         select: {
+          author: {
+            select: {
+              role: true,
+              username: true,
+            },
+          },
           authorName: true,
           content: true,
           createdAt: true,

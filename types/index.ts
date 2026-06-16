@@ -9,7 +9,12 @@ export type PublicComment = Pick<
   | "parentId"
   | "postId"
   | "status"
->
+> & {
+  author: {
+    role: string
+    username: string | null
+  } | null
+}
 
 export type CommentWithReplies = PublicComment & {
   replies: PublicComment[]

@@ -10,6 +10,8 @@ interface CommentSectionProps {
   initialComments: CommentWithReplies[]
   postId: string
   postSlug?: string
+  isAuthenticated?: boolean
+  postAuthorUsernames?: string[]
 }
 
 function countComments(comments: CommentWithReplies[]) {
@@ -23,6 +25,8 @@ export function CommentSection({
   initialComments,
   postId,
   postSlug,
+  isAuthenticated,
+  postAuthorUsernames = [],
 }: CommentSectionProps) {
   const [comments, setComments] =
     useState<CommentWithReplies[]>(initialComments)
@@ -64,6 +68,7 @@ export function CommentSection({
         onSuccess={handleNewComment}
         postId={postId}
         postSlug={postSlug}
+        isAuthenticated={isAuthenticated}
       />
 
       {comments.length > 0 && (
@@ -73,6 +78,8 @@ export function CommentSection({
             onReply={handleNewComment}
             postId={postId}
             postSlug={postSlug}
+            isAuthenticated={isAuthenticated}
+            postAuthorUsernames={postAuthorUsernames}
           />
         </div>
       )}

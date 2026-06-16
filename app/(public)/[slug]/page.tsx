@@ -119,6 +119,8 @@ export default async function PostPage({ params }: PostPageProps) {
               initialComments={post.comments}
               postId={post.id}
               postSlug={post.slug}
+              isAuthenticated={!!session?.user}
+              postAuthorUsernames={authors}
             />
           </article>
           <aside className="hidden w-[200px] shrink-0 xl:block">

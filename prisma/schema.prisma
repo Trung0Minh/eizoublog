@@ -28,6 +28,7 @@ model User {
   sessions        Session[]
   invitesSent     Invite[]             @relation("InviteCreatedBy")
   passwordResets  PasswordResetToken[]
+  comments        Comment[]
 
   @@index([username])
   @@index([role, createdAt(sort: Desc)])
@@ -228,6 +229,7 @@ model Comment {
   parentId    String?
   authorName  String
   authorEmail String
+  authorId    String?
   content     String        @db.Text
   status      CommentStatus @default(APPROVED)
   notifyReply Boolean       @default(true)
@@ -235,6 +237,7 @@ model Comment {
   post        Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
   parent      Comment?      @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   replies     Comment[]     @relation("CommentReplies")
+  author      User?         @relation(fields: [authorId], references: [id])
 
   @@index([postId, status])
   @@index([parentId])
