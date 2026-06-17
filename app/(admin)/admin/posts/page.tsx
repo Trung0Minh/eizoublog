@@ -4,15 +4,17 @@ import Link from "next/link"
 
 import { AdminPageHeader } from "@/components/admin/AdminPrimitives"
 import { AdminPostsTable } from "@/components/admin/AdminPostsTable"
+import { PostSortTabs } from "@/components/posts/PostSortTabs"
 import { Pagination } from "@/components/ui/Pagination"
 import {
   getCachedAdminDashboardStats,
   getCachedAdminPosts,
 } from "@/lib/queries"
+import { parsePostListSort } from "@/lib/postListSort"
 import { cn } from "@/lib/utils"
 
 interface AdminPostsPageProps {
-  searchParams: Promise<{ page?: string; status?: string }>
+  searchParams: Promise<{ page?: string; sort?: string; status?: string }>
 }
 
 const PAGE_SIZE = 20
@@ -38,12 +40,13 @@ function parseStatus(value?: string): PostStatus | undefined {
 export default async function AdminPostsPage({
   searchParams,
 }: AdminPostsPageProps) {
-  const { page: pageParam, status: statusParam } = await searchParams
+  const { page: pageParam, sort: sortParam, status: statusParam } = await searchParams
   const page = parsePage(pageParam)
+  const sort = parsePostListSort(sortParam)
   const status = parseStatus(statusParam)
 
   const [{ posts, total }, counts] = await Promise.all([
-    getCachedAdminPosts(page, status, PAGE_SIZE),
+    getCachedAdminPosts(page, status, PAGE_SIZE, sort),
     getCachedAdminDashboardStats(),
   ])
   const allCount = counts.publishedPosts + counts.draftPosts + counts.archivedPosts
@@ -84,7 +87,12 @@ export default async function AdminPostsPage({
           })}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <PostSortTabs
+            basePath="/admin/posts"
+            query={{ status }}
+            sort={sort}
+          />
           <div className="relative w-full md:w-[220px]">
             <Search
               aria-hidden="true"
@@ -113,7 +121,7 @@ export default async function AdminPostsPage({
         page={page}
         pageSize={PAGE_SIZE}
         prefetch={false}
-        query={{ status }}
+        query={{ sort: sort === "latest" ? undefined : sort, status }}
         total={total}
       />
     </div>

@@ -9,6 +9,7 @@ import {
   getInternalAnalyticsStats,
   getInternalTopPages,
 } from "@/lib/internalAnalytics"
+import type { PostListSort } from "@/lib/postListSort"
 import { prisma } from "@/lib/prisma"
 import type { SearchResult } from "@/lib/search"
 
@@ -161,6 +162,59 @@ const adminAwardEventTagSelect = {
   id: true,
   name: true,
 } satisfies Prisma.TagSelect
+
+const adminContentCategorySelect = {
+  _count: { select: { children: true, posts: true } },
+  children: {
+    orderBy: { name: "asc" },
+    select: {
+      _count: { select: { children: true, posts: true } },
+      description: true,
+      id: true,
+      name: true,
+      parentId: true,
+      slug: true,
+    },
+  },
+  description: true,
+  id: true,
+  name: true,
+  parentId: true,
+  slug: true,
+} satisfies Prisma.CategorySelect
+
+const adminContentTagSelect = {
+  _count: { select: { posts: true } },
+  id: true,
+  name: true,
+  slug: true,
+} satisfies Prisma.TagSelect
+
+const adminDashboardRecentPostSelect = {
+  author: { select: { name: true } },
+  status: true,
+  title: true,
+  updatedAt: true,
+} satisfies Prisma.PostSelect
+
+const adminDashboardRecentCommentSelect = {
+  authorName: true,
+  content: true,
+  createdAt: true,
+  id: true,
+  post: { select: { slug: true, title: true } },
+} satisfies Prisma.CommentSelect
+
+const writerAwardEventSelect = {
+  _count: { select: { rooms: true } },
+  finalPost: { select: { slug: true } },
+  id: true,
+  rooms: {
+    select: { id: true, status: true },
+  },
+  status: true,
+  title: true,
+} satisfies Prisma.AwardEventSelect
 
 export const publishedPostDetailSelect = {
   _count: { select: { comments: true } },
@@ -346,7 +400,7 @@ async function getPublishedPostListByWhere(
   where: Prisma.PostWhereInput,
   page: number,
   pageSize: number,
-  sort: "latest" | "oldest" | "comments" = "latest",
+  sort: PostListSort = "latest",
 ) {
   let orderBy: Prisma.PostOrderByWithRelationInput | Prisma.PostOrderByWithRelationInput[]
   if (sort === "oldest") {
@@ -372,7 +426,7 @@ async function getPublishedPostListByWhere(
 }
 
 export const getCachedPublishedPosts = unstable_cache(
-  async (page: number, pageSize: number, sort: "latest" | "oldest" | "comments" = "latest") => {
+  async (page: number, pageSize: number, sort: PostListSort = "latest") => {
     const where = { status: "PUBLISHED" } satisfies Prisma.PostWhereInput
     return getPublishedPostListByWhere(where, page, pageSize, sort)
   },
@@ -501,11 +555,22 @@ export const getCachedAdminDashboardStats = unstable_cache(
 )
 
 export const getCachedAdminPosts = unstable_cache(
-  async (page: number, status: PostStatus | undefined, pageSize: number) => {
+  async (
+    page: number,
+    status: PostStatus | undefined,
+    pageSize: number,
+    sort: PostListSort = "latest",
+  ) => {
     const offset = (page - 1) * pageSize
     const statusFilter = status
       ? Prisma.sql`WHERE p.status::text = ${status}`
       : Prisma.empty
+    const orderBy =
+      sort === "oldest"
+        ? Prisma.sql`ORDER BY "publishedAt" ASC NULLS LAST, "updatedAt" ASC`
+        : sort === "comments"
+          ? Prisma.sql`ORDER BY "commentCount" DESC, "publishedAt" DESC NULLS LAST`
+          : Prisma.sql`ORDER BY "publishedAt" DESC NULLS FIRST, "updatedAt" DESC`
     const rows = await prisma.$queryRaw<AdminPostRow[]>`
       WITH filtered AS (
         SELECT
@@ -530,7 +595,7 @@ export const getCachedAdminPosts = unstable_cache(
       paged AS (
         SELECT *
         FROM filtered
-        ORDER BY "publishedAt" DESC NULLS FIRST, "updatedAt" DESC
+        ${orderBy}
         LIMIT ${pageSize} OFFSET ${offset}
       )
       SELECT counted."totalCount", paged.*
@@ -672,6 +737,48 @@ export const getCachedAdminWritersData = unstable_cache(
   { revalidate: 60, tags: ["users", "invites"] },
 )
 
+export const getCachedAdminContentData = unstable_cache(
+  async () => {
+    const [categories, tags] = await Promise.all([
+      prisma.category.findMany({
+        orderBy: { name: "asc" },
+        select: adminContentCategorySelect,
+        where: { parentId: null },
+      }),
+      prisma.tag.findMany({
+        orderBy: { name: "asc" },
+        select: adminContentTagSelect,
+      }),
+    ])
+
+    return { categories, tags }
+  },
+  ["admin-content-data"],
+  { revalidate: 60, tags: ["categories", "tags", "posts"] },
+)
+
+export const getCachedAdminDashboardRecentData = unstable_cache(
+  async () => {
+    const [recentPosts, recentComments] = await Promise.all([
+      prisma.post.findMany({
+        orderBy: [{ updatedAt: "desc" }],
+        select: adminDashboardRecentPostSelect,
+        take: 5,
+      }),
+      prisma.comment.findMany({
+        orderBy: { createdAt: "desc" },
+        select: adminDashboardRecentCommentSelect,
+        take: 5,
+        where: { status: "APPROVED" },
+      }),
+    ])
+
+    return { recentComments, recentPosts }
+  },
+  ["admin-dashboard-recent-data"],
+  { revalidate: 60, tags: ["posts", "comments"] },
+)
+
 export const getCachedAdminNewsletterData = unstable_cache(
   async () => {
     const [activeCount, recentPosts] = await Promise.all([
@@ -726,6 +833,23 @@ export const getCachedAdminEventsData = unstable_cache(
   { revalidate: 60, tags: ["award-events", "categories", "tags"] },
 )
 
+export const getCachedWriterEvents = unstable_cache(
+  async (userId: string) =>
+    prisma.awardEvent.findMany({
+      orderBy: { createdAt: "desc" },
+      select: {
+        ...writerAwardEventSelect,
+        rooms: {
+          select: { id: true, status: true },
+          where: { writerId: userId },
+        },
+      },
+      where: { status: { in: ["OPEN", "PUBLISHED"] } },
+    }),
+  ["writer-events"],
+  { revalidate: 60, tags: ["award-events"] },
+)
+
 export const getCachedAdminEventDetail = unstable_cache(
   async (id: string) =>
     prisma.awardEvent.findUnique({
@@ -747,11 +871,17 @@ export const getCachedCategoryBySlug = unstable_cache(
 )
 
 export const getCachedCategoryPosts = unstable_cache(
-  async (categoryId: string, page: number, pageSize: number) =>
+  async (
+    categoryId: string,
+    page: number,
+    pageSize: number,
+    sort: PostListSort = "latest",
+  ) =>
     getPublishedPostListByWhere(
       { categoryId, status: "PUBLISHED" },
       page,
       pageSize,
+      sort,
     ),
   ["category-posts"],
   { revalidate: 60, tags: ["posts", "categories"] },
@@ -768,7 +898,12 @@ export const getCachedTagBySlug = unstable_cache(
 )
 
 export const getCachedTagPosts = unstable_cache(
-  async (tagId: string, page: number, pageSize: number) =>
+  async (
+    tagId: string,
+    page: number,
+    pageSize: number,
+    sort: PostListSort = "latest",
+  ) =>
     getPublishedPostListByWhere(
       {
         status: "PUBLISHED",
@@ -776,6 +911,7 @@ export const getCachedTagPosts = unstable_cache(
       },
       page,
       pageSize,
+      sort,
     ),
   ["tag-posts"],
   { revalidate: 60, tags: ["posts", "tags"] },
@@ -792,7 +928,12 @@ export const getCachedAuthorByUsername = unstable_cache(
 )
 
 export const getCachedAuthorPosts = unstable_cache(
-  async (authorId: string, page: number, pageSize: number) =>
+  async (
+    authorId: string,
+    page: number,
+    pageSize: number,
+    sort: PostListSort = "latest",
+  ) =>
     getPublishedPostListByWhere(
       {
         OR: [
@@ -803,6 +944,7 @@ export const getCachedAuthorPosts = unstable_cache(
       },
       page,
       pageSize,
+      sort,
     ),
   ["author-posts"],
   { revalidate: 60, tags: ["posts", "users"] },

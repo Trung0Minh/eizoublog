@@ -1,3 +1,4 @@
+import { revalidateTag } from "next/cache"
 import { ZodError, z } from "zod"
 
 import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
@@ -51,6 +52,9 @@ export async function POST(request: Request) {
       update: {},
       where: { slug },
     })
+
+    revalidateTag("tags", "max")
+    revalidateTag("posts", "max")
 
     return Response.json({ data: tag }, { status: 201 })
   } catch (error) {

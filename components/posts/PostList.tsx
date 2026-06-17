@@ -6,6 +6,7 @@ interface PostListProps {
   pagination?: {
     page: number
     pageSize: number
+    query?: Record<string, number | string | undefined>
     total: number
   }
   posts: PostCardPost[]
@@ -36,6 +37,7 @@ export function PostList({
         <Pagination
           page={pagination.page}
           pageSize={pagination.pageSize}
+          query={pagination.query}
           total={pagination.total}
         />
       )}

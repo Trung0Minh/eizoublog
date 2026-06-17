@@ -9,8 +9,10 @@ import {
 
 import { AdminMetricCard, AdminPageHeader, AdminStatusBadge } from "@/components/admin/AdminPrimitives"
 import { AnalyticsWidget } from "@/components/admin/AnalyticsWidget"
-import { prisma } from "@/lib/prisma"
-import { getCachedAdminDashboardStats } from "@/lib/queries"
+import {
+  getCachedAdminDashboardRecentData,
+  getCachedAdminDashboardStats,
+} from "@/lib/queries"
 import { formatDate } from "@/lib/utils"
 
 const statCards = [
@@ -52,31 +54,11 @@ const statCards = [
 }>
 
 export default async function AdminDashboardPage() {
-  const [stats, recentPosts, recentComments] = await Promise.all([
+  const [stats, recentData] = await Promise.all([
     getCachedAdminDashboardStats(),
-    prisma.post.findMany({
-      orderBy: [{ updatedAt: "desc" }],
-      select: {
-        author: { select: { name: true } },
-        status: true,
-        title: true,
-        updatedAt: true,
-      },
-      take: 5,
-    }),
-    prisma.comment.findMany({
-      orderBy: { createdAt: "desc" },
-      select: {
-        authorName: true,
-        content: true,
-        createdAt: true,
-        id: true,
-        post: { select: { slug: true, title: true } },
-      },
-      take: 5,
-      where: { status: "APPROVED" },
-    }),
+    getCachedAdminDashboardRecentData(),
   ])
+  const { recentComments, recentPosts } = recentData
 
   return (
     <div>

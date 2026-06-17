@@ -54,6 +54,7 @@ export async function POST(request: Request) {
       select: tagSelect,
     })
 
+    revalidateTag("tags", "max")
     revalidateTag("posts", "max")
 
     return Response.json({ data: tag }, { status: 201 })

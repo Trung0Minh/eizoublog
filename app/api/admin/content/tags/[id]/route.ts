@@ -48,6 +48,7 @@ export async function PATCH(
       where: { id },
     })
 
+    revalidateTag("tags", "max")
     revalidateTag("posts", "max")
 
     return Response.json({ data: tag })
@@ -95,6 +96,7 @@ export async function DELETE(
       })
     })
 
+    revalidateTag("tags", "max")
     revalidateTag("posts", "max")
 
     return Response.json({ data: { message: "Tag deleted" } })

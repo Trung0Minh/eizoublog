@@ -3,16 +3,18 @@ import { notFound } from "next/navigation"
 
 import { PageContainer } from "@/components/layout/PageContainer"
 import { PostList } from "@/components/posts/PostList"
+import { PostSortTabs } from "@/components/posts/PostSortTabs"
 import { StaticPostContent } from "@/components/posts/StaticPostContent"
 import {
   getCachedAuthorByUsername,
   getCachedAuthorPosts,
 } from "@/lib/queries"
+import { parsePostListSort } from "@/lib/postListSort"
 import { buildMetadata } from "@/lib/seo"
 
 interface AuthorPageProps {
   params: Promise<{ username: string }>
-  searchParams: Promise<{ page?: string }>
+  searchParams: Promise<{ page?: string; sort?: string }>
 }
 
 const PAGE_SIZE = 10
@@ -45,11 +47,12 @@ export default async function AuthorPage({
   params,
   searchParams,
 }: AuthorPageProps) {
-  const [{ username }, { page: pageParam }] = await Promise.all([
+  const [{ username }, { page: pageParam, sort: sortParam }] = await Promise.all([
     params,
     searchParams,
   ])
   const page = parsePage(pageParam)
+  const sort = parsePostListSort(sortParam)
   const author = await getCachedAuthorByUsername(username)
 
   if (!author) {
@@ -60,6 +63,7 @@ export default async function AuthorPage({
     author.id,
     page,
     PAGE_SIZE,
+    sort,
   )
 
   return (
@@ -105,11 +109,21 @@ export default async function AuthorPage({
         </div>
       </section>
 
-      <PostList
-        emptyMessage="This author has no published posts yet."
-        pagination={{ page, pageSize: PAGE_SIZE, total }}
-        posts={posts}
-      />
+      <section className="space-y-6">
+        <div className="flex justify-end">
+          <PostSortTabs basePath={`/authors/${username}`} sort={sort} />
+        </div>
+        <PostList
+          emptyMessage="This author has no published posts yet."
+          pagination={{
+            page,
+            pageSize: PAGE_SIZE,
+            query: { sort: sort === "latest" ? undefined : sort },
+            total,
+          }}
+          posts={posts}
+        />
+      </section>
     </PageContainer>
   )
 }

@@ -158,7 +158,7 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
 
     async function loadNotificationCounts() {
       try {
-        const response = await fetch("/api/user/notifications")
+        const response = await fetch("/api/user/notification-counts")
         const result = response.ok ? await response.json() : null
         const counts = readNotificationCounts(result)
 

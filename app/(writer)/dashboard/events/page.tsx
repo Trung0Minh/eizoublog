@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation"
 
 import { WriterEventsList } from "@/components/events/WriterEventsList"
+import { getCachedWriterEvents } from "@/lib/queries"
 import { getCurrentSession } from "@/lib/session"
-import { prisma } from "@/lib/prisma"
 
 export default async function DashboardEventsPage() {
   const session = await getCurrentSession()
@@ -11,21 +11,7 @@ export default async function DashboardEventsPage() {
     redirect("/login")
   }
 
-  const events = await prisma.awardEvent.findMany({
-    orderBy: { createdAt: "desc" },
-    select: {
-      _count: { select: { rooms: true } },
-      finalPost: { select: { slug: true } },
-      id: true,
-      rooms: {
-        select: { id: true, status: true },
-        where: { writerId: session.user.id },
-      },
-      status: true,
-      title: true,
-    },
-    where: { status: { in: ["OPEN", "PUBLISHED"] } },
-  })
+  const events = await getCachedWriterEvents(session.user.id)
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:py-10 md:px-6 lg:px-8">

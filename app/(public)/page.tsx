@@ -1,16 +1,20 @@
 import { Suspense } from "react"
 import type { Metadata } from "next"
-import Link from "next/link"
 
 import { PageContainer } from "@/components/layout/PageContainer"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { NewsletterForm } from "@/components/newsletter/NewsletterForm"
 import { PostList } from "@/components/posts/PostList"
+import { PostSortTabs } from "@/components/posts/PostSortTabs"
 import {
   PostListSkeleton,
   SidebarSkeleton,
 } from "@/components/posts/PostListSkeleton"
 import { getCachedPublishedPosts, getCachedSidebarData } from "@/lib/queries"
+import {
+  parsePostListSort,
+  type PostListSort,
+} from "@/lib/postListSort"
 import { buildMetadata, getAppUrl } from "@/lib/seo"
 
 interface HomePageProps {
@@ -25,19 +29,12 @@ function parsePage(page?: string) {
   return Number.isInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1
 }
 
-function parseSort(sort?: string): "latest" | "oldest" | "comments" {
-  if (sort === "oldest" || sort === "comments") {
-    return sort
-  }
-  return "latest"
-}
-
 export async function generateMetadata({
   searchParams,
 }: HomePageProps): Promise<Metadata> {
   const { page: pageParam, sort: sortParam } = await searchParams
   const page = parsePage(pageParam)
-  const sort = parseSort(sortParam)
+  const sort = parsePostListSort(sortParam)
 
   const sortQuery = sort !== "latest" ? `&sort=${sort}` : ""
 
@@ -54,7 +51,7 @@ export async function generateMetadata({
 export default async function HomePage({ searchParams }: HomePageProps) {
   const { page: pageParam, sort: sortParam } = await searchParams
   const page = parsePage(pageParam)
-  const sort = parseSort(sortParam)
+  const sort = parsePostListSort(sortParam)
 
   return (
     <PageContainer size="wide">
@@ -72,43 +69,14 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   )
 }
 
-export async function HomePostList({ page, sort }: { page: number; sort: "latest" | "oldest" | "comments" }) {
+export async function HomePostList({ page, sort }: { page: number; sort: PostListSort }) {
   const { posts, total } = await getCachedPublishedPosts(page, PAGE_SIZE, sort)
-
-  const sortOptions: { value: "latest" | "oldest" | "comments"; label: string }[] = [
-    { value: "latest", label: "Mới nhất" },
-    { value: "oldest", label: "Cũ nhất" },
-    { value: "comments", label: "Nhiều bình luận" },
-  ]
 
   return (
     <div className="flex flex-col">
       <div className="mb-6 flex flex-col justify-between gap-4 border-b pb-4 sm:flex-row sm:items-center">
         <h2 className="text-xl font-bold tracking-tight text-text-primary">Bài viết đã xuất bản</h2>
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-text-tertiary">Sắp xếp:</span>
-          <div className="flex rounded-md border border-border-default bg-subtle-bg/30 p-0.5" role="tablist" aria-label="Sắp xếp bài viết">
-            {sortOptions.map((option) => {
-              const isActive = sort === option.value
-              const queryStr = option.value !== "latest" ? `?sort=${option.value}` : "/"
-              return (
-                <Link
-                  href={queryStr}
-                  key={option.value}
-                  role="tab"
-                  aria-selected={isActive}
-                  className={`rounded-[4px] px-2.5 py-1 text-[11px] font-semibold tracking-wide transition-all ${
-                    isActive
-                      ? "bg-background text-editorial shadow-sm border border-border-default/60"
-                      : "text-text-secondary hover:text-text-primary border border-transparent"
-                  }`}
-                >
-                  {option.label}
-                </Link>
-              )
-            })}
-          </div>
-        </div>
+        <PostSortTabs basePath="/" sort={sort} />
       </div>
 
       <PostList

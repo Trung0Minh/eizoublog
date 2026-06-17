@@ -26,12 +26,12 @@ describe("WriterMenu notifications", () => {
     vi.clearAllMocks()
   })
 
-  it("fetches notification counts even when a user is provided", async () => {
+  it("fetches lightweight notification counts even when a user is provided", async () => {
     const fetchMock = vi
       .spyOn(globalThis, "fetch")
       .mockImplementation(async (input) => {
         const url = String(input)
-        if (url === "/api/user/notifications") {
+        if (url === "/api/user/notification-counts") {
           return new Response(
             JSON.stringify({
               data: {
@@ -64,8 +64,9 @@ describe("WriterMenu notifications", () => {
       )
 
       await waitFor(() => {
-        expect(fetchMock).toHaveBeenCalledWith("/api/user/notifications")
+        expect(fetchMock).toHaveBeenCalledWith("/api/user/notification-counts")
       })
+      expect(fetchMock).not.toHaveBeenCalledWith("/api/user/notifications")
 
       await userEvent.click(
         screen.getByRole("button", { name: "Mở menu tác giả" }),

@@ -71,4 +71,29 @@ describe("AuthorPage", () => {
     expect(screen.getByText("Writer")).toBeVisible()
     expect(screen.queryByText("ADMIN")).not.toBeInTheDocument()
   })
+
+  it("passes shared post sorting through to the author post query", async () => {
+    mocks.getCachedAuthorByUsername.mockResolvedValue({
+      avatarUrl: null,
+      bio: null,
+      id: "writer-1",
+      name: "Mina",
+      role: "WRITER",
+      username: "mina",
+    })
+
+    render(
+      await AuthorPage({
+        params: Promise.resolve({ username: "mina" }),
+        searchParams: Promise.resolve({ page: "2", sort: "comments" }),
+      }),
+    )
+
+    expect(mocks.getCachedAuthorPosts).toHaveBeenCalledWith(
+      "writer-1",
+      2,
+      10,
+      "comments",
+    )
+  })
 })

@@ -3,12 +3,14 @@ import { notFound } from "next/navigation"
 
 import { PageContainer } from "@/components/layout/PageContainer"
 import { PostList } from "@/components/posts/PostList"
+import { PostSortTabs } from "@/components/posts/PostSortTabs"
 import { getCachedTagBySlug, getCachedTagPosts } from "@/lib/queries"
+import { parsePostListSort } from "@/lib/postListSort"
 import { buildMetadata } from "@/lib/seo"
 
 interface TagPageProps {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ page?: string }>
+  searchParams: Promise<{ page?: string; sort?: string }>
 }
 
 const PAGE_SIZE = 10
@@ -37,18 +39,19 @@ export async function generateMetadata({
 }
 
 export default async function TagPage({ params, searchParams }: TagPageProps) {
-  const [{ slug }, { page: pageParam }] = await Promise.all([
+  const [{ slug }, { page: pageParam, sort: sortParam }] = await Promise.all([
     params,
     searchParams,
   ])
   const page = parsePage(pageParam)
+  const sort = parsePostListSort(sortParam)
   const tag = await getCachedTagBySlug(slug)
 
   if (!tag) {
     notFound()
   }
 
-  const { posts, total } = await getCachedTagPosts(tag.id, page, PAGE_SIZE)
+  const { posts, total } = await getCachedTagPosts(tag.id, page, PAGE_SIZE, sort)
 
   return (
     <PageContainer>
@@ -59,11 +62,21 @@ export default async function TagPage({ params, searchParams }: TagPageProps) {
         <h1 className="text-[32px] font-bold leading-tight tracking-tight">#{tag.name}</h1>
       </section>
 
-      <PostList
-        emptyMessage="No published posts with this tag yet."
-        pagination={{ page, pageSize: PAGE_SIZE, total }}
-        posts={posts}
-      />
+      <section className="space-y-6">
+        <div className="flex justify-end">
+          <PostSortTabs basePath={`/tag/${slug}`} sort={sort} />
+        </div>
+        <PostList
+          emptyMessage="No published posts with this tag yet."
+          pagination={{
+            page,
+            pageSize: PAGE_SIZE,
+            query: { sort: sort === "latest" ? undefined : sort },
+            total,
+          }}
+          posts={posts}
+        />
+      </section>
     </PageContainer>
   )
 }
