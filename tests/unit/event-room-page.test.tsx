@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const mocks = vi.hoisted(() => ({
   joinAwardEvent: vi.fn(),
-  normalizeAwardEventContent: vi.fn((content: unknown) => content),
   notFound: vi.fn(() => {
     throw new Error("notFound")
   }),
@@ -32,25 +31,24 @@ vi.mock("@/lib/session", () => ({ getCurrentSession: mocks.session }))
 vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }))
 vi.mock("@/lib/awardEventService", () => ({
   joinAwardEvent: mocks.joinAwardEvent,
-  normalizeAwardEventContent: mocks.normalizeAwardEventContent,
 }))
 vi.mock("@/components/events/EventRoomEditor", () => ({
   EventRoomEditor: ({
     eligiblePosts,
     room,
-    sharedRooms,
+    participantRooms,
   }: {
     eligiblePosts: unknown[]
     room: { id: string }
-    sharedRooms: { selectedPost?: { title: string } | null }[]
+    participantRooms: { selectedPost?: { title: string } | null }[]
   }) => (
     <div>
       <div>room:{room.id}</div>
       <div>eligible:{eligiblePosts.length}</div>
-      <div>shared:{sharedRooms.length}</div>
-      {sharedRooms.map((sharedRoom) => (
-        <div key={sharedRoom.selectedPost?.title}>
-          sharedPost:{sharedRoom.selectedPost?.title}
+      <div>participants:{participantRooms.length}</div>
+      {participantRooms.map((participantRoom) => (
+        <div key={participantRoom.selectedPost?.title}>
+          participantPost:{participantRoom.selectedPost?.title}
         </div>
       ))}
     </div>
@@ -58,11 +56,6 @@ vi.mock("@/components/events/EventRoomEditor", () => ({
 }))
 
 import DashboardEventRoomPage from "@/app/(writer)/dashboard/events/[id]/page"
-
-const content = {
-  content: [{ type: "paragraph" }],
-  type: "doc",
-}
 
 describe("DashboardEventRoomPage", () => {
   beforeEach(() => {
@@ -156,18 +149,16 @@ describe("DashboardEventRoomPage", () => {
   it("passes shared participant submissions with selected post content", async () => {
     mocks.prisma.awardEventRoom.findMany.mockResolvedValue([
       {
-        comments: [],
         id: "room-3",
         postId: "post-3",
         selectedPost: {
-          content,
-          contentText: "Shared body",
           id: "post-3",
           status: "DRAFT",
           title: "Shared pick",
         },
         status: "SUBMITTED",
-        writer: { name: "Mai", username: "mai" },
+        visibility: "PARTICIPANTS",
+        writer: { id: "writer-2", name: "Mai", username: "mai", avatarUrl: null },
         writerIntro: null,
       },
     ])
@@ -178,6 +169,6 @@ describe("DashboardEventRoomPage", () => {
       }),
     )
 
-    expect(screen.getByText("sharedPost:Shared pick")).toBeVisible()
+    expect(screen.getByText("participantPost:Shared pick")).toBeVisible()
   })
 })

@@ -1,8 +1,7 @@
-import type { JSONContent } from "@tiptap/react"
 import { notFound, redirect } from "next/navigation"
 
 import { EventRoomEditor } from "@/components/events/EventRoomEditor"
-import { joinAwardEvent, normalizeAwardEventContent } from "@/lib/awardEventService"
+import { joinAwardEvent } from "@/lib/awardEventService"
 import { prisma } from "@/lib/prisma"
 import { getCurrentSession } from "@/lib/session"
 
@@ -110,37 +109,32 @@ export default async function DashboardEventRoomPage({
     },
   })
 
-  const sharedRooms = await prisma.awardEventRoom.findMany({
-    orderBy: [{ order: "asc" }, { updatedAt: "asc" }],
+  const participantRooms = await prisma.awardEventRoom.findMany({
+    orderBy: [{ order: "asc" }, { updatedAt: "desc" }],
     select: {
-      comments: {
-        orderBy: { createdAt: "asc" },
-        select: {
-          author: { select: { name: true, username: true } },
-          content: true,
-          createdAt: true,
-          id: true,
-        },
-      },
       id: true,
       postId: true,
       selectedPost: {
         select: {
-          content: true,
-          contentText: true,
           id: true,
           status: true,
           title: true,
         },
       },
       status: true,
-      writer: { select: { name: true, username: true } },
+      visibility: true,
+      writer: {
+        select: {
+          id: true,
+          name: true,
+          username: true,
+          avatarUrl: true,
+        },
+      },
       writerIntro: true,
     },
     where: {
       eventId: id,
-      visibility: "PARTICIPANTS",
-      writerId: { not: session.user.id },
     },
   })
 
@@ -156,17 +150,7 @@ export default async function DashboardEventRoomPage({
         eligiblePosts={eligiblePosts}
         event={event}
         room={room}
-        sharedRooms={sharedRooms.map((sharedRoom) => ({
-          ...sharedRoom,
-          selectedPost: sharedRoom.selectedPost
-            ? {
-                ...sharedRoom.selectedPost,
-                content: normalizeAwardEventContent(
-                  sharedRoom.selectedPost.content,
-                ) as JSONContent,
-              }
-            : null,
-        }))}
+        participantRooms={participantRooms}
       />
     </main>
   )
