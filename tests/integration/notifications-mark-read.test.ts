@@ -86,4 +86,56 @@ describe("POST /api/user/notifications/mark-read", () => {
     expect(mocks.markCommentRead).toHaveBeenCalledWith("comment-123", writerSession.user)
     expect(mocks.markNotificationRead).toHaveBeenCalledWith("notification-123", "writer-1")
   })
+
+  it("fails if both commentId and notificationId are missing", async () => {
+    const response = await POST(postRequest({}))
+
+    expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toEqual({
+      error: "Missing commentId or notificationId",
+    })
+  })
+
+  it("fails if commentId is not a string", async () => {
+    const response = await POST(postRequest({ commentId: 123 }))
+
+    expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toEqual({
+      error: "Invalid commentId format",
+    })
+  })
+
+  it("fails if notificationId is not a string", async () => {
+    const response = await POST(postRequest({ notificationId: true }))
+
+    expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toEqual({
+      error: "Invalid notificationId format",
+    })
+  })
+
+  it("fails with 400 when invalid JSON is provided", async () => {
+    const request = new Request("https://example.test/api/user/notifications/mark-read", {
+      body: "{invalid-json",
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    })
+
+    const response = await POST(request)
+    expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toEqual({
+      error: "Invalid JSON body",
+    })
+  })
+
+  it("fails with 500 when database helper throws an error", async () => {
+    console.error = vi.fn() // mock console.error to avoid cluttering test logs
+    mocks.markCommentRead.mockRejectedValue(new Error("Database error"))
+
+    const response = await POST(postRequest({ commentId: "comment-123" }))
+    expect(response.status).toBe(500)
+    await expect(response.json()).resolves.toEqual({
+      error: "Internal error",
+    })
+  })
 })

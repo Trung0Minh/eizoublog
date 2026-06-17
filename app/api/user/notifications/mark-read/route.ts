@@ -18,6 +18,27 @@ export async function POST(request: Request) {
 
     const { commentId, notificationId } = body
 
+    if (!commentId && !notificationId) {
+      return Response.json(
+        { error: "Missing commentId or notificationId" },
+        { status: 400 },
+      )
+    }
+
+    if (commentId && typeof commentId !== "string") {
+      return Response.json(
+        { error: "Invalid commentId format" },
+        { status: 400 },
+      )
+    }
+
+    if (notificationId && typeof notificationId !== "string") {
+      return Response.json(
+        { error: "Invalid notificationId format" },
+        { status: 400 },
+      )
+    }
+
     const promises: Promise<unknown>[] = []
 
     if (commentId) {
