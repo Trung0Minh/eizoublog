@@ -25,7 +25,6 @@ interface CommentResponse {
 
 export function CommentForm({
   ariaLabel = "Comment form",
-  onCancel,
   onSuccess,
   parentId,
   postId,
@@ -163,7 +162,7 @@ export function CommentForm({
           />
         </div>
 
-        <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+        <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
           <label className="flex items-center gap-2 text-[13px] text-text-secondary">
             <input
               checked={notifyReply}
@@ -174,23 +173,16 @@ export function CommentForm({
             Thông báo cho tôi qua email khi có người trả lời
           </label>
 
-          <Button className="h-[38px] px-5 font-semibold" disabled={isSubmitting}>
+          <Button
+            className="h-[38px] self-end px-5 font-semibold md:ml-auto"
+            disabled={isSubmitting}
+          >
             {isSubmitting
               ? "Đang đăng..."
               : parentId
                 ? "Đăng trả lời"
                 : "Đăng bình luận"}
           </Button>
-          {onCancel && (
-            <Button
-              className="h-[38px] px-5"
-              onClick={onCancel}
-              type="button"
-              variant="outline"
-            >
-              Hủy
-            </Button>
-          )}
         </div>
       </div>
     </form>

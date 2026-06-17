@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation"
 
 import { PageContainer } from "@/components/layout/PageContainer"
 import { PostBody } from "@/components/posts/PostBody"
+import { PostContentFrame } from "@/components/posts/PostContentFrame"
 import { PostHeader } from "@/components/posts/PostHeader"
 import { TableOfContents } from "@/components/posts/TableOfContents"
 import { canViewPost } from "@/lib/postAccess"
@@ -93,8 +94,10 @@ export default async function DashboardPostPreviewPage({
           <div className="mb-6 rounded-[6px] border border-border-default bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
             Previewing saved post content. Edit changes from My posts.
           </div>
-          <PostHeader post={post} />
-          <PostBody content={content} />
+          <PostContentFrame>
+            <PostHeader post={post} />
+            <PostBody content={content} />
+          </PostContentFrame>
         </article>
         <aside className="hidden w-[200px] shrink-0 xl:block">
           <TableOfContents content={content} />

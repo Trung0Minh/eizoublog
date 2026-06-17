@@ -240,7 +240,7 @@ export const publishedPostDetailSelect = {
     },
   },
   comments: {
-    orderBy: { createdAt: "asc" },
+    orderBy: { createdAt: "desc" },
     select: {
       author: {
         select: {
@@ -255,7 +255,7 @@ export const publishedPostDetailSelect = {
       parentId: true,
       postId: true,
       replies: {
-        orderBy: { createdAt: "asc" },
+        orderBy: { createdAt: "desc" },
         select: {
           author: {
             select: {

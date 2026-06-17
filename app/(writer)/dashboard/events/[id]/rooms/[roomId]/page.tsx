@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma"
 import { getCurrentSession } from "@/lib/session"
 import { getCoverStyle } from "@/lib/cover-style"
 import { PostBody } from "@/components/posts/PostBody"
+import { PostContentFrame } from "@/components/posts/PostContentFrame"
 import { TableOfContents } from "@/components/posts/TableOfContents"
 import { RoomFeedbackSection } from "@/components/events/RoomFeedbackSection"
 
@@ -209,7 +210,9 @@ export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
         <div className="flex w-full flex-col gap-12 xl:flex-row items-start">
           <article className="min-w-0 flex-1 w-full max-w-[800px]">
             {/* Post Content */}
-            <PostBody content={room.selectedPost.content as unknown as JSONContent} />
+            <PostContentFrame>
+              <PostBody content={room.selectedPost.content as unknown as JSONContent} />
+            </PostContentFrame>
 
             {/* Feedback Section */}
             <RoomFeedbackSection

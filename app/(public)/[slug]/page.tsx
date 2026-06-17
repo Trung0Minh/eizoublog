@@ -6,6 +6,7 @@ import { CommentSection } from "@/components/comments/CommentSection"
 import { PageContainer } from "@/components/layout/PageContainer"
 import { AuthorBio } from "@/components/posts/AuthorBio"
 import { PostBody } from "@/components/posts/PostBody"
+import { PostContentFrame } from "@/components/posts/PostContentFrame"
 import { PostHeader } from "@/components/posts/PostHeader"
 import { PostJsonLd } from "@/components/posts/PostJsonLd"
 import { PostReadTracker } from "@/components/posts/PostReadTracker"
@@ -105,8 +106,10 @@ export default async function PostPage({ params }: PostPageProps) {
       >
         <div className="flex w-full max-w-[800px] flex-col gap-[48px] xl:max-w-[1048px] xl:flex-row">
           <article className="min-w-0 flex-1 max-w-[800px]">
-            <PostHeader post={post} authorUsernames={authors} />
-            <PostBody content={content} />
+            <PostContentFrame>
+              <PostHeader post={post} authorUsernames={authors} />
+              <PostBody content={content} />
+            </PostContentFrame>
             <div className="mt-12 md:mt-16 flex flex-col gap-4">
               {[post.author, ...post.coAuthors.map(c => c.user)].map(author => (
                 <AuthorBio key={author.username} author={author} />

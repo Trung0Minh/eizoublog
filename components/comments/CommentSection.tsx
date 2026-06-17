@@ -5,7 +5,7 @@ import { useState } from "react"
 import { CommentForm } from "@/components/comments/CommentForm"
 import { CommentList } from "@/components/comments/CommentList"
 import { useSessionUser } from "@/lib/clientSession"
-import type { CommentWithReplies } from "@/types"
+import type { CommentWithReplies, PublicComment } from "@/types"
 
 interface CommentSectionProps {
   initialComments: CommentWithReplies[]
@@ -22,6 +22,27 @@ function countComments(comments: CommentWithReplies[]) {
   )
 }
 
+function sortPublicCommentsLatestFirst<T extends PublicComment>(comments: T[]) {
+  return [...comments].sort(
+    (firstComment, secondComment) =>
+      new Date(secondComment.createdAt).getTime() -
+      new Date(firstComment.createdAt).getTime(),
+  )
+}
+
+function sortCommentsLatestFirst(comments: CommentWithReplies[]) {
+  return [...comments]
+    .map((comment) => ({
+      ...comment,
+      replies: sortPublicCommentsLatestFirst(comment.replies),
+    }))
+    .sort(
+      (firstComment, secondComment) =>
+        new Date(secondComment.createdAt).getTime() -
+        new Date(firstComment.createdAt).getTime(),
+    )
+}
+
 export function CommentSection({
   initialComments,
   postId,
@@ -29,8 +50,9 @@ export function CommentSection({
   isAuthenticated: initialIsAuthenticated,
   postAuthorUsernames = [],
 }: CommentSectionProps) {
-  const [comments, setComments] =
-    useState<CommentWithReplies[]>(initialComments)
+  const [comments, setComments] = useState<CommentWithReplies[]>(() =>
+    sortCommentsLatestFirst(initialComments),
+  )
   const { user } = useSessionUser()
   const isAuthenticated = initialIsAuthenticated ?? Boolean(user)
   const total = countComments(comments)
@@ -42,7 +64,10 @@ export function CommentSection({
           currentComment.id === comment.parentId
             ? {
                 ...currentComment,
-                replies: [...currentComment.replies, comment],
+                replies: sortPublicCommentsLatestFirst([
+                  ...currentComment.replies,
+                  comment,
+                ]),
               }
             : currentComment,
         ),
@@ -50,7 +75,9 @@ export function CommentSection({
       return
     }
 
-    setComments((currentComments) => [...currentComments, comment])
+    setComments((currentComments) =>
+      sortCommentsLatestFirst([...currentComments, comment]),
+    )
   }
 
   return (

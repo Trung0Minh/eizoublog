@@ -145,6 +145,36 @@ describe("CommentSection", () => {
     expect(screen.getByText("2 bình luận")).toHaveClass("text-text-secondary")
   })
 
+  it("sorts top-level comments and replies latest first", () => {
+    render(
+      <CommentSection
+        initialComments={[
+          topComment,
+          {
+            author: null,
+            authorName: "Rin",
+            content: "Newest top-level comment.",
+            createdAt: new Date("2024-04-04T00:00:00Z"),
+            id: "comment-2",
+            parentId: null,
+            postId: "post-1",
+            replies: [],
+            status: "APPROVED",
+          },
+        ]}
+        postId="post-1"
+        postSlug="frieren-memory"
+      />,
+    )
+
+    const newest = screen.getByText("Newest top-level comment.")
+    const oldest = screen.getByText("<script>alert(1)</script>")
+
+    expect(
+      newest.compareDocumentPosition(oldest) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+  })
+
   it("adds a successful reply under the selected parent comment", async () => {
     const user = userEvent.setup()
     const fetchMock = vi.fn().mockResolvedValue(
@@ -179,6 +209,9 @@ describe("CommentSection", () => {
     )
 
     const replyForm = screen.getByRole("form", { name: "Trả lời Mina" })
+    expect(
+      within(replyForm).queryByRole("button", { name: "Hủy" }),
+    ).not.toBeInTheDocument()
     await user.type(within(replyForm).getByLabelText("Tên *"), "Rei")
     await user.type(
       within(replyForm).getByLabelText("Email *"),
