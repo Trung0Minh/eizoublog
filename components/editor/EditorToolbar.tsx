@@ -9,6 +9,8 @@ import {
   Heading2,
   Heading3,
   Heading4,
+  IndentDecrease,
+  IndentIncrease,
   Italic,
   Link2,
   List,
@@ -16,6 +18,7 @@ import {
   Minus,
   Quote,
   Strikethrough,
+  Underline,
   Video,
 } from "lucide-react"
 import { useState } from "react"
@@ -119,6 +122,13 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
           <Strikethrough aria-hidden="true" className="h-[15px] w-[15px]" />
         </ToolbarButton>
         <ToolbarButton
+          active={editor.isActive("underline")}
+          onClick={() => editor.chain().focus().toggleUnderline().run()}
+          title="Underline"
+        >
+          <Underline aria-hidden="true" className="h-[15px] w-[15px]" />
+        </ToolbarButton>
+        <ToolbarButton
           active={editor.isActive("code")}
           onClick={() => editor.chain().focus().toggleCode().run()}
           title="Inline code"
@@ -165,6 +175,18 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
           title="Ordered list"
         >
           <ListOrdered aria-hidden="true" className="h-[15px] w-[15px]" />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().sinkListItem("listItem").run()}
+          title="Indent list item"
+        >
+          <IndentIncrease aria-hidden="true" className="h-[15px] w-[15px]" />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().liftListItem("listItem").run()}
+          title="Outdent list item"
+        >
+          <IndentDecrease aria-hidden="true" className="h-[15px] w-[15px]" />
         </ToolbarButton>
         <ToolbarButton
           active={editor.isActive("blockquote")}

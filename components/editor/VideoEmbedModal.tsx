@@ -1,7 +1,8 @@
 "use client"
 
 import { X } from "lucide-react"
-import { FormEvent, useState } from "react"
+import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,7 +14,12 @@ interface VideoEmbedModalProps {
 
 export function VideoEmbedModal({ onClose, onInsert }: VideoEmbedModalProps) {
   const [caption, setCaption] = useState("")
+  const [mounted, setMounted] = useState(false)
   const [url, setUrl] = useState("")
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   function handleSubmit() {
     const trimmedUrl = url.trim()
@@ -32,10 +38,14 @@ export function VideoEmbedModal({ onClose, onInsert }: VideoEmbedModalProps) {
     }
   }
 
-  return (
+  if (!mounted) {
+    return null
+  }
+
+  return createPortal(
     <div
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4"
       onClick={(event) => {
         if (event.target === event.currentTarget) {
           onClose()
@@ -100,6 +110,7 @@ export function VideoEmbedModal({ onClose, onInsert }: VideoEmbedModalProps) {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

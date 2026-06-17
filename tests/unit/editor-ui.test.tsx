@@ -461,6 +461,31 @@ describe("EditorToolbar", () => {
       type: "imageGallery",
     })
   })
+
+  it("supports underline and nested list toolbar actions", () => {
+    const chain = {
+      focus: vi.fn(() => chain),
+      liftListItem: vi.fn(() => chain),
+      run: vi.fn(() => true),
+      sinkListItem: vi.fn(() => chain),
+      toggleUnderline: vi.fn(() => chain),
+    }
+    const editor = {
+      chain: vi.fn(() => chain),
+      getAttributes: vi.fn(() => ({})),
+      isActive: vi.fn(() => false),
+    }
+
+    render(<EditorToolbar editor={editor as never} />)
+
+    fireEvent.mouseDown(screen.getByRole("button", { name: "Underline" }))
+    fireEvent.mouseDown(screen.getByRole("button", { name: "Indent list item" }))
+    fireEvent.mouseDown(screen.getByRole("button", { name: "Outdent list item" }))
+
+    expect(chain.toggleUnderline).toHaveBeenCalled()
+    expect(chain.sinkListItem).toHaveBeenCalledWith("listItem")
+    expect(chain.liftListItem).toHaveBeenCalledWith("listItem")
+  })
 })
 
 describe("VideoEmbedModal", () => {

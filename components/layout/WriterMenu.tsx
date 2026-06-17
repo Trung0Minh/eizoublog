@@ -100,6 +100,10 @@ function readNotificationCounts(value: unknown) {
   ) {
     const counts = value.data.counts
     return {
+      openEvents:
+        "openEvents" in counts && typeof counts.openEvents === "number"
+          ? counts.openEvents
+          : 0,
       pendingInvites:
         "pendingInvites" in counts && typeof counts.pendingInvites === "number"
           ? counts.pendingInvites
@@ -123,6 +127,7 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
   const [pendingInvites, setPendingInvites] = useState(0)
   const [responseEvents, setResponseEvents] = useState(0)
   const [unreadComments, setUnreadComments] = useState(0)
+  const [openEvents, setOpenEvents] = useState(0)
 
   useEffect(() => {
     if (user !== undefined) return
@@ -166,12 +171,14 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
           setPendingInvites(counts?.pendingInvites ?? readCount(result))
           setResponseEvents(counts?.responseEvents ?? 0)
           setUnreadComments(counts?.unreadComments ?? 0)
+          setOpenEvents(counts?.openEvents ?? 0)
         }
       } catch {
         if (isMounted) {
           setPendingInvites(0)
           setResponseEvents(0)
           setUnreadComments(0)
+          setOpenEvents(0)
         }
       }
     }
@@ -190,7 +197,15 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
 
   if (!menuUser) return null
 
-  const totalNotifications = pendingInvites + responseEvents + unreadComments
+  const notificationTotal = pendingInvites + responseEvents + unreadComments
+  const totalNotifications = notificationTotal + openEvents
+
+  function markEventNotificationsSeen() {
+    if (openEvents === 0) return
+
+    setOpenEvents(0)
+    void fetch("/api/user/event-notifications/seen", { method: "POST" })
+  }
 
   return (
     <DropdownMenu>
@@ -225,9 +240,21 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/dashboard/events" prefetch={false}>
-            <PartyPopper aria-hidden="true" />
-            Sự kiện viết
+          <Link
+            className="flex items-center justify-between"
+            href="/dashboard/events"
+            onClick={markEventNotificationsSeen}
+            prefetch={false}
+          >
+            <div className="flex items-center gap-2">
+              <PartyPopper aria-hidden="true" />
+              Sự kiện viết
+            </div>
+            {openEvents > 0 && (
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white">
+                {openEvents}
+              </span>
+            )}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
@@ -240,9 +267,9 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
               <Bell aria-hidden="true" />
               Thông báo
             </div>
-            {totalNotifications > 0 && (
+            {notificationTotal > 0 && (
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white">
-                {totalNotifications}
+                {notificationTotal}
               </span>
             )}
           </Link>

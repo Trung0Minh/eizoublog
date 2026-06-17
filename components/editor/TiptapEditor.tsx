@@ -11,14 +11,15 @@ import StarterKit from "@tiptap/starter-kit"
 
 import { common, createLowlight } from "lowlight"
 
-import { BubbleMenuComponent } from "@/components/editor/BubbleMenu"
 import { EditorToolbar } from "@/components/editor/EditorToolbar"
 import {
   CustomImageExtension,
   GalleryExtension,
   HeadingWithIdExtension,
+  ListItemExtension,
   SpoilerExtension,
   TrailingNodeExtension,
+  UnderlineExtension,
   VideoEmbedExtension,
 } from "@/components/editor/extensions"
 
@@ -56,8 +57,10 @@ export function TiptapEditor({
       StarterKit.configure({
         codeBlock: false,
         heading: false,
+        listItem: false,
       }),
       HeadingWithIdExtension,
+      ListItemExtension,
       CustomImageExtension,
       GalleryExtension,
       Link.configure({
@@ -82,6 +85,7 @@ export function TiptapEditor({
       }),
       SpoilerExtension,
       TrailingNodeExtension,
+      UnderlineExtension,
       VideoEmbedExtension,
     ],
     immediatelyRender: false,
@@ -102,7 +106,6 @@ export function TiptapEditor({
       {editable && (
         <>
           <EditorToolbar editor={editor} />
-          <BubbleMenuComponent editor={editor} />
         </>
       )}
 

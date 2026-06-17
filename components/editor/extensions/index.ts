@@ -1,6 +1,8 @@
 export { CustomImageExtension } from "./CustomImageExtension"
 export { GalleryExtension } from "./GalleryExtension"
 export { HeadingWithIdExtension } from "./HeadingWithIdExtension"
+export { ListItemExtension } from "./ListItemExtension"
 export { SpoilerExtension } from "./SpoilerExtension"
 export { TrailingNodeExtension } from "./TrailingNodeExtension"
+export { UnderlineExtension } from "./UnderlineExtension"
 export { toVideoEmbedUrl, VideoEmbedExtension } from "./VideoEmbedExtension"

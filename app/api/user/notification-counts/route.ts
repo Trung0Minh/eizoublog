@@ -1,4 +1,5 @@
 import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
+import { getUnseenOpenEventCount } from "@/lib/eventNotifications"
 import { getNotificationCounts } from "@/lib/notifications"
 
 export async function GET() {
@@ -9,7 +10,15 @@ export async function GET() {
   }
 
   try {
-    const counts = await getNotificationCounts(activeSession.user)
+    const [notificationCounts, openEvents] = await Promise.all([
+      getNotificationCounts(activeSession.user),
+      getUnseenOpenEventCount(activeSession.user.id),
+    ])
+    const counts = {
+      ...notificationCounts,
+      openEvents,
+      total: notificationCounts.total + openEvents,
+    }
 
     return Response.json({ data: { counts } })
   } catch (error) {

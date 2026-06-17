@@ -81,4 +81,73 @@ describe("WriterMenu notifications", () => {
       fetchMock.mockRestore()
     }
   })
+
+  it("shows open event badges separately and clears them when the writer checks events", async () => {
+    const user = userEvent.setup()
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async (input, init) => {
+        const url = String(input)
+        if (url === "/api/user/notification-counts") {
+          return new Response(
+            JSON.stringify({
+              data: {
+                counts: {
+                  openEvents: 2,
+                  pendingInvites: 0,
+                  responseEvents: 1,
+                  total: 3,
+                  unreadComments: 0,
+                },
+              },
+            }),
+          )
+        }
+        if (
+          url === "/api/user/event-notifications/seen" &&
+          init?.method === "POST"
+        ) {
+          return new Response(JSON.stringify({ data: { count: 0 } }))
+        }
+        return new Response(JSON.stringify({ data: { count: 0 } }))
+      })
+
+    try {
+      render(
+        <WriterMenu
+          user={{
+            avatarUrl: null,
+            name: "Mina Writer",
+            role: "WRITER",
+            username: "mina",
+          }}
+        />,
+      )
+
+      const menuTrigger = screen.getByRole("button", { name: "Mở menu tác giả" })
+      await user.click(menuTrigger)
+
+      expect(screen.getByRole("menuitem", { name: /Sự kiện viết/ })).toHaveTextContent(
+        "2",
+      )
+      expect(screen.getByRole("menuitem", { name: /Thông báo/ })).toHaveTextContent(
+        "1",
+      )
+
+      await user.click(screen.getByRole("menuitem", { name: /Sự kiện viết/ }))
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/user/event-notifications/seen",
+        { method: "POST" },
+      )
+      await user.click(menuTrigger)
+      await waitFor(() => {
+        expect(
+          screen.getByRole("menuitem", { name: /Sự kiện viết/ }),
+        ).not.toHaveTextContent("2")
+      })
+    } finally {
+      fetchMock.mockRestore()
+    }
+  })
 })
