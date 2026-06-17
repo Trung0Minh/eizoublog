@@ -88,7 +88,14 @@ describe("DashboardEventRoomPage (Page A)", () => {
     expect(screen.getByText("Alice")).toBeVisible()
     expect(screen.getByText("My submission")).toBeVisible()
     expect(screen.getByRole("link", { name: /Edit/i })).toBeVisible()
-    expect(screen.getByRole("link", { name: /View/i })).toBeVisible()
+    expect(screen.getByRole("link", { name: /View/i })).toHaveAttribute(
+      "href",
+      "/dashboard/preview/post-1",
+    )
+    expect(screen.getByRole("link", { name: /Feedback/i })).toHaveAttribute(
+      "href",
+      "/dashboard/events/event-1/rooms/room-1",
+    )
   })
 
   it("joins the event when the writer has no room yet", async () => {
@@ -160,6 +167,9 @@ describe("DashboardEventRoomPage (Page A)", () => {
 
     expect(screen.getByText("Mai")).toBeVisible()
     expect(screen.getByText("Shared pick")).toBeVisible()
-    expect(screen.getByRole("link", { name: /View/i })).toBeVisible()
+    expect(screen.getByRole("link", { name: /View/i })).toHaveAttribute(
+      "href",
+      "/dashboard/events/event-1/rooms/room-3",
+    )
   })
 })

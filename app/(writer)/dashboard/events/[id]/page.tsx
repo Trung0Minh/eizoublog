@@ -229,10 +229,18 @@ export default async function DashboardEventRoomPage({
 
             <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
               {ourRoom.postId && ourRoom.selectedPost && (
-                <Button asChild size="sm" variant="outline" className="relative font-semibold">
-                  <Link href={`/dashboard/events/${id}/rooms/${ourRoom.id}`}>
+                <Button asChild size="sm" variant="outline" className="font-semibold">
+                  <Link href={`/dashboard/preview/${ourRoom.selectedPost.id}`}>
                     <Eye className="mr-2 h-4 w-4" />
                     View
+                  </Link>
+                </Button>
+              )}
+              {ourRoom.postId && ourRoom.selectedPost && (
+                <Button asChild size="sm" variant="outline" className="relative font-semibold">
+                  <Link href={`/dashboard/events/${id}/rooms/${ourRoom.id}`}>
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    Feedback
                     {unreadFeedbackCount > 0 && (
                       <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground animate-pulse shadow-md">
                         {unreadFeedbackCount}
