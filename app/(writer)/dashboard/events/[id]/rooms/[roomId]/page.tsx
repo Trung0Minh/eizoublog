@@ -5,6 +5,7 @@ import { ArrowLeft, Lock } from "lucide-react"
 import type { JSONContent } from "@tiptap/react"
 import { prisma } from "@/lib/prisma"
 import { getCurrentSession } from "@/lib/session"
+import { getCoverStyle } from "@/lib/cover-style"
 import { PostBody } from "@/components/posts/PostBody"
 import { TableOfContents } from "@/components/posts/TableOfContents"
 import { RoomFeedbackSection } from "@/components/events/RoomFeedbackSection"
@@ -189,12 +190,18 @@ export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
 
         {/* Post Image */}
         {room.selectedPost.coverUrl && (
-          <div className="relative overflow-hidden rounded-lg border border-border-default aspect-video max-h-96 w-full bg-subtle-bg">
-            <img
-              src={room.selectedPost.coverUrl}
-              alt={room.selectedPost.title}
-              className="h-full w-full object-cover"
-            />
+          <div className="relative aspect-video w-full overflow-hidden bg-subtle-bg rounded-[8px] border border-border-default">
+            <div className="absolute inset-0 overflow-hidden">
+              <img
+                alt={room.selectedPost.title}
+                className="h-full w-full"
+                style={getCoverStyle(room.selectedPost.coverUrl)}
+                decoding="async"
+                fetchPriority="high"
+                loading="eager"
+                src={room.selectedPost.coverUrl.split("?")[0]}
+              />
+            </div>
           </div>
         )}
 
