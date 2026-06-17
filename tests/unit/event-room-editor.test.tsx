@@ -12,11 +12,6 @@ vi.mock("next/navigation", () => ({
 
 import { EventRoomEditor } from "@/components/events/EventRoomEditor"
 
-const paragraph = (text: string) => ({
-  content: [{ text, type: "text" }],
-  type: "paragraph",
-})
-
 describe("EventRoomEditor", () => {
   it("renders a post picker instead of an event-local editor", () => {
     render(
@@ -43,7 +38,7 @@ describe("EventRoomEditor", () => {
           visibility: "PRIVATE",
           writerIntro: null,
         }}
-        sharedRooms={[]}
+        participantRooms={[]}
       />,
     )
 
@@ -54,7 +49,7 @@ describe("EventRoomEditor", () => {
     expect(screen.getByRole("button", { name: /Submit/i })).toBeVisible()
   })
 
-  it("renders shared selected post content for participant feedback", () => {
+  it("renders other participants with shared posts in the list", () => {
     render(
       <EventRoomEditor
         eligiblePosts={[]}
@@ -72,30 +67,26 @@ describe("EventRoomEditor", () => {
           visibility: "PRIVATE",
           writerIntro: null,
         }}
-        sharedRooms={[
+        participantRooms={[
           {
-            comments: [],
             id: "room-2",
             postId: "post-2",
             selectedPost: {
-              content: {
-                content: [paragraph("Shared full body")],
-                type: "doc",
-              },
-              contentText: "Shared full body",
               id: "post-2",
               status: "DRAFT",
               title: "Shared post",
             },
             status: "SUBMITTED",
-            writer: { name: "Mai", username: "mai" },
+            visibility: "PARTICIPANTS",
+            writer: { id: "writer-2", name: "Mai", username: "mai", avatarUrl: null },
             writerIntro: null,
           },
         ]}
       />,
     )
 
+    expect(screen.getByText("Mai")).toBeVisible()
     expect(screen.getByText("Shared post")).toBeVisible()
-    expect(screen.getByText("Shared full body")).toBeVisible()
+    expect(screen.getByRole("button", { name: /View & Comment/i })).toBeVisible()
   })
 })
