@@ -280,6 +280,38 @@
     margin: 0;
   }
 
+  .editor-highlight {
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+    border-radius: 2px;
+    padding: 0 0.12em;
+  }
+
+  .prose-editor .task-list,
+  .post-content .task-list {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .prose-editor .task-item,
+  .post-content .task-item {
+    align-items: flex-start;
+    display: flex;
+    gap: 0.55em;
+    padding-left: 0;
+  }
+
+  .prose-editor .task-item > label,
+  .post-content .task-item > label {
+    display: inline-flex;
+    padding-top: 0.28em;
+  }
+
+  .prose-editor .task-item > div,
+  .post-content .task-item > div {
+    flex: 1;
+    min-width: 0;
+  }
+
   .prose-editor blockquote {
     background: var(--subtle-bg);
     border-left: 3px solid var(--border-strong);

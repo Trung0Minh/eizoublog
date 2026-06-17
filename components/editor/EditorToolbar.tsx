@@ -6,15 +6,20 @@ import {
   Code,
   CodeSquare,
   Eye,
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
   Heading2,
   Heading3,
   Heading4,
+  Highlighter,
   IndentDecrease,
   IndentIncrease,
   Italic,
   Link2,
   List,
   ListOrdered,
+  ListTodo,
   Minus,
   Quote,
   Strikethrough,
@@ -129,6 +134,13 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
           <Underline aria-hidden="true" className="h-[15px] w-[15px]" />
         </ToolbarButton>
         <ToolbarButton
+          active={editor.isActive("highlight")}
+          onClick={() => editor.chain().focus().toggleHighlight().run()}
+          title="Highlight"
+        >
+          <Highlighter aria-hidden="true" className="h-[15px] w-[15px]" />
+        </ToolbarButton>
+        <ToolbarButton
           active={editor.isActive("code")}
           onClick={() => editor.chain().focus().toggleCode().run()}
           title="Inline code"
@@ -163,6 +175,30 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
         <Divider />
 
         <ToolbarButton
+          active={editor.isActive({ textAlign: "left" })}
+          onClick={() => editor.chain().focus().setTextAlign("left").run()}
+          title="Align left"
+        >
+          <AlignLeft aria-hidden="true" className="h-[15px] w-[15px]" />
+        </ToolbarButton>
+        <ToolbarButton
+          active={editor.isActive({ textAlign: "center" })}
+          onClick={() => editor.chain().focus().setTextAlign("center").run()}
+          title="Align center"
+        >
+          <AlignCenter aria-hidden="true" className="h-[15px] w-[15px]" />
+        </ToolbarButton>
+        <ToolbarButton
+          active={editor.isActive({ textAlign: "right" })}
+          onClick={() => editor.chain().focus().setTextAlign("right").run()}
+          title="Align right"
+        >
+          <AlignRight aria-hidden="true" className="h-[15px] w-[15px]" />
+        </ToolbarButton>
+
+        <Divider />
+
+        <ToolbarButton
           active={editor.isActive("bulletList")}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           title="Bullet list"
@@ -175,6 +211,13 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
           title="Ordered list"
         >
           <ListOrdered aria-hidden="true" className="h-[15px] w-[15px]" />
+        </ToolbarButton>
+        <ToolbarButton
+          active={editor.isActive("taskList")}
+          onClick={() => editor.chain().focus().toggleTaskList().run()}
+          title="Task list"
+        >
+          <ListTodo aria-hidden="true" className="h-[15px] w-[15px]" />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().sinkListItem("listItem").run()}

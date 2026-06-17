@@ -1,5 +1,5 @@
 import type { JSONContent } from "@tiptap/react"
-import type { ReactNode } from "react"
+import type { CSSProperties, ReactNode } from "react"
 
 import {
   getGalleryImageAlt,
@@ -31,6 +31,19 @@ function numberAttr(
 ): number | undefined {
   const value = attrs[name]
   return typeof value === "number" ? value : undefined
+}
+
+function textAlignStyle(value: string | undefined): CSSProperties | undefined {
+  if (
+    value === "left" ||
+    value === "right" ||
+    value === "center" ||
+    value === "justify"
+  ) {
+    return { textAlign: value }
+  }
+
+  return undefined
 }
 
 function captionIsVisible(attrs: Record<string, unknown>) {
@@ -70,6 +83,13 @@ function renderTextNode(node: JSONContent, key: string): ReactNode {
       case "italic":
         rendered = <em key={markKey}>{rendered}</em>
         break
+      case "highlight":
+        rendered = (
+          <mark className="editor-highlight" key={markKey}>
+            {rendered}
+          </mark>
+        )
+        break
       case "link": {
         const href = stringAttr(attrs, "href")
         if (href) {
@@ -83,6 +103,9 @@ function renderTextNode(node: JSONContent, key: string): ReactNode {
       }
       case "strike":
         rendered = <s key={markKey}>{rendered}</s>
+        break
+      case "underline":
+        rendered = <u key={markKey}>{rendered}</u>
         break
     }
   })
@@ -243,6 +266,9 @@ function renderVideoEmbed(node: JSONContent, key: string) {
 }
 
 function renderNode(node: JSONContent, key: string): ReactNode {
+  const attrs = attrsFor(node)
+  const alignStyle = textAlignStyle(stringAttr(attrs, "textAlign"))
+
   switch (node.type) {
     case "blockquote":
       return <blockquote key={key}>{renderChildren(node)}</blockquote>
@@ -259,12 +285,12 @@ function renderNode(node: JSONContent, key: string): ReactNode {
     case "hardBreak":
       return <br key={key} />
     case "heading": {
-      const level = numberAttr(attrsFor(node), "level")
+      const level = numberAttr(attrs, "level")
       const Tag = level === 3 ? "h3" : level === 4 ? "h4" : "h2"
       const text = getNodeText(node).trim()
 
       return (
-        <Tag id={text ? generateSlug(text) : undefined} key={key}>
+        <Tag id={text ? generateSlug(text) : undefined} key={key} style={alignStyle}>
           {renderChildren(node)}
         </Tag>
       )
@@ -279,7 +305,7 @@ function renderNode(node: JSONContent, key: string): ReactNode {
     case "listItem":
       return <li key={key}>{renderChildren(node)}</li>
     case "orderedList": {
-      const start = numberAttr(attrsFor(node), "start")
+      const start = numberAttr(attrs, "start")
       return (
         <ol key={key} start={start}>
           {renderChildren(node)}
@@ -289,7 +315,7 @@ function renderNode(node: JSONContent, key: string): ReactNode {
     case "paragraph": {
       const children = renderChildren(node)
       return (
-        <p key={key}>
+        <p key={key} style={alignStyle}>
           {children.length > 0 ? children : <br />}
         </p>
       )
@@ -298,6 +324,23 @@ function renderNode(node: JSONContent, key: string): ReactNode {
       return <SpoilerBlock key={key}>{renderChildren(node)}</SpoilerBlock>
     case "text":
       return renderTextNode(node, key)
+    case "taskItem": {
+      const checked = attrs.checked === true
+      return (
+        <li className="task-item" data-checked={checked} key={key}>
+          <label contentEditable={false}>
+            <input checked={checked} disabled type="checkbox" />
+          </label>
+          <div>{renderChildren(node)}</div>
+        </li>
+      )
+    }
+    case "taskList":
+      return (
+        <ul className="task-list" data-type="taskList" key={key}>
+          {renderChildren(node)}
+        </ul>
+      )
     case "videoEmbed":
       return renderVideoEmbed(node, key)
     default: {

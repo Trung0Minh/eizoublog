@@ -486,6 +486,35 @@ describe("EditorToolbar", () => {
     expect(chain.sinkListItem).toHaveBeenCalledWith("listItem")
     expect(chain.liftListItem).toHaveBeenCalledWith("listItem")
   })
+
+  it("supports highlight, text alignment, and task list toolbar actions", () => {
+    const chain = {
+      focus: vi.fn(() => chain),
+      run: vi.fn(() => true),
+      setTextAlign: vi.fn(() => chain),
+      toggleHighlight: vi.fn(() => chain),
+      toggleTaskList: vi.fn(() => chain),
+    }
+    const editor = {
+      chain: vi.fn(() => chain),
+      getAttributes: vi.fn(() => ({})),
+      isActive: vi.fn(() => false),
+    }
+
+    render(<EditorToolbar editor={editor as never} />)
+
+    fireEvent.mouseDown(screen.getByRole("button", { name: "Highlight" }))
+    fireEvent.mouseDown(screen.getByRole("button", { name: "Align left" }))
+    fireEvent.mouseDown(screen.getByRole("button", { name: "Align center" }))
+    fireEvent.mouseDown(screen.getByRole("button", { name: "Align right" }))
+    fireEvent.mouseDown(screen.getByRole("button", { name: "Task list" }))
+
+    expect(chain.toggleHighlight).toHaveBeenCalled()
+    expect(chain.setTextAlign).toHaveBeenCalledWith("left")
+    expect(chain.setTextAlign).toHaveBeenCalledWith("center")
+    expect(chain.setTextAlign).toHaveBeenCalledWith("right")
+    expect(chain.toggleTaskList).toHaveBeenCalled()
+  })
 })
 
 describe("VideoEmbedModal", () => {
@@ -523,6 +552,24 @@ describe("SpoilerView", () => {
 
     expect(screen.getByRole("button", { name: /Hide spoiler/ })).toBeVisible()
     expect(content).not.toHaveClass("blur-sm")
+  })
+
+  it("keeps reveal button clicks out of parent editor handlers", () => {
+    const onClick = vi.fn()
+    const onMouseDown = vi.fn()
+
+    render(
+      <div onClick={onClick} onMouseDown={onMouseDown}>
+        <SpoilerView />
+      </div>,
+    )
+
+    const button = screen.getByRole("button", { name: /Show spoiler/ })
+    fireEvent.mouseDown(button)
+    fireEvent.click(button)
+
+    expect(onMouseDown).not.toHaveBeenCalled()
+    expect(onClick).not.toHaveBeenCalled()
   })
 })
 
@@ -629,6 +676,49 @@ describe("PostBody", () => {
     )
     expect(screen.getByRole("button", { name: "Show spoiler" })).toBeVisible()
     expect(screen.getByText("Spoiler text")).toBeVisible()
+  })
+
+  it("renders editor highlight, underline, alignment, and task lists statically", () => {
+    const content = {
+      content: [
+        {
+          attrs: { textAlign: "center" },
+          content: [
+            {
+              marks: [{ type: "highlight" }, { type: "underline" }],
+              text: "Marked text",
+              type: "text",
+            },
+          ],
+          type: "paragraph",
+        },
+        {
+          content: [
+            {
+              attrs: { checked: true },
+              content: [
+                {
+                  content: [{ text: "Done item", type: "text" }],
+                  type: "paragraph",
+                },
+              ],
+              type: "taskItem",
+            },
+          ],
+          type: "taskList",
+        },
+      ],
+      type: "doc",
+    }
+
+    render(<PostBody content={content} />)
+
+    const marked = screen.getByText("Marked text")
+    expect(marked.closest("mark")).toHaveClass("editor-highlight")
+    expect(marked.closest("u")).not.toBeNull()
+    expect(marked.closest("p")).toHaveStyle({ textAlign: "center" })
+    expect(screen.getByRole("checkbox")).toBeChecked()
+    expect(screen.getByText("Done item")).toBeVisible()
   })
 
   it("opens a keyboard-navigable lightbox for post images", async () => {

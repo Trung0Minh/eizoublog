@@ -45,7 +45,7 @@ export default async function ContributorsPage({ searchParams }: ContributorsPag
   })
 
   const sortOptions: { value: "role" | "posts"; label: string }[] = [
-    { value: "role", label: "Mặc định (Vai trò)" },
+    { value: "role", label: "Vai trò" },
     { value: "posts", label: "Nhiều bài viết nhất" },
   ]
 
