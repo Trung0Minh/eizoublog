@@ -5,7 +5,8 @@ import { ArrowLeft, Lock } from "lucide-react"
 import type { JSONContent } from "@tiptap/react"
 import { prisma } from "@/lib/prisma"
 import { getCurrentSession } from "@/lib/session"
-import { StaticPostContent } from "@/components/posts/StaticPostContent"
+import { PostBody } from "@/components/posts/PostBody"
+import { TableOfContents } from "@/components/posts/TableOfContents"
 import { RoomFeedbackSection } from "@/components/events/RoomFeedbackSection"
 
 interface RoomDetailPageProps {
@@ -117,7 +118,7 @@ export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
   })
 
   return (
-    <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:py-10 md:px-6 lg:px-8">
+    <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:py-10 md:px-6 lg:px-8">
       {/* Back navigation */}
       <div className="mb-6">
         <Link
@@ -197,17 +198,23 @@ export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
           </div>
         )}
 
-        {/* Post Content */}
-        <article className="prose dark:prose-invert max-w-none bg-subtle-bg p-6 sm:p-8 rounded-lg border border-border-default">
-          <StaticPostContent content={room.selectedPost.content as unknown as JSONContent} />
-        </article>
+        {/* Main Content Area with sidebar Table of Contents */}
+        <div className="flex w-full flex-col gap-12 xl:flex-row items-start">
+          <article className="min-w-0 flex-1 w-full max-w-[800px]">
+            {/* Post Content */}
+            <PostBody content={room.selectedPost.content as unknown as JSONContent} />
 
-        {/* Feedback Section */}
-        <RoomFeedbackSection
-          eventId={eventId}
-          roomId={roomId}
-          initialComments={comments}
-        />
+            {/* Feedback Section */}
+            <RoomFeedbackSection
+              eventId={eventId}
+              roomId={roomId}
+              initialComments={comments}
+            />
+          </article>
+          <aside className="hidden w-[200px] shrink-0 xl:block">
+            <TableOfContents content={room.selectedPost.content as unknown as JSONContent} />
+          </aside>
+        </div>
       </div>
     </main>
   )
