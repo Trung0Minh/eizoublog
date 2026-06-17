@@ -234,6 +234,7 @@ describe("notification queries", () => {
       where: {
         id: "notification-123",
         userId: "writer-1",
+        readAt: null,
       },
     })
   })

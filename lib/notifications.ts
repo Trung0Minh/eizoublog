@@ -166,6 +166,7 @@ export async function markNotificationRead(notificationId: string, userId: strin
     where: {
       id: notificationId,
       userId,
+      readAt: null,
     },
   })
 }
