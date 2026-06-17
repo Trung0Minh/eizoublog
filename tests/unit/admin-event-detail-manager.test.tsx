@@ -2,8 +2,18 @@ import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
 vi.mock("next/link", () => ({
-  default: ({ href, children }: { href: string; children: React.ReactNode }) => (
-    <a href={href}>{children}</a>
+  default: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string
+    children: React.ReactNode
+    title?: string
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }))
 vi.mock("next/navigation", () => ({
@@ -47,5 +57,9 @@ describe("AdminEventDetailManager", () => {
     expect(screen.getByText("Draft event pick")).toBeVisible()
     expect(screen.getByText(/DRAFT source post/i)).toBeVisible()
     expect(screen.getByText(/2 feedback comments/i)).toBeVisible()
+    expect(screen.getByTitle("Preview selected post")).toHaveAttribute(
+      "href",
+      "/dashboard/preview/post-1",
+    )
   })
 })

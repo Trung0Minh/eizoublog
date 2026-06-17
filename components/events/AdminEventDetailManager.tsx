@@ -307,11 +307,26 @@ export function AdminEventDetailManager({
                 >
                   <ArrowDown aria-hidden="true" className="h-4 w-4" />
                 </Button>
-                <Button asChild size="icon" title="Preview writer room" variant="ghost">
-                  <Link href={`/dashboard/events/${event.id}?room=${room.id}`}>
+                {room.selectedPost ? (
+                  <Button asChild size="icon" variant="ghost">
+                    <Link
+                      href={`/dashboard/preview/${room.selectedPost.id}`}
+                      title="Preview selected post"
+                    >
+                      <Eye aria-hidden="true" className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button
+                    disabled
+                    size="icon"
+                    title="No selected post to preview"
+                    type="button"
+                    variant="ghost"
+                  >
                     <Eye aria-hidden="true" className="h-4 w-4" />
-                  </Link>
-                </Button>
+                  </Button>
+                )}
               </div>
             </article>
           ))
