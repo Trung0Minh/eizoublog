@@ -132,7 +132,28 @@ export async function GET(
     }
 
     if (!canViewPost(post, session?.user.id, session?.user.role)) {
-      return Response.json({ error: "Post not found" }, { status: 404 })
+      let isParticipantViewer = false
+      if (session?.user.id) {
+        const sharedInEvent = await prisma.awardEventRoom.findFirst({
+          select: { id: true },
+          where: {
+            postId: id,
+            visibility: "PARTICIPANTS",
+            event: {
+              rooms: {
+                some: {
+                  writerId: session.user.id
+                }
+              }
+            }
+          }
+        })
+        isParticipantViewer = Boolean(sharedInEvent)
+      }
+
+      if (!isParticipantViewer) {
+        return Response.json({ error: "Post not found" }, { status: 404 })
+      }
     }
 
     const { authorId, ...safePost } = post

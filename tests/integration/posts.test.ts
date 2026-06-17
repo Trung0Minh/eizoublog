@@ -20,6 +20,9 @@ const mocks = vi.hoisted(() => {
     user: {
       findUnique: vi.fn(),
     },
+    awardEventRoom: {
+      findFirst: vi.fn(),
+    },
   }
 
   return {
@@ -364,6 +367,67 @@ describe("single post API", () => {
     await expect(response.json()).resolves.toMatchObject({
       data: { id: "post-1", status: "DRAFT", title: "Shared Draft" },
     })
+  })
+
+  it("allows event participants to view shared draft previews", async () => {
+    mocks.auth.mockResolvedValue({
+      user: { id: "writer-2", role: "WRITER" },
+    })
+    mocks.prisma.post.findUnique.mockResolvedValue({
+      authorId: "writer-1",
+      coAuthors: [],
+      draftVisibility: "PRIVATE",
+      id: "post-1",
+      status: "DRAFT",
+      title: "Shared Event Draft",
+    })
+    mocks.prisma.awardEventRoom.findFirst.mockResolvedValue({ id: "room-1" })
+
+    const response = await GET_POST(
+      new Request("https://example.test/api/posts/post-1"),
+      routeContext("post-1"),
+    )
+
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toMatchObject({
+      data: { id: "post-1", status: "DRAFT", title: "Shared Event Draft" },
+    })
+    expect(mocks.prisma.awardEventRoom.findFirst).toHaveBeenCalledWith({
+      select: { id: true },
+      where: {
+        postId: "post-1",
+        visibility: "PARTICIPANTS",
+        event: {
+          rooms: {
+            some: {
+              writerId: "writer-2",
+            },
+          },
+        },
+      },
+    })
+  })
+
+  it("hides shared draft previews if requester is not in the same event", async () => {
+    mocks.auth.mockResolvedValue({
+      user: { id: "writer-2", role: "WRITER" },
+    })
+    mocks.prisma.post.findUnique.mockResolvedValue({
+      authorId: "writer-1",
+      coAuthors: [],
+      draftVisibility: "PRIVATE",
+      id: "post-1",
+      status: "DRAFT",
+    })
+    mocks.prisma.awardEventRoom.findFirst.mockResolvedValue(null)
+
+    const response = await GET_POST(
+      new Request("https://example.test/api/posts/post-1"),
+      routeContext("post-1"),
+    )
+
+    expect(response.status).toBe(404)
+    await expect(response.json()).resolves.toEqual({ error: "Post not found" })
   })
 
   it("hides archived posts from visitors and writers while allowing admins", async () => {
