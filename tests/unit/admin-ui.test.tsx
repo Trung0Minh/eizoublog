@@ -33,6 +33,7 @@ import { InviteWriterForm } from "@/components/admin/InviteWriterForm"
 import { NewsletterBroadcastForm } from "@/components/admin/NewsletterBroadcastForm"
 import { PendingInvitesTable } from "@/components/admin/PendingInvitesTable"
 import { WritersTable } from "@/components/admin/WritersTable"
+import { clearSessionUserCache } from "@/lib/clientSession"
 
 function okResponse(body: unknown = { data: { message: "OK" } }) {
   return new Response(JSON.stringify(body), { status: 200 })
@@ -51,6 +52,7 @@ describe("admin client components", () => {
 
   afterEach(() => {
     vi.unstubAllGlobals()
+    clearSessionUserCache()
   })
 
   it("renders admin navigation", () => {
@@ -82,6 +84,30 @@ describe("admin client components", () => {
     )
 
     expect(screen.getByRole("button", { name: /open admin menu/i })).toBeVisible()
+  })
+
+  it("uses the server-provided admin user without fetching the session again", () => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal("fetch", fetchMock)
+
+    render(
+      <AdminNav
+        user={{
+          avatarUrl: null,
+          name: "Nun",
+          role: "ADMIN",
+          username: "admin",
+        }}
+      />,
+    )
+
+    expect(
+      screen.getByRole("button", { name: "Mở menu tác giả" }),
+    ).toBeVisible()
+    expect(fetchMock).not.toHaveBeenCalledWith("/api/auth/session", {
+      cache: "no-store",
+      credentials: "same-origin",
+    })
   })
 
   it("deletes posts through the shared posts API and refreshes", async () => {

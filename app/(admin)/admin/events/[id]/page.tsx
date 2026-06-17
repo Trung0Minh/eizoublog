@@ -2,8 +2,7 @@ import { notFound } from "next/navigation"
 
 import { AdminPageHeader } from "@/components/admin/AdminPrimitives"
 import { AdminEventDetailManager } from "@/components/events/AdminEventDetailManager"
-import { awardEventDetailSelect } from "@/lib/awardEventService"
-import { prisma } from "@/lib/prisma"
+import { getCachedAdminEventDetail } from "@/lib/queries"
 
 interface AdminEventPageProps {
   params: Promise<{ id: string }>
@@ -11,10 +10,7 @@ interface AdminEventPageProps {
 
 export default async function AdminEventPage({ params }: AdminEventPageProps) {
   const { id } = await params
-  const event = await prisma.awardEvent.findUnique({
-    select: awardEventDetailSelect,
-    where: { id },
-  })
+  const event = await getCachedAdminEventDetail(id)
 
   if (!event) {
     notFound()

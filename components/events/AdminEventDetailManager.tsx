@@ -83,9 +83,13 @@ export function AdminEventDetailManager({
     [rooms],
   )
 
-  async function patchEvent(body: object) {
+  async function patchEvent(
+    body: object,
+    options: { refreshOnSuccess?: boolean; rollbackRooms?: AdminEventRoom[] } = {},
+  ) {
     setError("")
     setIsPending(true)
+    const refreshOnSuccess = options.refreshOnSuccess ?? true
 
     try {
       const response = await fetch(`/api/admin/events/${event.id}`, {
@@ -99,8 +103,13 @@ export function AdminEventDetailManager({
         throw new Error(getApiError(result))
       }
 
-      router.refresh()
+      if (refreshOnSuccess) {
+        router.refresh()
+      }
     } catch (caughtError) {
+      if (options.rollbackRooms) {
+        setRooms(options.rollbackRooms)
+      }
       setError(caughtError instanceof Error ? caughtError.message : "Event update failed")
     } finally {
       setIsPending(false)
@@ -138,14 +147,18 @@ export function AdminEventDetailManager({
     }
 
     const nextRooms = [...rooms]
+    const previousRooms = rooms
     const current = nextRooms[index]
     nextRooms[index] = nextRooms[nextIndex]
     nextRooms[nextIndex] = current
     const ordered = nextRooms.map((room, order) => ({ ...room, order }))
     setRooms(ordered)
-    void patchEvent({
-      roomOrder: ordered.map((room) => ({ id: room.id, order: room.order })),
-    })
+    void patchEvent(
+      {
+        roomOrder: ordered.map((room) => ({ id: room.id, order: room.order })),
+      },
+      { refreshOnSuccess: false, rollbackRooms: previousRooms },
+    )
   }
 
   return (

@@ -11,12 +11,11 @@ import {
 } from "lucide-react"
 
 import { AdminMetricCard } from "@/components/admin/AdminPrimitives"
-import {
-  getInternalAnalyticsStats,
-  getInternalTopPages,
-  type InternalAnalyticsStats,
-  type InternalTopPage,
+import type {
+  InternalAnalyticsStats,
+  InternalTopPage,
 } from "@/lib/internalAnalytics"
+import { getCachedAdminAnalyticsData } from "@/lib/queries"
 
 function last30Days() {
   const endAt = Date.now()
@@ -76,10 +75,7 @@ export async function AnalyticsWidget({
   let topPages: InternalTopPage[]
 
   try {
-    ;[stats, topPages] = await Promise.all([
-      getInternalAnalyticsStats(startAt, endAt),
-      getInternalTopPages(startAt, endAt, 5),
-    ])
+    ;({ stats, topPages } = await getCachedAdminAnalyticsData(startAt, endAt))
   } catch {
     return (
       <section className="rounded-[8px] border border-dashed p-5 text-sm text-muted-foreground">

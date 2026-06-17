@@ -1,6 +1,14 @@
 import { unstable_cache } from "next/cache"
 import { Prisma, type CommentStatus, type PostStatus } from "@prisma/client"
 
+import {
+  adminAwardEventDetailSelect,
+  awardEventListSelect,
+} from "@/lib/awardEventService"
+import {
+  getInternalAnalyticsStats,
+  getInternalTopPages,
+} from "@/lib/internalAnalytics"
 import { prisma } from "@/lib/prisma"
 import type { SearchResult } from "@/lib/search"
 
@@ -143,6 +151,16 @@ const newsletterRecentPostSelect = {
   id: true,
   title: true,
 } satisfies Prisma.PostSelect
+
+const adminAwardEventCategorySelect = {
+  id: true,
+  name: true,
+} satisfies Prisma.CategorySelect
+
+const adminAwardEventTagSelect = {
+  id: true,
+  name: true,
+} satisfies Prisma.TagSelect
 
 export const publishedPostDetailSelect = {
   _count: { select: { comments: true } },
@@ -670,6 +688,52 @@ export const getCachedAdminNewsletterData = unstable_cache(
   },
   ["admin-newsletter-data"],
   { revalidate: 60, tags: ["newsletter", "posts"] },
+)
+
+export const getCachedAdminAnalyticsData = unstable_cache(
+  async (startAt: number, endAt: number) => {
+    const [stats, topPages] = await Promise.all([
+      getInternalAnalyticsStats(startAt, endAt),
+      getInternalTopPages(startAt, endAt, 5),
+    ])
+
+    return { stats, topPages }
+  },
+  ["admin-analytics-data"],
+  { revalidate: 60, tags: ["analytics"] },
+)
+
+export const getCachedAdminEventsData = unstable_cache(
+  async () => {
+    const [events, categories, tags] = await Promise.all([
+      prisma.awardEvent.findMany({
+        orderBy: { createdAt: "desc" },
+        select: awardEventListSelect,
+      }),
+      prisma.category.findMany({
+        orderBy: { name: "asc" },
+        select: adminAwardEventCategorySelect,
+      }),
+      prisma.tag.findMany({
+        orderBy: { name: "asc" },
+        select: adminAwardEventTagSelect,
+      }),
+    ])
+
+    return { categories, events, tags }
+  },
+  ["admin-events-data"],
+  { revalidate: 60, tags: ["award-events", "categories", "tags"] },
+)
+
+export const getCachedAdminEventDetail = unstable_cache(
+  async (id: string) =>
+    prisma.awardEvent.findUnique({
+      select: adminAwardEventDetailSelect,
+      where: { id },
+    }),
+  ["admin-event-detail"],
+  { revalidate: 60, tags: ["award-events"] },
 )
 
 export const getCachedCategoryBySlug = unstable_cache(

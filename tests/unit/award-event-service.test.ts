@@ -21,7 +21,11 @@ vi.mock("next/cache", () => ({
 }))
 vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }))
 
-import { AwardEventError, updateAwardEventRoom } from "@/lib/awardEventService"
+import {
+  AwardEventError,
+  adminAwardEventDetailSelect,
+  updateAwardEventRoom,
+} from "@/lib/awardEventService"
 
 function updateInput(postId: string | null) {
   return {
@@ -83,5 +87,19 @@ describe("updateAwardEventRoom", () => {
         }),
       }),
     )
+  })
+})
+
+describe("adminAwardEventDetailSelect", () => {
+  it("keeps selected post payloads lightweight for admin event navigation", () => {
+    const selectedPostSelect =
+      adminAwardEventDetailSelect.rooms.select.selectedPost.select
+
+    expect(selectedPostSelect).toMatchObject({
+      id: true,
+      status: true,
+      title: true,
+    })
+    expect(selectedPostSelect).not.toHaveProperty("content")
   })
 })

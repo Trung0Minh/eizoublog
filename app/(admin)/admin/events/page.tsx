@@ -1,23 +1,9 @@
 import { AdminPageHeader } from "@/components/admin/AdminPrimitives"
 import { AdminEventsManager } from "@/components/events/AdminEventsManager"
-import { awardEventListSelect } from "@/lib/awardEventService"
-import { prisma } from "@/lib/prisma"
+import { getCachedAdminEventsData } from "@/lib/queries"
 
 export default async function AdminEventsPage() {
-  const [events, categories, tags] = await Promise.all([
-    prisma.awardEvent.findMany({
-      orderBy: { createdAt: "desc" },
-      select: awardEventListSelect,
-    }),
-    prisma.category.findMany({
-      orderBy: { name: "asc" },
-      select: { id: true, name: true },
-    }),
-    prisma.tag.findMany({
-      orderBy: { name: "asc" },
-      select: { id: true, name: true },
-    }),
-  ])
+  const { categories, events, tags } = await getCachedAdminEventsData()
 
   return (
     <div className="animate-in fade-in duration-300">

@@ -93,6 +93,23 @@ export const awardEventDetailSelect = {
   updatedAt: true,
 } satisfies Prisma.AwardEventSelect
 
+export const adminAwardEventDetailSelect = {
+  ...awardEventDetailSelect,
+  rooms: {
+    ...awardEventDetailSelect.rooms,
+    select: {
+      ...awardEventDetailSelect.rooms.select,
+      selectedPost: {
+        select: {
+          id: true,
+          status: true,
+          title: true,
+        },
+      },
+    },
+  },
+} satisfies Prisma.AwardEventSelect
+
 export type AwardEventDetail = Prisma.AwardEventGetPayload<{
   select: typeof awardEventDetailSelect
 }>

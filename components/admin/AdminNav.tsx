@@ -17,6 +17,7 @@ import { usePathname } from "next/navigation"
 import { useState } from "react"
 
 import { WriterMenu } from "@/components/layout/WriterMenu"
+import type { WriterMenuUser } from "@/components/layout/WriterMenu"
 
 import { cn } from "@/lib/utils"
 
@@ -39,7 +40,7 @@ function isActivePath(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
-export function AdminNav() {
+export function AdminNav({ user }: { user?: WriterMenuUser | null }) {
   const pathname = usePathname()
   const [drawerOpen, setDrawerOpen] = useState(false)
 
@@ -87,7 +88,7 @@ export function AdminNav() {
 
         <div className="flex items-center gap-2">
           <div className="hidden md:block">
-            <WriterMenu />
+            <WriterMenu user={user} />
           </div>
 
           <button
