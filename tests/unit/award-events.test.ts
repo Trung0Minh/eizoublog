@@ -30,25 +30,40 @@ describe("buildAwardEventPostContent", () => {
       eventIntro: doc(paragraph("A noisy year-end table of personal picks.")),
       rooms: [
         {
-          content: doc(paragraph("Mai pick body")),
           id: "room-2",
           order: 2,
+          selectedPost: {
+            content: doc(paragraph("Mai pick body")),
+            id: "post-2",
+            status: "PUBLISHED",
+            title: "Mai selections",
+          },
           status: "SUBMITTED",
           writer: { name: "Mai", username: "mai" },
           writerIntro: "Cuts that stayed in my head.",
         },
         {
-          content: doc(paragraph("An pick body")),
           id: "room-1",
           order: 1,
+          selectedPost: {
+            content: doc(paragraph("An pick body")),
+            id: "post-1",
+            status: "DRAFT",
+            title: "An selections",
+          },
           status: "SUBMITTED",
           writer: { name: "An", username: "an" },
           writerIntro: "I watched too many endings.",
         },
         {
-          content: doc(paragraph("Draft body")),
           id: "room-3",
           order: 3,
+          selectedPost: {
+            content: doc(paragraph("Draft body")),
+            id: "post-3",
+            status: "DRAFT",
+            title: "Draft selections",
+          },
           status: "DRAFT",
           writer: { name: "Draft", username: "draft" },
           writerIntro: "Not ready.",
@@ -74,6 +89,25 @@ describe("buildAwardEventPostContent", () => {
     expect(JSON.stringify(content).indexOf("An")).toBeLessThan(
       JSON.stringify(content).indexOf("Mai"),
     )
+  })
+
+  it("ignores submitted rooms without a selected post", () => {
+    const content = buildAwardEventPostContent({
+      eventIntro: null,
+      rooms: [
+        {
+          id: "room-1",
+          order: 1,
+          selectedPost: null,
+          status: "SUBMITTED",
+          writer: { name: "Empty", username: "empty" },
+          writerIntro: "No post yet.",
+        },
+      ],
+    })
+
+    expect(JSON.stringify(content)).toContain("No submitted entries yet.")
+    expect(JSON.stringify(content)).not.toContain("Empty")
   })
 })
 

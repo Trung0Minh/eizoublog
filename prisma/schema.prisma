@@ -147,6 +147,7 @@ model Post {
   tags            PostTag[]
   comments        Comment[]
   finalAwardEvent AwardEvent? @relation("AwardEventFinalPost")
+  awardEventRooms AwardEventRoom[] @relation("AwardEventRoomSelectedPost")
   searchVector    Unsupported("tsvector")? @map("search_vector")
 
   @@index([slug])
@@ -218,6 +219,7 @@ model AwardEventRoom {
   id          String                   @id @default(cuid())
   eventId     String
   writerId    String
+  postId      String?
   writerIntro String?                  @db.Text
   content     Json
   contentText String?                  @db.Text
@@ -231,10 +233,12 @@ model AwardEventRoom {
 
   event    AwardEvent              @relation(fields: [eventId], references: [id], onDelete: Cascade)
   writer   User                    @relation(fields: [writerId], references: [id], onDelete: Cascade)
+  selectedPost Post?               @relation("AwardEventRoomSelectedPost", fields: [postId], references: [id], onDelete: SetNull)
   comments AwardEventRoomComment[]
 
   @@unique([eventId, writerId])
   @@index([eventId, status, order])
+  @@index([postId])
   @@index([writerId, updatedAt(sort: Desc)])
   @@map("award_event_rooms")
 }

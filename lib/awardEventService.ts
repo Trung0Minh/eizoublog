@@ -57,12 +57,19 @@ export const awardEventDetailSelect = {
     orderBy: [{ order: "asc" }, { updatedAt: "asc" }],
     select: {
       _count: { select: { comments: true } },
-      content: true,
-      contentText: true,
       createdAt: true,
       excludedAt: true,
       id: true,
       order: true,
+      postId: true,
+      selectedPost: {
+        select: {
+          content: true,
+          id: true,
+          status: true,
+          title: true,
+        },
+      },
       status: true,
       submittedAt: true,
       updatedAt: true,
@@ -124,9 +131,16 @@ export async function regenerateAwardEventPost(eventId: string) {
   const rooms = event.rooms
     .filter((room) => !room.excludedAt)
     .map((room) => ({
-      content: normalizeAwardEventContent(room.content),
       id: room.id,
       order: room.order,
+      selectedPost: room.selectedPost
+        ? {
+            content: normalizeAwardEventContent(room.selectedPost.content),
+            id: room.selectedPost.id,
+            status: room.selectedPost.status,
+            title: room.selectedPost.title,
+          }
+        : null,
       status: room.status,
       writer: room.writer,
       writerIntro: room.writerIntro,
@@ -258,17 +272,15 @@ export async function joinAwardEvent(eventId: string, writerId: string) {
 }
 
 export async function updateAwardEventRoom({
-  content,
-  contentText,
   eventId,
+  postId,
   status,
   visibility,
   writerId,
   writerIntro,
 }: {
-  content: JSONContent
-  contentText: string
   eventId: string
+  postId: string | null
   status?: AwardEventRoomStatus
   visibility: AwardEventRoomVisibility
   writerId: string
@@ -287,10 +299,28 @@ export async function updateAwardEventRoom({
     throw new AwardEventError("Event is closed", 400)
   }
 
+  if (status === "SUBMITTED" && !postId) {
+    throw new AwardEventError("Select a post before submitting", 400)
+  }
+
+  if (postId) {
+    const selectedPost = await prisma.post.findFirst({
+      select: { id: true, status: true },
+      where: {
+        authorId: writerId,
+        id: postId,
+        status: { in: ["DRAFT", "PUBLISHED"] },
+      },
+    })
+
+    if (!selectedPost) {
+      throw new AwardEventError("Selected post not found", 404)
+    }
+  }
+
   const updated = await prisma.awardEventRoom.update({
     data: {
-      content: content as Prisma.InputJsonObject,
-      contentText: contentText.trim() || null,
+      postId,
       ...(status && {
         status,
         submittedAt: status === "SUBMITTED" ? new Date() : null,

@@ -4,13 +4,11 @@ import {
   AwardEventError,
   updateAwardEventRoom,
 } from "@/lib/awardEventService"
-import { emptyAwardEventDoc } from "@/lib/awardEvents"
 import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
 import { prisma } from "@/lib/prisma"
 
 const updateRoomSchema = z.object({
-  content: z.record(z.string(), z.unknown()).default(emptyAwardEventDoc),
-  contentText: z.string().default(""),
+  postId: z.string().nullable().default(null),
   status: z.enum(["DRAFT", "SUBMITTED"]).optional(),
   visibility: z.enum(["PRIVATE", "PARTICIPANTS"]).default("PRIVATE"),
   writerIntro: z.string().max(1000).default(""),
@@ -34,9 +32,15 @@ export async function GET(
         id: true,
         rooms: {
           select: {
-            content: true,
-            contentText: true,
             id: true,
+            postId: true,
+            selectedPost: {
+              select: {
+                id: true,
+                status: true,
+                title: true,
+              },
+            },
             status: true,
             updatedAt: true,
             visibility: true,
@@ -76,9 +80,8 @@ export async function PATCH(
     const { id } = await params
     const data = updateRoomSchema.parse(await request.json())
     const room = await updateAwardEventRoom({
-      content: data.content,
-      contentText: data.contentText,
       eventId: id,
+      postId: data.postId,
       status: data.status,
       visibility: data.visibility,
       writerId: activeSession.user.id,

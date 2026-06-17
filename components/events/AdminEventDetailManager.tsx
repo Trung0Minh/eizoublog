@@ -1,6 +1,10 @@
 "use client"
 
-import type { AwardEventRoomStatus, AwardEventStatus } from "@prisma/client"
+import type {
+  AwardEventRoomStatus,
+  AwardEventStatus,
+  PostStatus,
+} from "@prisma/client"
 import { ArrowDown, ArrowUp, ExternalLink, Eye, Shuffle, Upload } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -15,6 +19,12 @@ interface AdminEventRoom {
   excludedAt: Date | null
   id: string
   order: number
+  postId: string | null
+  selectedPost: {
+    id: string
+    status: PostStatus
+    title: string
+  } | null
   status: AwardEventRoomStatus
   updatedAt: Date
   visibility: "PRIVATE" | "PARTICIPANTS"
@@ -66,7 +76,10 @@ export function AdminEventDetailManager({
   const [rooms, setRooms] = useState(event.rooms)
 
   const submittedRooms = useMemo(
-    () => rooms.filter((room) => room.status === "SUBMITTED" && !room.excludedAt),
+    () =>
+      rooms.filter(
+        (room) => room.status === "SUBMITTED" && !room.excludedAt && room.selectedPost,
+      ),
     [rooms],
   )
 
@@ -155,7 +168,7 @@ export function AdminEventDetailManager({
               {event.status}
             </span>
             <p className="mt-2 text-[13px] text-text-secondary">
-              {submittedRooms.length} submitted rooms are eligible for the final article.
+              {submittedRooms.length} submitted submissions are eligible for the final article.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -233,7 +246,7 @@ export function AdminEventDetailManager({
 
       <section className="overflow-hidden rounded-[8px] border border-border-default bg-background">
         <div className="flex h-10 items-center border-b border-border-default bg-subtle-bg px-4 text-[11px] font-semibold uppercase tracking-[0.06em] text-text-secondary">
-          Rooms
+          Submissions
         </div>
         {rooms.length === 0 ? (
           <div className="p-8 text-center text-[13px] text-text-tertiary">
@@ -260,6 +273,18 @@ export function AdminEventDetailManager({
                 <p className="mt-1 text-[12px] text-text-tertiary">
                   @{room.writer.username} · {room._count.comments} feedback comments
                 </p>
+                {room.selectedPost ? (
+                  <p className="mt-2 text-[13px] text-text-secondary">
+                    {room.selectedPost.title}
+                    <span className="ml-2 text-[12px] text-text-tertiary">
+                      {room.selectedPost.status} source post
+                    </span>
+                  </p>
+                ) : (
+                  <p className="mt-2 text-[13px] text-text-tertiary">
+                    No source post selected yet.
+                  </p>
+                )}
               </div>
               <div className="flex flex-wrap gap-1">
                 <Button

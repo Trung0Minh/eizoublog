@@ -26,9 +26,15 @@ export default async function DashboardEventRoomPage({
       id: true,
       rooms: {
         select: {
-          content: true,
-          contentText: true,
           id: true,
+          postId: true,
+          selectedPost: {
+            select: {
+              id: true,
+              status: true,
+              title: true,
+            },
+          },
           status: true,
           visibility: true,
           writerIntro: true,
@@ -41,11 +47,20 @@ export default async function DashboardEventRoomPage({
     where: { id },
   })
 
-  if (!event || (event.status !== "OPEN" && event.status !== "PUBLISHED")) {
+  if (
+    !event ||
+    (event.status !== "OPEN" &&
+      event.status !== "PUBLISHED" &&
+      event.status !== "CLOSED")
+  ) {
     notFound()
   }
 
   if (!event.rooms[0]) {
+    if (event.status === "CLOSED") {
+      notFound()
+    }
+
     await joinAwardEvent(id, session.user.id)
     event = await prisma.awardEvent.findUnique({
       select: {
@@ -53,9 +68,15 @@ export default async function DashboardEventRoomPage({
         id: true,
         rooms: {
           select: {
-            content: true,
-            contentText: true,
             id: true,
+            postId: true,
+            selectedPost: {
+              select: {
+                id: true,
+                status: true,
+                title: true,
+              },
+            },
             status: true,
             visibility: true,
             writerIntro: true,
@@ -75,6 +96,20 @@ export default async function DashboardEventRoomPage({
     notFound()
   }
 
+  const eligiblePosts = await prisma.post.findMany({
+    orderBy: [{ updatedAt: "desc" }],
+    select: {
+      id: true,
+      status: true,
+      title: true,
+      updatedAt: true,
+    },
+    where: {
+      authorId: session.user.id,
+      status: { in: ["DRAFT", "PUBLISHED"] },
+    },
+  })
+
   const sharedRooms = await prisma.awardEventRoom.findMany({
     orderBy: [{ order: "asc" }, { updatedAt: "asc" }],
     select: {
@@ -87,8 +122,17 @@ export default async function DashboardEventRoomPage({
           id: true,
         },
       },
-      content: true,
       id: true,
+      postId: true,
+      selectedPost: {
+        select: {
+          content: true,
+          contentText: true,
+          id: true,
+          status: true,
+          title: true,
+        },
+      },
       status: true,
       writer: { select: { name: true, username: true } },
       writerIntro: true,
@@ -109,14 +153,19 @@ export default async function DashboardEventRoomPage({
         <h1 className="text-2xl font-bold tracking-tight">{event.title}</h1>
       </div>
       <EventRoomEditor
+        eligiblePosts={eligiblePosts}
         event={event}
-        room={{
-          ...room,
-          content: normalizeAwardEventContent(room.content) as JSONContent,
-        }}
+        room={room}
         sharedRooms={sharedRooms.map((sharedRoom) => ({
           ...sharedRoom,
-          content: normalizeAwardEventContent(sharedRoom.content) as JSONContent,
+          selectedPost: sharedRoom.selectedPost
+            ? {
+                ...sharedRoom.selectedPost,
+                content: normalizeAwardEventContent(
+                  sharedRoom.selectedPost.content,
+                ) as JSONContent,
+              }
+            : null,
         }))}
       />
     </main>

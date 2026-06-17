@@ -14,6 +14,9 @@ const mocks = vi.hoisted(() => ({
     awardEventRoom: {
       findMany: vi.fn(),
     },
+    post: {
+      findMany: vi.fn(),
+    },
   },
   redirect: vi.fn((path: string) => {
     throw new Error(`redirect:${path}`)
@@ -33,15 +36,23 @@ vi.mock("@/lib/awardEventService", () => ({
 }))
 vi.mock("@/components/events/EventRoomEditor", () => ({
   EventRoomEditor: ({
+    eligiblePosts,
     room,
     sharedRooms,
   }: {
+    eligiblePosts: unknown[]
     room: { id: string }
-    sharedRooms: unknown[]
+    sharedRooms: { selectedPost?: { title: string } | null }[]
   }) => (
     <div>
       <div>room:{room.id}</div>
+      <div>eligible:{eligiblePosts.length}</div>
       <div>shared:{sharedRooms.length}</div>
+      {sharedRooms.map((sharedRoom) => (
+        <div key={sharedRoom.selectedPost?.title}>
+          sharedPost:{sharedRoom.selectedPost?.title}
+        </div>
+      ))}
     </div>
   ),
 }))
@@ -64,9 +75,9 @@ describe("DashboardEventRoomPage", () => {
       id: "event-1",
       rooms: [
         {
-          content,
-          contentText: "",
           id: "room-1",
+          postId: null,
+          selectedPost: null,
           status: "DRAFT",
           visibility: "PRIVATE",
           writerIntro: null,
@@ -76,6 +87,9 @@ describe("DashboardEventRoomPage", () => {
       title: "Awards",
     })
     mocks.prisma.awardEventRoom.findMany.mockResolvedValue([])
+    mocks.prisma.post.findMany.mockResolvedValue([
+      { id: "post-1", status: "DRAFT", title: "Draft pick" },
+    ])
   })
 
   it("renders an existing writer room", async () => {
@@ -87,6 +101,20 @@ describe("DashboardEventRoomPage", () => {
 
     expect(screen.getByText("Awards")).toBeVisible()
     expect(screen.getByText("room:room-1")).toBeVisible()
+    expect(screen.getByText("eligible:1")).toBeVisible()
+    expect(mocks.prisma.post.findMany).toHaveBeenCalledWith({
+      orderBy: [{ updatedAt: "desc" }],
+      select: {
+        id: true,
+        status: true,
+        title: true,
+        updatedAt: true,
+      },
+      where: {
+        authorId: "writer-1",
+        status: { in: ["DRAFT", "PUBLISHED"] },
+      },
+    })
   })
 
   it("joins the event before rendering when the writer has no room yet", async () => {
@@ -103,9 +131,9 @@ describe("DashboardEventRoomPage", () => {
         id: "event-1",
         rooms: [
           {
-            content,
-            contentText: "",
             id: "room-2",
+            postId: null,
+            selectedPost: null,
             status: "DRAFT",
             visibility: "PRIVATE",
             writerIntro: null,
@@ -123,5 +151,33 @@ describe("DashboardEventRoomPage", () => {
 
     expect(mocks.joinAwardEvent).toHaveBeenCalledWith("event-1", "writer-1")
     expect(screen.getByText("room:room-2")).toBeVisible()
+  })
+
+  it("passes shared participant submissions with selected post content", async () => {
+    mocks.prisma.awardEventRoom.findMany.mockResolvedValue([
+      {
+        comments: [],
+        id: "room-3",
+        postId: "post-3",
+        selectedPost: {
+          content,
+          contentText: "Shared body",
+          id: "post-3",
+          status: "DRAFT",
+          title: "Shared pick",
+        },
+        status: "SUBMITTED",
+        writer: { name: "Mai", username: "mai" },
+        writerIntro: null,
+      },
+    ])
+
+    render(
+      await DashboardEventRoomPage({
+        params: Promise.resolve({ id: "event-1" }),
+      }),
+    )
+
+    expect(screen.getByText("sharedPost:Shared pick")).toBeVisible()
   })
 })

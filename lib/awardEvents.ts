@@ -1,6 +1,7 @@
 import type { JSONContent } from "@tiptap/react"
 
 type AwardEventRoomStatus = "DRAFT" | "SUBMITTED"
+type AwardEventSelectedPostStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED"
 
 export interface AwardEventWriter {
   name: string
@@ -8,9 +9,14 @@ export interface AwardEventWriter {
 }
 
 export interface AwardEventPostRoom {
-  content: JSONContent
   id: string
   order: number
+  selectedPost: {
+    content: JSONContent
+    id: string
+    status: AwardEventSelectedPostStatus
+    title: string
+  } | null
   status: AwardEventRoomStatus
   writer: AwardEventWriter
   writerIntro: string | null
@@ -78,7 +84,7 @@ function getSectionId(room: AwardEventPostRoom) {
 
 export function getSubmittedAwardEventRooms(rooms: AwardEventPostRoom[]) {
   return [...rooms]
-    .filter((room) => room.status === "SUBMITTED")
+    .filter((room) => room.status === "SUBMITTED" && room.selectedPost)
     .sort((a, b) => a.order - b.order || a.writer.name.localeCompare(b.writer.name))
 }
 
@@ -107,7 +113,7 @@ export function buildAwardEventPostContent({
       content.push(blockquote(room.writerIntro.trim()))
     }
 
-    content.push(...getDocContent(room.content))
+    content.push(...getDocContent(room.selectedPost?.content))
   })
 
   return {
