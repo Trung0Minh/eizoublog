@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import type { AnchorHTMLAttributes } from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -8,6 +8,10 @@ const mocks = vi.hoisted(() => ({
   redirect: vi.fn((path: string) => {
     throw new Error(`redirect:${path}`)
   }),
+  router: {
+    push: vi.fn(),
+    refresh: vi.fn(),
+  },
 }))
 
 vi.mock("next/link", () => ({
@@ -18,7 +22,10 @@ vi.mock("next/link", () => ({
     <a data-prefetch={String(prefetch)} {...props} />
   ),
 }))
-vi.mock("next/navigation", () => ({ redirect: mocks.redirect }))
+vi.mock("next/navigation", () => ({
+  redirect: mocks.redirect,
+  useRouter: () => mocks.router,
+}))
 vi.mock("@/lib/authz", () => ({ getActiveSession: mocks.getActiveSession }))
 vi.mock("@/lib/notifications", () => ({
   getNotifications: mocks.getNotifications,
@@ -34,6 +41,7 @@ vi.mock("@/components/posts/CoAuthorInviteActions", () => ({
   CoAuthorInviteActions: () => <div>Invite actions</div>,
 }))
 
+import { ViewLink } from "@/components/notifications/ViewLink"
 import NotificationsPage from "@/app/(writer)/dashboard/notifications/page"
 
 describe("NotificationsPage", () => {
@@ -105,5 +113,83 @@ describe("NotificationsPage", () => {
 
     expect(screen.getByRole("button", { name: "Đánh dấu tất cả đã đọc" }))
       .toBeDisabled()
+  })
+
+  describe("ViewLink component", () => {
+    it("calls the mark-read API, dispatches event, and navigates on click for commentId", async () => {
+      const fetchSpy = vi.spyOn(global, "fetch").mockResolvedValue({
+        ok: true,
+        json: async () => ({ data: { success: true } }),
+      } as Response)
+
+      const dispatchSpy = vi.spyOn(window, "dispatchEvent")
+
+      render(
+        <ViewLink commentId="comment-1" href="/test-path">
+          Test Comment Link
+        </ViewLink>,
+      )
+
+      const link = screen.getByRole("link", { name: "Test Comment Link" })
+      fireEvent.click(link)
+
+      expect(fetchSpy).toHaveBeenCalledWith("/api/user/notifications/mark-read", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ commentId: "comment-1" }),
+      })
+
+      await waitFor(() => {
+        expect(dispatchSpy).toHaveBeenCalledWith(expect.any(Event))
+        const event = dispatchSpy.mock.calls.find(
+          (call) => call[0].type === "notifications:changed",
+        )?.[0]
+        expect(event).toBeDefined()
+        expect(mocks.router.push).toHaveBeenCalledWith("/test-path")
+      })
+
+      fetchSpy.mockRestore()
+      dispatchSpy.mockRestore()
+    })
+
+    it("calls the mark-read API, dispatches event, and navigates on click for notificationId", async () => {
+      const fetchSpy = vi.spyOn(global, "fetch").mockResolvedValue({
+        ok: true,
+        json: async () => ({ data: { success: true } }),
+      } as Response)
+
+      const dispatchSpy = vi.spyOn(window, "dispatchEvent")
+
+      render(
+        <ViewLink notificationId="notification-1" href="/another-path">
+          Test Notification Link
+        </ViewLink>,
+      )
+
+      const link = screen.getByRole("link", { name: "Test Notification Link" })
+      fireEvent.click(link)
+
+      expect(fetchSpy).toHaveBeenCalledWith("/api/user/notifications/mark-read", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ notificationId: "notification-1" }),
+      })
+
+      await waitFor(() => {
+        expect(dispatchSpy).toHaveBeenCalledWith(expect.any(Event))
+        const event = dispatchSpy.mock.calls.find(
+          (call) => call[0].type === "notifications:changed",
+        )?.[0]
+        expect(event).toBeDefined()
+        expect(mocks.router.push).toHaveBeenCalledWith("/another-path")
+      })
+
+      fetchSpy.mockRestore()
+      dispatchSpy.mockRestore()
+    })
   })
 })

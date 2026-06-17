@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import type { Prisma } from "@prisma/client"
 
 import { MarkCommentsReadButton } from "@/components/notifications/MarkCommentsReadButton"
+import { ViewLink } from "@/components/notifications/ViewLink"
 import { CoAuthorInviteActions } from "@/components/posts/CoAuthorInviteActions"
 import { Button } from "@/components/ui/button"
 import { getActiveSession } from "@/lib/authz"
@@ -137,12 +138,13 @@ export default async function NotificationsPage() {
                       {accepted ? "đã chấp nhận" : "đã từ chối"} lời mời cộng tác
                       cho{" "}
                       {postHref ? (
-                        <Link
+                        <ViewLink
                           className="font-medium text-editorial hover:underline"
                           href={postHref}
+                          notificationId={event.id}
                         >
                           {postTitle}
-                        </Link>
+                        </ViewLink>
                       ) : (
                         <span className="font-medium text-text-primary">
                           {postTitle}
@@ -155,7 +157,9 @@ export default async function NotificationsPage() {
                   </div>
                   {postHref && (
                     <Button asChild size="sm" variant="outline">
-                      <Link href={postHref}>Xem</Link>
+                      <ViewLink href={postHref} notificationId={event.id}>
+                        Xem
+                      </ViewLink>
                     </Button>
                   )}
                 </article>
@@ -194,12 +198,13 @@ export default async function NotificationsPage() {
                         {comment.authorName}
                       </span>{" "}
                       đã bình luận trong{" "}
-                      <Link
+                      <ViewLink
                         className="font-medium text-editorial hover:underline"
                         href={`/${comment.post.slug}#comment-${comment.id}`}
+                        commentId={comment.id}
                       >
                         {comment.post.title}
-                      </Link>
+                      </ViewLink>
                     </p>
                     <p className="mt-2 text-sm leading-6 text-text-primary">
                       {excerpt(comment.content)}
@@ -209,9 +214,12 @@ export default async function NotificationsPage() {
                     </p>
                   </div>
                   <Button asChild size="sm" variant="outline">
-                    <Link href={`/${comment.post.slug}#comment-${comment.id}`}>
+                    <ViewLink
+                      href={`/${comment.post.slug}#comment-${comment.id}`}
+                      commentId={comment.id}
+                    >
                       Xem
-                    </Link>
+                    </ViewLink>
                   </Button>
                 </div>
               </article>
