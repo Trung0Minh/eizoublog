@@ -179,6 +179,7 @@ export async function PATCH(
   try {
     const { id } = await params
     const data = updateSchema.parse(await request.json())
+    let shouldRevalidatePosts = false
 
     const post = await prisma.$transaction(async (tx) => {
       const existing = await tx.post.findUnique({
@@ -229,6 +230,12 @@ export async function PATCH(
       ) {
         throw new RouteError("Forbidden", 403)
       }
+
+      const nextStatus = data.status ?? existing.status
+      shouldRevalidatePosts =
+        existing.status === "PUBLISHED" ||
+        nextStatus === "PUBLISHED" ||
+        data.status === "ARCHIVED"
 
       let publishedAt: Date | null | undefined
       if (data.status === "PUBLISHED" && existing.status === "DRAFT") {
@@ -338,7 +345,9 @@ export async function PATCH(
       })
     })
 
-    revalidateTag("posts", "max")
+    if (shouldRevalidatePosts) {
+      revalidateTag("posts", "max")
+    }
 
     return Response.json({ data: post })
   } catch (error) {

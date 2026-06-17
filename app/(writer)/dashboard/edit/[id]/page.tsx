@@ -18,28 +18,31 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
   }
 
   const { id } = await params
-  const post = await prisma.post.findUnique({
-    select: {
-      authorId: true,
-      categoryId: true,
-      coAuthors: { select: { userId: true, status: true } },
-      content: true,
-      contentText: true,
-      coverAlt: true,
-      coverUrl: true,
-      draftVisibility: true,
-      excerpt: true,
-      id: true,
-      status: true,
-      tags: {
-        select: {
-          tag: { select: { id: true, name: true, slug: true } },
+  const [post, referenceData] = await Promise.all([
+    prisma.post.findUnique({
+      select: {
+        authorId: true,
+        categoryId: true,
+        coAuthors: { select: { userId: true, status: true } },
+        content: true,
+        contentText: true,
+        coverAlt: true,
+        coverUrl: true,
+        draftVisibility: true,
+        excerpt: true,
+        id: true,
+        status: true,
+        tags: {
+          select: {
+            tag: { select: { id: true, name: true, slug: true } },
+          },
         },
+        title: true,
       },
-      title: true,
-    },
-    where: { id },
-  })
+      where: { id },
+    }),
+    getCachedEditorReferenceData(),
+  ])
 
   if (!post) {
     notFound()
@@ -57,11 +60,9 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
     notFound()
   }
 
-  const { categories, writers } = await getCachedEditorReferenceData()
-
   return (
     <PostEditor
-      categories={categories}
+      categories={referenceData.categories}
       currentUserId={session.user.id}
       initialData={{
         categoryId: post.categoryId,
@@ -78,7 +79,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
         tags: post.tags.map(({ tag }) => tag),
         title: post.title,
       }}
-      writers={writers}
+      writers={referenceData.writers}
     />
   )
 }

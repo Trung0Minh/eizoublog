@@ -339,14 +339,16 @@ async function getPublishedPostListByWhere(
     orderBy = [{ publishedAt: "desc" }, { updatedAt: "desc" }]
   }
 
-  const posts = await prisma.post.findMany({
-    orderBy,
-    select: publishedPostListSelect,
-    skip: (page - 1) * pageSize,
-    take: pageSize,
-    where,
-  })
-  const total = await prisma.post.count({ where })
+  const [posts, total] = await Promise.all([
+    prisma.post.findMany({
+      orderBy,
+      select: publishedPostListSelect,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      where,
+    }),
+    prisma.post.count({ where }),
+  ])
 
   return { posts, total }
 }
@@ -362,17 +364,19 @@ export const getCachedPublishedPosts = unstable_cache(
 
 export const getCachedSidebarData = unstable_cache(
   async () => {
-    const categories = await prisma.category.findMany({
-      orderBy: { name: "asc" },
-      select: sidebarCategorySelect,
-      where: { parentId: null },
-    })
-    const recentPosts = await prisma.post.findMany({
-      orderBy: [{ publishedAt: "desc" }, { updatedAt: "desc" }],
-      select: recentPostSelect,
-      take: 5,
-      where: { status: "PUBLISHED" },
-    })
+    const [categories, recentPosts] = await Promise.all([
+      prisma.category.findMany({
+        orderBy: { name: "asc" },
+        select: sidebarCategorySelect,
+        where: { parentId: null },
+      }),
+      prisma.post.findMany({
+        orderBy: [{ publishedAt: "desc" }, { updatedAt: "desc" }],
+        select: recentPostSelect,
+        take: 5,
+        where: { status: "PUBLISHED" },
+      }),
+    ])
 
     return { categories, recentPosts }
   },

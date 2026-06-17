@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { Bell, ChevronDown, FileText, LogOut, PartyPopper, Shield, User } from "lucide-react"
-import type { Role } from "@prisma/client"
 import Link from "next/link"
 import { signOut } from "next-auth/react"
 
@@ -14,46 +13,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  loadSessionUser,
+  type ClientSessionUser,
+} from "@/lib/clientSession"
 import { cn } from "@/lib/utils"
 
-export interface WriterMenuUser {
-  avatarUrl: string | null
-  name: string
-  role?: Role
-  username: string
-}
-
-function getSessionRole(value: unknown): Role | undefined {
-  return value === "ADMIN" || value === "WRITER" || value === "REVOKED"
-    ? value
-    : undefined
-}
-
-export function getSessionUser(value: unknown): WriterMenuUser | null {
-  if (
-    typeof value === "object" &&
-    value !== null &&
-    "user" in value &&
-    typeof value.user === "object" &&
-    value.user !== null &&
-    "name" in value.user &&
-    "username" in value.user &&
-    typeof value.user.name === "string" &&
-    typeof value.user.username === "string"
-  ) {
-    return {
-      avatarUrl:
-        "avatarUrl" in value.user && typeof value.user.avatarUrl === "string"
-          ? value.user.avatarUrl
-          : null,
-      name: value.user.name,
-      role: "role" in value.user ? getSessionRole(value.user.role) : undefined,
-      username: value.user.username,
-    }
-  }
-
-  return null
-}
+export type WriterMenuUser = ClientSessionUser
 
 function getInitials(name: string) {
   return (
@@ -165,13 +131,9 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
 
     async function loadSession() {
       try {
-        const sessionRes = await fetch("/api/auth/session")
-        
-        if (sessionRes.ok) {
-          const result: unknown = await sessionRes.json()
-          if (isMounted) {
-            setLoadedUser(getSessionUser(result))
-          }
+        const sessionUser = await loadSessionUser()
+        if (isMounted) {
+          setLoadedUser(sessionUser)
         }
       } catch {
         if (isMounted) {

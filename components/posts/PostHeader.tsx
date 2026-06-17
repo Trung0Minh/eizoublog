@@ -1,5 +1,6 @@
 import Link from "next/link"
 
+import { PostEditLink } from "@/components/posts/PostEditLink"
 import { formatDate } from "@/lib/utils"
 import { getCoverStyle } from "@/lib/cover-style"
 
@@ -25,8 +26,8 @@ export interface PostHeaderPost {
 }
 
 interface PostHeaderProps {
+  authorUsernames?: string[]
   post: PostHeaderPost
-  canEdit?: boolean
 }
 
 function Avatar({ author }: { author: HeaderAuthor }) {
@@ -48,9 +49,7 @@ function Avatar({ author }: { author: HeaderAuthor }) {
   )
 }
 
-import { Pencil } from "lucide-react"
-
-export function PostHeader({ post, canEdit }: PostHeaderProps) {
+export function PostHeader({ authorUsernames, post }: PostHeaderProps) {
   const authors = [post.author, ...post.coAuthors.map(({ user }) => user)]
   const fallbackTags = [
     { name: "Animation Analysis", slug: "animation-analysis" },
@@ -124,14 +123,8 @@ export function PostHeader({ post, canEdit }: PostHeaderProps) {
           </div>
         </div>
 
-        {canEdit && (
-          <Link
-            href={`/dashboard/edit/${post.id}`}
-            className="flex items-center gap-1.5 rounded-md border border-border-default px-3 py-1.5 text-xs font-medium text-text-primary transition-colors hover:bg-subtle-bg"
-          >
-            <Pencil className="h-3.5 w-3.5" />
-            Edit Post
-          </Link>
+        {authorUsernames && (
+          <PostEditLink authorUsernames={authorUsernames} postId={post.id} />
         )}
       </div>
 

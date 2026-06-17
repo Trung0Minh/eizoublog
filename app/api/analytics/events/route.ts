@@ -1,12 +1,11 @@
 import { ZodError, z } from "zod"
+import { after } from "next/server"
 
-import { auth } from "@/lib/auth"
 import {
   createSessionHash,
   createVisitorHash,
   recordAnalyticsEvent,
   shouldIgnoreAnalyticsPath,
-  shouldIgnoreAnalyticsRole,
 } from "@/lib/internalAnalytics"
 
 const eventSchema = z.object({
@@ -30,12 +29,8 @@ async function parseBody(request: Request) {
 export async function POST(request: Request) {
   try {
     const data = eventSchema.parse(await parseBody(request))
-    const session = await auth()
 
-    if (
-      shouldIgnoreAnalyticsPath(data.path) ||
-      shouldIgnoreAnalyticsRole(session?.user?.role)
-    ) {
+    if (shouldIgnoreAnalyticsPath(data.path)) {
       return Response.json({ data: { tracked: false } }, { status: 202 })
     }
 
@@ -46,16 +41,18 @@ export async function POST(request: Request) {
       visitorHash,
       occurredAt,
     )
-    const result = await recordAnalyticsEvent({
-      data: data.data,
-      eventName: data.eventName,
-      occurredAt,
-      path: data.path,
-      sessionHash,
-      visitorHash,
+    after(async () => {
+      await recordAnalyticsEvent({
+        data: data.data,
+        eventName: data.eventName,
+        occurredAt,
+        path: data.path,
+        sessionHash,
+        visitorHash,
+      })
     })
 
-    return Response.json({ data: result }, { status: 202 })
+    return Response.json({ data: { accepted: true } }, { status: 202 })
   } catch (error) {
     if (error instanceof ZodError || error instanceof SyntaxError) {
       return Response.json({ error: "Invalid request" }, { status: 400 })

@@ -2,18 +2,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
+  after: vi.fn((task: () => Promise<unknown> | unknown) => {
+    void task()
+  }),
   recordAnalyticsEvent: vi.fn(),
 }))
 
 vi.mock("@/lib/auth", () => ({ auth: mocks.auth }))
+vi.mock("next/server", () => ({ after: mocks.after }))
 vi.mock("@/lib/internalAnalytics", () => ({
   createSessionHash: vi.fn(() => "hashed-session"),
   createVisitorHash: vi.fn(() => "hashed-visitor"),
   recordAnalyticsEvent: mocks.recordAnalyticsEvent,
   shouldIgnoreAnalyticsPath: vi.fn((path: string) => path.startsWith("/admin")),
-  shouldIgnoreAnalyticsRole: vi.fn((role?: string) =>
-    ["ADMIN", "REVOKED", "WRITER"].includes(role ?? ""),
-  ),
 }))
 
 import { POST } from "@/app/api/analytics/events/route"
@@ -49,8 +50,10 @@ describe("POST /api/analytics/events", () => {
 
     expect(response.status).toBe(202)
     await expect(response.json()).resolves.toEqual({
-      data: { tracked: true },
+      data: { accepted: true },
     })
+    expect(mocks.auth).not.toHaveBeenCalled()
+    expect(mocks.after).toHaveBeenCalledTimes(1)
     expect(mocks.recordAnalyticsEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         eventName: "post_read",
@@ -61,9 +64,7 @@ describe("POST /api/analytics/events", () => {
     )
   })
 
-  it("ignores logged-in writer/admin traffic", async () => {
-    mocks.auth.mockResolvedValue({ user: { role: "ADMIN" } })
-
+  it("ignores private paths without scheduling analytics work", async () => {
     const response = await POST(
       analyticsRequest({
         eventName: "page_view",
@@ -76,6 +77,8 @@ describe("POST /api/analytics/events", () => {
     await expect(response.json()).resolves.toEqual({
       data: { tracked: false },
     })
+    expect(mocks.auth).not.toHaveBeenCalled()
+    expect(mocks.after).not.toHaveBeenCalled()
     expect(mocks.recordAnalyticsEvent).not.toHaveBeenCalled()
   })
 

@@ -93,7 +93,7 @@ export default async function DashboardPostPreviewPage({
           <div className="mb-6 rounded-[6px] border border-border-default bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
             Previewing saved post content. Edit changes from My posts.
           </div>
-          <PostHeader post={post} canEdit={false} />
+          <PostHeader post={post} />
           <PostBody content={content} />
         </article>
         <aside className="hidden w-[200px] shrink-0 xl:block">

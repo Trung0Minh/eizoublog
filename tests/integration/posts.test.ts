@@ -661,7 +661,7 @@ describe("single post API", () => {
         where: { id: "post-1" },
       }),
     )
-    expect(mocks.revalidateTag).toHaveBeenCalledWith("posts", "max")
+    expect(mocks.revalidateTag).not.toHaveBeenCalledWith("posts", "max")
   })
 
   it("forbids deleting another writer's post", async () => {

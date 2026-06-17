@@ -207,15 +207,12 @@ export function PostEditor({
     scheduleDebounce,
     status: saveStatus,
   } = useAutosave({
+    isDirty,
     onSave: performAutosave,
     postId,
   })
 
   useWarnUnsaved(isDirty)
-
-  const markDirty = useCallback(() => {
-    setIsDirty(true)
-  }, [])
 
   const markDirtyAndAutosave = useCallback(() => {
     setIsDirty(true)

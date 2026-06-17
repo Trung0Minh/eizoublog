@@ -35,6 +35,7 @@ vi.mock("next/navigation", () => ({
 
 afterEach(() => {
   vi.useRealTimers()
+  clearSessionUserCache()
 })
 
 import { Footer } from "@/components/layout/Footer"
@@ -44,6 +45,7 @@ import { PageContainer } from "@/components/layout/PageContainer"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { ThemeToggle } from "@/components/layout/ThemeToggle"
 import { WriterMenu } from "@/components/layout/WriterMenu"
+import { clearSessionUserCache } from "@/lib/clientSession"
 
 describe("ThemeToggle", () => {
   beforeEach(() => {
@@ -128,7 +130,13 @@ describe("Navbar", () => {
       expect(
         screen.getByRole("button", { name: "Mở menu tác giả" }),
       ).toBeInTheDocument()
-      expect(fetchMock).toHaveBeenCalledTimes(2)
+      expect(fetchMock).toHaveBeenCalledWith("/api/auth/session", {
+        cache: "no-store",
+        credentials: "same-origin",
+      })
+      expect(
+        fetchMock.mock.calls.filter((call) => call[0] === "/api/auth/session"),
+      ).toHaveLength(1)
     } finally {
       fetchMock.mockRestore()
     }
@@ -157,23 +165,12 @@ describe("Navbar", () => {
     }
   })
 
-  it("refetches the writer session after navigation", async () => {
+  it("reuses the deferred writer session after navigation", async () => {
     vi.useFakeTimers()
     themeMocks.pathname = "/"
     const fetchMock = vi
       .spyOn(globalThis, "fetch")
-      .mockResolvedValueOnce(new Response(JSON.stringify({ user: null })))
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            user: {
-              avatarUrl: null,
-              name: "Mina Writer",
-              username: "mina",
-            },
-          }),
-        ),
-      )
+      .mockResolvedValue(new Response(JSON.stringify({ user: null })))
 
     try {
       const { rerender } = render(<Navbar />)
@@ -192,9 +189,9 @@ describe("Navbar", () => {
       })
 
       expect(
-        screen.getByRole("button", { name: "Mở menu tác giả" }),
-      ).toBeInTheDocument()
-      expect(fetchMock).toHaveBeenCalledTimes(3)
+        screen.queryByRole("button", { name: "Mở menu tác giả" }),
+      ).not.toBeInTheDocument()
+      expect(fetchMock).toHaveBeenCalledTimes(1)
     } finally {
       fetchMock.mockRestore()
     }

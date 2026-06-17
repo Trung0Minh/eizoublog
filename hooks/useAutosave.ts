@@ -7,6 +7,7 @@ export type SaveStatus = "idle" | "saving" | "saved" | "error"
 interface UseAutosaveOptions {
   debounceMs?: number
   intervalMs?: number
+  isDirty?: boolean
   onSave: () => Promise<void>
   postId: string | null
   retryMs?: number
@@ -15,6 +16,7 @@ interface UseAutosaveOptions {
 export function useAutosave({
   debounceMs = 3000,
   intervalMs = 30_000,
+  isDirty = true,
   onSave,
   postId,
   retryMs = 5000,
@@ -26,6 +28,11 @@ export function useAutosave({
   const pendingRef = useRef(false)
   const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const saveRef = useRef<(() => Promise<void>) | null>(null)
+  const isDirtyRef = useRef(isDirty)
+
+  useEffect(() => {
+    isDirtyRef.current = isDirty
+  }, [isDirty])
 
   const clearRetry = useCallback(() => {
     if (retryRef.current) {
@@ -36,6 +43,7 @@ export function useAutosave({
 
   const save = useCallback(async () => {
     if (!postId) return
+    if (!isDirtyRef.current) return
 
     if (isSavingRef.current) {
       pendingRef.current = true

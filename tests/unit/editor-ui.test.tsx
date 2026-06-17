@@ -115,6 +115,7 @@ import { SpoilerView } from "@/components/editor/SpoilerView"
 import { toVideoEmbedUrl } from "@/components/editor/extensions/VideoEmbedExtension"
 import { VideoEmbedModal } from "@/components/editor/VideoEmbedModal"
 import { PostBody } from "@/components/posts/PostBody"
+import { useAutosave } from "@/hooks/useAutosave"
 
 describe("toVideoEmbedUrl", () => {
   it("converts YouTube watch and short links to embed URLs", () => {
@@ -130,6 +131,34 @@ describe("toVideoEmbedUrl", () => {
     expect(toVideoEmbedUrl("https://player.example.com/video")).toBe(
       "https://player.example.com/video",
     )
+  })
+})
+
+function AutosaveHarness({
+  isDirty,
+  onSave,
+}: {
+  isDirty: boolean
+  onSave: () => Promise<void>
+}) {
+  const { save } = useAutosave({ isDirty, onSave, postId: "post-1" })
+
+  return (
+    <button onClick={() => void save()} type="button">
+      save
+    </button>
+  )
+}
+
+describe("useAutosave", () => {
+  it("does not save when the current draft is clean", async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn().mockResolvedValue(undefined)
+
+    render(<AutosaveHarness isDirty={false} onSave={onSave} />)
+    await user.click(screen.getByRole("button", { name: "save" }))
+
+    expect(onSave).not.toHaveBeenCalled()
   })
 })
 

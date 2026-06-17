@@ -4,6 +4,7 @@ import { useState } from "react"
 
 import { CommentForm } from "@/components/comments/CommentForm"
 import { CommentList } from "@/components/comments/CommentList"
+import { useSessionUser } from "@/lib/clientSession"
 import type { CommentWithReplies } from "@/types"
 
 interface CommentSectionProps {
@@ -25,11 +26,13 @@ export function CommentSection({
   initialComments,
   postId,
   postSlug,
-  isAuthenticated,
+  isAuthenticated: initialIsAuthenticated,
   postAuthorUsernames = [],
 }: CommentSectionProps) {
   const [comments, setComments] =
     useState<CommentWithReplies[]>(initialComments)
+  const { user } = useSessionUser()
+  const isAuthenticated = initialIsAuthenticated ?? Boolean(user)
   const total = countComments(comments)
 
   function handleNewComment(comment: CommentWithReplies) {

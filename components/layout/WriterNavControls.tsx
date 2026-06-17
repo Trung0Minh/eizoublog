@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation"
 
 import { MobileNav } from "@/components/layout/MobileNav"
 import {
-  getSessionUser,
   WriterMenu,
   type WriterMenuUser,
 } from "@/components/layout/WriterMenu"
+import { loadSessionUser } from "@/lib/clientSession"
 
 interface WriterNavControlsProps {
   links: { href: string; label: string }[]
@@ -34,15 +34,9 @@ export function WriterNavControls({ links, user }: WriterNavControlsProps) {
 
     async function loadSession() {
       try {
-        const response = await fetch("/api/auth/session", {
-          cache: "no-store",
-          credentials: "same-origin",
-        })
-        if (!response.ok) return
-
-        const result: unknown = await response.json()
+        const sessionUser = await loadSessionUser()
         if (isMounted) {
-          setLoadedUser(getSessionUser(result))
+          setLoadedUser(sessionUser)
         }
       } catch {
         if (isMounted) {
