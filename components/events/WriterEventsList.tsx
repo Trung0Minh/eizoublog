@@ -74,17 +74,19 @@ export function WriterEventsList({ events }: { events: WriterEventItem[] }) {
           >
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                {room ? (
-                  <Link
-                    className="font-medium text-text-primary hover:underline hover:text-editorial"
-                    href={`/dashboard/events/${event.id}`}
-                    prefetch={false}
-                  >
-                    {event.title}
-                  </Link>
-                ) : (
-                  <h2 className="font-medium text-text-primary">{event.title}</h2>
-                )}
+                <h2 className="font-medium text-text-primary">
+                  {room ? (
+                    <Link
+                      className="hover:underline hover:text-editorial"
+                      href={`/dashboard/events/${event.id}`}
+                      prefetch={false}
+                    >
+                      {event.title}
+                    </Link>
+                  ) : (
+                    event.title
+                  )}
+                </h2>
                 <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                   {event.status}
                 </span>
