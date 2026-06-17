@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 
 const commentSchema = z.object({
   content: z.string().trim().min(1).max(2000),
+  isPrivate: z.boolean().default(false),
 })
 
 async function canAccessRoom({
@@ -29,15 +30,15 @@ async function canAccessRoom({
   })
 
   if (!room || room.eventId !== eventId) {
-    return false
+    return null
   }
 
   if (userRole === "ADMIN" || room.writerId === userId) {
-    return true
+    return room
   }
 
   if (room.visibility !== "PARTICIPANTS") {
-    return false
+    return null
   }
 
   const participant = await prisma.awardEventRoom.findUnique({
@@ -45,7 +46,7 @@ async function canAccessRoom({
     where: { eventId_writerId: { eventId, writerId: userId } },
   })
 
-  return Boolean(participant)
+  return participant ? room : null
 }
 
 export async function GET(
@@ -60,16 +61,20 @@ export async function GET(
 
   try {
     const { id, roomId } = await params
-    const allowed = await canAccessRoom({
+    const room = await canAccessRoom({
       eventId: id,
       roomId,
       userId: activeSession.user.id,
       userRole: activeSession.user.role,
     })
 
-    if (!allowed) {
+    if (!room) {
       return Response.json({ error: "Room not found" }, { status: 404 })
     }
+
+    const isOwnerOrAdmin =
+      activeSession.user.role === "ADMIN" ||
+      room.writerId === activeSession.user.id
 
     const comments = await prisma.awardEventRoomComment.findMany({
       orderBy: { createdAt: "asc" },
@@ -77,10 +82,21 @@ export async function GET(
         author: { select: { name: true, username: true } },
         authorId: true,
         content: true,
+        isPrivate: true,
         createdAt: true,
         id: true,
       },
-      where: { roomId },
+      where: {
+        roomId,
+        ...(isOwnerOrAdmin
+          ? {}
+          : {
+              OR: [
+                { isPrivate: false },
+                { isPrivate: true, authorId: activeSession.user.id },
+              ],
+            }),
+      },
     })
 
     return Response.json({ data: { comments } })
@@ -102,14 +118,14 @@ export async function POST(
 
   try {
     const { id, roomId } = await params
-    const allowed = await canAccessRoom({
+    const room = await canAccessRoom({
       eventId: id,
       roomId,
       userId: activeSession.user.id,
       userRole: activeSession.user.role,
     })
 
-    if (!allowed) {
+    if (!room) {
       return Response.json({ error: "Room not found" }, { status: 404 })
     }
 
@@ -118,11 +134,13 @@ export async function POST(
       data: {
         authorId: activeSession.user.id,
         content: data.content,
+        isPrivate: data.isPrivate,
         roomId,
       },
       select: {
         author: { select: { name: true, username: true } },
         content: true,
+        isPrivate: true,
         createdAt: true,
         id: true,
       },
