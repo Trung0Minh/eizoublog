@@ -321,7 +321,15 @@ function renderNode(node: JSONContent, key: string): ReactNode {
       )
     }
     case "spoiler":
-      return <SpoilerBlock key={key}>{renderChildren(node)}</SpoilerBlock>
+      return (
+        <SpoilerBlock
+          hideLabel={stringAttr(attrs, "hideLabel")}
+          key={key}
+          showLabel={stringAttr(attrs, "showLabel")}
+        >
+          {renderChildren(node)}
+        </SpoilerBlock>
+      )
     case "text":
       return renderTextNode(node, key)
     case "taskItem": {

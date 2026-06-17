@@ -4,8 +4,25 @@ import { Eye, EyeOff } from "lucide-react"
 import { useState } from "react"
 import type { ReactNode } from "react"
 
-export function SpoilerBlock({ children }: { children: ReactNode }) {
+const DEFAULT_HIDE_LABEL = "Hide spoiler"
+const DEFAULT_SHOW_LABEL = "Show spoiler"
+
+function getLabel(value: string | undefined, fallback: string) {
+  return value && value.trim() !== "" ? value : fallback
+}
+
+export function SpoilerBlock({
+  children,
+  hideLabel,
+  showLabel,
+}: {
+  children: ReactNode
+  hideLabel?: string
+  showLabel?: string
+}) {
   const [revealed, setRevealed] = useState(false)
+  const closedLabel = getLabel(showLabel, DEFAULT_SHOW_LABEL)
+  const openLabel = getLabel(hideLabel, DEFAULT_HIDE_LABEL)
 
   return (
     <div className="relative my-4 rounded-md border border-dashed border-yellow-500/50 bg-yellow-50/30 dark:bg-yellow-950/20">
@@ -19,7 +36,7 @@ export function SpoilerBlock({ children }: { children: ReactNode }) {
         ) : (
           <Eye aria-hidden="true" className="h-3 w-3" />
         )}
-        {revealed ? "Hide spoiler" : "Show spoiler"}
+        {revealed ? openLabel : closedLabel}
       </button>
       <div
         className={[

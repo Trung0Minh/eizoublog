@@ -1,11 +1,33 @@
 "use client"
 
 import { Eye, EyeOff } from "lucide-react"
-import { useState } from "react"
-import { NodeViewContent, NodeViewWrapper } from "@tiptap/react"
+import { useEffect, useState } from "react"
+import {
+  NodeViewContent,
+  NodeViewWrapper,
+  type NodeViewProps,
+} from "@tiptap/react"
 
-export function SpoilerView() {
+const DEFAULT_HIDE_LABEL = "Hide spoiler"
+const DEFAULT_SHOW_LABEL = "Show spoiler"
+
+function getLabel(value: unknown, fallback: string) {
+  return typeof value === "string" && value.trim() !== "" ? value : fallback
+}
+
+export function SpoilerView({ node, updateAttributes }: Partial<NodeViewProps>) {
   const [revealed, setRevealed] = useState(false)
+  const [hideLabel, setHideLabel] = useState(() =>
+    getLabel(node?.attrs.hideLabel, DEFAULT_HIDE_LABEL),
+  )
+  const [showLabel, setShowLabel] = useState(() =>
+    getLabel(node?.attrs.showLabel, DEFAULT_SHOW_LABEL),
+  )
+
+  useEffect(() => {
+    setHideLabel(getLabel(node?.attrs.hideLabel, DEFAULT_HIDE_LABEL))
+    setShowLabel(getLabel(node?.attrs.showLabel, DEFAULT_SHOW_LABEL))
+  }, [node?.attrs.hideLabel, node?.attrs.showLabel])
 
   function handleToggle(event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault()
@@ -13,9 +35,31 @@ export function SpoilerView() {
     setRevealed((value) => !value)
   }
 
-  function stopEditorMouseDown(event: React.MouseEvent<HTMLButtonElement>) {
+  function stopEditorMouseDown(event: React.MouseEvent<HTMLElement>) {
     event.preventDefault()
     event.stopPropagation()
+  }
+
+  function stopEditorEvent(
+    event: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>,
+  ) {
+    event.stopPropagation()
+  }
+
+  function updateShowLabel(value: string) {
+    setShowLabel(value)
+    updateAttributes?.({
+      hideLabel,
+      showLabel: value,
+    })
+  }
+
+  function updateHideLabel(value: string) {
+    setHideLabel(value)
+    updateAttributes?.({
+      hideLabel: value,
+      showLabel,
+    })
   }
 
   return (
@@ -33,8 +77,34 @@ export function SpoilerView() {
           ) : (
             <Eye aria-hidden="true" className="h-3 w-3" />
           )}
-          {revealed ? "Hide spoiler" : "Show spoiler"}
+          {revealed ? getLabel(hideLabel, DEFAULT_HIDE_LABEL) : getLabel(showLabel, DEFAULT_SHOW_LABEL)}
         </button>
+        <div
+          className="flex flex-wrap gap-2 border-b border-dashed border-yellow-500/30 bg-yellow-50/60 p-2 pr-28 text-xs dark:bg-yellow-950/20"
+          contentEditable={false}
+          onClick={stopEditorEvent}
+          onKeyDown={stopEditorEvent}
+          onMouseDown={stopEditorMouseDown}
+        >
+          <label className="flex min-w-[150px] flex-1 items-center gap-1.5 text-yellow-900 dark:text-yellow-200">
+            <span className="shrink-0">Show</span>
+            <input
+              aria-label="Show spoiler label"
+              className="h-7 min-w-0 flex-1 rounded border border-yellow-500/30 bg-background px-2 text-xs text-text-primary outline-none focus:border-accent"
+              onChange={(event) => updateShowLabel(event.target.value)}
+              value={showLabel}
+            />
+          </label>
+          <label className="flex min-w-[150px] flex-1 items-center gap-1.5 text-yellow-900 dark:text-yellow-200">
+            <span className="shrink-0">Hide</span>
+            <input
+              aria-label="Hide spoiler label"
+              className="h-7 min-w-0 flex-1 rounded border border-yellow-500/30 bg-background px-2 text-xs text-text-primary outline-none focus:border-accent"
+              onChange={(event) => updateHideLabel(event.target.value)}
+              value={hideLabel}
+            />
+          </label>
+        </div>
         <div
           className={[
             "p-4 transition-all",

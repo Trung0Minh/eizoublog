@@ -12,6 +12,27 @@ declare module "@tiptap/core" {
 }
 
 export const SpoilerExtension = Node.create({
+  addAttributes() {
+    return {
+      hideLabel: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-hide-label"),
+        renderHTML: (attributes) =>
+          typeof attributes.hideLabel === "string" && attributes.hideLabel
+            ? { "data-hide-label": attributes.hideLabel }
+            : {},
+      },
+      showLabel: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-show-label"),
+        renderHTML: (attributes) =>
+          typeof attributes.showLabel === "string" && attributes.showLabel
+            ? { "data-show-label": attributes.showLabel }
+            : {},
+      },
+    }
+  },
+
   addCommands() {
     return {
       toggleSpoiler:

@@ -5,6 +5,7 @@ import {
   waitFor,
   within,
 } from "@testing-library/react"
+import type { ComponentType } from "react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -571,6 +572,34 @@ describe("SpoilerView", () => {
     expect(onMouseDown).not.toHaveBeenCalled()
     expect(onClick).not.toHaveBeenCalled()
   })
+
+  it("updates custom spoiler labels without editing the toggle button directly", async () => {
+    const user = userEvent.setup()
+    const updateAttributes = vi.fn()
+    const SpoilerViewWithProps = SpoilerView as ComponentType<{
+      node: { attrs: { hideLabel?: string; showLabel?: string } }
+      updateAttributes: (attrs: Record<string, string>) => void
+    }>
+
+    render(
+      <SpoilerViewWithProps
+        node={{ attrs: { hideLabel: "Close secret", showLabel: "Big secret" } }}
+        updateAttributes={updateAttributes}
+      />,
+    )
+
+    expect(screen.getByRole("button", { name: /Big secret/ })).toBeVisible()
+
+    await user.clear(screen.getByLabelText("Show spoiler label"))
+    await user.type(screen.getByLabelText("Show spoiler label"), "Do not open")
+    await user.clear(screen.getByLabelText("Hide spoiler label"))
+    await user.type(screen.getByLabelText("Hide spoiler label"), "Close it")
+
+    expect(updateAttributes).toHaveBeenLastCalledWith({
+      hideLabel: "Close it",
+      showLabel: "Do not open",
+    })
+  })
 })
 
 describe("PostBody", () => {
@@ -651,6 +680,10 @@ describe("PostBody", () => {
           type: "videoEmbed",
         },
         {
+          attrs: {
+            hideLabel: "Close secret",
+            showLabel: "Big secret",
+          },
           content: [
             {
               content: [{ text: "Spoiler text", type: "text" }],
@@ -674,7 +707,9 @@ describe("PostBody", () => {
       "src",
       "https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0",
     )
-    expect(screen.getByRole("button", { name: "Show spoiler" })).toBeVisible()
+    expect(screen.getByRole("button", { name: "Big secret" })).toBeVisible()
+    fireEvent.click(screen.getByRole("button", { name: "Big secret" }))
+    expect(screen.getByRole("button", { name: "Close secret" })).toBeVisible()
     expect(screen.getByText("Spoiler text")).toBeVisible()
   })
 

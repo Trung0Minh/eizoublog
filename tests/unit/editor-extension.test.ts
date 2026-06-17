@@ -48,6 +48,34 @@ describe("SpoilerExtension", () => {
     expect(editor.getHTML()).toContain("Major reveal")
     editor.destroy()
   })
+
+  it("serializes custom spoiler labels as node attributes", () => {
+    const editor = new Editor({
+      content: {
+        content: [
+          {
+            attrs: {
+              hideLabel: "Close secret",
+              showLabel: "Big secret",
+            },
+            content: [
+              {
+                content: [{ text: "Major reveal", type: "text" }],
+                type: "paragraph",
+              },
+            ],
+            type: "spoiler",
+          },
+        ],
+        type: "doc",
+      },
+      extensions: [StarterKit, SpoilerExtension],
+    })
+
+    expect(editor.getHTML()).toContain('data-show-label="Big secret"')
+    expect(editor.getHTML()).toContain('data-hide-label="Close secret"')
+    editor.destroy()
+  })
 })
 
 describe("HeadingWithIdExtension", () => {
