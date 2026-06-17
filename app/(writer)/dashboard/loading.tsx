@@ -1,3 +1,5 @@
+import { Loader } from "@/components/ui/Loader"
+
 export default function DashboardLoading() {
   return (
     <main
@@ -6,6 +8,9 @@ export default function DashboardLoading() {
       role="status"
     >
       <span className="sr-only">Loading dashboard</span>
+      <div className="flex justify-center py-4">
+        <Loader aria-hidden="true" label="Loading dashboard" />
+      </div>
       <div className="mb-8 flex items-center justify-between gap-4">
         <div className="space-y-3">
           <div className="h-3 w-24 rounded bg-muted" />

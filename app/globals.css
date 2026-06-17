@@ -126,6 +126,77 @@
     display: none;
   }
 
+  .loader {
+    border-radius: 50%;
+    color: var(--text-primary);
+    display: inline-block;
+    perspective: 1000px;
+    position: relative;
+    transform: rotateZ(45deg);
+  }
+
+  .loader::before,
+  .loader::after {
+    animation: loader-spin 1s linear infinite;
+    border-radius: 50%;
+    content: "";
+    display: block;
+    height: inherit;
+    left: 0;
+    position: absolute;
+    top: 0;
+    transform: rotateX(70deg);
+    width: inherit;
+  }
+
+  .loader::after {
+    animation-delay: 0.4s;
+    color: var(--accent);
+    transform: rotateY(70deg);
+  }
+
+  @keyframes loader-spin {
+    0%,
+    100% {
+      box-shadow: 0.2em 0 0 0 currentcolor;
+    }
+
+    12% {
+      box-shadow: 0.2em 0.2em 0 0 currentcolor;
+    }
+
+    25% {
+      box-shadow: 0 0.2em 0 0 currentcolor;
+    }
+
+    37% {
+      box-shadow: -0.2em 0.2em 0 0 currentcolor;
+    }
+
+    50% {
+      box-shadow: -0.2em 0 0 0 currentcolor;
+    }
+
+    62% {
+      box-shadow: -0.2em -0.2em 0 0 currentcolor;
+    }
+
+    75% {
+      box-shadow: 0 -0.2em 0 0 currentcolor;
+    }
+
+    87% {
+      box-shadow: 0.2em -0.2em 0 0 currentcolor;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .loader::before,
+    .loader::after {
+      animation-duration: 2s;
+    }
+  }
+
   .prose-editor {
     color: var(--text-primary);
     font-family: var(--font-lora), Georgia, serif;
