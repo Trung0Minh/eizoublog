@@ -11,7 +11,6 @@ import {
 } from "@/components/editor/TiptapEditor"
 import { Textarea } from "@/components/ui/textarea"
 import { CoverImageUpload } from "@/components/posts/CoverImageUpload"
-import { DraftVisibilityToggle } from "@/components/posts/DraftVisibilityToggle"
 import { TagInput, type TagOption } from "@/components/posts/TagInput"
 import { useAutosave } from "@/hooks/useAutosave"
 import { useWarnUnsaved } from "@/hooks/useWarnUnsaved"
@@ -131,9 +130,6 @@ export function PostEditor({
     initialData?.tags ?? initialTags,
   )
   const [title, setTitle] = useState(initialData?.title ?? "")
-  const [draftVisibility, setDraftVisibility] = useState<"PRIVATE" | "CO_AUTHORS">(
-    initialData?.draftVisibility ?? "PRIVATE",
-  )
   const coAuthorStatusById = new Map(
     initialData?.coAuthors?.map((coAuthor) => [
       coAuthor.userId,
@@ -148,7 +144,6 @@ export function PostEditor({
     contentText,
     coverAlt,
     coverUrl,
-    draftVisibility,
     excerpt,
     tagIds: selectedTags.map((tag) => tag.id),
     title,
@@ -167,12 +162,11 @@ export function PostEditor({
       contentText,
       coverAlt,
       coverUrl,
-      draftVisibility,
       excerpt,
       tagIds: selectedTags.map((tag) => tag.id),
       title,
     }
-  }, [categoryId, coAuthorIds, content, contentText, coverAlt, coverUrl, draftVisibility, excerpt, selectedTags, title])
+  }, [categoryId, coAuthorIds, content, contentText, coverAlt, coverUrl, excerpt, selectedTags, title])
 
   const performAutosave = useCallback(async () => {
     if (!postId) return
@@ -186,7 +180,8 @@ export function PostEditor({
         contentText: draft.contentText,
         coverAlt: draft.coverAlt || undefined,
         coverUrl: draft.coverUrl || undefined,
-        draftVisibility: draft.draftVisibility,
+        draftVisibility:
+          draft.coAuthorIds.length > 0 ? "CO_AUTHORS" : "PRIVATE",
         excerpt: draft.excerpt,
         tagIds: draft.tagIds,
         title: draft.title,
@@ -222,9 +217,6 @@ export function PostEditor({
   async function savePost(status: "DRAFT" | "PUBLISHED") {
     setError("")
 
-    const hasCoAuthors = coAuthorIds.length > 0
-    const effectiveDraftVisibility = hasCoAuthors ? draftVisibility : "PRIVATE"
-
     const payload = {
       categoryId: categoryId || undefined,
       coAuthorIds,
@@ -232,7 +224,7 @@ export function PostEditor({
       contentText,
       coverAlt: coverAlt || undefined,
       coverUrl: coverUrl || undefined,
-      draftVisibility: effectiveDraftVisibility,
+      draftVisibility: coAuthorIds.length > 0 ? "CO_AUTHORS" : "PRIVATE",
       excerpt,
       status,
       tagIds: selectedTags.map((tag) => tag.id),
@@ -287,10 +279,6 @@ export function PostEditor({
       const nextIds = currentIds.includes(writerId)
         ? currentIds.filter((id) => id !== writerId)
         : [...currentIds, writerId]
-
-      if (nextIds.length === 0) {
-        setDraftVisibility("PRIVATE")
-      }
 
       return nextIds
     })
@@ -379,7 +367,7 @@ export function PostEditor({
                     Cài đặt bài viết
                   </h2>
                   <p className="mt-1.5 text-[12px] leading-relaxed text-text-secondary">
-                    Ảnh bìa, phân loại, cộng tác viên, và quyền truy cập bản nháp.
+                    Ảnh bìa, phân loại, thẻ, và cộng tác viên.
                   </p>
                 </div>
                 <button
@@ -532,14 +520,6 @@ export function PostEditor({
                       </div>
                     )}
 
-                    <DraftVisibilityToggle
-                      hasCoAuthors={coAuthorIds.length > 0}
-                      onChange={(value) => {
-                        setDraftVisibility(value)
-                        markDirtyAndAutosave()
-                      }}
-                      value={draftVisibility}
-                    />
                   </div>
             </>
           )}

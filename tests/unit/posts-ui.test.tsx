@@ -666,7 +666,7 @@ describe("PostEditor", () => {
     vi.useRealTimers()
   })
 
-  it("sends draft visibility when saving a shared draft", async () => {
+  it("shares drafts with co-authors automatically without a visibility toggle", async () => {
     const user = userEvent.setup()
 
     render(
@@ -680,9 +680,11 @@ describe("PostEditor", () => {
     await user.type(screen.getByLabelText("Tiêu đề"), "Shared Draft")
     await user.click(screen.getByRole("button", { name: /^Cài đặt bài viết/ }))
     await user.selectOptions(screen.getByLabelText("Thêm đồng tác giả"), "writer-2")
-    await user.click(
-      screen.getByRole("button", { name: "Hiển thị với đồng tác giả" }),
-    )
+
+    expect(screen.queryByText("Quyền truy cập bản nháp")).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: "Hiển thị với đồng tác giả" }),
+    ).not.toBeInTheDocument()
     await user.click(screen.getByRole("button", { name: /Lưu nháp\s*Nháp/ }))
 
     await waitFor(() => {

@@ -113,7 +113,6 @@ const writerDashboardPostSelect = {
   _count: { select: { comments: true } },
   authorId: true,
   coAuthors: { select: { status: true, userId: true } },
-  draftVisibility: true,
   id: true,
   publishedAt: true,
   slug: true,

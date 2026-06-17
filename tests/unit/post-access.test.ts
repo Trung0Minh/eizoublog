@@ -20,12 +20,12 @@ describe("canViewPost", () => {
     ).toBe(true)
   })
 
-  it("allows admins and primary authors to view private drafts", () => {
+  it("allows admins and primary authors to view drafts", () => {
     expect(canViewPost(privateDraft, "admin-1", "ADMIN")).toBe(true)
     expect(canViewPost(privateDraft, "writer-1", "WRITER")).toBe(true)
   })
 
-  it("hides private drafts from unaccepted co-authors", () => {
+  it("hides drafts from unaccepted co-authors", () => {
     expect(canViewPost(privateDraft, "writer-2", "WRITER")).toBe(false)
   })
 

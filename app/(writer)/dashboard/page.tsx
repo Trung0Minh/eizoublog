@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { Eye, Lock, Pencil } from "lucide-react"
+import { Eye, Pencil } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -56,15 +56,8 @@ export default async function DashboardPage() {
                     ? `Đã xuất bản ${formatDate(post.publishedAt)}`
                     : (
                       <>
-                        {post.draftVisibility === "PRIVATE" && (
-                          <Lock aria-hidden="true" className="h-3 w-3" />
-                        )}
                         <span>
-                          Bản nháp ·{" "}
-                          {post.draftVisibility === "PRIVATE"
-                            ? "Riêng tư"
-                            : "Đã chia sẻ với đồng tác giả"}{" "}
-                          · Đã cập nhật {formatDate(post.updatedAt)}
+                          Bản nháp · Đã cập nhật {formatDate(post.updatedAt)}
                         </span>
                       </>
                     )}
