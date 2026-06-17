@@ -150,6 +150,26 @@ export async function markNotificationsRead(userId: string) {
   })
 }
 
+export async function markCommentRead(commentId: string, user: NotificationUser) {
+  return prisma.comment.updateMany({
+    data: { isRead: true },
+    where: {
+      ...unreadCommentWhere(user),
+      id: commentId,
+    },
+  })
+}
+
+export async function markNotificationRead(notificationId: string, userId: string) {
+  return prisma.notification.updateMany({
+    data: { readAt: new Date() },
+    where: {
+      id: notificationId,
+      userId,
+    },
+  })
+}
+
 export async function createCoAuthorResponseNotification(
   input: CoAuthorResponseNotificationInput,
 ) {
