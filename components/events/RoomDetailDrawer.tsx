@@ -66,16 +66,28 @@ export function RoomDetailDrawer({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!open) return
+  const [prevPostId, setPrevPostId] = useState<string | null>(null)
+  const [prevOpen, setPrevOpen] = useState(false)
 
-    // If no post is selected yet, we don't fetch anything, just clear past state
-    if (!postId) {
-      setPost(null)
-      setComments([])
-      setError(null)
-      return
+  // Adjust state during render when props change to avoid synchronous useEffect updates
+  if (postId !== prevPostId) {
+    setPrevPostId(postId)
+    setPost(null)
+    setComments([])
+    setError(null)
+  }
+
+  if (open !== prevOpen) {
+    setPrevOpen(open)
+    if (!open) {
+      setCommentContent("")
+      setIsPrivate(false)
+      setSubmitError(null)
     }
+  }
+
+  useEffect(() => {
+    if (!open || !postId) return
 
     let isMounted = true
 
@@ -123,15 +135,6 @@ export function RoomDetailDrawer({
     }
   }, [open, eventId, roomId, postId])
 
-  // Reset form inputs when the drawer is opened or closed
-  useEffect(() => {
-    if (!open) {
-      setCommentContent("")
-      setIsPrivate(false)
-      setSubmitError(null)
-    }
-  }, [open])
-
   async function handleCommentSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!commentContent.trim()) return
@@ -178,7 +181,7 @@ export function RoomDetailDrawer({
             Room Details: {writerName}
           </SheetTitle>
           <SheetDescription className="sr-only">
-            Details of writer's event room submission, entry draft, and private or participant feedback.
+            Details of writer&apos;s event room submission, entry draft, and private or participant feedback.
           </SheetDescription>
         </SheetHeader>
 
@@ -186,7 +189,7 @@ export function RoomDetailDrawer({
           {writerIntro && (
             <div className="border-l-2 border-accent pl-4 py-1">
               <blockquote className="text-sm italic text-text-secondary leading-relaxed">
-                "{writerIntro}"
+                &ldquo;{writerIntro}&rdquo;
               </blockquote>
             </div>
           )}

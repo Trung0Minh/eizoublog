@@ -3,7 +3,6 @@
 import type {
   AwardEventRoomStatus,
   AwardEventRoomVisibility,
-  AwardEventStatus,
   PostStatus,
 } from "@prisma/client"
 import { ExternalLink, FileText, MessageSquare, Save, Send } from "lucide-react"
@@ -294,7 +293,7 @@ export function EventRoomEditor({
                 {/* Intro if exists */}
                 {pr.writerIntro && (
                   <p className="text-xs italic text-muted-foreground line-clamp-2">
-                    "{pr.writerIntro}"
+                    &ldquo;{pr.writerIntro}&rdquo;
                   </p>
                 )}
 
