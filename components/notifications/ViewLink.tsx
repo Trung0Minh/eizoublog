@@ -18,34 +18,77 @@ export function ViewLink({
 }: ViewLinkProps) {
   const router = useRouter()
 
-  const handleClick = async (e: MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault()
+  const isModifiedEvent = (event: MouseEvent<HTMLAnchorElement>) => {
+    return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey)
+  }
+
+  const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    if (onClick) {
+      onClick(e)
+    }
 
     const body: { commentId?: string; notificationId?: string } = {}
     if (commentId) body.commentId = commentId
     if (notificationId) body.notificationId = notificationId
 
-    if (commentId || notificationId) {
-      try {
-        await fetch("/api/user/notifications/mark-read", {
+    const hasTarget = props.target && props.target !== "_self"
+
+    if (
+      e.defaultPrevented ||
+      e.button !== 0 || // not left click
+      isModifiedEvent(e) ||
+      hasTarget
+    ) {
+      // Let browser handle native new tab/window behavior
+      if (commentId || notificationId) {
+        fetch("/api/user/notifications/mark-read", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(body),
+          keepalive: true,
+        }).catch((err) => {
+          console.error("Failed to mark as read in background:", err)
         })
-      } catch (error) {
-        console.error("Failed to mark notification or comment as read:", error)
       }
+      return
+    }
+
+    // Normal client-side SPA navigation - non-blocking
+    e.preventDefault()
+
+    if (commentId || notificationId) {
+      fetch("/api/user/notifications/mark-read", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+        keepalive: true,
+      })
+        .then((res) => {
+          if (!res.ok) {
+            console.error("Failed to mark notification/comment as read:", res.statusText)
+          }
+        })
+        .catch((error) => {
+          console.error("Failed to mark notification or comment as read:", error)
+        })
     }
 
     window.dispatchEvent(new Event("notifications:changed"))
 
-    if (onClick) {
-      onClick(e)
+    let targetHref = ""
+    if (typeof href === "string") {
+      targetHref = href
+    } else {
+      const queryStr = href.query
+        ? `?${new URLSearchParams(href.query as Record<string, string>).toString()}`
+        : ""
+      const hashStr = href.hash ? `#${href.hash.replace(/^#/, "")}` : ""
+      targetHref = `${href.pathname || ""}${queryStr}${hashStr}`
     }
-
-    const targetHref = typeof href === "string" ? href : (href.href || href.pathname || "")
     router.push(targetHref)
   }
 

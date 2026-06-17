@@ -139,6 +139,7 @@ describe("NotificationsPage", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ commentId: "comment-1" }),
+        keepalive: true,
       })
 
       await waitFor(() => {
@@ -177,6 +178,7 @@ describe("NotificationsPage", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ notificationId: "notification-1" }),
+        keepalive: true,
       })
 
       await waitFor(() => {
