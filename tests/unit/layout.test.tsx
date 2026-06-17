@@ -63,6 +63,35 @@ describe("ThemeToggle", () => {
 
     expect(themeMocks.setTheme).toHaveBeenCalledWith("dark")
   })
+
+  it("uses view transitions when supported by browser", async () => {
+    const startTransitionSpy = vi.fn((cb) => {
+      cb()
+      return {
+        ready: Promise.resolve(),
+      }
+    })
+    document.startViewTransition = startTransitionSpy as any
+
+    const animateSpy = vi.fn()
+    document.documentElement.animate = animateSpy
+
+    const user = userEvent.setup()
+    render(<ThemeToggle />)
+
+    const button = await screen.findByRole("button", { name: "Switch to dark mode" })
+    await user.click(button)
+
+    expect(startTransitionSpy).toHaveBeenCalled()
+    expect(themeMocks.setTheme).toHaveBeenCalledWith("dark")
+    
+    // We wait for microtasks/promises to resolve
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(animateSpy).toHaveBeenCalled()
+
+    delete (document as any).startViewTransition
+    delete (document as any).documentElement.animate
+  })
 })
 
 describe("Navbar", () => {
