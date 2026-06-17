@@ -259,6 +259,7 @@ model AwardEventRoomComment {
   authorId  String
   content   String   @db.Text
   isPrivate Boolean  @default(false)
+  isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 
   room   AwardEventRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)

@@ -38,7 +38,6 @@ describe("EventRoomEditor", () => {
           visibility: "PRIVATE",
           writerIntro: null,
         }}
-        participantRooms={[]}
       />,
     )
 
@@ -47,46 +46,5 @@ describe("EventRoomEditor", () => {
     expect(screen.queryByTestId("event-editor")).not.toBeInTheDocument()
     expect(screen.getByRole("button", { name: /Save/i })).toBeVisible()
     expect(screen.getByRole("button", { name: /Submit/i })).toBeVisible()
-  })
-
-  it("renders other participants with shared posts in the list", () => {
-    render(
-      <EventRoomEditor
-        eligiblePosts={[]}
-        event={{
-          finalPost: null,
-          id: "event-1",
-          status: "OPEN",
-          title: "Awards",
-        }}
-        room={{
-          id: "room-1",
-          postId: null,
-          selectedPost: null,
-          status: "DRAFT",
-          visibility: "PRIVATE",
-          writerIntro: null,
-        }}
-        participantRooms={[
-          {
-            id: "room-2",
-            postId: "post-2",
-            selectedPost: {
-              id: "post-2",
-              status: "DRAFT",
-              title: "Shared post",
-            },
-            status: "SUBMITTED",
-            visibility: "PARTICIPANTS",
-            writer: { id: "writer-2", name: "Mai", username: "mai", avatarUrl: null },
-            writerIntro: null,
-          },
-        ]}
-      />,
-    )
-
-    expect(screen.getByText("Mai")).toBeVisible()
-    expect(screen.getByText("Shared post")).toBeVisible()
-    expect(screen.getByRole("button", { name: /View & Comment/i })).toBeVisible()
   })
 })
