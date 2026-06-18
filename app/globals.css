@@ -238,10 +238,9 @@
     color: var(--text-secondary);
     font-size: 0.875rem;
     font-weight: 650;
-    letter-spacing: 0.04em;
+    letter-spacing: 0;
     margin-bottom: 0.35em;
     margin-top: 1.6em;
-    text-transform: uppercase;
   }
 
   .prose-editor ul,
@@ -294,12 +293,12 @@
   .editor-highlight {
     background-color: #fef08a;
     border-radius: 2px;
-    color: #111111;
+    color: #000000 !important;
     padding: 0 0.12em;
   }
 
   .editor-highlight * {
-    color: inherit;
+    color: inherit !important;
   }
 
   .prose-editor .task-list,
@@ -415,10 +414,9 @@
     color: var(--text-secondary);
     font-size: 0.875rem;
     font-weight: 650;
-    letter-spacing: 0.04em;
+    letter-spacing: 0;
     margin-bottom: 0.35em;
     margin-top: 1.6em;
-    text-transform: uppercase;
   }
 
   .post-content a {

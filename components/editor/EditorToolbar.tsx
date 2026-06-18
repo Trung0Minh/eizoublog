@@ -30,6 +30,7 @@ import {
 import { useRef, useState } from "react"
 import { createPortal } from "react-dom"
 
+import { LinkEditModal } from "@/components/editor/LinkEditModal"
 import { MediaUpload } from "@/components/editor/MediaUpload"
 import { VideoEmbedModal } from "@/components/editor/VideoEmbedModal"
 import { serializeGalleryImages } from "@/components/editor/gallery"
@@ -78,8 +79,9 @@ function ToolbarButton({
         }
       }}
       onMouseDown={(event) => {
+        event.preventDefault()
+
         if (trigger === "mousedown") {
-          event.preventDefault()
           onClick()
         }
       }}
@@ -105,29 +107,13 @@ export function EditorToolbar({
   spellcheckEnabled?: boolean
 }) {
   const [showVideoModal, setShowVideoModal] = useState(false)
+  const [showLinkModal, setShowLinkModal] = useState(false)
   const [showHighlightMenu, setShowHighlightMenu] = useState(false)
   const [highlightMenuPosition, setHighlightMenuPosition] = useState({
     left: 0,
     top: 0,
   })
   const highlightButtonRef = useRef<HTMLDivElement>(null)
-
-  function setLink() {
-    const previous = editor.getAttributes("link").href
-    const previousUrl = typeof previous === "string" ? previous : "https://"
-    const url = window.prompt("Enter URL:", previousUrl)
-
-    if (url === null) {
-      return
-    }
-
-    if (url === "") {
-      editor.chain().focus().unsetLink().run()
-      return
-    }
-
-    editor.chain().focus().setLink({ href: url }).run()
-  }
 
   function toggleHighlightMenu() {
     const rect = highlightButtonRef.current?.getBoundingClientRect()
@@ -350,8 +336,9 @@ export function EditorToolbar({
 
         <ToolbarButton
           active={editor.isActive("link")}
-          onClick={setLink}
+          onClick={() => setShowLinkModal(true)}
           title="Insert / edit link"
+          trigger="click"
         >
           <Link2 aria-hidden="true" className="h-[15px] w-[15px]" />
         </ToolbarButton>
@@ -406,6 +393,24 @@ export function EditorToolbar({
         </ToolbarButton>
       </div>
 
+      {showLinkModal && (
+        <LinkEditModal
+          initialUrl={
+            typeof editor.getAttributes("link").href === "string"
+              ? editor.getAttributes("link").href
+              : ""
+          }
+          onClose={() => setShowLinkModal(false)}
+          onRemove={() => {
+            editor.chain().focus().unsetLink().run()
+            setShowLinkModal(false)
+          }}
+          onSubmit={(url) => {
+            editor.chain().focus().setLink({ href: url }).run()
+            setShowLinkModal(false)
+          }}
+        />
+      )}
       {showVideoModal && (
         <VideoEmbedModal
           onClose={() => setShowVideoModal(false)}
