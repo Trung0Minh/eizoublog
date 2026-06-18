@@ -6,7 +6,10 @@ import Link from "next/link"
 import { ThemeToggle } from "@/components/layout/ThemeToggle"
 import { SaveStatusIndicator } from "@/components/editor/SaveStatusIndicator"
 import { Button } from "@/components/ui/button"
+import { Loader } from "@/components/ui/Loader"
 import type { SaveStatus } from "@/hooks/useAutosave"
+
+type PendingAction = "draft" | "publish" | null
 
 interface EditorTopBarProps {
   autosaveHint?: string
@@ -15,6 +18,7 @@ interface EditorTopBarProps {
   isPending: boolean
   isSettingsOpen?: boolean
   isPublished: boolean
+  pendingAction?: PendingAction
   onToggleSettings?: () => void
   onPublish: () => void
   onSaveDraft: () => void
@@ -29,6 +33,7 @@ export function EditorTopBar({
   isPending,
   isSettingsOpen = false,
   isPublished,
+  pendingAction = null,
   onToggleSettings,
   onPublish,
   onSaveDraft,
@@ -36,6 +41,10 @@ export function EditorTopBar({
   titlePreview,
 }: EditorTopBarProps) {
   const actionsDisabled = isPending || !canSave
+  const isDraftPending = pendingAction === "draft"
+  const isPublishPending = pendingAction === "publish"
+  const publishLabel = isPublished ? "Cập nhật" : "Xuất bản"
+  const publishPendingLabel = isPublished ? "Đang cập nhật..." : "Đang xuất bản..."
   const statusText = canSave
     ? autosaveHint
     : "Thêm tiêu đề để có thể lưu và xuất bản."
@@ -98,8 +107,11 @@ export function EditorTopBar({
             type="button"
             variant="outline"
           >
-            <span className="hidden md:inline">Lưu nháp</span>
-            <span className="md:hidden">Nháp</span>
+            {isDraftPending && <Loader aria-hidden="true" size="sm" />}
+            <span className="hidden md:inline">
+              {isDraftPending ? "Đang lưu..." : "Lưu nháp"}
+            </span>
+            <span className="md:hidden">{isDraftPending ? "..." : "Nháp"}</span>
           </Button>
           <Button
             className="h-8 px-3.5 font-semibold"
@@ -108,7 +120,8 @@ export function EditorTopBar({
             size="sm"
             type="button"
           >
-            {isPublished ? "Cập nhật" : "Xuất bản"}
+            {isPublishPending && <Loader aria-hidden="true" size="sm" />}
+            {isPublishPending ? publishPendingLabel : publishLabel}
           </Button>
         </div>
       </div>

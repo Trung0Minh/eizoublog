@@ -35,10 +35,13 @@ import { serializeGalleryImages } from "@/components/editor/gallery"
 
 const HIGHLIGHT_COLORS = [
   { color: "#fef08a", label: "amber" },
+  { color: "#fed7aa", label: "orange" },
   { color: "#fecdd3", label: "rose" },
+  { color: "#fbcfe8", label: "pink" },
   { color: "#bfdbfe", label: "blue" },
   { color: "#bbf7d0", label: "green" },
   { color: "#ddd6fe", label: "violet" },
+  { color: "#e5e7eb", label: "gray" },
 ]
 
 interface ToolbarButtonProps {
@@ -68,7 +71,7 @@ function ToolbarButton({
         disabled ? "cursor-not-allowed opacity-40" : "",
       ].join(" ")}
       disabled={disabled}
-      onClick={(event) => {
+      onClick={() => {
         if (trigger === "click") {
           onClick()
         }
@@ -101,6 +104,7 @@ export function EditorToolbar({
   spellcheckEnabled?: boolean
 }) {
   const [showVideoModal, setShowVideoModal] = useState(false)
+  const [showHighlightMenu, setShowHighlightMenu] = useState(false)
 
   function setLink() {
     const previous = editor.getAttributes("link").href
@@ -165,39 +169,51 @@ export function EditorToolbar({
           <Code aria-hidden="true" className="h-[15px] w-[15px]" />
         </ToolbarButton>
 
-        <div className="flex items-center gap-0.5 pl-1">
-          <Highlighter aria-hidden="true" className="h-[15px] w-[15px] text-text-tertiary" />
-          {HIGHLIGHT_COLORS.map(({ color, label }) => (
-            <button
-              aria-label={`Highlight ${label}`}
-              className={[
-                "h-[18px] w-[18px] rounded-full border transition-transform hover:scale-110",
-                editor.isActive("highlight", { color })
-                  ? "border-text-primary ring-1 ring-text-primary"
-                  : "border-border-strong",
-              ].join(" ")}
-              key={color}
-              onMouseDown={(event) => {
-                event.preventDefault()
-                editor.chain().focus().setHighlight({ color }).run()
-              }}
-              style={{ backgroundColor: color }}
-              title={`Highlight ${label}`}
-              type="button"
-            />
-          ))}
-          <button
-            aria-label="Clear highlight"
-            className="flex h-[18px] w-[18px] items-center justify-center rounded-full border border-border-strong text-[10px] text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary"
-            onMouseDown={(event) => {
-              event.preventDefault()
-              editor.chain().focus().unsetHighlight().run()
-            }}
-            title="Clear highlight"
-            type="button"
+        <div className="relative">
+          <ToolbarButton
+            active={editor.isActive("highlight")}
+            onClick={() => setShowHighlightMenu((current) => !current)}
+            title="Highlight color"
           >
-            ×
-          </button>
+            <Highlighter aria-hidden="true" className="h-[15px] w-[15px]" />
+          </ToolbarButton>
+          {showHighlightMenu && (
+            <div className="absolute left-0 top-9 z-[80] grid w-[148px] grid-cols-4 gap-1 rounded-[6px] border border-border-default bg-background p-2 shadow-lg">
+              {HIGHLIGHT_COLORS.map(({ color, label }) => (
+                <button
+                  aria-label={`Highlight ${label}`}
+                  className={[
+                    "h-7 w-7 rounded-full border transition-transform hover:scale-110",
+                    editor.isActive("highlight", { color })
+                      ? "border-text-primary ring-1 ring-text-primary"
+                      : "border-border-strong",
+                  ].join(" ")}
+                  key={color}
+                  onMouseDown={(event) => {
+                    event.preventDefault()
+                    editor.chain().focus().setHighlight({ color }).run()
+                    setShowHighlightMenu(false)
+                  }}
+                  style={{ backgroundColor: color }}
+                  title={`Highlight ${label}`}
+                  type="button"
+                />
+              ))}
+              <button
+                aria-label="Clear highlight"
+                className="col-span-4 flex h-7 items-center justify-center rounded-[4px] border border-border-default text-xs text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary"
+                onMouseDown={(event) => {
+                  event.preventDefault()
+                  editor.chain().focus().unsetHighlight().run()
+                  setShowHighlightMenu(false)
+                }}
+                title="Clear highlight"
+                type="button"
+              >
+                Clear
+              </button>
+            </div>
+          )}
         </div>
 
         <Divider />

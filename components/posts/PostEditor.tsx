@@ -125,6 +125,7 @@ export function PostEditor({
   const [excerpt, setExcerpt] = useState(initialData?.excerpt ?? "")
   const [isDirty, setIsDirty] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [savingAction, setSavingAction] = useState<"draft" | "publish" | null>(null)
   const [postId, setPostId] = useState<string | null>(initialData?.id ?? null)
   const [selectedTags, setSelectedTags] = useState<TagOption[]>(
     initialData?.tags ?? initialTags,
@@ -215,7 +216,9 @@ export function PostEditor({
   }, [scheduleDebounce])
 
   async function savePost(status: "DRAFT" | "PUBLISHED") {
+    setSavingAction(status === "PUBLISHED" ? "publish" : "draft")
     setError("")
+    let isNavigatingAway = false
 
     const payload = {
       categoryId: categoryId || undefined,
@@ -254,6 +257,7 @@ export function PostEditor({
 
       if (status === "PUBLISHED") {
         setIsDirty(false)
+        isNavigatingAway = true
         router.push(`/${post.slug}`)
         return
       }
@@ -270,6 +274,10 @@ export function PostEditor({
       setError(
         saveError instanceof Error ? saveError.message : "Something went wrong",
       )
+    } finally {
+      if (!isNavigatingAway) {
+        setSavingAction(null)
+      }
     }
   }
 
@@ -329,11 +337,12 @@ export function PostEditor({
         autosaveHint={autosaveHint}
         canSave={canSave}
         exitHref="/dashboard"
-        isPending={isPending}
+        isPending={isPending || savingAction !== null}
         isSettingsOpen={isSettingsOpen}
         isPublished={initialData?.status === "PUBLISHED"}
         onPublish={() => startTransition(() => void savePost("PUBLISHED"))}
         onSaveDraft={() => startTransition(() => void savePost("DRAFT"))}
+        pendingAction={savingAction}
         onToggleSettings={() => setIsSettingsOpen((current) => !current)}
         saveStatus={saveStatus}
         titlePreview={title}

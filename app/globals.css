@@ -73,7 +73,7 @@
     --subtle-bg: #1e1e1e;
     --text-primary: #e8e8e8;
     --text-secondary: #888888;
-    --text-tertiary: #555555;
+    --text-tertiary: #a3a3a3;
     --border-default: #2a2a2a;
     --border-strong: #404040;
     --accent: #e05c4a;
@@ -233,6 +233,16 @@
     margin-top: 2em;
   }
 
+  .prose-editor h4 {
+    font-family: var(--font-inter), system-ui, sans-serif;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.35em;
+    margin-top: 1.6em;
+    text-transform: uppercase;
+  }
+
   .prose-editor ul,
   .prose-editor ol {
     margin-bottom: 0.8em;
@@ -283,7 +293,12 @@
   .editor-highlight {
     background: color-mix(in srgb, var(--accent) 18%, transparent);
     border-radius: 2px;
+    color: #111111;
     padding: 0 0.12em;
+  }
+
+  .editor-highlight * {
+    color: inherit;
   }
 
   .prose-editor .task-list,
@@ -328,7 +343,7 @@
     border-top: 2px solid var(--border-strong);
     margin-bottom: 2.5em;
     margin-top: 2.5em;
-    width: 48%;
+    width: 100%;
   }
 
   .prose-editor img {
@@ -394,6 +409,16 @@
     margin-top: 2em;
   }
 
+  .post-content h4 {
+    font-family: var(--font-inter), system-ui, sans-serif;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.35em;
+    margin-top: 1.6em;
+    text-transform: uppercase;
+  }
+
   .post-content a {
     border-bottom: 1px solid transparent;
     color: var(--accent);
@@ -456,7 +481,7 @@
     border-top: 2px solid var(--border-strong);
     margin-bottom: 3em;
     margin-top: 3em;
-    width: 48%;
+    width: 100%;
   }
 
   .image-gallery {
@@ -526,6 +551,12 @@
     margin-top: 0.5rem;
     min-height: calc(0.75rem * 1.35);
     text-align: center;
+  }
+
+  .dark .post-content figcaption,
+  .dark .post-content .media-caption,
+  .dark .image-gallery__caption {
+    color: #b8b8b8;
   }
 
   .post-content pre,

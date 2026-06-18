@@ -504,8 +504,11 @@ describe("EditorToolbar", () => {
 
     render(<EditorToolbar editor={editor as never} />)
 
+    fireEvent.mouseDown(screen.getByRole("button", { name: "Highlight color" }))
     fireEvent.mouseDown(screen.getByRole("button", { name: "Highlight amber" }))
+    fireEvent.mouseDown(screen.getByRole("button", { name: "Highlight color" }))
     fireEvent.mouseDown(screen.getByRole("button", { name: "Highlight rose" }))
+    fireEvent.mouseDown(screen.getByRole("button", { name: "Highlight color" }))
     fireEvent.mouseDown(screen.getByRole("button", { name: "Clear highlight" }))
     fireEvent.mouseDown(screen.getByRole("button", { name: "Align left" }))
     fireEvent.mouseDown(screen.getByRole("button", { name: "Align center" }))
