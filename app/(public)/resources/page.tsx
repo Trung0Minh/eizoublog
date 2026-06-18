@@ -1,6 +1,7 @@
 import { Metadata } from "next"
 
 import { PageContainer } from "@/components/layout/PageContainer"
+import { auth } from "@/lib/auth"
 import { getAppName } from "@/lib/seo"
 import { prisma } from "@/lib/prisma"
 import { ResourcesClient } from "./ResourcesClient"
@@ -12,6 +13,8 @@ export const metadata: Metadata = {
 
 export default async function ResourcesPage() {
   const appName = getAppName()
+  const session = await auth()
+  const isAdmin = session?.user?.role === "ADMIN"
 
   const page = await prisma.sitePage.findUnique({
     where: { slug: "resources" },
@@ -19,7 +22,7 @@ export default async function ResourcesPage() {
 
   return (
     <PageContainer>
-      <ResourcesClient initialPage={page} isAdmin={false} appName={appName} />
+      <ResourcesClient initialPage={page} isAdmin={isAdmin} appName={appName} />
     </PageContainer>
   )
 }

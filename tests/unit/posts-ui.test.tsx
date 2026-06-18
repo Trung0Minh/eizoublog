@@ -704,7 +704,7 @@ describe("PostEditor", () => {
   })
 })
 
-import HomePage, { HomePostList } from "@/app/(public)/page"
+import { HomePostList } from "@/app/(public)/HomePostList"
 
 describe("HomePage sorting UI", () => {
   beforeEach(() => {

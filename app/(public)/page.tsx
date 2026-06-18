@@ -4,24 +4,18 @@ import type { Metadata } from "next"
 import { PageContainer } from "@/components/layout/PageContainer"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { NewsletterForm } from "@/components/newsletter/NewsletterForm"
-import { PostList } from "@/components/posts/PostList"
-import { PostSortTabs } from "@/components/posts/PostSortTabs"
+import { HomePostList } from "@/app/(public)/HomePostList"
 import {
   PostListSkeleton,
   SidebarSkeleton,
 } from "@/components/posts/PostListSkeleton"
-import { getCachedPublishedPosts, getCachedSidebarData } from "@/lib/queries"
-import {
-  parsePostListSort,
-  type PostListSort,
-} from "@/lib/postListSort"
+import { getCachedSidebarData } from "@/lib/queries"
+import { parsePostListSort } from "@/lib/postListSort"
 import { buildMetadata, getAppUrl } from "@/lib/seo"
 
 interface HomePageProps {
   searchParams: Promise<{ page?: string; sort?: string }>
 }
-
-const PAGE_SIZE = 10
 
 function parsePage(page?: string) {
   const parsedPage = Number(page ?? "1")
@@ -66,25 +60,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </Suspense>
       </div>
     </PageContainer>
-  )
-}
-
-export async function HomePostList({ page, sort }: { page: number; sort: PostListSort }) {
-  const { posts, total } = await getCachedPublishedPosts(page, PAGE_SIZE, sort)
-
-  return (
-    <div className="flex flex-col">
-      <div className="mb-6 flex flex-col justify-between gap-4 border-b pb-4 sm:flex-row sm:items-center">
-        <h2 className="text-xl font-bold tracking-tight text-text-primary">Bài viết đã xuất bản</h2>
-        <PostSortTabs basePath="/" sort={sort} />
-      </div>
-
-      <PostList
-        emptyMessage="Chưa có bài viết nào được xuất bản."
-        pagination={{ page, pageSize: PAGE_SIZE, total }}
-        posts={posts}
-      />
-    </div>
   )
 }
 

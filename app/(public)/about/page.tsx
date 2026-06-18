@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 
 import { PageContainer } from "@/components/layout/PageContainer"
+import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { buildMetadata, getAppName } from "@/lib/seo"
 import { AboutClient } from "./AboutClient"
@@ -17,6 +18,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function AboutPage() {
   const appName = getAppName()
+  const session = await auth()
+  const isAdmin = session?.user?.role === "ADMIN"
 
   const page = await prisma.sitePage.findUnique({
     where: { slug: "about" },
@@ -24,7 +27,7 @@ export default async function AboutPage() {
 
   return (
     <PageContainer>
-      <AboutClient initialPage={page} isAdmin={false} appName={appName} />
+      <AboutClient initialPage={page} isAdmin={isAdmin} appName={appName} />
     </PageContainer>
   )
 }
