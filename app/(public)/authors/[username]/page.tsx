@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { PageContainer } from "@/components/layout/PageContainer"
-import { PostList } from "@/components/posts/PostList"
+import { CompactPostList } from "@/components/posts/CompactPostList"
 import { PostSortTabs } from "@/components/posts/PostSortTabs"
 import { StaticPostContent } from "@/components/posts/StaticPostContent"
 import {
@@ -113,7 +113,7 @@ export default async function AuthorPage({
         <div className="flex justify-end">
           <PostSortTabs basePath={`/authors/${username}`} sort={sort} />
         </div>
-        <PostList
+        <CompactPostList
           emptyMessage="This author has no published posts yet."
           pagination={{
             page,

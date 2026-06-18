@@ -3,9 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 interface UseEditorOptions {
   editorProps?: {
-    attributes?: {
-      class?: string
-    }
+      attributes?: {
+        class?: string
+        spellcheck?: string
+      }
   }
 }
 
@@ -46,6 +47,12 @@ function getEditorClass() {
   return options?.editorProps?.attributes?.class ?? ""
 }
 
+function getEditorSpellcheck() {
+  const options = useEditorMock.calls.at(-1) as UseEditorOptions | undefined
+
+  return options?.editorProps?.attributes?.spellcheck
+}
+
 describe("TiptapEditor", () => {
   beforeEach(() => {
     useEditorMock.calls.length = 0
@@ -58,6 +65,12 @@ describe("TiptapEditor", () => {
     expect(getEditorClass()).toContain("prose-editor")
     expect(getEditorClass()).toContain("min-h-[420px]")
     expect(getEditorClass()).not.toContain("prose prose-lg")
+  })
+
+  it("disables browser spellcheck by default for write mode", () => {
+    render(<TiptapEditor editable />)
+
+    expect(getEditorSpellcheck()).toBe("false")
   })
 
   it("keeps read-mode typography classes when not editable", () => {

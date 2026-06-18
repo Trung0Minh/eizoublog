@@ -13,7 +13,6 @@ interface VideoEmbedModalProps {
 }
 
 export function VideoEmbedModal({ onClose, onInsert }: VideoEmbedModalProps) {
-  const [caption, setCaption] = useState("")
   const [mounted, setMounted] = useState(false)
   const [url, setUrl] = useState("")
 
@@ -28,7 +27,7 @@ export function VideoEmbedModal({ onClose, onInsert }: VideoEmbedModalProps) {
       return
     }
 
-    onInsert(trimmedUrl, caption.trim())
+    onInsert(trimmedUrl, "")
   }
 
   function handleKeyDown(event: React.KeyboardEvent) {
@@ -83,22 +82,6 @@ export function VideoEmbedModal({ onClose, onInsert }: VideoEmbedModalProps) {
               required
               type="url"
               value={url}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="video-caption">
-              Caption{" "}
-              <span className="font-normal text-muted-foreground">
-                (optional)
-              </span>
-            </label>
-            <Input
-              id="video-caption"
-              onChange={(event) => setCaption(event.target.value)}
-              placeholder="Brief description of the video..."
-              type="text"
-              value={caption}
             />
           </div>
 

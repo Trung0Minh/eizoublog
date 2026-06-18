@@ -5,7 +5,6 @@ import {
   waitFor,
   within,
 } from "@testing-library/react"
-import type { ComponentType } from "react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -488,12 +487,13 @@ describe("EditorToolbar", () => {
     expect(chain.liftListItem).toHaveBeenCalledWith("listItem")
   })
 
-  it("supports highlight, text alignment, and task list toolbar actions", () => {
+  it("supports highlight colors, text alignment, and task list toolbar actions", () => {
     const chain = {
       focus: vi.fn(() => chain),
       run: vi.fn(() => true),
+      setHighlight: vi.fn(() => chain),
       setTextAlign: vi.fn(() => chain),
-      toggleHighlight: vi.fn(() => chain),
+      unsetHighlight: vi.fn(() => chain),
       toggleTaskList: vi.fn(() => chain),
     }
     const editor = {
@@ -504,22 +504,47 @@ describe("EditorToolbar", () => {
 
     render(<EditorToolbar editor={editor as never} />)
 
-    fireEvent.mouseDown(screen.getByRole("button", { name: "Highlight" }))
+    fireEvent.mouseDown(screen.getByRole("button", { name: "Highlight amber" }))
+    fireEvent.mouseDown(screen.getByRole("button", { name: "Highlight rose" }))
+    fireEvent.mouseDown(screen.getByRole("button", { name: "Clear highlight" }))
     fireEvent.mouseDown(screen.getByRole("button", { name: "Align left" }))
     fireEvent.mouseDown(screen.getByRole("button", { name: "Align center" }))
     fireEvent.mouseDown(screen.getByRole("button", { name: "Align right" }))
     fireEvent.mouseDown(screen.getByRole("button", { name: "Task list" }))
 
-    expect(chain.toggleHighlight).toHaveBeenCalled()
+    expect(chain.setHighlight).toHaveBeenCalledWith({ color: "#fef08a" })
+    expect(chain.setHighlight).toHaveBeenCalledWith({ color: "#fecdd3" })
+    expect(chain.unsetHighlight).toHaveBeenCalled()
     expect(chain.setTextAlign).toHaveBeenCalledWith("left")
     expect(chain.setTextAlign).toHaveBeenCalledWith("center")
     expect(chain.setTextAlign).toHaveBeenCalledWith("right")
     expect(chain.toggleTaskList).toHaveBeenCalled()
   })
+
+  it("toggles editor spellcheck from the toolbar", () => {
+    const onToggleSpellcheck = vi.fn()
+    const editor = {
+      chain: vi.fn(),
+      getAttributes: vi.fn(() => ({})),
+      isActive: vi.fn(() => false),
+    }
+
+    render(
+      <EditorToolbar
+        editor={editor as never}
+        onToggleSpellcheck={onToggleSpellcheck}
+        spellcheckEnabled={false}
+      />,
+    )
+
+    fireEvent.mouseDown(screen.getByRole("button", { name: "Enable spellcheck" }))
+
+    expect(onToggleSpellcheck).toHaveBeenCalled()
+  })
 })
 
 describe("VideoEmbedModal", () => {
-  it("submits a trimmed URL and caption", async () => {
+  it("submits a trimmed URL without asking for a caption", async () => {
     const user = userEvent.setup()
     const onInsert = vi.fn()
     render(<VideoEmbedModal onClose={vi.fn()} onInsert={onInsert} />)
@@ -528,15 +553,13 @@ describe("VideoEmbedModal", () => {
       screen.getByRole("textbox", { name: /Video URL/ }),
       " https://youtu.be/dQw4w9WgXcQ ",
     )
-    await user.type(
-      screen.getByRole("textbox", { name: /Caption/ }),
-      " Opening sequence ",
-    )
+
+    expect(screen.queryByRole("textbox", { name: /Caption/ })).not.toBeInTheDocument()
     await user.click(screen.getByRole("button", { name: "Insert" }))
 
     expect(onInsert).toHaveBeenCalledWith(
       "https://youtu.be/dQw4w9WgXcQ",
-      "Opening sequence",
+      "",
     )
   })
 })
@@ -552,6 +575,7 @@ describe("SpoilerView", () => {
     await user.click(screen.getByRole("button", { name: /Show spoiler/ }))
 
     expect(screen.getByRole("button", { name: /Hide spoiler/ })).toBeVisible()
+    expect(screen.queryByText("Hide spoiler")).not.toBeInTheDocument()
     expect(content).not.toHaveClass("blur-sm")
   })
 
@@ -573,32 +597,11 @@ describe("SpoilerView", () => {
     expect(onClick).not.toHaveBeenCalled()
   })
 
-  it("updates custom spoiler labels without editing the toggle button directly", async () => {
-    const user = userEvent.setup()
-    const updateAttributes = vi.fn()
-    const SpoilerViewWithProps = SpoilerView as ComponentType<{
-      node: { attrs: { hideLabel?: string; showLabel?: string } }
-      updateAttributes: (attrs: Record<string, string>) => void
-    }>
+  it("does not render spoiler label editing fields", () => {
+    render(<SpoilerView />)
 
-    render(
-      <SpoilerViewWithProps
-        node={{ attrs: { hideLabel: "Close secret", showLabel: "Big secret" } }}
-        updateAttributes={updateAttributes}
-      />,
-    )
-
-    expect(screen.getByRole("button", { name: /Big secret/ })).toBeVisible()
-
-    await user.clear(screen.getByLabelText("Show spoiler label"))
-    await user.type(screen.getByLabelText("Show spoiler label"), "Do not open")
-    await user.clear(screen.getByLabelText("Hide spoiler label"))
-    await user.type(screen.getByLabelText("Hide spoiler label"), "Close it")
-
-    expect(updateAttributes).toHaveBeenLastCalledWith({
-      hideLabel: "Close it",
-      showLabel: "Do not open",
-    })
+    expect(screen.queryByLabelText("Show spoiler label")).not.toBeInTheDocument()
+    expect(screen.queryByLabelText("Hide spoiler label")).not.toBeInTheDocument()
   })
 })
 
@@ -680,10 +683,6 @@ describe("PostBody", () => {
           type: "videoEmbed",
         },
         {
-          attrs: {
-            hideLabel: "Close secret",
-            showLabel: "Big secret",
-          },
           content: [
             {
               content: [{ text: "Spoiler text", type: "text" }],
@@ -707,9 +706,11 @@ describe("PostBody", () => {
       "src",
       "https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0",
     )
-    expect(screen.getByRole("button", { name: "Big secret" })).toBeVisible()
-    fireEvent.click(screen.getByRole("button", { name: "Big secret" }))
-    expect(screen.getByRole("button", { name: "Close secret" })).toBeVisible()
+    expect(screen.getByRole("button", { name: "Show spoiler" })).toBeVisible()
+    expect(screen.queryByText("Show spoiler")).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: "Show spoiler" }))
+    expect(screen.getByRole("button", { name: "Hide spoiler" })).toBeVisible()
+    expect(screen.queryByText("Hide spoiler")).not.toBeInTheDocument()
     expect(screen.getByText("Spoiler text")).toBeVisible()
   })
 

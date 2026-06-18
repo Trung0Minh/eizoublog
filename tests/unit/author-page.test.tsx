@@ -13,6 +13,11 @@ vi.mock("next/navigation", () => ({ notFound: mocks.notFound }))
 vi.mock("@/components/posts/PostList", () => ({
   PostList: () => <div data-testid="post-list" />,
 }))
+vi.mock("@/components/posts/CompactPostList", () => ({
+  CompactPostList: ({ posts }: { posts: { slug: string }[] }) => (
+    <div data-count={posts.length} data-testid="compact-post-list" />
+  ),
+}))
 vi.mock("@/components/posts/StaticPostContent", () => ({
   StaticPostContent: () => <div data-testid="static-post-content" />,
 }))
@@ -95,5 +100,47 @@ describe("AuthorPage", () => {
       10,
       "comments",
     )
+  })
+
+  it("uses the compact profile post list instead of homepage cards", async () => {
+    mocks.getCachedAuthorByUsername.mockResolvedValue({
+      avatarUrl: null,
+      bio: null,
+      id: "writer-1",
+      name: "Mina",
+      role: "WRITER",
+      username: "mina",
+    })
+    mocks.getCachedAuthorPosts.mockResolvedValue({
+      posts: [
+        {
+          _count: { comments: 3 },
+          author: { avatarUrl: null, name: "Mina", username: "mina" },
+          category: null,
+          coAuthors: [],
+          coverAlt: null,
+          coverUrl: null,
+          excerpt: null,
+          publishedAt: new Date("2026-06-17T00:00:00Z"),
+          slug: "compact-post",
+          tags: [],
+          title: "Compact Post",
+        },
+      ],
+      total: 1,
+    })
+
+    render(
+      await AuthorPage({
+        params: Promise.resolve({ username: "mina" }),
+        searchParams: Promise.resolve({}),
+      }),
+    )
+
+    expect(screen.getByTestId("compact-post-list")).toHaveAttribute(
+      "data-count",
+      "1",
+    )
+    expect(screen.queryByTestId("post-list")).not.toBeInTheDocument()
   })
 })

@@ -584,7 +584,7 @@ export function PostEditor({
                     />
                   </div>
 
-                  <div className="mt-1 border-t border-border-default pt-6" />
+                  <div className="mt-1 border-t-2 border-border-strong pt-6" />
                 </TiptapEditor>
               </div>
             </section>

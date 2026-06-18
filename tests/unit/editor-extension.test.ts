@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest"
 import {
   GalleryExtension,
   HeadingWithIdExtension,
+  ListItemExtension,
   SpoilerExtension,
   VideoEmbedExtension,
 } from "@/components/editor/extensions"
@@ -49,7 +50,7 @@ describe("SpoilerExtension", () => {
     editor.destroy()
   })
 
-  it("serializes custom spoiler labels as node attributes", () => {
+  it("does not serialize custom spoiler label attributes", () => {
     const editor = new Editor({
       content: {
         content: [
@@ -72,8 +73,23 @@ describe("SpoilerExtension", () => {
       extensions: [StarterKit, SpoilerExtension],
     })
 
-    expect(editor.getHTML()).toContain('data-show-label="Big secret"')
-    expect(editor.getHTML()).toContain('data-hide-label="Close secret"')
+    expect(editor.getHTML()).not.toContain("data-show-label")
+    expect(editor.getHTML()).not.toContain("data-hide-label")
+    editor.destroy()
+  })
+})
+
+describe("ListItemExtension", () => {
+  it("preserves default Enter behavior while adding nested-list shortcuts", () => {
+    const editor = new Editor({
+      content: "<ul><li><p>First item</p></li></ul>",
+      extensions: [StarterKit.configure({ listItem: false }), ListItemExtension],
+    })
+
+    editor.commands.focus("end")
+    editor.commands.keyboardShortcut("Enter")
+
+    expect(editor.getHTML()).toContain("<li><p>First item</p></li><li><p></p></li>")
     editor.destroy()
   })
 })

@@ -85,7 +85,13 @@ function renderTextNode(node: JSONContent, key: string): ReactNode {
         break
       case "highlight":
         rendered = (
-          <mark className="editor-highlight" key={markKey}>
+          <mark
+            className="editor-highlight"
+            key={markKey}
+            style={{
+              backgroundColor: stringAttr(attrs, "color"),
+            }}
+          >
             {rendered}
           </mark>
         )
@@ -321,15 +327,7 @@ function renderNode(node: JSONContent, key: string): ReactNode {
       )
     }
     case "spoiler":
-      return (
-        <SpoilerBlock
-          hideLabel={stringAttr(attrs, "hideLabel")}
-          key={key}
-          showLabel={stringAttr(attrs, "showLabel")}
-        >
-          {renderChildren(node)}
-        </SpoilerBlock>
-      )
+      return <SpoilerBlock key={key}>{renderChildren(node)}</SpoilerBlock>
     case "text":
       return renderTextNode(node, key)
     case "taskItem": {

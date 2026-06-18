@@ -14,6 +14,7 @@ import { EditorContent, useEditor, type JSONContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 
 import { common, createLowlight } from "lowlight"
+import { useEffect, useState } from "react"
 
 import { EditorToolbar } from "@/components/editor/EditorToolbar"
 import {
@@ -46,6 +47,7 @@ export function TiptapEditor({
   placeholder = "Bắt đầu viết bài...",
   ariaLabel,
 }: TiptapEditorProps) {
+  const [spellcheckEnabled, setSpellcheckEnabled] = useState(false)
   const editor = useEditor({
     content: content ?? "",
     editable,
@@ -55,6 +57,7 @@ export function TiptapEditor({
           ? "prose-editor min-h-[420px] focus:outline-none"
           : "prose prose-lg dark:prose-invert max-w-none focus:outline-none",
         ...(ariaLabel && { "aria-label": ariaLabel }),
+        spellcheck: "false",
       },
     },
     extensions: [
@@ -69,6 +72,7 @@ export function TiptapEditor({
         HTMLAttributes: {
           class: "editor-highlight",
         },
+        multicolor: true,
       }),
       CustomImageExtension,
       GalleryExtension,
@@ -117,6 +121,16 @@ export function TiptapEditor({
     },
   })
 
+  useEffect(() => {
+    if (!editor) return
+
+    const dom = editor.view?.dom
+    if (!dom) return
+
+    dom.spellcheck = spellcheckEnabled
+    dom.setAttribute("spellcheck", String(spellcheckEnabled))
+  }, [editor, spellcheckEnabled])
+
   if (!editor) {
     return null
   }
@@ -128,7 +142,13 @@ export function TiptapEditor({
     <div className="relative w-full">
       {editable && (
         <>
-          <EditorToolbar editor={editor} />
+          <EditorToolbar
+            editor={editor}
+            onToggleSpellcheck={() =>
+              setSpellcheckEnabled((current) => !current)
+            }
+            spellcheckEnabled={spellcheckEnabled}
+          />
         </>
       )}
 

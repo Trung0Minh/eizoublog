@@ -22,6 +22,7 @@ import {
   ListTodo,
   Minus,
   Quote,
+  SpellCheck,
   Strikethrough,
   Underline,
   Video,
@@ -31,6 +32,14 @@ import { useState } from "react"
 import { MediaUpload } from "@/components/editor/MediaUpload"
 import { VideoEmbedModal } from "@/components/editor/VideoEmbedModal"
 import { serializeGalleryImages } from "@/components/editor/gallery"
+
+const HIGHLIGHT_COLORS = [
+  { color: "#fef08a", label: "amber" },
+  { color: "#fecdd3", label: "rose" },
+  { color: "#bfdbfe", label: "blue" },
+  { color: "#bbf7d0", label: "green" },
+  { color: "#ddd6fe", label: "violet" },
+]
 
 interface ToolbarButtonProps {
   active?: boolean
@@ -82,7 +91,15 @@ function Divider() {
   return <div className="mx-1 hidden h-4 w-px shrink-0 bg-border-default sm:block" />
 }
 
-export function EditorToolbar({ editor }: { editor: Editor }) {
+export function EditorToolbar({
+  editor,
+  onToggleSpellcheck,
+  spellcheckEnabled = false,
+}: {
+  editor: Editor
+  onToggleSpellcheck?: () => void
+  spellcheckEnabled?: boolean
+}) {
   const [showVideoModal, setShowVideoModal] = useState(false)
 
   function setLink() {
@@ -134,11 +151,11 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
           <Underline aria-hidden="true" className="h-[15px] w-[15px]" />
         </ToolbarButton>
         <ToolbarButton
-          active={editor.isActive("highlight")}
-          onClick={() => editor.chain().focus().toggleHighlight().run()}
-          title="Highlight"
+          active={spellcheckEnabled}
+          onClick={() => onToggleSpellcheck?.()}
+          title={spellcheckEnabled ? "Disable spellcheck" : "Enable spellcheck"}
         >
-          <Highlighter aria-hidden="true" className="h-[15px] w-[15px]" />
+          <SpellCheck aria-hidden="true" className="h-[15px] w-[15px]" />
         </ToolbarButton>
         <ToolbarButton
           active={editor.isActive("code")}
@@ -147,6 +164,41 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
         >
           <Code aria-hidden="true" className="h-[15px] w-[15px]" />
         </ToolbarButton>
+
+        <div className="flex items-center gap-0.5 pl-1">
+          <Highlighter aria-hidden="true" className="h-[15px] w-[15px] text-text-tertiary" />
+          {HIGHLIGHT_COLORS.map(({ color, label }) => (
+            <button
+              aria-label={`Highlight ${label}`}
+              className={[
+                "h-[18px] w-[18px] rounded-full border transition-transform hover:scale-110",
+                editor.isActive("highlight", { color })
+                  ? "border-text-primary ring-1 ring-text-primary"
+                  : "border-border-strong",
+              ].join(" ")}
+              key={color}
+              onMouseDown={(event) => {
+                event.preventDefault()
+                editor.chain().focus().setHighlight({ color }).run()
+              }}
+              style={{ backgroundColor: color }}
+              title={`Highlight ${label}`}
+              type="button"
+            />
+          ))}
+          <button
+            aria-label="Clear highlight"
+            className="flex h-[18px] w-[18px] items-center justify-center rounded-full border border-border-strong text-[10px] text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary"
+            onMouseDown={(event) => {
+              event.preventDefault()
+              editor.chain().focus().unsetHighlight().run()
+            }}
+            title="Clear highlight"
+            type="button"
+          >
+            ×
+          </button>
+        </div>
 
         <Divider />
 

@@ -4,30 +4,14 @@ import { Eye, EyeOff } from "lucide-react"
 import { useState } from "react"
 import type { ReactNode } from "react"
 
-const DEFAULT_HIDE_LABEL = "Hide spoiler"
-const DEFAULT_SHOW_LABEL = "Show spoiler"
-
-function getLabel(value: string | undefined, fallback: string) {
-  return value && value.trim() !== "" ? value : fallback
-}
-
-export function SpoilerBlock({
-  children,
-  hideLabel,
-  showLabel,
-}: {
-  children: ReactNode
-  hideLabel?: string
-  showLabel?: string
-}) {
+export function SpoilerBlock({ children }: { children: ReactNode }) {
   const [revealed, setRevealed] = useState(false)
-  const closedLabel = getLabel(showLabel, DEFAULT_SHOW_LABEL)
-  const openLabel = getLabel(hideLabel, DEFAULT_HIDE_LABEL)
 
   return (
     <div className="relative my-4 rounded-md border border-dashed border-yellow-500/50 bg-yellow-50/30 dark:bg-yellow-950/20">
       <button
-        className="absolute right-2 top-2 z-10 flex min-h-9 items-center gap-1 rounded bg-yellow-100 px-2 py-1 text-xs text-yellow-800 transition-opacity hover:opacity-80 dark:bg-yellow-900/40 dark:text-yellow-300"
+        aria-label={revealed ? "Hide spoiler" : "Show spoiler"}
+        className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded bg-yellow-100 text-yellow-800 transition-opacity hover:opacity-80 dark:bg-yellow-900/40 dark:text-yellow-300"
         onClick={() => setRevealed((value) => !value)}
         type="button"
       >
@@ -36,7 +20,6 @@ export function SpoilerBlock({
         ) : (
           <Eye aria-hidden="true" className="h-3 w-3" />
         )}
-        {revealed ? openLabel : closedLabel}
       </button>
       <div
         className={[
