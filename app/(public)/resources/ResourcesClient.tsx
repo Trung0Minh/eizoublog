@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type DragEvent } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowDown, ArrowUp, Pencil, Plus, Save, Trash2, X } from "lucide-react"
+import { GripVertical, Pencil, Plus, Save, Trash2, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -152,6 +152,7 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [draggedResourceIndex, setDraggedResourceIndex] = useState<number | null>(null)
 
   const initialData: ResourcesData = initialPage?.content || {
     title: "Nguồn tham khảo",
@@ -161,14 +162,32 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
 
   const [data, setData] = useState<ResourcesData>(initialData)
 
-  function moveResource(index: number, direction: -1 | 1) {
-    const targetIndex = index + direction
-    if (targetIndex < 0 || targetIndex >= data.resources.length) return
+  function reorderResource(sourceIndex: number, targetIndex: number) {
+    if (
+      sourceIndex === targetIndex ||
+      sourceIndex < 0 ||
+      targetIndex < 0 ||
+      sourceIndex >= data.resources.length ||
+      targetIndex >= data.resources.length
+    ) {
+      return
+    }
 
     const newResources = [...data.resources]
-    const [resource] = newResources.splice(index, 1)
+    const [resource] = newResources.splice(sourceIndex, 1)
     newResources.splice(targetIndex, 0, resource)
     setData({ ...data, resources: newResources })
+  }
+
+  function handleResourceDrop(event: DragEvent<HTMLDivElement>, targetIndex: number) {
+    event.preventDefault()
+
+    if (draggedResourceIndex === null) {
+      return
+    }
+
+    reorderResource(draggedResourceIndex, targetIndex)
+    setDraggedResourceIndex(null)
   }
 
   async function handleSave() {
@@ -235,31 +254,30 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
             <label className="block text-lg font-semibold mb-4 text-text-primary">Các nguồn tham khảo</label>
             <div className="space-y-6">
               {data.resources.map((resource, index) => (
-                <div key={index} className="flex gap-4 items-start p-4 border border-border-default rounded-md relative group bg-subtle-bg/30">
-                  <div className="flex shrink-0 flex-col gap-1 pt-1">
-                    <Button
-                      aria-label={`Di chuyển ${resource.domain || `nguồn ${index + 1}`} lên`}
-                      disabled={index === 0}
-                      onClick={() => moveResource(index, -1)}
-                      size="icon"
-                      title="Di chuyển lên"
-                      type="button"
-                      variant="outline"
-                    >
-                      <ArrowUp aria-hidden="true" className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      aria-label={`Di chuyển ${resource.domain || `nguồn ${index + 1}`} xuống`}
-                      disabled={index === data.resources.length - 1}
-                      onClick={() => moveResource(index, 1)}
-                      size="icon"
-                      title="Di chuyển xuống"
-                      type="button"
-                      variant="outline"
-                    >
-                      <ArrowDown aria-hidden="true" className="h-4 w-4" />
-                    </Button>
-                  </div>
+                <div
+                  className={[
+                    "flex gap-4 items-start p-4 border border-border-default rounded-md relative group bg-subtle-bg/30 transition-colors",
+                    draggedResourceIndex === index ? "opacity-60 border-accent" : "",
+                  ].join(" ")}
+                  data-testid={`resource-editor-card-${resource.domain || index}`}
+                  key={index}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={(event) => handleResourceDrop(event, index)}
+                >
+                  <button
+                    aria-label={`Kéo ${resource.domain || `nguồn ${index + 1}`} để sắp xếp`}
+                    className="mt-1 grid h-9 w-9 shrink-0 cursor-grab place-items-center rounded-[5px] border border-border-default bg-background text-text-tertiary transition-colors hover:border-accent hover:text-text-primary active:cursor-grabbing"
+                    draggable
+                    onDragEnd={() => setDraggedResourceIndex(null)}
+                    onDragStart={(event) => {
+                      setDraggedResourceIndex(index)
+                      event.dataTransfer.effectAllowed = "move"
+                    }}
+                    title="Kéo để sắp xếp"
+                    type="button"
+                  >
+                    <GripVertical aria-hidden="true" className="h-4 w-4" />
+                  </button>
                   <div className="grid grid-cols-2 gap-4 flex-1">
                     <div className="space-y-4">
                       <div>

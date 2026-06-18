@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -22,8 +22,11 @@ describe("ResourcesClient", () => {
     mocks.updateResourcesPage.mockResolvedValue({ id: "resources" })
   })
 
-  it("moves resources up and down before saving", async () => {
+  it("reorders resources by dragging before saving", async () => {
     const user = userEvent.setup()
+    const dataTransfer = {
+      effectAllowed: "",
+    }
 
     render(
       <ResourcesClient
@@ -44,8 +47,20 @@ describe("ResourcesClient", () => {
     )
 
     await user.click(screen.getByRole("button", { name: "Chỉnh sửa trang" }))
-    await user.click(screen.getByRole("button", { name: "Di chuyển Second lên" }))
-    await user.click(screen.getByRole("button", { name: "Di chuyển First xuống" }))
+    expect(screen.queryByRole("button", { name: /Di chuyển/ })).not.toBeInTheDocument()
+
+    fireEvent.dragStart(screen.getByRole("button", { name: "Kéo Second để sắp xếp" }), {
+      dataTransfer,
+    })
+    fireEvent.drop(screen.getByTestId("resource-editor-card-First"), {
+      dataTransfer,
+    })
+    fireEvent.dragStart(screen.getByRole("button", { name: "Kéo First để sắp xếp" }), {
+      dataTransfer,
+    })
+    fireEvent.drop(screen.getByTestId("resource-editor-card-Third"), {
+      dataTransfer,
+    })
     await user.click(screen.getByRole("button", { name: /^Lưu$/ }))
 
     await waitFor(() => {
