@@ -6,7 +6,6 @@ import { InternalAnalyticsTracker } from "@/components/analytics/InternalAnalyti
 import { Footer } from "@/components/layout/Footer"
 import { Navbar } from "@/components/layout/Navbar"
 import { NavbarWrapper } from "@/components/layout/NavbarWrapper"
-import { NavigationProgress } from "@/components/layout/NavigationProgress"
 import { ThemeProvider } from "@/components/layout/ThemeProvider"
 import { DEFAULT_DESCRIPTION, getAppName, getAppUrl } from "@/lib/seo"
 
@@ -60,9 +59,6 @@ export default function RootLayout({
             <NavbarWrapper>
               <Navbar />
             </NavbarWrapper>
-            <Suspense fallback={null}>
-              <NavigationProgress />
-            </Suspense>
             <div className="flex-1">{children}</div>
             <Footer />
           </div>

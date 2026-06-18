@@ -190,32 +190,10 @@
     }
   }
 
-  @keyframes navigation-progress {
-    0% {
-      transform: scaleX(0);
-    }
-
-    45% {
-      transform: scaleX(0.72);
-    }
-
-    100% {
-      transform: scaleX(1);
-    }
-  }
-
-  .animate-navigation-progress {
-    animation: navigation-progress 1.2s ease-out infinite;
-  }
-
   @media (prefers-reduced-motion: reduce) {
     .loader::before,
     .loader::after {
       animation-duration: 2s;
-    }
-
-    .animate-navigation-progress {
-      animation-duration: 3s;
     }
   }
 
