@@ -137,11 +137,39 @@ describe("cached Prisma query helpers", () => {
     })
   })
 
+  it("filters published post lists by archive month", async () => {
+    mocks.prisma.post.findMany.mockResolvedValue([{ slug: "june-essay" }])
+    mocks.prisma.post.count.mockResolvedValue(1)
+
+    await expect(
+      getCachedPublishedPosts(1, 10, "latest", "2026-06"),
+    ).resolves.toEqual({
+      posts: [{ slug: "june-essay" }],
+      total: 1,
+    })
+
+    expect(mocks.prisma.post.findMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        where: {
+          publishedAt: {
+            gte: new Date("2026-06-01T00:00:00.000Z"),
+            lt: new Date("2026-07-01T00:00:00.000Z"),
+          },
+          status: "PUBLISHED",
+        },
+      }),
+    )
+  })
+
   it("caches sidebar data behind posts and categories tags", async () => {
     mocks.prisma.category.findMany.mockResolvedValue([{ slug: "analysis" }])
     mocks.prisma.post.findMany.mockResolvedValue([{ slug: "recent" }])
+    mocks.prisma.$queryRaw.mockResolvedValue([
+      { count: BigInt(2), month: "2026-06" },
+    ])
 
     await expect(getCachedSidebarData()).resolves.toEqual({
+      archives: [{ count: 2, month: "2026-06" }],
       categories: [{ slug: "analysis" }],
       recentPosts: [{ slug: "recent" }],
     })
@@ -156,6 +184,7 @@ describe("cached Prisma query helpers", () => {
         where: { parentId: null },
       }),
     )
+    expect(mocks.prisma.$queryRaw).toHaveBeenCalled()
     expect(mocks.cacheEntries).toContainEqual({
       keyParts: ["sidebar-data"],
       options: { revalidate: 300, tags: ["posts", "categories"] },

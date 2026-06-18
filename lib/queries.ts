@@ -59,6 +59,11 @@ const recentPostSelect = {
   title: true,
 } satisfies Prisma.PostSelect
 
+type SidebarArchiveRow = {
+  count: bigint
+  month: string
+}
+
 const contributorSelect = {
   _count: {
     select: { posts: { where: { status: "PUBLISHED" } } },
@@ -424,9 +429,39 @@ async function getPublishedPostListByWhere(
   return { posts, total }
 }
 
+function getArchiveMonthRange(archiveMonth?: string) {
+  if (!archiveMonth || !/^\d{4}-\d{2}$/.test(archiveMonth)) {
+    return null
+  }
+
+  const [yearPart, monthPart] = archiveMonth.split("-")
+  const year = Number(yearPart)
+  const month = Number(monthPart)
+
+  if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
+    return null
+  }
+
+  const start = new Date(Date.UTC(year, month - 1, 1))
+  const end = new Date(Date.UTC(year, month, 1))
+
+  return { end, start }
+}
+
 export const getCachedPublishedPosts = unstable_cache(
-  async (page: number, pageSize: number, sort: PostListSort = "latest") => {
-    const where = { status: "PUBLISHED" } satisfies Prisma.PostWhereInput
+  async (
+    page: number,
+    pageSize: number,
+    sort: PostListSort = "latest",
+    archiveMonth?: string,
+  ) => {
+    const archiveRange = getArchiveMonthRange(archiveMonth)
+    const where = {
+      ...(archiveRange && {
+        publishedAt: { gte: archiveRange.start, lt: archiveRange.end },
+      }),
+      status: "PUBLISHED",
+    } satisfies Prisma.PostWhereInput
     return getPublishedPostListByWhere(where, page, pageSize, sort)
   },
   ["published-posts"],
@@ -435,7 +470,7 @@ export const getCachedPublishedPosts = unstable_cache(
 
 export const getCachedSidebarData = unstable_cache(
   async () => {
-    const [categories, recentPosts] = await Promise.all([
+    const [categories, recentPosts, archiveRows] = await Promise.all([
       prisma.category.findMany({
         orderBy: { name: "asc" },
         select: sidebarCategorySelect,
@@ -447,9 +482,25 @@ export const getCachedSidebarData = unstable_cache(
         take: 5,
         where: { status: "PUBLISHED" },
       }),
+      prisma.$queryRaw<SidebarArchiveRow[]>`
+        SELECT
+          to_char(date_trunc('month', "publishedAt"), 'YYYY-MM') AS month,
+          COUNT(*) AS count
+        FROM posts
+        WHERE status::text = 'PUBLISHED'
+          AND "publishedAt" IS NOT NULL
+        GROUP BY date_trunc('month', "publishedAt")
+        ORDER BY date_trunc('month', "publishedAt") DESC
+        LIMIT 12
+      `,
     ])
 
-    return { categories, recentPosts }
+    const archives = archiveRows.map((archive) => ({
+      count: Number(archive.count),
+      month: archive.month,
+    }))
+
+    return { archives, categories, recentPosts }
   },
   ["sidebar-data"],
   { revalidate: 300, tags: ["posts", "categories"] },

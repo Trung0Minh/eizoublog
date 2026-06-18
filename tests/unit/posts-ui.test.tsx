@@ -710,6 +710,7 @@ describe("HomePage sorting UI", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     queriesMocks.getCachedSidebarData.mockResolvedValue({
+      archives: [],
       categories: [],
       recentPosts: [],
     })
@@ -727,7 +728,12 @@ describe("HomePage sorting UI", () => {
     expect(screen.getByRole("tab", { name: "Cũ nhất" })).toHaveAttribute("aria-selected", "false")
     expect(screen.getByRole("tab", { name: "Nhiều bình luận" })).toHaveAttribute("aria-selected", "false")
     
-    expect(queriesMocks.getCachedPublishedPosts).toHaveBeenCalledWith(1, 10, "latest")
+    expect(queriesMocks.getCachedPublishedPosts).toHaveBeenCalledWith(
+      1,
+      10,
+      "latest",
+      undefined,
+    )
 
     unmount()
 
@@ -737,6 +743,46 @@ describe("HomePage sorting UI", () => {
     expect(screen.getByRole("tab", { name: "Mới nhất" })).toHaveAttribute("aria-selected", "false")
     expect(screen.getByRole("tab", { name: "Nhiều bình luận" })).toHaveAttribute("aria-selected", "true")
     
-    expect(queriesMocks.getCachedPublishedPosts).toHaveBeenCalledWith(2, 10, "comments")
+    expect(queriesMocks.getCachedPublishedPosts).toHaveBeenCalledWith(
+      2,
+      10,
+      "comments",
+      undefined,
+    )
+  })
+
+  it("passes archive month through homepage sorting and pagination", async () => {
+    queriesMocks.getCachedPublishedPosts.mockResolvedValue({
+      posts: Array.from({ length: 10 }, (_, index) => ({
+        ...post,
+        slug: `post-${index}`,
+      })),
+      total: 11,
+    })
+
+    const element = await HomePostList({
+      archiveMonth: "2026-06",
+      page: 1,
+      sort: "oldest",
+    })
+    render(element)
+
+    expect(
+      screen.getByRole("heading", { name: "Bài viết June 2026" }),
+    ).toBeVisible()
+    expect(screen.getByRole("tab", { name: "Mới nhất" })).toHaveAttribute(
+      "href",
+      "/?archive=2026-06",
+    )
+    expect(screen.getByRole("link", { name: "Page 2" })).toHaveAttribute(
+      "href",
+      "?archive=2026-06&sort=oldest&page=2",
+    )
+    expect(queriesMocks.getCachedPublishedPosts).toHaveBeenCalledWith(
+      1,
+      10,
+      "oldest",
+      "2026-06",
+    )
   })
 })

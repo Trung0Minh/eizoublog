@@ -481,6 +481,12 @@ describe("Sidebar", () => {
   it("renders newsletter content, categories, and recent posts", () => {
     render(
       <Sidebar
+        archives={[
+          {
+            count: 2,
+            month: "2026-06",
+          },
+        ]}
         categories={[
           {
             _count: { posts: 2 },
@@ -511,6 +517,10 @@ describe("Sidebar", () => {
     expect(
       screen.getByRole("link", { name: "Frieren and the passage of time" }),
     ).toHaveAttribute("href", "/frieren")
+    expect(screen.getByRole("link", { name: /June 2026/ })).toHaveAttribute(
+      "href",
+      "/?archive=2026-06",
+    )
   })
 
   it("uses zoom-friendly responsive sidebar widths", () => {

@@ -3,6 +3,10 @@ import Link from "next/link"
 import { cn, formatDate } from "@/lib/utils"
 
 interface SidebarProps {
+  archives?: {
+    count: number
+    month: string
+  }[]
   categories: {
     _count: { posts: number }
     children: { id: string; name: string; slug: string }[]
@@ -20,6 +24,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({
+  archives = [],
   categories,
   className,
   newsletter,
@@ -91,8 +96,43 @@ export function Sidebar({
           </ul>
         </SidebarSection>
       )}
+
+      {archives.length > 0 && (
+        <SidebarSection title="Lưu trữ">
+          <ul className="flex flex-col text-sm">
+            {archives.map((archive) => (
+              <li key={archive.month}>
+                <Link
+                  className="flex items-center justify-between border-b border-border-default py-2.5 transition-colors last:border-0 hover:text-accent"
+                  href={`/?archive=${archive.month}`}
+                >
+                  <span>{formatArchiveMonth(archive.month)}</span>
+                  <span className="text-[12px] text-text-tertiary">
+                    {archive.count}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </SidebarSection>
+      )}
     </aside>
   )
+}
+
+function formatArchiveMonth(month: string) {
+  const [yearPart, monthPart] = month.split("-")
+  const date = new Date(Date.UTC(Number(yearPart), Number(monthPart) - 1, 1))
+
+  if (Number.isNaN(date.getTime())) {
+    return month
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    timeZone: "UTC",
+    year: "numeric",
+  }).format(date)
 }
 
 function SidebarSection({
