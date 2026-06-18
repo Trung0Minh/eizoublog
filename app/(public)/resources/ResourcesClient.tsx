@@ -74,6 +74,78 @@ const defaultResources: ResourceCard[] = [
     logo: "/logos/anilist.svg",
     description: "Nền tảng tuyệt vời để theo dõi lịch chiếu phim, quản lý danh sách anime/manga đang xem, cũng như tương tác với cộng đồng người hâm mộ.",
   },
+  {
+    url: "https://artistunknown.info/",
+    domain: "ArtistUnknown",
+    logo: "/logos/artistunknown.jpg",
+    description: "Trang blog chuyên sâu về phân tích sakuga và quy trình sản xuất anime. Đây là nơi chia sẻ những bài phân tích chi tiết về phong cách của các họa sĩ diễn hoạt (animator), đạo diễn, cùng các thông tin/phóng sự từ các sự kiện anime lớn như Otakon.",
+  },
+  {
+    url: "https://fullfrontal.moe/",
+    domain: "fullfrontal.moe",
+    logo: "/logos/fullfrontal.png",
+    description: "Chuyên trang uy tín về diễn hoạt và văn hóa anime/manga, nổi bật with chuyên mục \"Sakuga Espresso\" phân tích chi tiết các phân cảnh hoạt họa ấn tượng. Trang web còn cung cấp nhiều bài phỏng vấn chuyên sâu với các nhân sự trong ngành cùng các phân tích sắc sảo về khía cạnh kinh doanh của anime.",
+  },
+  {
+    url: "https://magicalstage.moe/",
+    domain: "Magical Stage",
+    logo: "/logos/magicalstage.jpg",
+    description: "Nền tảng báo chí và bình luận anime độc lập được vận hành bởi buildknuckle và các cộng sự. Trang web nổi tiếng với phong cách viết hài hước xen lẫn các bài phỏng vấn dịch thuật nghiêm túc, sâu sắc về đội ngũ sản xuất và các xu hướng mới trong ngành công nghiệp anime.",
+  },
+  {
+    url: "https://shinseiki.blog/",
+    domain: "SHINSEIKI",
+    logo: "/logos/shinseiki.png",
+    description: "Dự án phi lợi nhuận chuyên dịch thuật các bài phỏng vấn đạo diễn, họa sĩ diễn hoạt và nhà sản xuất anime từ các nguồn tư liệu gốc tiếng Nhật (như sách, tạp chí, booklet). Đây là nguồn tài liệu vô cùng quý giá để tìm hiểu sâu về tư duy nghệ thuật và hậu trường sản xuất của nhiều tác phẩm kinh điển.",
+  },
+  {
+    url: "https://ultimatemegax.wordpress.com/",
+    domain: "Ultimate MegaX",
+    logo: "/logos/ultimatemegax.png",
+    description: "Trang blog lâu đời và vô cùng uy tín trong cộng đồng nghiên cứu anime quốc tế. Blog nổi tiếng with những bài dịch phỏng vấn nhân sự và phân tích chi tiết về ban sản xuất (production committee), đặc biệt là các thông tin chuyên sâu xoay quanh studio Kyoto Animation.",
+  },
+  {
+    url: "https://www.anime-atelier.com/author/sarca/",
+    domain: "Sarca (Anime Atelier)",
+    logo: "/logos/sarca.png",
+    description: "Cây bút phân tích tự do trên chuyên trang Anime Atelier. Tác giả Sarca nổi tiếng với những bài viết nghiên cứu sâu sắc về hậu trường sản xuất, phân tích phong cách nghệ thuật của các đạo diễn (như Shin Oonuma, Satoshi Mori), và các bài thảo luận về chất lượng diễn họa của các dự án anime nổi tiếng.",
+  },
+  {
+    url: "https://www.youtube.com/@RCAnime",
+    domain: "RCAnime",
+    logo: "/logos/rcanime.jpg",
+    description: "Kênh video essay nổi tiếng về anime trên YouTube, tập trung vào nghệ thuật diễn hoạt, lịch sử ngành công nghiệp và các kỹ thuật kể chuyện bằng hình ảnh. RCAnime nổi bật với các bài phân tích sâu sắc về cách các đạo diễn sử dụng khung hình, nhịp điệu và màu sắc để truyền tải cảm xúc.",
+  },
+  {
+    url: "https://www.youtube.com/@LKR9029",
+    domain: "LKR",
+    logo: "/logos/lkr.jpg",
+    description: "Kênh YouTube chuyên tổng hợp và thực hiện các video tri ân (tribute) dành riêng cho các họa sĩ diễn hoạt (animator) nổi tiếng trong ngành công nghiệp anime. LKR cung cấp các clip tuyển tập sakuga chất lượng cao kèm thông tin chi tiết về phong cách đặc trưng của từng họa sĩ.",
+  },
+  {
+    url: "https://www.youtube.com/@UnderTheScopeAnime",
+    domain: "Under the Scope",
+    logo: "/logos/uts.jpg",
+    description: "Kênh YouTube chuyên về video essay phân tích nghệ thuật điện ảnh trong anime. Under the Scope được đánh giá cao nhờ những phân tích tỉ mỉ về ngôn ngữ hình ảnh, bố cục khung hình, kỹ thuật đạo diễn và âm nhạc trong các tác phẩm của Kyoto Animation cùng nhiều studio tên tuổi khác.",
+  },
+  {
+    url: "https://www.youtube.com/@TheCanipaEffect",
+    domain: "The Canipa Effect",
+    logo: "/logos/canipa.jpg",
+    description: "Kênh YouTube uy tín hàng đầu được vận hành bởi nhà báo Callum May, chuyên thực hiện các phóng sự và phân tích chi tiết về quy trình sản xuất anime, lịch sử các studio hoạt hình và chân dung của những họa sĩ diễn hoạt (animator) tài ba. Đây là nguồn tư liệu chuẩn xác và phong phú cho cộng đồng yêu thích sakuga.",
+  },
+  {
+    url: "https://www.youtube.com/@HipHopSakuga",
+    domain: "Hip-Hop Sakuga",
+    logo: "/logos/hiphopsakuga.jpg",
+    description: "Kênh YouTube độc đáo kết hợp các đoạn cắt sakuga đỉnh cao của anime với các bản nhạc hip-hop/lo-fi sôi động. Đây là nơi tuyệt vời để vừa thưởng thức kỹ năng diễn hoạt xuất sắc của các animator vừa tận hưởng không gian âm nhạc thư giãn.",
+  },
+  {
+    url: "https://www.youtube.com/@HobbesSakuga",
+    domain: "Hobbes Sakuga",
+    logo: "/logos/hobbessakuga.jpg",
+    description: "Kênh YouTube chuyên thực hiện các video tổng hợp (sakuga MAD) chất lượng cao và phân tích ngắn về các phân cảnh hoạt họa xuất sắc trong anime. Kênh tập trung giới thiệu nét vẽ cá nhân của các họa sĩ diễn hoạt và sự phát triển của phong cách sakuga qua các thời kỳ.",
+  }
 ]
 
 export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClientProps) {
