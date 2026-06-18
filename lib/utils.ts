@@ -8,11 +8,25 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatDate(date: Date | string): string {
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(new Date(date))
+  const value = new Date(date)
+  const diffMs = Date.now() - value.getTime()
+  const hourMs = 60 * 60 * 1000
+  const dayMs = 24 * hourMs
+
+  if (diffMs >= 0 && diffMs < dayMs) {
+    const hours = Math.max(1, Math.floor(diffMs / hourMs))
+    return `${hours} giờ trước`
+  }
+
+  if (diffMs >= dayMs && diffMs < 2 * dayMs) {
+    return "Hôm qua"
+  }
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+  }).format(value)
 }
 
 export function generateSlug(title: string): string {

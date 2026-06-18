@@ -190,6 +190,22 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
     setDraggedResourceIndex(null)
   }
 
+  function handleResourceDragOver(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault()
+
+    const edgeSize = 96
+    const scrollStep = 18
+
+    if (event.clientY < edgeSize) {
+      window.scrollBy({ top: -scrollStep })
+      return
+    }
+
+    if (window.innerHeight - event.clientY < edgeSize) {
+      window.scrollBy({ top: scrollStep })
+    }
+  }
+
   async function handleSave() {
     setIsSaving(true)
     try {
@@ -261,7 +277,7 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
                   ].join(" ")}
                   data-testid={`resource-editor-card-${resource.domain || index}`}
                   key={index}
-                  onDragOver={(event) => event.preventDefault()}
+                  onDragOver={handleResourceDragOver}
                   onDrop={(event) => handleResourceDrop(event, index)}
                 >
                   <button

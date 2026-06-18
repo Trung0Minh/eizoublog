@@ -24,8 +24,37 @@ describe("generateSlug", () => {
 })
 
 describe("formatDate", () => {
-  it("formats dates using the Vietnamese locale", () => {
-    expect(formatDate(new Date("2024-04-01T00:00:00Z"))).toContain("2024")
+  it("shows relative hours for dates within 24 hours", () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date("2026-06-18T12:00:00.000Z"))
+
+    try {
+      expect(formatDate(new Date("2026-06-18T09:30:00.000Z"))).toBe("2 giờ trước")
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it("shows yesterday for dates between 24 and 48 hours ago", () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date("2026-06-18T12:00:00.000Z"))
+
+    try {
+      expect(formatDate(new Date("2026-06-17T10:00:00.000Z"))).toBe("Hôm qua")
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it("formats older dates as dd/mm/yy", () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date("2026-06-18T12:00:00.000Z"))
+
+    try {
+      expect(formatDate(new Date("2026-06-16T00:00:00.000Z"))).toBe("16/06/26")
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it("accepts date strings", () => {

@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 const mocks = vi.hoisted(() => ({
   refresh: vi.fn(),
@@ -22,8 +22,13 @@ describe("ResourcesClient", () => {
     mocks.updateResourcesPage.mockResolvedValue({ id: "resources" })
   })
 
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it("reorders resources by dragging before saving", async () => {
     const user = userEvent.setup()
+    const scrollBy = vi.spyOn(window, "scrollBy").mockImplementation(() => undefined)
     const dataTransfer = {
       effectAllowed: "",
     }
@@ -52,6 +57,15 @@ describe("ResourcesClient", () => {
     fireEvent.dragStart(screen.getByRole("button", { name: "Kéo Second để sắp xếp" }), {
       dataTransfer,
     })
+    const dragOverEvent = new Event("dragover", { bubbles: true, cancelable: true })
+    Object.defineProperty(dragOverEvent, "clientY", {
+      value: window.innerHeight - 8,
+    })
+    Object.defineProperty(dragOverEvent, "dataTransfer", {
+      value: dataTransfer,
+    })
+    fireEvent(screen.getByTestId("resource-editor-card-First"), dragOverEvent)
+    expect(scrollBy).toHaveBeenCalledWith({ top: 18 })
     fireEvent.drop(screen.getByTestId("resource-editor-card-First"), {
       dataTransfer,
     })
@@ -74,5 +88,6 @@ describe("ResourcesClient", () => {
         }),
       )
     })
+    scrollBy.mockRestore()
   })
 })
