@@ -64,4 +64,26 @@ describe("EditorTopBar", () => {
       screen.getByText("Thêm tiêu đề để có thể lưu và xuất bản."),
     ).toBeVisible()
   })
+
+  it("uses a current-color spinner inside pending publish actions", () => {
+    render(
+      <EditorTopBar
+        canSave
+        exitHref="/dashboard"
+        isPending
+        isPublished
+        onPublish={vi.fn()}
+        onSaveDraft={vi.fn()}
+        pendingAction="publish"
+        saveStatus="saving"
+      />,
+    )
+
+    const updateButton = screen.getByRole("button", { name: /Đang cập nhật/ })
+    const spinner = updateButton.querySelector("[data-button-spinner='true']")
+
+    expect(spinner).not.toBeNull()
+    expect(spinner).toHaveClass("text-current")
+    expect(spinner).not.toHaveClass("loader")
+  })
 })

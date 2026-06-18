@@ -89,7 +89,7 @@ function renderTextNode(node: JSONContent, key: string): ReactNode {
             className="editor-highlight"
             key={markKey}
             style={{
-              backgroundColor: stringAttr(attrs, "color"),
+              backgroundColor: stringAttr(attrs, "color") ?? "#fef08a",
             }}
           >
             {rendered}

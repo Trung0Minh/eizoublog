@@ -227,17 +227,18 @@
 
   .prose-editor h3 {
     font-family: var(--font-inter), system-ui, sans-serif;
-    font-size: 1.0625rem;
-    font-weight: 650;
+    font-size: 1.125rem;
+    font-weight: 700;
     margin-bottom: 0.4em;
     margin-top: 2em;
   }
 
   .prose-editor h4 {
     font-family: var(--font-inter), system-ui, sans-serif;
-    font-size: 0.9375rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 650;
+    letter-spacing: 0.04em;
     margin-bottom: 0.35em;
     margin-top: 1.6em;
     text-transform: uppercase;
@@ -291,7 +292,7 @@
   }
 
   .editor-highlight {
-    background: color-mix(in srgb, var(--accent) 18%, transparent);
+    background-color: #fef08a;
     border-radius: 2px;
     color: #111111;
     padding: 0 0.12em;
@@ -403,17 +404,18 @@
 
   .post-content h3 {
     font-family: var(--font-inter), system-ui, sans-serif;
-    font-size: 1.0625rem;
-    font-weight: 600;
+    font-size: 1.125rem;
+    font-weight: 700;
     margin-bottom: 0.4em;
     margin-top: 2em;
   }
 
   .post-content h4 {
     font-family: var(--font-inter), system-ui, sans-serif;
-    font-size: 0.9375rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 650;
+    letter-spacing: 0.04em;
     margin-bottom: 0.35em;
     margin-top: 1.6em;
     text-transform: uppercase;
@@ -467,7 +469,8 @@
   }
 
   .post-content figcaption,
-  .post-content .media-caption {
+  .post-content .media-caption,
+  .editor-media-caption {
     color: var(--text-tertiary);
     font-family: var(--font-inter), system-ui, sans-serif;
     font-size: 0.75rem;
@@ -555,6 +558,7 @@
 
   .dark .post-content figcaption,
   .dark .post-content .media-caption,
+  .dark .editor-media-caption,
   .dark .image-gallery__caption {
     color: #b8b8b8;
   }

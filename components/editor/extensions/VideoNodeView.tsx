@@ -60,10 +60,10 @@ export function VideoNodeView(props: NodeViewProps) {
         </div>
         {editor.isEditable ? (
           node.attrs.showCaption ? (
-            <figcaption className="mt-1 w-full text-center text-sm text-text-tertiary">
+            <figcaption className="editor-media-caption mt-1 w-full text-center text-sm">
               <input
                 autoFocus
-                className="w-full bg-transparent text-center outline-none border-none placeholder:text-text-tertiary/50"
+                className="w-full border-none bg-transparent text-center italic outline-none placeholder:text-text-tertiary/50"
                 placeholder="Write a caption..."
                 value={caption}
                 onChange={(e) => updateAttributes({ caption: e.target.value })}
@@ -72,7 +72,7 @@ export function VideoNodeView(props: NodeViewProps) {
             </figcaption>
           ) : null
         ) : node.attrs.showCaption !== false && caption ? (
-          <figcaption className="mt-1 text-center text-sm text-text-tertiary">
+          <figcaption className="editor-media-caption mt-1 text-center text-sm">
             {caption}
           </figcaption>
         ) : null}

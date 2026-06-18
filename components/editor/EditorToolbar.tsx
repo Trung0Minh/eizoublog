@@ -27,7 +27,8 @@ import {
   Underline,
   Video,
 } from "lucide-react"
-import { useState } from "react"
+import { useRef, useState } from "react"
+import { createPortal } from "react-dom"
 
 import { MediaUpload } from "@/components/editor/MediaUpload"
 import { VideoEmbedModal } from "@/components/editor/VideoEmbedModal"
@@ -105,6 +106,11 @@ export function EditorToolbar({
 }) {
   const [showVideoModal, setShowVideoModal] = useState(false)
   const [showHighlightMenu, setShowHighlightMenu] = useState(false)
+  const [highlightMenuPosition, setHighlightMenuPosition] = useState({
+    left: 0,
+    top: 0,
+  })
+  const highlightButtonRef = useRef<HTMLDivElement>(null)
 
   function setLink() {
     const previous = editor.getAttributes("link").href
@@ -122,6 +128,70 @@ export function EditorToolbar({
 
     editor.chain().focus().setLink({ href: url }).run()
   }
+
+  function toggleHighlightMenu() {
+    const rect = highlightButtonRef.current?.getBoundingClientRect()
+
+    if (rect) {
+      setHighlightMenuPosition({
+        left: rect.left,
+        top: rect.bottom + 6,
+      })
+    }
+
+    setShowHighlightMenu((current) => !current)
+  }
+
+  const highlightMenu = showHighlightMenu
+    ? createPortal(
+        <div
+          aria-label="Highlight colors"
+          className="fixed z-[120] grid w-[148px] grid-cols-4 gap-1 rounded-[6px] border border-border-default bg-background p-2 shadow-lg"
+          role="menu"
+          style={{
+            left: highlightMenuPosition.left,
+            top: highlightMenuPosition.top,
+          }}
+        >
+          {HIGHLIGHT_COLORS.map(({ color, label }) => (
+            <button
+              aria-label={`Highlight ${label}`}
+              className={[
+                "h-7 w-7 rounded-full border transition-transform hover:scale-110",
+                editor.isActive("highlight", { color })
+                  ? "border-text-primary ring-1 ring-text-primary"
+                  : "border-border-strong",
+              ].join(" ")}
+              key={color}
+              onMouseDown={(event) => {
+                event.preventDefault()
+                editor.chain().focus().setHighlight({ color }).run()
+                setShowHighlightMenu(false)
+              }}
+              role="menuitem"
+              style={{ backgroundColor: color }}
+              title={`Highlight ${label}`}
+              type="button"
+            />
+          ))}
+          <button
+            aria-label="Clear highlight"
+            className="col-span-4 flex h-7 items-center justify-center rounded-[4px] border border-border-default text-xs text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary"
+            onMouseDown={(event) => {
+              event.preventDefault()
+              editor.chain().focus().unsetHighlight().run()
+              setShowHighlightMenu(false)
+            }}
+            role="menuitem"
+            title="Clear highlight"
+            type="button"
+          >
+            Clear
+          </button>
+        </div>,
+        document.body,
+      )
+    : null
 
   return (
     <>
@@ -169,51 +239,14 @@ export function EditorToolbar({
           <Code aria-hidden="true" className="h-[15px] w-[15px]" />
         </ToolbarButton>
 
-        <div className="relative">
+        <div ref={highlightButtonRef}>
           <ToolbarButton
             active={editor.isActive("highlight")}
-            onClick={() => setShowHighlightMenu((current) => !current)}
+            onClick={toggleHighlightMenu}
             title="Highlight color"
           >
             <Highlighter aria-hidden="true" className="h-[15px] w-[15px]" />
           </ToolbarButton>
-          {showHighlightMenu && (
-            <div className="absolute left-0 top-9 z-[80] grid w-[148px] grid-cols-4 gap-1 rounded-[6px] border border-border-default bg-background p-2 shadow-lg">
-              {HIGHLIGHT_COLORS.map(({ color, label }) => (
-                <button
-                  aria-label={`Highlight ${label}`}
-                  className={[
-                    "h-7 w-7 rounded-full border transition-transform hover:scale-110",
-                    editor.isActive("highlight", { color })
-                      ? "border-text-primary ring-1 ring-text-primary"
-                      : "border-border-strong",
-                  ].join(" ")}
-                  key={color}
-                  onMouseDown={(event) => {
-                    event.preventDefault()
-                    editor.chain().focus().setHighlight({ color }).run()
-                    setShowHighlightMenu(false)
-                  }}
-                  style={{ backgroundColor: color }}
-                  title={`Highlight ${label}`}
-                  type="button"
-                />
-              ))}
-              <button
-                aria-label="Clear highlight"
-                className="col-span-4 flex h-7 items-center justify-center rounded-[4px] border border-border-default text-xs text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary"
-                onMouseDown={(event) => {
-                  event.preventDefault()
-                  editor.chain().focus().unsetHighlight().run()
-                  setShowHighlightMenu(false)
-                }}
-                title="Clear highlight"
-                type="button"
-              >
-                Clear
-              </button>
-            </div>
-          )}
         </div>
 
         <Divider />
@@ -389,6 +422,7 @@ export function EditorToolbar({
           }}
         />
       )}
+      {highlightMenu}
     </>
   )
 }

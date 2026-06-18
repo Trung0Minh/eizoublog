@@ -505,11 +505,14 @@ describe("EditorToolbar", () => {
     render(<EditorToolbar editor={editor as never} />)
 
     fireEvent.mouseDown(screen.getByRole("button", { name: "Highlight color" }))
-    fireEvent.mouseDown(screen.getByRole("button", { name: "Highlight amber" }))
+    expect(screen.getByRole("menu", { name: "Highlight colors" }).parentElement).toBe(
+      document.body,
+    )
+    fireEvent.mouseDown(screen.getByRole("menuitem", { name: "Highlight amber" }))
     fireEvent.mouseDown(screen.getByRole("button", { name: "Highlight color" }))
-    fireEvent.mouseDown(screen.getByRole("button", { name: "Highlight rose" }))
+    fireEvent.mouseDown(screen.getByRole("menuitem", { name: "Highlight rose" }))
     fireEvent.mouseDown(screen.getByRole("button", { name: "Highlight color" }))
-    fireEvent.mouseDown(screen.getByRole("button", { name: "Clear highlight" }))
+    fireEvent.mouseDown(screen.getByRole("menuitem", { name: "Clear highlight" }))
     fireEvent.mouseDown(screen.getByRole("button", { name: "Align left" }))
     fireEvent.mouseDown(screen.getByRole("button", { name: "Align center" }))
     fireEvent.mouseDown(screen.getByRole("button", { name: "Align right" }))
@@ -754,6 +757,7 @@ describe("PostBody", () => {
 
     const marked = screen.getByText("Marked text")
     expect(marked.closest("mark")).toHaveClass("editor-highlight")
+    expect(marked.closest("mark")).toHaveStyle({ backgroundColor: "#fef08a" })
     expect(marked.closest("u")).not.toBeNull()
     expect(marked.closest("p")).toHaveStyle({ textAlign: "center" })
     expect(screen.getByRole("checkbox")).toBeChecked()

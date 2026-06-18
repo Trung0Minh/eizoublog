@@ -6,10 +6,19 @@ import Link from "next/link"
 import { ThemeToggle } from "@/components/layout/ThemeToggle"
 import { SaveStatusIndicator } from "@/components/editor/SaveStatusIndicator"
 import { Button } from "@/components/ui/button"
-import { Loader } from "@/components/ui/Loader"
 import type { SaveStatus } from "@/hooks/useAutosave"
 
 type PendingAction = "draft" | "publish" | null
+
+function ButtonSpinner() {
+  return (
+    <span
+      aria-hidden="true"
+      className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-r-transparent text-current"
+      data-button-spinner="true"
+    />
+  )
+}
 
 interface EditorTopBarProps {
   autosaveHint?: string
@@ -107,7 +116,7 @@ export function EditorTopBar({
             type="button"
             variant="outline"
           >
-            {isDraftPending && <Loader aria-hidden="true" size="sm" />}
+            {isDraftPending && <ButtonSpinner />}
             <span className="hidden md:inline">
               {isDraftPending ? "Đang lưu..." : "Lưu nháp"}
             </span>
@@ -120,7 +129,7 @@ export function EditorTopBar({
             size="sm"
             type="button"
           >
-            {isPublishPending && <Loader aria-hidden="true" size="sm" />}
+            {isPublishPending && <ButtonSpinner />}
             {isPublishPending ? publishPendingLabel : publishLabel}
           </Button>
         </div>

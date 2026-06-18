@@ -109,7 +109,7 @@ export function ImageNodeView(props: NodeViewProps) {
       />
       <figcaption
         ref={captionRef}
-        className={`mt-1 w-full text-center text-sm text-text-tertiary ${
+        className={`editor-media-caption mt-1 w-full text-center text-sm ${
           props.editor.isEditable ? "min-h-[1.5rem] outline-none" : ""
         } ${!node.attrs.showCaption ? "hidden" : ""}`}
       >

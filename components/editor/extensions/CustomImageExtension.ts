@@ -42,7 +42,7 @@ export const CustomImageExtension = Node.create({
       mergeAttributes(HTMLAttributes, { "data-type": "image" }),
       [
         "figcaption",
-        { class: `mt-1 w-full text-center text-sm text-text-tertiary ${!showCaption ? "hidden" : ""}`.trim() },
+        { class: `editor-media-caption mt-1 w-full text-center text-sm ${!showCaption ? "hidden" : ""}`.trim() },
         0,
       ],
     ]
