@@ -199,7 +199,7 @@
 
   .prose-editor {
     color: var(--text-primary);
-    font-family: var(--font-lora), Georgia, sans-serif;
+    font-family: var(--font-inter), system-ui, sans-serif;
     font-size: 1rem;
     line-height: 1.65;
     max-width: 100%;
