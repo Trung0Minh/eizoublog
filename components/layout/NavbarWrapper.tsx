@@ -5,7 +5,12 @@ import { usePathname } from "next/navigation"
 export function NavbarWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   
-  if (pathname.startsWith("/admin")) {
+  const isEditorRoute =
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/dashboard/edit") ||
+    pathname.startsWith("/dashboard/new")
+  
+  if (isEditorRoute) {
     return null
   }
   

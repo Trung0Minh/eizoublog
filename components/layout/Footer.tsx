@@ -1,9 +1,21 @@
+"use client"
+
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { MagneticEffect } from "@/components/ui/MagneticEffect"
 
 export function Footer() {
+  const pathname = usePathname()
   const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "Anime Blog"
   const year = new Date().getFullYear()
+
+  // Hide footer on editor and admin pages
+  const isEditorRoute =
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/dashboard/edit") ||
+    pathname.startsWith("/dashboard/new")
+
+  if (isEditorRoute) return null
 
   return (
     <footer className="border-t border-border-default mt-20">

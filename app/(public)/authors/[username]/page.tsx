@@ -43,6 +43,24 @@ export async function generateMetadata({
   })
 }
 
+import type { JSONContent } from "@tiptap/react"
+
+/** Strip image/video/embed nodes from Tiptap JSON so bios only show text. */
+function stripMediaNodes(node: JSONContent): JSONContent {
+  return {
+    ...node,
+    content: node.content
+      ?.filter(
+        (child) =>
+          child.type !== "image" &&
+          child.type !== "customImage" &&
+          child.type !== "imageGallery" &&
+          child.type !== "videoEmbed",
+      )
+      .map(stripMediaNodes),
+  }
+}
+
 export default async function AuthorPage({
   params,
   searchParams,
@@ -94,12 +112,12 @@ export default async function AuthorPage({
             @{author.username}
           </p>
           {author.bio && (
-            <div className="mt-3 max-w-2xl text-sm leading-relaxed prose prose-sm dark:prose-invert max-h-48 overflow-hidden [&_img]:hidden [&_figure]:hidden [&_iframe]:hidden [&_video]:hidden">
+            <div className="mt-3 max-w-2xl text-sm leading-relaxed">
               {(() => {
                 if (author.bio.startsWith("{")) {
                   try {
-                    const json = JSON.parse(author.bio)
-                    return <StaticPostContent content={json} />
+                    const json = JSON.parse(author.bio) as JSONContent
+                    return <StaticPostContent content={stripMediaNodes(json)} />
                   } catch {}
                 }
                 return <p>{author.bio}</p>
