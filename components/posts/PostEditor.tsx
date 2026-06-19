@@ -555,6 +555,42 @@ export function PostEditor({
               data-testid="editor-writing-surface"
             >
               <div className="md:px-12 md:pb-16 md:pt-10">
+                <div className="mt-4 pb-2 md:mt-0">
+                  <label className="sr-only" htmlFor="post-title">
+                    Tiêu đề
+                  </label>
+                  <input
+                    className="w-full border-none bg-transparent text-[32px] md:text-[40px] font-bold font-display leading-[1.2] text-text-primary outline-none placeholder:text-text-tertiary placeholder:font-normal"
+                    id="post-title"
+                    maxLength={200}
+                    onChange={(event) => {
+                      setTitle(event.target.value)
+                      markDirtyAndAutosave()
+                    }}
+                    placeholder="Tiêu đề bài viết..."
+                    value={title}
+                  />
+                </div>
+
+                <div className="pb-4">
+                  <label className="sr-only" htmlFor="post-excerpt">
+                    Đoạn trích
+                  </label>
+                  <Textarea
+                    className="h-16 min-h-16 resize-none border-none bg-transparent px-0 text-[16px] text-text-secondary/80 shadow-none placeholder:text-text-tertiary focus-visible:border-transparent focus-visible:ring-0 leading-relaxed"
+                    id="post-excerpt"
+                    maxLength={500}
+                    onChange={(event) => {
+                      setExcerpt(event.target.value)
+                      markDirtyAndAutosave()
+                    }}
+                    placeholder="Đoạn trích ngắn hiển thị trên trang danh sách..."
+                    value={excerpt}
+                  />
+                </div>
+
+                <div className="mt-4 mb-2 border-t-2 border-transparent bg-gradient-to-r from-accent/0 via-accent/30 to-accent/0 h-[2px] w-full" />
+
                 <TiptapEditor
                   content={content}
                   editable
@@ -563,43 +599,7 @@ export function PostEditor({
                     setContentText(text)
                     markDirtyAndAutosave()
                   }}
-                >
-                  <div className="mt-4 pb-2 md:mt-0">
-                    <label className="sr-only" htmlFor="post-title">
-                      Tiêu đề
-                    </label>
-                    <input
-                      className="w-full border-none bg-transparent text-[32px] md:text-[40px] font-bold font-display leading-[1.2] text-text-primary outline-none placeholder:text-text-tertiary placeholder:font-normal"
-                      id="post-title"
-                      maxLength={200}
-                      onChange={(event) => {
-                        setTitle(event.target.value)
-                        markDirtyAndAutosave()
-                      }}
-                      placeholder="Tiêu đề bài viết..."
-                      value={title}
-                    />
-                  </div>
-
-                  <div className="pb-4">
-                    <label className="sr-only" htmlFor="post-excerpt">
-                      Đoạn trích
-                    </label>
-                    <Textarea
-                      className="h-16 min-h-16 resize-none border-none bg-transparent px-0 text-[16px] text-text-secondary/80 shadow-none placeholder:text-text-tertiary focus-visible:border-transparent focus-visible:ring-0 leading-relaxed"
-                      id="post-excerpt"
-                      maxLength={500}
-                      onChange={(event) => {
-                        setExcerpt(event.target.value)
-                        markDirtyAndAutosave()
-                      }}
-                      placeholder="Đoạn trích ngắn hiển thị trên trang danh sách..."
-                      value={excerpt}
-                    />
-                  </div>
-
-                  <div className="mt-4 mb-2 border-t-2 border-transparent bg-gradient-to-r from-accent/0 via-accent/30 to-accent/0 h-[2px] w-full" />
-                </TiptapEditor>
+                />
               </div>
             </section>
           </div>

@@ -87,4 +87,15 @@ describe("anime-blog-4 appearance parity", () => {
     expect(postPage).toContain("post.tags.length > 0")
     expect(postPage).toContain("Animation Analysis")
   })
+
+  it("keeps post title and excerpt outside the Tiptap body editor", () => {
+    const editor = read("components/posts/PostEditor.tsx")
+    const titleIndex = editor.indexOf('id="post-title"')
+    const tiptapIndex = editor.indexOf("<TiptapEditor")
+
+    expect(titleIndex).toBeGreaterThan(-1)
+    expect(tiptapIndex).toBeGreaterThan(-1)
+    expect(titleIndex).toBeLessThan(tiptapIndex)
+    expect(editor).not.toContain("</TiptapEditor>")
+  })
 })
