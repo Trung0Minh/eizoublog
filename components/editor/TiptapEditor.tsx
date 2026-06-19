@@ -54,7 +54,13 @@ export function TiptapEditor({
   placeholder = "Bắt đầu viết bài...",
   ariaLabel,
 }: TiptapEditorProps) {
+  const [mounted, setMounted] = useState(false)
   const [spellcheckEnabled, setSpellcheckEnabled] = useState(false)
+  
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const editor = useEditor({
     content: content ?? "",
     editable,
@@ -122,7 +128,6 @@ export function TiptapEditor({
       UnderlineExtension,
       VideoEmbedExtension,
     ],
-    immediatelyRender: false,
     onUpdate: ({ editor }) => {
       onChange?.(editor.getJSON(), editor.getText())
     },
@@ -146,7 +151,7 @@ export function TiptapEditor({
     }
   }, [editor, onEditorReady])
 
-  if (!editor) {
+  if (!mounted || !editor) {
     return null
   }
 

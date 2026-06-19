@@ -87,24 +87,28 @@ export default async function AuthorPage({
   return (
     <PageContainer>
       <section className="mb-10 flex items-start gap-4 border-b pb-8">
-        {author.avatarUrl && (
+        {author.avatarUrl ? (
           <img
             alt={author.name}
-            className="h-16 w-16 shrink-0 rounded-full object-cover"
+            className="h-16 w-16 shrink-0 rounded-full object-cover border border-border-default bg-subtle-bg"
             decoding="async"
             loading="lazy"
             src={author.avatarUrl}
           />
+        ) : (
+          <div className="h-16 w-16 shrink-0 rounded-full flex items-center justify-center text-xl font-bold bg-[#2d6e7e] text-white border-2 border-background shadow-sm">
+            {author.name.charAt(0)}
+          </div>
         )}
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold tracking-tight">{author.name}</h1>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               {author.role === "ADMIN" && (
-                <span className="rounded-md bg-red-100 px-1.5 py-0.5 text-xs font-semibold text-red-700 dark:bg-red-900/30 dark:text-red-400">ADMIN</span>
+                <span className="rounded-md bg-destructive px-2 py-0.5 text-[11px] font-bold tracking-wider text-destructive-foreground dark:bg-destructive/90">ADMIN</span>
               )}
               {author.role === "WRITER" && (
-                <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">Writer</span>
+                <span className="rounded-md bg-emerald-500 px-2 py-0.5 text-[11px] font-bold tracking-wider text-white dark:bg-emerald-600">WRITER</span>
               )}
             </div>
           </div>
