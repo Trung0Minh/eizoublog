@@ -46,7 +46,7 @@ export function CompactPostList({
               </div>
               <Link
                 aria-label={post.title}
-                className="block overflow-hidden rounded-[3px] border border-border-default bg-subtle-bg"
+                className="block relative overflow-hidden rounded-[3px] border border-border-default bg-subtle-bg"
                 href={`/${post.slug}`}
               >
                 {post.coverUrl ? (

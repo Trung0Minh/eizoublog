@@ -539,7 +539,7 @@ export function PostEditor({
 
         <div className="min-w-0 flex-1 overflow-y-auto">
           <div 
-            className="mx-auto flex w-full max-w-[1200px] flex-col px-4 pb-[120px] pt-6 md:px-6 md:pt-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out"
+            className="mx-auto flex w-full max-w-[1200px] flex-col px-4 pb-[120px] pt-6 md:px-6 md:pt-8"
           >
             {error && (
               <div

@@ -4,6 +4,7 @@ import { ArrowLeft, Settings2 } from "lucide-react"
 import Link from "next/link"
 
 import { ThemeToggle } from "@/components/layout/ThemeToggle"
+import { SeasonToggle } from "@/components/ui/SeasonToggle"
 import { SaveStatusIndicator } from "@/components/editor/SaveStatusIndicator"
 import { Button } from "@/components/ui/button"
 import type { SaveStatus } from "@/hooks/useAutosave"
@@ -91,6 +92,7 @@ export function EditorTopBar({
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
+          <SeasonToggle />
           <ThemeToggle />
           {onToggleSettings && (
             <Button
