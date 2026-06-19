@@ -107,7 +107,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
         </div>
       )}
 
-      <section className="rounded-[8px] border p-4 sm:p-5">
+      <section className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6 sm:p-8">
         <label className="mb-3 block text-sm font-medium">Ảnh đại diện</label>
         <AvatarUpload name={name} onChange={setAvatarUrl} value={avatarUrl} />
       </section>
@@ -125,6 +125,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
             onChange={(event) => setName(event.target.value)}
             required
             value={name}
+            className="rounded-[12px] border-[2px] border-border-default focus-visible:border-accent focus-visible:ring-accent"
           />
         </div>
 
@@ -151,6 +152,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
             id="profile-username"
             readOnly
             value={`@${user.username}`}
+            className="rounded-[12px] border-[2px] border-border-default bg-muted/50"
           />
           <p className="text-xs text-muted-foreground">
             Đây là một phần của URL hồ sơ công khai của bạn.
@@ -161,14 +163,14 @@ export function ProfileForm({ user }: ProfileFormProps) {
           <label className="text-sm font-medium" htmlFor="profile-email">
             Email
           </label>
-          <Input disabled id="profile-email" readOnly value={user.email} />
+          <Input disabled id="profile-email" readOnly value={user.email} className="rounded-[12px] border-[2px] border-border-default bg-muted/50" />
           <p className="text-xs text-muted-foreground">
             Email được liên kết với tài khoản đăng nhập của bạn.
           </p>
         </div>
       </div>
 
-      <Button className="w-full sm:w-auto" disabled={saving || !name.trim()}>
+      <Button className="w-full sm:w-auto rounded-full bg-accent text-white hover:bg-accent/90" disabled={saving || !name.trim()}>
         {saving ? "Đang lưu..." : "Lưu thay đổi"}
       </Button>
     </form>

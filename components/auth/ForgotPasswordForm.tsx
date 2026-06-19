@@ -56,8 +56,8 @@ export function ForgotPasswordForm() {
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-12">
-      <section className="w-full max-w-sm rounded-[8px] border bg-background p-6 sm:p-8">
-        <h1 className="text-2xl font-bold tracking-tight">Forgot password</h1>
+      <section className="w-full max-w-sm rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6 sm:p-8">
+        <h1 className="font-display text-3xl font-bold tracking-tight text-text-primary">Forgot password</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           Enter your invited writer email. If it belongs to an active account,
           we will send a link to set a new Anime Blog password.
@@ -87,9 +87,10 @@ export function ForgotPasswordForm() {
               required
               type="email"
               value={email}
+              className="rounded-[12px] border-[2px] border-border-default focus-visible:border-accent focus-visible:ring-accent"
             />
           </div>
-          <Button className="w-full" disabled={loading} type="submit">
+          <Button className="w-full rounded-full bg-accent text-white hover:bg-accent/90" disabled={loading} type="submit">
             {loading ? "Sending..." : "Send reset link"}
           </Button>
         </form>

@@ -16,6 +16,7 @@ import { TagInput, type TagOption } from "@/components/posts/TagInput"
 import { useAutosave } from "@/hooks/useAutosave"
 import { useWarnUnsaved } from "@/hooks/useWarnUnsaved"
 import { cn } from "@/lib/utils"
+import { motion } from "framer-motion"
 
 interface CategoryOption {
   children: { id: string; name: string; slug?: string }[]
@@ -350,7 +351,7 @@ export function PostEditor({
         titlePreview={title}
       />
 
-      <main className="relative mt-12 flex min-h-0 flex-1 overflow-hidden bg-subtle-bg/10 dark:bg-black/40">
+      <main className="relative mt-14 flex min-h-0 flex-1 overflow-hidden bg-subtle-bg/10 dark:bg-black/40">
         <button
           aria-label={isSettingsOpen ? "Đóng cài đặt" : "Mở cài đặt"}
           className={cn(
@@ -392,7 +393,7 @@ export function PostEditor({
               </div>
 
               <div className="flex flex-col gap-6">
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 bg-subtle-bg/30 p-4 rounded-[16px] border border-border-default">
                     <CoverImageUpload
                       onChange={(url) => {
                         setCoverUrl(url)
@@ -423,7 +424,7 @@ export function PostEditor({
                     )}
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-4 bg-subtle-bg/30 p-4 rounded-[16px] border border-border-default">
                       <label
                         className="text-[12px] font-semibold text-text-secondary"
                         htmlFor="post-category"
@@ -451,7 +452,6 @@ export function PostEditor({
                           </optgroup>
                         ))}
                       </select>
-                    </div>
 
                     <TagInput
                       onChange={(tags) => {
@@ -460,10 +460,11 @@ export function PostEditor({
                       }}
                       selectedTags={selectedTags}
                     />
+                </div>
 
-                    {availableWriters.length > 0 && (!initialData || currentUserId === initialData.authorId) && (
-                      <div className="space-y-2">
-                        <div className="text-[12px] font-semibold text-text-secondary">
+                {availableWriters.length > 0 && (!initialData || currentUserId === initialData.authorId) && (
+                  <div className="space-y-4 bg-subtle-bg/30 p-4 rounded-[16px] border border-border-default">
+                    <div className="text-[12px] font-semibold text-text-secondary">
                           Đồng tác giả
                         </div>
                         <div className="flex flex-wrap gap-2">
@@ -537,7 +538,12 @@ export function PostEditor({
         </aside>
 
         <div className="min-w-0 flex-1 overflow-y-auto">
-          <div className="mx-auto flex w-full max-w-[1200px] flex-col px-4 pb-[120px] pt-6 md:px-6 md:pt-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="mx-auto flex w-full max-w-[1200px] flex-col px-4 pb-[120px] pt-6 md:px-6 md:pt-8"
+          >
             {error && (
               <div
                 className="mb-4 rounded-[5px] border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
@@ -548,10 +554,10 @@ export function PostEditor({
             )}
 
             <section
-              className="relative w-full bg-background md:rounded-[8px] md:border md:border-border-default md:shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)] dark:md:shadow-[0_1px_3px_rgba(0,0,0,0.3),0_2px_8px_rgba(0,0,0,0.2)]"
+              className="relative w-full bg-background md:rounded-[24px] md:border-[2px] md:border-border-default md:shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:md:shadow-[0_8px_30px_rgb(0,0,0,0.2)]"
               data-testid="editor-writing-surface"
             >
-              <div className="md:px-10 md:pb-12 md:pt-9">
+              <div className="md:px-12 md:pb-16 md:pt-10">
                 <TiptapEditor
                   content={content}
                   editable
@@ -566,7 +572,7 @@ export function PostEditor({
                       Tiêu đề
                     </label>
                     <input
-                      className="w-full border-none bg-transparent text-[22px] font-bold leading-[1.2] text-text-primary outline-none placeholder:text-text-tertiary placeholder:font-normal md:text-[28px]"
+                      className="w-full border-none bg-transparent text-[32px] md:text-[40px] font-bold font-display leading-[1.2] text-text-primary outline-none placeholder:text-text-tertiary placeholder:font-normal"
                       id="post-title"
                       maxLength={200}
                       onChange={(event) => {
@@ -583,7 +589,7 @@ export function PostEditor({
                       Đoạn trích
                     </label>
                     <Textarea
-                      className="h-12 min-h-12 resize-none border-none bg-transparent px-0 text-[15px] text-text-secondary shadow-none placeholder:text-text-tertiary focus-visible:border-transparent focus-visible:ring-0"
+                      className="h-16 min-h-16 resize-none border-none bg-transparent px-0 text-[16px] text-text-secondary/80 shadow-none placeholder:text-text-tertiary focus-visible:border-transparent focus-visible:ring-0 leading-relaxed"
                       id="post-excerpt"
                       maxLength={500}
                       onChange={(event) => {
@@ -595,11 +601,11 @@ export function PostEditor({
                     />
                   </div>
 
-                  <div className="mt-1 border-t-2 border-border-strong pt-6" />
+                  <div className="mt-4 mb-2 border-t-2 border-transparent bg-gradient-to-r from-accent/0 via-accent/30 to-accent/0 h-[2px] w-full" />
                 </TiptapEditor>
               </div>
             </section>
-          </div>
+          </motion.div>
         </div>
       </main>
     </div>

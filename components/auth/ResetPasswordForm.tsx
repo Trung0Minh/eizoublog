@@ -67,8 +67,8 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-12">
-      <section className="w-full max-w-sm rounded-[8px] border bg-background p-6 sm:p-8">
-        <h1 className="text-2xl font-bold tracking-tight">Set new password</h1>
+      <section className="w-full max-w-sm rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6 sm:p-8">
+        <h1 className="font-display text-3xl font-bold tracking-tight text-text-primary">Set new password</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           Create a new Anime Blog password. This is separate from your Gmail
           password.
@@ -99,6 +99,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
               required
               type="password"
               value={password}
+              className="rounded-[12px] border-[2px] border-border-default focus-visible:border-accent focus-visible:ring-accent"
             />
           </div>
           <div className="space-y-2">
@@ -114,9 +115,10 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
               required
               type="password"
               value={confirmPassword}
+              className="rounded-[12px] border-[2px] border-border-default focus-visible:border-accent focus-visible:ring-accent"
             />
           </div>
-          <Button className="w-full" disabled={loading} type="submit">
+          <Button className="w-full rounded-full bg-accent text-white hover:bg-accent/90" disabled={loading} type="submit">
             {loading ? "Saving..." : "Save password"}
           </Button>
         </form>

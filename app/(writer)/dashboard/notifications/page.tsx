@@ -7,6 +7,8 @@ import { MarkCommentsReadButton } from "@/components/notifications/MarkCommentsR
 import { ViewLink } from "@/components/notifications/ViewLink"
 import { CoAuthorInviteActions } from "@/components/posts/CoAuthorInviteActions"
 import { Button } from "@/components/ui/button"
+import { ScrollReveal } from "@/components/ui/ScrollReveal"
+import { TextReveal } from "@/components/ui/TextReveal"
 import { getActiveSession } from "@/lib/authz"
 import { getNotifications } from "@/lib/notifications"
 import { formatDate } from "@/lib/utils"
@@ -47,7 +49,9 @@ export default async function NotificationsPage() {
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-editorial">
             Trung tâm thông báo
           </p>
-          <h1 className="text-2xl font-bold tracking-tight">Thông báo</h1>
+          <h1 className="font-display text-3xl font-bold tracking-tight text-text-primary">
+            <TextReveal text="Thông báo" />
+          </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">
             Theo dõi lời mời cộng tác và bình luận mới trên bài viết của bạn.
           </p>
@@ -67,18 +71,20 @@ export default async function NotificationsPage() {
       </div>
 
       <div className="space-y-8">
-        <section>
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="flex items-center gap-2 text-base font-semibold">
-              <PenLine aria-hidden="true" className="h-4 w-4 text-editorial" />
+        <ScrollReveal className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6" index={0}>
+          <div className="mb-6 flex items-center justify-between gap-3">
+            <h2 className="flex items-center gap-3 font-display text-lg font-semibold">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/10 text-accent">
+                <PenLine aria-hidden="true" className="h-4 w-4" />
+              </span>
               Lời mời cộng tác
             </h2>
-            <span className="text-xs text-text-tertiary">
-              {pendingInvites.length} lời mời
+            <span className="inline-flex items-center justify-center rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-white">
+              {pendingInvites.length}
             </span>
           </div>
 
-          <div className="divide-y rounded-[8px] border">
+          <div className="divide-y divide-border-default/50">
             {pendingInvites.map((invite) => (
               <article
                 className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
@@ -98,25 +104,27 @@ export default async function NotificationsPage() {
             ))}
 
             {pendingInvites.length === 0 && (
-              <p className="p-4 text-sm text-text-tertiary">
+              <p className="py-4 text-sm text-text-tertiary">
                 Không có lời mời cộng tác mới.
               </p>
             )}
           </div>
-        </section>
+        </ScrollReveal>
 
-        <section>
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="flex items-center gap-2 text-base font-semibold">
-              <PenLine aria-hidden="true" className="h-4 w-4 text-editorial" />
+        <ScrollReveal className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6" index={1}>
+          <div className="mb-6 flex items-center justify-between gap-3">
+            <h2 className="flex items-center gap-3 font-display text-lg font-semibold">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/10 text-accent">
+                <PenLine aria-hidden="true" className="h-4 w-4" />
+              </span>
               Phản hồi lời mời
             </h2>
-            <span className="text-xs text-text-tertiary">
-              {responseEvents.length} phản hồi
+            <span className="inline-flex items-center justify-center rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-white">
+              {responseEvents.length}
             </span>
           </div>
 
-          <div className="divide-y rounded-[8px] border">
+          <div className="divide-y divide-border-default/50">
             {responseEvents.map((event) => {
               const data = isRecord(event.data) ? event.data : {}
               const actorName = stringValue(data.actorName) || "Một đồng tác giả"
@@ -167,28 +175,30 @@ export default async function NotificationsPage() {
             })}
 
             {responseEvents.length === 0 && (
-              <p className="p-4 text-sm text-text-tertiary">
+              <p className="py-4 text-sm text-text-tertiary">
                 Chưa có phản hồi lời mời mới.
               </p>
             )}
           </div>
-        </section>
+        </ScrollReveal>
 
-        <section>
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="flex items-center gap-2 text-base font-semibold">
-              <MessageSquare
-                aria-hidden="true"
-                className="h-4 w-4 text-editorial"
-              />
+        <ScrollReveal className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6" index={2}>
+          <div className="mb-6 flex items-center justify-between gap-3">
+            <h2 className="flex items-center gap-3 font-display text-lg font-semibold">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/10 text-accent">
+                <MessageSquare
+                  aria-hidden="true"
+                  className="h-4 w-4"
+                />
+              </span>
               Bình luận mới
             </h2>
-            <span className="text-xs text-text-tertiary">
-              {unreadComments.length} bình luận
+            <span className="inline-flex items-center justify-center rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-white">
+              {unreadComments.length}
             </span>
           </div>
 
-          <div className="divide-y rounded-[8px] border">
+          <div className="divide-y divide-border-default/50">
             {unreadComments.map((comment) => (
               <article className="p-4" key={comment.id}>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -226,12 +236,12 @@ export default async function NotificationsPage() {
             ))}
 
             {unreadComments.length === 0 && (
-              <p className="p-4 text-sm text-text-tertiary">
+              <p className="py-4 text-sm text-text-tertiary">
                 Không có bình luận mới.
               </p>
             )}
           </div>
-        </section>
+        </ScrollReveal>
 
         {!hasNotifications && (
           <div className="rounded-[8px] border border-dashed p-8 text-center text-sm text-text-tertiary">

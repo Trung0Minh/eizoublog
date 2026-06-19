@@ -59,16 +59,17 @@ export function EditorTopBar({
     : "Thêm tiêu đề để có thể lưu và xuất bản."
 
   return (
-    <header className="fixed left-0 right-0 top-0 z-[100] h-12 border-b border-border-default bg-background px-5">
+    <header className="fixed left-0 right-0 top-0 z-[100] h-14 border-b border-border-default/60 bg-background/80 backdrop-blur-md px-5">
       <div className="flex h-full items-center justify-between gap-3">
         <Link
-          className="group flex items-center gap-1.5 text-text-secondary transition-colors hover:text-text-primary"
+          className="group flex items-center gap-1.5 text-text-secondary transition-colors hover:text-accent"
           href={exitHref}
         >
           <ArrowLeft aria-hidden="true" className="h-4 w-4" />
           <span className="hidden text-[13px] font-medium md:inline">
             Bảng điều khiển
           </span>
+          <span className="text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">✨</span>
         </Link>
 
         <div className="absolute left-1/2 flex h-full -translate-x-1/2 items-center">
@@ -96,7 +97,7 @@ export function EditorTopBar({
               aria-controls="post-settings-panel"
               aria-expanded={isSettingsOpen}
               aria-label={isSettingsOpen ? "Ẩn cài đặt bài viết" : "Cài đặt bài viết"}
-              className="h-8 px-2 md:px-3 lg:hidden"
+              className="h-9 rounded-full px-3 lg:hidden border-[2px]"
               onClick={onToggleSettings}
               size="sm"
               type="button"
@@ -109,7 +110,7 @@ export function EditorTopBar({
             </Button>
           )}
           <Button
-            className="h-8 px-2 md:px-3.5"
+            className="h-9 rounded-full border-[2px] px-3 md:px-4"
             disabled={actionsDisabled}
             onClick={onSaveDraft}
             size="sm"
@@ -123,7 +124,7 @@ export function EditorTopBar({
             <span className="md:hidden">{isDraftPending ? "..." : "Nháp"}</span>
           </Button>
           <Button
-            className="h-8 px-3.5 font-semibold"
+            className="h-9 rounded-full bg-accent hover:bg-accent/90 text-white px-4 font-semibold"
             disabled={actionsDisabled}
             onClick={onPublish}
             size="sm"

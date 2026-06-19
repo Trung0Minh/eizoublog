@@ -82,7 +82,7 @@ export function InviteForm({ token, email }: InviteFormProps) {
           Email
         </label>
         <Input
-          className="bg-muted text-muted-foreground"
+          className="bg-muted/50 text-muted-foreground rounded-[12px] border-[2px] border-border-default focus-visible:border-accent focus-visible:ring-accent"
           disabled
           id="invite-email"
           type="email"
@@ -103,6 +103,7 @@ export function InviteForm({ token, email }: InviteFormProps) {
           placeholder="Your full name or pen name"
           required
           value={name}
+          className="rounded-[12px] border-[2px] border-border-default focus-visible:border-accent focus-visible:ring-accent"
         />
       </div>
 
@@ -124,6 +125,7 @@ export function InviteForm({ token, email }: InviteFormProps) {
           placeholder="e.g. sakuga_fan"
           required
           value={username}
+          className="rounded-[12px] border-[2px] border-border-default focus-visible:border-accent focus-visible:ring-accent"
         />
       </div>
 
@@ -143,6 +145,7 @@ export function InviteForm({ token, email }: InviteFormProps) {
           required
           type="password"
           value={password}
+          className="rounded-[12px] border-[2px] border-border-default focus-visible:border-accent focus-visible:ring-accent"
         />
       </div>
 
@@ -162,10 +165,11 @@ export function InviteForm({ token, email }: InviteFormProps) {
           required
           type="password"
           value={confirmPassword}
+          className="rounded-[12px] border-[2px] border-border-default focus-visible:border-accent focus-visible:ring-accent"
         />
       </div>
 
-      <Button className="w-full" disabled={loading} type="submit">
+      <Button className="w-full rounded-full bg-accent text-white hover:bg-accent/90" disabled={loading} type="submit">
         {loading ? "Creating account..." : "Create account"}
       </Button>
     </form>

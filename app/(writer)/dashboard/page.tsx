@@ -4,6 +4,8 @@ import { Eye, Pencil } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { ScrollReveal } from "@/components/ui/ScrollReveal"
+import { TextReveal } from "@/components/ui/TextReveal"
 import { CoAuthorInviteActions } from "@/components/posts/CoAuthorInviteActions"
 import { PostOwnerActions } from "@/components/posts/PostOwnerActions"
 import { getCachedWriterDashboardPosts } from "@/lib/queries"
@@ -26,17 +28,19 @@ export default async function DashboardPage() {
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-editorial">
             Bảng điều khiển
           </p>
-          <h1 className="text-2xl font-bold tracking-tight">Bài viết của tôi</h1>
+          <h1 className="font-display text-3xl font-bold tracking-tight text-text-primary">
+            <TextReveal text={`Chào, ${session.user.name}! ✨`} />
+          </h1>
         </div>
-        <Button asChild>
+        <Button asChild className="rounded-full bg-accent text-white hover:bg-accent/90">
           <Link href="/dashboard/new" prefetch={false}>
             Bài viết mới
           </Link>
         </Button>
       </div>
 
-      <div className="space-y-2">
-        {posts.map((post) => {
+      <div className="space-y-4">
+        {posts.map((post, index) => {
           const isOwner = post.authorId === session.user.id
           const hasPendingInvite = post.coAuthors?.some(
             (coAuthor) =>
@@ -45,66 +49,65 @@ export default async function DashboardPage() {
           )
 
           return (
-            <article
-              className="flex flex-col gap-3 border-t py-4 transition-colors first:border-t-0 hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between"
-              key={post.id}
-            >
-              <div className="min-w-0">
-                <h2 className="truncate font-medium">{post.title}</h2>
-                <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-                  {post.status === "PUBLISHED" && post.publishedAt
-                    ? `Đã xuất bản ${formatDate(post.publishedAt)}`
-                    : (
-                      <>
-                        <span>
-                          Bản nháp · Đã cập nhật {formatDate(post.updatedAt)}
-                        </span>
-                      </>
-                    )}
-                  {" · "}
-                  {post._count.comments} bình luận
-                </p>
-              </div>
-              <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
-                {hasPendingInvite ? (
-                  <CoAuthorInviteActions postId={post.id} />
-                ) : (
-                  <>
-                    <Badge variant={post.status === "PUBLISHED" ? "default" : "secondary"}>
-                      {post.status === "PUBLISHED" ? "Đã xuất bản" : "Bản nháp"}
-                    </Badge>
-                    {post.status === "PUBLISHED" && (
-                      <Button asChild size="icon" variant="ghost">
+            <ScrollReveal key={post.id} index={index}>
+              <article className="flex flex-col gap-3 rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-5 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <h2 className="truncate font-medium">{post.title}</h2>
+                  <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+                    {post.status === "PUBLISHED" && post.publishedAt
+                      ? `Đã xuất bản ${formatDate(post.publishedAt)}`
+                      : (
+                        <>
+                          <span>
+                            Bản nháp · Đã cập nhật {formatDate(post.updatedAt)}
+                          </span>
+                        </>
+                      )}
+                    {" · "}
+                    {post._count.comments} bình luận
+                  </p>
+                </div>
+                <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
+                  {hasPendingInvite ? (
+                    <CoAuthorInviteActions postId={post.id} />
+                  ) : (
+                    <>
+                      <Badge variant={post.status === "PUBLISHED" ? "default" : "secondary"}>
+                        {post.status === "PUBLISHED" ? "Đã xuất bản" : "Bản nháp"}
+                      </Badge>
+                      {post.status === "PUBLISHED" && (
+                        <Button asChild size="icon" variant="ghost">
+                          <Link
+                            aria-label={`Xem ${post.title}`}
+                            href={`/${post.slug}`}
+                            title={`Xem ${post.title}`}
+                          >
+                            <Eye aria-hidden="true" className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                      )}
+                      <Button asChild size="icon" variant="outline">
                         <Link
-                          aria-label={`Xem ${post.title}`}
-                          href={`/${post.slug}`}
-                          title={`Xem ${post.title}`}
+                          aria-label={`Chỉnh sửa ${post.title}`}
+                          href={`/dashboard/edit/${post.id}`}
+                          prefetch={false}
+                          title={`Chỉnh sửa ${post.title}`}
                         >
-                          <Eye aria-hidden="true" className="h-4 w-4" />
+                          <Pencil aria-hidden="true" className="h-4 w-4" />
                         </Link>
                       </Button>
-                    )}
-                    <Button asChild size="icon" variant="outline">
-                      <Link
-                        aria-label={`Chỉnh sửa ${post.title}`}
-                        href={`/dashboard/edit/${post.id}`}
-                        prefetch={false}
-                        title={`Chỉnh sửa ${post.title}`}
-                      >
-                        <Pencil aria-hidden="true" className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                    {isOwner && (
-                      <PostOwnerActions
-                        postId={post.id}
-                        status={post.status}
-                        title={post.title}
-                      />
-                    )}
-                  </>
-                )}
-              </div>
-            </article>
+                      {isOwner && (
+                        <PostOwnerActions
+                          postId={post.id}
+                          status={post.status}
+                          title={post.title}
+                        />
+                      )}
+                    </>
+                  )}
+                </div>
+              </article>
+            </ScrollReveal>
           )
         })}
 
