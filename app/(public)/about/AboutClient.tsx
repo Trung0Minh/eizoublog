@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Pencil, Save, X, Plus, Trash2, Sparkles, Heart } from "lucide-react"
 import type { JSONContent } from "@tiptap/react"
@@ -95,11 +95,24 @@ export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps)
 
   const [data, setData] = useState(initialData)
   const [contentText, setContentText] = useState(initialPage?.contentText || "")
+  const dataRef = useRef(data)
+  const contentTextRef = useRef(contentText)
+
+  function updateData(updater: (currentData: AboutPageContent) => AboutPageContent) {
+    const nextData = updater(dataRef.current)
+    dataRef.current = nextData
+    setData(nextData)
+  }
+
+  function updateContentText(nextContentText: string) {
+    contentTextRef.current = nextContentText
+    setContentText(nextContentText)
+  }
 
   async function handleSave() {
     setIsSaving(true)
     try {
-      await updateAboutPage(data, contentText)
+      await updateAboutPage(dataRef.current, contentTextRef.current)
       setIsEditing(false)
       router.refresh()
     } catch (error) {
@@ -123,7 +136,10 @@ export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps)
               size="sm"
               className="rounded-full border-border-default font-bold"
               onClick={() => {
+                dataRef.current = initialData
+                contentTextRef.current = initialPage?.contentText || ""
                 setData(initialData)
+                setContentText(initialPage?.contentText || "")
                 setIsEditing(false)
               }}
               disabled={isSaving}
@@ -143,7 +159,12 @@ export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps)
             <label className="block text-sm font-semibold text-text-primary mb-2">Tiêu đề chính</label>
             <Textarea
               value={data.title}
-              onChange={(e) => setData({ ...data, title: e.target.value })}
+              onChange={(e) =>
+                updateData((currentData) => ({
+                  ...currentData,
+                  title: e.target.value,
+                }))
+              }
               className="text-2xl font-bold resize-none rounded-[16px] bg-background border-[2px]"
               rows={2}
             />
@@ -154,7 +175,12 @@ export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps)
             <label className="block text-sm font-semibold text-text-primary mb-2">Lý do chúng mình tạo blog này (Why we do this)</label>
             <Textarea
               value={data.whyWeDoThis}
-              onChange={(e) => setData({ ...data, whyWeDoThis: e.target.value })}
+              onChange={(e) =>
+                updateData((currentData) => ({
+                  ...currentData,
+                  whyWeDoThis: e.target.value,
+                }))
+              }
               className="text-base resize-none rounded-[16px] bg-background border-[2px]"
               rows={4}
             />
@@ -167,11 +193,11 @@ export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps)
                 content={data.body}
                 editable={true}
                 onChange={(json, text) => {
-                  setData((currentData) => ({
+                  updateData((currentData) => ({
                     ...currentData,
                     body: json,
                   }))
-                  setContentText(text)
+                  updateContentText(text)
                 }}
               />
             </div>

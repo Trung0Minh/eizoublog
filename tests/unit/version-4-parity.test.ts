@@ -48,7 +48,10 @@ describe("anime-blog-4 appearance parity", () => {
   it("keeps About body edits when other editable fields change", () => {
     const about = read("app/(public)/about/AboutClient.tsx")
 
-    expect(about).toContain("setData((currentData) => ({")
+    expect(about).toContain("dataRef.current")
+    expect(about).toContain("contentTextRef.current")
+    expect(about).toContain("await updateAboutPage(dataRef.current")
+    expect(about).toContain("updateData((currentData) => ({")
     expect(about).toContain("body: json")
     expect(about).not.toContain("setData({ ...data, body: json })")
   })
