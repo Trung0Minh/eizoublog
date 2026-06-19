@@ -46,7 +46,7 @@ export default async function NotificationsPage() {
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:py-10 md:px-6 lg:px-8">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-editorial">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-accent">
             Trung tâm thông báo
           </p>
           <h1 className="font-display text-3xl font-bold tracking-tight text-text-primary">

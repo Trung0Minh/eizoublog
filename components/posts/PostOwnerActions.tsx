@@ -74,7 +74,8 @@ export function PostOwnerActions({ postId, status, title }: PostOwnerActionsProp
         size="icon"
         title={`Lưu trữ ${title}`}
         type="button"
-        variant="destructive"
+        variant="outline"
+        className="text-text-tertiary hover:text-destructive hover:bg-destructive/10 transition-colors"
       >
         <Archive aria-hidden="true" className="h-4 w-4" />
       </Button>

@@ -16,7 +16,7 @@ import { TagInput, type TagOption } from "@/components/posts/TagInput"
 import { useAutosave } from "@/hooks/useAutosave"
 import { useWarnUnsaved } from "@/hooks/useWarnUnsaved"
 import { cn } from "@/lib/utils"
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 
 interface CategoryOption {
   children: { id: string; name: string; slug?: string }[]
@@ -538,11 +538,8 @@ export function PostEditor({
         </aside>
 
         <div className="min-w-0 flex-1 overflow-y-auto">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="mx-auto flex w-full max-w-[1200px] flex-col px-4 pb-[120px] pt-6 md:px-6 md:pt-8"
+          <div 
+            className="mx-auto flex w-full max-w-[1200px] flex-col px-4 pb-[120px] pt-6 md:px-6 md:pt-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out"
           >
             {error && (
               <div
@@ -605,7 +602,7 @@ export function PostEditor({
                 </TiptapEditor>
               </div>
             </section>
-          </motion.div>
+          </div>
         </div>
       </main>
     </div>

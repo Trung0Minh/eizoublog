@@ -94,7 +94,7 @@ export default async function AuthorPage({
             @{author.username}
           </p>
           {author.bio && (
-            <div className="mt-3 max-w-2xl text-sm leading-relaxed [&_.ProseMirror]:!ml-0 [&_.ProseMirror>p]:!ml-0">
+            <div className="mt-3 max-w-2xl text-sm leading-relaxed prose prose-sm dark:prose-invert max-h-48 overflow-hidden [&_img]:hidden [&_figure]:hidden [&_iframe]:hidden [&_video]:hidden">
               {(() => {
                 if (author.bio.startsWith("{")) {
                   try {

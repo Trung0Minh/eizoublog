@@ -25,7 +25,7 @@ export default async function DashboardPage() {
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:py-10 md:px-6 lg:px-8">
       <div className="mb-8 flex items-center justify-between gap-4">
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-editorial">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-accent">
             Bảng điều khiển
           </p>
           <h1 className="font-display text-3xl font-bold tracking-tight text-text-primary">

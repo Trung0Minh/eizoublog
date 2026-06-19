@@ -27,7 +27,7 @@ export default async function ProfilePage() {
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-8 sm:py-10 md:px-6 lg:px-8">
       <div className="mb-8">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-editorial">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-accent">
           Cài đặt tác giả
         </p>
         <h1 className="font-display text-3xl font-bold tracking-tight text-text-primary">
