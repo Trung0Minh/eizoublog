@@ -111,8 +111,13 @@ export default async function ContributorsPage({ searchParams }: ContributorsPag
               </Link>
 
               <div className="flex-1">
-                <div className="inline-block bg-accent/10 text-accent text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full mb-2">
-                  {contributor.role === "ADMIN" ? "ADMIN" : "WRITER"}
+                <div className="flex items-center gap-2 mb-2">
+                  {contributor.role === "ADMIN" && (
+                    <span className="rounded-md bg-red-100 px-2 py-0.5 text-[11px] font-bold text-red-700 tracking-wider">ADMIN</span>
+                  )}
+                  {contributor.role === "WRITER" && (
+                    <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700 tracking-wider">WRITER</span>
+                  )}
                 </div>
                 <Link href={`/authors/${contributor.username}`}>
                   <h2 className="text-[22px] font-display font-bold text-text-primary mb-2 group-hover:text-accent transition-colors">

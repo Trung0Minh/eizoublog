@@ -351,7 +351,7 @@ export function PostEditor({
         titlePreview={title}
       />
 
-      <main className="relative mt-14 flex min-h-0 flex-1 overflow-hidden bg-subtle-bg/10 dark:bg-black/40">
+      <main className="relative mt-14 flex w-full h-full min-h-0 flex-1 overflow-hidden bg-subtle-bg/10 dark:bg-black/40">
         <button
           aria-label={isSettingsOpen ? "Đóng cài đặt" : "Mở cài đặt"}
           className={cn(
@@ -537,7 +537,7 @@ export function PostEditor({
           )}
         </aside>
 
-        <div className="min-w-0 flex-1 overflow-y-auto">
+        <div className="min-w-0 flex-1 w-full h-full overflow-y-auto">
           <div 
             className="mx-auto flex w-full max-w-[1200px] flex-col px-4 pb-[120px] pt-6 md:px-6 md:pt-8"
           >

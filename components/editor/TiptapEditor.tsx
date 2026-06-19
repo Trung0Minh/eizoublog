@@ -128,6 +128,7 @@ export function TiptapEditor({
       UnderlineExtension,
       VideoEmbedExtension,
     ],
+    immediatelyRender: false,
     onUpdate: ({ editor }) => {
       onChange?.(editor.getJSON(), editor.getText())
     },
@@ -151,19 +152,17 @@ export function TiptapEditor({
     }
   }, [editor, onEditorReady])
 
-  if (!mounted || !editor) {
-    return null
-  }
+  const isReady = mounted && !!editor
 
-  const words = editor.storage.characterCount.words()
+  const words = isReady ? editor!.storage.characterCount.words() : 0
   const readingTime = Math.max(1, Math.ceil(words / 200))
 
   return (
     <div className="relative w-full">
-      {editable && (
+      {isReady && editable && (
         <>
           <EditorToolbar
-            editor={editor}
+            editor={editor!}
             onToggleSpellcheck={() =>
               setSpellcheckEnabled((current) => !current)
             }
@@ -174,12 +173,16 @@ export function TiptapEditor({
 
       {children}
 
-      <EditorContent editor={editor} />
+      {isReady ? (
+        <EditorContent editor={editor!} />
+      ) : (
+        <div className="prose-editor min-h-[420px]" />
+      )}
 
-      {editable && (
+      {isReady && editable && (
         <div className="mt-2 flex items-center justify-end gap-3 text-xs text-text-tertiary">
           <span>{words.toLocaleString()} từ</span>
-          <span>{editor.storage.characterCount.characters().toLocaleString()} ký tự</span>
+          <span>{editor!.storage.characterCount.characters().toLocaleString()} ký tự</span>
           <span>~{readingTime} phút đọc</span>
         </div>
       )}

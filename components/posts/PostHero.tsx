@@ -3,13 +3,14 @@ import { Sparkles } from "lucide-react"
 import { formatDate } from "@/lib/utils"
 import { getCoverStyle } from "@/lib/cover-style"
 import { PostHeaderPost } from "./PostHeader"
+import { PostEditLink } from "./PostEditLink"
 
 interface PostHeroProps {
   post: PostHeaderPost
   authorUsernames?: string[]
 }
 
-export function PostHero({ post }: PostHeroProps) {
+export function PostHero({ post, authorUsernames }: PostHeroProps) {
   const author = post.author
   const coAuthor = post.coAuthors[0]?.user
 
@@ -39,42 +40,48 @@ export function PostHero({ post }: PostHeroProps) {
             {post.title}
           </h1>
 
-          <div className="flex items-center gap-[12px] bg-background/95 backdrop-blur-md w-max p-2 pr-4 rounded-full border border-border-default shadow-md select-none">
-            <div className="flex items-center">
-              <div className="w-9 h-9 rounded-full bg-[#2d6e7e] flex justify-center items-center text-white text-[14px] outline outline-2 outline-background z-10 font-bold overflow-hidden">
-                {author.avatarUrl ? <img src={author.avatarUrl} alt="" className="w-full h-full object-cover"/> : author.name.charAt(0)}
-              </div>
-              {coAuthor && (
-                <div className="w-9 h-9 rounded-full bg-[#c47f5a] flex justify-center items-center text-white text-[14px] outline outline-2 outline-background -ml-[12px] z-20 font-bold overflow-hidden">
-                  {coAuthor.avatarUrl ? <img src={coAuthor.avatarUrl} alt="" className="w-full h-full object-cover"/> : coAuthor.name.charAt(0)}
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-[12px] bg-background/95 backdrop-blur-md p-2 pr-4 rounded-full border border-border-default shadow-md select-none">
+              <div className="flex items-center">
+                <div className="w-9 h-9 rounded-full bg-[#2d6e7e] flex justify-center items-center text-white text-[14px] outline outline-2 outline-background z-10 font-bold overflow-hidden">
+                  {author.avatarUrl ? <img src={author.avatarUrl} alt="" className="w-full h-full object-cover"/> : author.name.charAt(0)}
                 </div>
-              )}
-            </div>
-            <div className="flex flex-col sm:flex-row sm:items-center text-[13px] text-text-primary font-bold">
-              <div className="flex items-center gap-1">
-                <span className="text-text-primary font-bold">{author.name}</span>
                 {coAuthor && (
-                  <>
-                    <span className="text-text-secondary font-medium">&amp;</span>
-                    <span className="text-text-primary font-bold">{coAuthor.name}</span>
-                  </>
+                  <div className="w-9 h-9 rounded-full bg-[#c47f5a] flex justify-center items-center text-white text-[14px] outline outline-2 outline-background -ml-[12px] z-20 font-bold overflow-hidden">
+                    {coAuthor.avatarUrl ? <img src={coAuthor.avatarUrl} alt="" className="w-full h-full object-cover"/> : coAuthor.name.charAt(0)}
+                  </div>
                 )}
               </div>
-              <div className="flex items-center text-text-secondary hidden sm:flex mx-2">&middot;</div>
-              <div className="flex items-center text-text-secondary font-medium">
-                {post.publishedAt && (
-                  <>
-                    <span>{formatDate(post.publishedAt)}</span>
-                  </>
-                )}
-                {post._count !== undefined && (
-                  <>
-                    <span className="mx-2">&middot;</span>
-                    <span>{post._count.comments} bình luận</span>
-                  </>
-                )}
+              <div className="flex flex-col sm:flex-row sm:items-center text-[13px] text-text-primary font-bold">
+                <div className="flex items-center gap-1">
+                  <span className="text-text-primary font-bold">{author.name}</span>
+                  {coAuthor && (
+                    <>
+                      <span className="text-text-secondary font-medium">&amp;</span>
+                      <span className="text-text-primary font-bold">{coAuthor.name}</span>
+                    </>
+                  )}
+                </div>
+                <div className="flex items-center text-text-secondary hidden sm:flex mx-2">&middot;</div>
+                <div className="flex items-center text-text-secondary font-medium">
+                  {post.publishedAt && (
+                    <>
+                      <span>{formatDate(post.publishedAt)}</span>
+                    </>
+                  )}
+                  {post._count !== undefined && (
+                    <>
+                      <span className="mx-2">&middot;</span>
+                      <span>{post._count.comments} bình luận</span>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
+
+            {authorUsernames && (
+              <PostEditLink authorUsernames={authorUsernames} postId={post.id} />
+            )}
           </div>
         </div>
       </div>

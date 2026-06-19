@@ -105,10 +105,10 @@ export default async function AuthorPage({
             <h1 className="text-2xl font-bold tracking-tight">{author.name}</h1>
             <div className="flex items-center gap-2">
               {author.role === "ADMIN" && (
-                <span className="rounded-md bg-destructive px-2 py-0.5 text-[11px] font-bold tracking-wider text-destructive-foreground dark:bg-destructive/90">ADMIN</span>
+                <span className="rounded-md bg-red-100 px-1.5 py-0.5 text-[11px] font-bold text-red-700 tracking-wider">ADMIN</span>
               )}
               {author.role === "WRITER" && (
-                <span className="rounded-md bg-emerald-500 px-2 py-0.5 text-[11px] font-bold tracking-wider text-white dark:bg-emerald-600">WRITER</span>
+                <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-[11px] font-bold text-emerald-700 tracking-wider">WRITER</span>
               )}
             </div>
           </div>
