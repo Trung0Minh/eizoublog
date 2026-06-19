@@ -44,4 +44,12 @@ describe("anime-blog-4 appearance parity", () => {
     expect(read("app/error.tsx")).toContain("reset()")
     expect(read("app/not-found.tsx")).toContain('href="/"')
   })
+
+  it("keeps About body edits when other editable fields change", () => {
+    const about = read("app/(public)/about/AboutClient.tsx")
+
+    expect(about).toContain("setData((currentData) => ({")
+    expect(about).toContain("body: json")
+    expect(about).not.toContain("setData({ ...data, body: json })")
+  })
 })

@@ -13,9 +13,20 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { updateAboutPage } from "./actions"
 
+interface PublishingNote {
+  text: string
+  title: string
+}
+
+interface AboutPageContent {
+  body: JSONContent
+  publishingNotes: PublishingNote[]
+  title: string
+  whyWeDoThis: string
+}
+
 interface AboutClientProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  initialPage: { content: any; contentText: string | null } | null
+  initialPage: { content: unknown; contentText: string | null } | null
   isAdmin: boolean
   appName: string
 }
@@ -59,15 +70,23 @@ const defaultPublishingNotes = [
   },
 ]
 
+function isAboutPageContent(value: unknown): value is AboutPageContent {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !("type" in value) &&
+    "body" in value &&
+    "title" in value &&
+    "whyWeDoThis" in value
+  )
+}
+
 export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps) {
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
-  // Determine if initial content is old format (just Tiptap) or new format
-  const isNewFormat = initialPage?.content && typeof initialPage.content === "object" && !initialPage.content.type;
-
-  const initialData = isNewFormat ? initialPage.content : {
+  const initialData: AboutPageContent = isAboutPageContent(initialPage?.content) ? initialPage.content : {
     title: `Chào mừng bạn đến với Eizou Blog!`, // Updated title
     whyWeDoThis: "Để lan tỏa tình yêu với hoạt hình và ghi nhận công sức của những nhà sáng tạo tuyệt vời đã thổi hồn vào những thế giới yêu thích của chúng ta. Chúng mình muốn tạo ra một nơi mà fan có thể đọc những bài tiểu luận sâu sắc cùng một tách trà trong một không gian ấm cúng, dễ thương! 💖",
     body: (initialPage?.content as JSONContent) || defaultBody,
@@ -148,7 +167,10 @@ export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps)
                 content={data.body}
                 editable={true}
                 onChange={(json, text) => {
-                  setData({ ...data, body: json })
+                  setData((currentData) => ({
+                    ...currentData,
+                    body: json,
+                  }))
                   setContentText(text)
                 }}
               />
