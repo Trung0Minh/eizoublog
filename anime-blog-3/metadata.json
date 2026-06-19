@@ -1,6 +1,0 @@
-{
-  "name": "Anime Blog",
-  "description": "An editorial-style anime analysis and review blog with a focus on high-fidelity long-form writing.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

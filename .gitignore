@@ -40,6 +40,9 @@ yarn-error.log*
 .codegraph/
 .codex/
 
+# local reference copies
+/anime-blog*/
+
 # vercel
 .vercel
 
