@@ -10,7 +10,12 @@ import TaskItem from "@tiptap/extension-task-item"
 import TaskList from "@tiptap/extension-task-list"
 import TextAlign from "@tiptap/extension-text-align"
 import Typography from "@tiptap/extension-typography"
-import { EditorContent, useEditor, type JSONContent } from "@tiptap/react"
+import {
+  EditorContent,
+  useEditor,
+  type Editor,
+  type JSONContent,
+} from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 
 import { common, createLowlight } from "lowlight"
@@ -35,6 +40,7 @@ interface TiptapEditorProps {
   content?: JSONContent
   editable?: boolean
   onChange?: (json: JSONContent, text: string) => void
+  onEditorReady?: (editor: Editor | null) => void
   placeholder?: string
   ariaLabel?: string
 }
@@ -44,6 +50,7 @@ export function TiptapEditor({
   content,
   editable = true,
   onChange,
+  onEditorReady,
   placeholder = "Bắt đầu viết bài...",
   ariaLabel,
 }: TiptapEditorProps) {
@@ -130,6 +137,14 @@ export function TiptapEditor({
     dom.spellcheck = spellcheckEnabled
     dom.setAttribute("spellcheck", String(spellcheckEnabled))
   }, [editor, spellcheckEnabled])
+
+  useEffect(() => {
+    onEditorReady?.(editor ?? null)
+
+    return () => {
+      onEditorReady?.(null)
+    }
+  }, [editor, onEditorReady])
 
   if (!editor) {
     return null

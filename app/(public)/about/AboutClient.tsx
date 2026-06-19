@@ -1,9 +1,9 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Pencil, Save, X, Plus, Trash2, Sparkles, Heart } from "lucide-react"
-import type { JSONContent } from "@tiptap/react"
+import type { Editor, JSONContent } from "@tiptap/react"
 import Link from "next/link"
 
 import { TiptapEditor } from "@/components/editor/TiptapEditor"
@@ -97,6 +97,7 @@ export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps)
   const [contentText, setContentText] = useState(initialPage?.contentText || "")
   const dataRef = useRef(data)
   const contentTextRef = useRef(contentText)
+  const aboutEditorRef = useRef<Editor | null>(null)
 
   function updateData(updater: (currentData: AboutPageContent) => AboutPageContent) {
     const nextData = updater(dataRef.current)
@@ -109,9 +110,29 @@ export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps)
     setContentText(nextContentText)
   }
 
+  const handleEditorReady = useCallback((editor: Editor | null) => {
+    aboutEditorRef.current = editor
+  }, [])
+
   async function handleSave() {
     setIsSaving(true)
     try {
+      const latestBody = aboutEditorRef.current?.getJSON()
+      const latestContentText = aboutEditorRef.current?.getText()
+
+      if (latestBody) {
+        dataRef.current = {
+          ...dataRef.current,
+          body: latestBody,
+        }
+        setData(dataRef.current)
+      }
+
+      if (latestContentText !== undefined) {
+        contentTextRef.current = latestContentText
+        setContentText(latestContentText)
+      }
+
       await updateAboutPage(dataRef.current, contentTextRef.current)
       setIsEditing(false)
       router.refresh()
@@ -192,6 +213,7 @@ export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps)
               <TiptapEditor
                 content={data.body}
                 editable={true}
+                onEditorReady={handleEditorReady}
                 onChange={(json, text) => {
                   updateData((currentData) => ({
                     ...currentData,

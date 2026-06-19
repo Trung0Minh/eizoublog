@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, type DragEvent } from "react"
+import { useEffect, useRef, useState, type DragEvent } from "react"
 import { useRouter } from "next/navigation"
 import { GripVertical, Pencil, Plus, Save, Trash2, X } from "lucide-react"
 
@@ -186,6 +186,11 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
   }
 
   const [data, setData] = useState<ResourcesData>(initialData)
+  const dataRef = useRef(data)
+
+  useEffect(() => {
+    dataRef.current = data
+  }, [data])
 
   function reorderResource(sourceIndex: number, targetIndex: number) {
     if (
@@ -234,7 +239,7 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
   async function handleSave() {
     setIsSaving(true)
     try {
-      await updateResourcesPage(data)
+      await updateResourcesPage(dataRef.current)
       setIsEditing(false)
       router.refresh()
     } catch (error) {
@@ -429,7 +434,7 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
   const categories = Array.from(new Set(data.resources.map((r) => r.category || "Khác")));
 
   return (
-    <div className="relative">
+    <div className="relative group">
       {isAdmin && (
         <Button
           onClick={() => setIsEditing(true)}

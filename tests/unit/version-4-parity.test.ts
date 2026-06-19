@@ -47,12 +47,24 @@ describe("anime-blog-4 appearance parity", () => {
 
   it("keeps About body edits when other editable fields change", () => {
     const about = read("app/(public)/about/AboutClient.tsx")
+    const editor = read("components/editor/TiptapEditor.tsx")
 
+    expect(editor).toContain("onEditorReady")
+    expect(about).toContain("aboutEditorRef")
+    expect(about).toContain("aboutEditorRef.current?.getJSON()")
     expect(about).toContain("dataRef.current")
     expect(about).toContain("contentTextRef.current")
     expect(about).toContain("await updateAboutPage(dataRef.current")
     expect(about).toContain("updateData((currentData) => ({")
     expect(about).toContain("body: json")
     expect(about).not.toContain("setData({ ...data, body: json })")
+  })
+
+  it("keeps the Resources edit button hover scope and save draft current", () => {
+    const resources = read("app/(public)/resources/ResourcesClient.tsx")
+
+    expect(resources).toContain('className="relative group"')
+    expect(resources).toContain("dataRef.current")
+    expect(resources).toContain("await updateResourcesPage(dataRef.current)")
   })
 })
