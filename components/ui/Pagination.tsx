@@ -1,6 +1,7 @@
 import Link from "next/link"
 
 import { cn } from "@/lib/utils"
+import { MagneticEffect } from "@/components/ui/MagneticEffect"
 
 interface PaginationProps {
   className?: string
@@ -12,7 +13,7 @@ interface PaginationProps {
 }
 
 const paginationLinkClass =
-  "inline-flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-[13px] font-medium text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary"
+  "w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-medium text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary"
 
 function getPageWindow(page: number, totalPages: number) {
   const start = Math.max(1, page - 2)
@@ -60,43 +61,48 @@ export function Pagination({
   return (
     <nav
       aria-label="Pagination"
-      className={cn("mt-8 flex flex-wrap items-center justify-center gap-2", className)}
+      className={cn("flex items-center justify-center gap-2 mt-8 md:mt-12", className)}
     >
       {page > 1 && (
-        <Link
-          className={paginationLinkClass}
-          href={buildPageHref(page - 1, query)}
-          prefetch={prefetch}
-        >
-          Previous
-        </Link>
+        <MagneticEffect>
+          <Link
+            className={cn(paginationLinkClass, "w-auto px-4")}
+            href={buildPageHref(page - 1, query)}
+            prefetch={prefetch}
+          >
+            Trang trước
+          </Link>
+        </MagneticEffect>
       )}
 
       {pages.map((pageNumber) => (
-        <Link
-          aria-current={pageNumber === page ? "page" : undefined}
-          aria-label={`Page ${pageNumber}`}
-          className={cn(
-            paginationLinkClass,
-            pageNumber === page &&
-              "bg-text-primary text-background hover:bg-text-primary hover:text-background",
-          )}
-          href={buildPageHref(pageNumber, query)}
-          key={pageNumber}
-          prefetch={prefetch}
-        >
-          {pageNumber}
-        </Link>
+        <MagneticEffect key={pageNumber}>
+          <Link
+            aria-current={pageNumber === page ? "page" : undefined}
+            aria-label={`Page ${pageNumber}`}
+            className={cn(
+              paginationLinkClass,
+              pageNumber === page &&
+                "bg-text-primary text-background hover:bg-text-primary hover:text-background",
+            )}
+            href={buildPageHref(pageNumber, query)}
+            prefetch={prefetch}
+          >
+            {pageNumber}
+          </Link>
+        </MagneticEffect>
       ))}
 
       {page < totalPages && (
-        <Link
-          className={paginationLinkClass}
-          href={buildPageHref(page + 1, query)}
-          prefetch={prefetch}
-        >
-          Next
-        </Link>
+        <MagneticEffect>
+          <Link
+            className={cn(paginationLinkClass, "w-auto px-4")}
+            href={buildPageHref(page + 1, query)}
+            prefetch={prefetch}
+          >
+            Trang sau
+          </Link>
+        </MagneticEffect>
       )}
     </nav>
   )

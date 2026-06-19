@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Pencil, Save, X, Plus, Trash2 } from "lucide-react"
+import { Pencil, Save, X, Plus, Trash2, Sparkles, Heart } from "lucide-react"
 import type { JSONContent } from "@tiptap/react"
 import Link from "next/link"
 
@@ -66,9 +66,10 @@ export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps)
 
   // Determine if initial content is old format (just Tiptap) or new format
   const isNewFormat = initialPage?.content && typeof initialPage.content === "object" && !initialPage.content.type;
-  
+
   const initialData = isNewFormat ? initialPage.content : {
-    title: `${appName} là một nơi yên tĩnh dành cho những bài viết nghiêm túc về hoạt hình Nhật Bản.`,
+    title: `Chào mừng bạn đến với Eizou Blog!`, // Updated title
+    whyWeDoThis: "Để lan tỏa tình yêu với hoạt hình và ghi nhận công sức của những nhà sáng tạo tuyệt vời đã thổi hồn vào những thế giới yêu thích của chúng ta. Chúng mình muốn tạo ra một nơi mà fan có thể đọc những bài tiểu luận sâu sắc cùng một tách trà trong một không gian ấm cúng, dễ thương! 💖",
     body: (initialPage?.content as JSONContent) || defaultBody,
     publishingNotes: defaultPublishingNotes
   }
@@ -101,6 +102,7 @@ export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps)
             <Button
               variant="outline"
               size="sm"
+              className="rounded-full border-border-default font-bold"
               onClick={() => {
                 setData(initialData)
                 setIsEditing(false)
@@ -110,7 +112,7 @@ export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps)
               <X className="h-4 w-4 mr-2" />
               Hủy
             </Button>
-            <Button size="sm" onClick={handleSave} disabled={isSaving}>
+            <Button size="sm" className="rounded-full bg-accent text-white hover:bg-accent/90 font-bold" onClick={handleSave} disabled={isSaving}>
               <Save className="h-4 w-4 mr-2" />
               {isSaving ? "Đang lưu..." : "Lưu"}
             </Button>
@@ -120,17 +122,28 @@ export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps)
         <div className="space-y-6 max-w-4xl mt-6">
           <div>
             <label className="block text-sm font-semibold text-text-primary mb-2">Tiêu đề chính</label>
-            <Textarea 
+            <Textarea
               value={data.title}
               onChange={(e) => setData({ ...data, title: e.target.value })}
-              className="text-2xl font-bold resize-none"
+              className="text-2xl font-bold resize-none rounded-[16px] bg-background border-[2px]"
               rows={2}
+            />
+          </div>
+
+
+          <div>
+            <label className="block text-sm font-semibold text-text-primary mb-2">Lý do chúng mình tạo blog này (Why we do this)</label>
+            <Textarea
+              value={data.whyWeDoThis}
+              onChange={(e) => setData({ ...data, whyWeDoThis: e.target.value })}
+              className="text-base resize-none rounded-[16px] bg-background border-[2px]"
+              rows={4}
             />
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-text-primary mb-2">Nội dung giới thiệu</label>
-            <div className="rounded-md border border-border-default p-4 md:pt-[44px] bg-background [&_.ProseMirror_p]:!mx-0 [&_.ProseMirror_ul]:!mx-0 [&_.ProseMirror_ol]:!mx-0 [&_.ProseMirror_p]:!max-w-none">
+            <div className="rounded-[16px] border-[2px] border-border-default p-4 md:pt-[44px] bg-background [&_.ProseMirror_p]:!mx-0 [&_.ProseMirror_ul]:!mx-0 [&_.ProseMirror_ol]:!mx-0 [&_.ProseMirror_p]:!max-w-none">
               <TiptapEditor
                 content={data.body}
                 editable={true}
@@ -142,70 +155,14 @@ export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps)
             </div>
           </div>
 
-          <div className="pt-6 border-t border-border-default">
-            <label className="block text-lg font-semibold mb-4 text-text-primary">Những gì chúng tôi xuất bản</label>
-            <div className="space-y-6">
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              {data.publishingNotes.map((note: any, index: number) => (
-                <div key={index} className="flex gap-4 items-start p-4 border border-border-default rounded-md relative group bg-subtle-bg/30">
-                  <div className="flex-1 space-y-4">
-                    <Input 
-                      value={note.title}
-                      onChange={(e) => {
-                        const newNotes = [...data.publishingNotes]
-                        newNotes[index].title = e.target.value
-                        setData({ ...data, publishingNotes: newNotes })
-                      }}
-                      placeholder="Tiêu đề (VD: Phân tích chuyên sâu)"
-                      className="font-semibold bg-background"
-                    />
-                    <Textarea 
-                      value={note.text}
-                      onChange={(e) => {
-                        const newNotes = [...data.publishingNotes]
-                        newNotes[index].text = e.target.value
-                        setData({ ...data, publishingNotes: newNotes })
-                      }}
-                      placeholder="Mô tả..."
-                      rows={3}
-                      className="bg-background"
-                    />
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => {
-                      const newNotes = [...data.publishingNotes]
-                      newNotes.splice(index, 1)
-                      setData({ ...data, publishingNotes: newNotes })
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-              <Button
-                variant="outline"
-                className="w-full border-dashed"
-                onClick={() => {
-                  setData({
-                    ...data,
-                    publishingNotes: [...data.publishingNotes, { title: "", text: "" }]
-                  })
-                }}
-              >
-                <Plus className="h-4 w-4 mr-2" /> Thêm mục mới
-              </Button>
-            </div>
-          </div>
+
         </div>
       </div>
     )
   }
 
   return (
-    <div className="relative group">
+    <div className="min-h-screen flex flex-col pt-0 group relative">
       {isAdmin && (
         <Button
           onClick={() => setIsEditing(true)}
@@ -218,58 +175,73 @@ export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps)
         </Button>
       )}
 
-      <section className="border-b border-border-default pb-10">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-editorial">
-          Giới thiệu
-        </p>
-        <h1 className="max-w-3xl text-balance text-[32px] font-bold leading-tight tracking-tight md:text-[40px] whitespace-pre-wrap text-text-primary">
-          {data.title}
-        </h1>
-        
-        <div className="mt-8 font-serif text-[17px] leading-[1.8] text-text-secondary max-w-3xl [&_.post-content]:!mx-0 [&_.post-content]:!max-w-none [&_.ProseMirror_p]:!mx-0 [&_.ProseMirror_ul]:!mx-0 [&_.ProseMirror_ol]:!mx-0 [&_.ProseMirror_p]:!max-w-none">
-          <PostBody content={data.body} />
-        </div>
-      </section>
+      <main className="flex-1 w-full max-w-[1000px] mx-auto pt-8 md:pt-16 pb-20">
+        <div className="bg-subtle-bg/80 backdrop-blur-sm border-[3px] border-border/60 rounded-[24px] p-6 md:p-12 shadow-xl relative isolate overflow-hidden">
+          {/* Decorative Corner Flairs */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-bl-[100px] -z-10" />
+          <div className="absolute bottom-0 left-0 w-40 h-40 bg-accent/10 rounded-tr-[100px] -z-10" />
 
-      <section className="py-10">
-        <p className="mb-6 text-xs font-semibold uppercase tracking-[0.12em] text-editorial">
-          Những gì chúng tôi xuất bản
-        </p>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          {data.publishingNotes.map((note: any) => (
-            <article className="border-t border-border-default py-5 sm:border-t-0 sm:border-l sm:pl-5 sm:first:border-l-0 sm:first:pl-0" key={note.title}>
-              <h2 className="font-semibold tracking-tight text-text-primary">{note.title}</h2>
-              <p className="mt-3 text-[14px] leading-relaxed text-text-secondary">
-                {note.text}
-              </p>
-            </article>
-          ))}
-        </div>
-      </section>
+          <div className="flex flex-col md:flex-row gap-10 items-center md:items-start">
 
-      <section className="border-t border-border-default py-8">
-        <h2 className="text-xl font-semibold tracking-tight text-text-primary">
-          Đọc toàn bộ kho lưu trữ.
-        </h2>
-        <p className="mt-3 max-w-2xl text-[14px] leading-relaxed text-text-secondary">
-          Bắt đầu với những bài luận mới nhất, hoặc gặp gỡ các tác giả đang định hình ấn phẩm này.
-        </p>
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <Link
-            className="inline-flex h-10 items-center justify-center rounded-[5px] bg-button-bg px-4 text-[13px] font-medium text-button-text transition-colors hover:bg-button-bg/90"
-            href="/"
-          >
-            Bài viết mới nhất
-          </Link>
-          <Link
-            className="inline-flex h-10 items-center justify-center rounded-[5px] border border-border-default px-4 text-[13px] font-medium transition-colors hover:bg-subtle-bg text-text-primary"
-            href="/contributors"
-          >
-            Người đóng góp
-          </Link>
+            <div className="w-full md:w-[40%] relative aspect-[3/4] rounded-[16px] overflow-hidden border-4 border-white dark:border-border shadow-lg rotate-[-2deg] hover:rotate-0 transition-transform duration-300">
+               <img
+                  src="https://picsum.photos/seed/animekawaiigirl/800/1000"
+                  alt="Mascot"
+                  className="object-cover w-full h-full"
+                  referrerPolicy="no-referrer"
+               />
+               {/* Cute sticker overlay */}
+               <div className="absolute -bottom-4 -right-4 bg-accent text-white w-16 h-16 rounded-full flex items-center justify-center font-display font-bold shadow-md rotate-12">
+                 Hi!
+               </div>
+            </div>
+
+            <div className="w-full md:w-[60%] flex flex-col">
+              <div className="flex items-center gap-2 mb-4">
+                <Sparkles className="w-6 h-6 text-accent animate-pulse" />
+                <h1 className="text-[32px] md:text-[42px] font-display font-bold text-text-primary leading-tight">
+                  {data.title.includes('Eizou Blog!') ? (
+                    <>Chào mừng bạn đến với <span className="text-accent">Eizou Blog!</span></>
+                  ) : (
+                    <span className="text-accent">{data.title}</span>
+                  )}
+                </h1>
+              </div>
+
+              <div className="space-y-4 text-[16px] text-text-secondary font-sans [&_.post-content]:!mx-0 [&_.post-content]:!max-w-none [&_.ProseMirror_p]:!mx-0 [&_.ProseMirror_ul]:!mx-0 [&_.ProseMirror_ol]:!mx-0 [&_.ProseMirror_p]:!max-w-none">
+                <PostBody content={data.body} />
+
+                {data.whyWeDoThis && (
+                  <div className="bg-background/60 p-4 rounded-xl border border-border mt-6">
+                    <h3 className="font-display font-bold text-text-primary flex items-center gap-2 text-[18px] mb-2">
+                      <Heart className="w-5 h-5 text-accent" /> Tại sao chúng mình làm blog này
+                    </h3>
+                    <p className="text-[14px]">
+                      {data.whyWeDoThis}
+                    </p>
+                  </div>
+                )}
+
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row pt-4 border-t border-border/50">
+                  <Link
+                    className="inline-flex h-10 items-center justify-center rounded-[5px] bg-accent px-4 text-[13px] font-bold text-white transition-colors hover:bg-accent/90"
+                    href="/"
+                  >
+                    Bài viết mới nhất
+                  </Link>
+                  <Link
+                    className="inline-flex h-10 items-center justify-center rounded-[5px] border border-border px-4 text-[13px] font-bold text-text-primary transition-colors hover:bg-subtle-bg"
+                    href="/contributors"
+                  >
+                    Người đóng góp
+                  </Link>
+                </div>
+
+              </div>
+            </div>
+          </div>
         </div>
-      </section>
+      </main>
     </div>
   )
 }

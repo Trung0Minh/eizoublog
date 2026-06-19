@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Inter, Lora } from "next/font/google"
+import { Nunito, Lora, M_PLUS_Rounded_1c } from "next/font/google"
 import { Suspense } from "react"
 
 import { InternalAnalyticsTracker } from "@/components/analytics/InternalAnalyticsTracker"
@@ -9,18 +9,31 @@ import { NavbarWrapper } from "@/components/layout/NavbarWrapper"
 import { ThemeProvider } from "@/components/layout/ThemeProvider"
 import { DEFAULT_DESCRIPTION, getAppName, getAppUrl } from "@/lib/seo"
 
+import { SeasonalEffects } from "@/components/ui/SakuraFalling"
+import { BackToTop } from "@/components/ui/BackToTop"
+import { ReadingProgress } from "@/components/ui/ReadingProgress"
+import { CustomCursor } from "@/components/ui/CustomCursor"
+import { NoiseOverlay } from "@/components/ui/NoiseOverlay"
+import { AmbientBackground } from "@/components/ui/AmbientBackground"
+
 import "./globals.css"
 
-const inter = Inter({
+const nunito = Nunito({
   subsets: ["latin", "vietnamese"],
   display: "swap",
-  variable: "--font-inter",
+  variable: "--font-inter", // Keep this variable name so tailwind config still works, or update tailwind config.
 })
 
 const lora = Lora({
   subsets: ["latin", "vietnamese"],
   display: "swap",
   variable: "--font-lora",
+})
+
+const mPlusRounded = M_PLUS_Rounded_1c({
+  weight: ['400', '500', '700', '800'],
+  subsets: ['latin', 'vietnamese'],
+  variable: '--font-display',
 })
 
 export const metadata: Metadata = {
@@ -45,23 +58,49 @@ export default function RootLayout({
   return (
     <html
       lang="vi"
-      className={`${inter.variable} ${lora.variable}`}
+      className={`${nunito.variable} ${lora.variable} ${mPlusRounded.variable}`}
       suppressHydrationWarning
     >
-      <body className="min-h-screen font-sans">
+      <head>
+        <script
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                let season = localStorage.getItem('season');
+                if (!season) {
+                  let month = new Date().getMonth();
+                  if (month >= 2 && month <= 4) season = 'spring';
+                  else if (month >= 5 && month <= 7) season = 'summer';
+                  else if (month >= 8 && month <= 10) season = 'autumn';
+                  else season = 'winter';
+                }
+                document.documentElement.setAttribute('data-season', season);
+              } catch (_) {}
+            `,
+          }}
+        />
+      </head>
+      <body className="min-h-screen font-sans bg-background text-text-primary antialiased selection:bg-accent/30 selection:text-accent">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           disableTransitionOnChange
           enableSystem
         >
-          <div className="flex min-h-screen flex-col">
+          <NoiseOverlay />
+          <AmbientBackground />
+          <SeasonalEffects />
+          <CustomCursor />
+          <ReadingProgress />
+          <div className="flex min-h-screen flex-col relative z-10">
             <NavbarWrapper>
               <Navbar />
             </NavbarWrapper>
             <div className="flex-1">{children}</div>
             <Footer />
           </div>
+          <BackToTop />
         </ThemeProvider>
         <Suspense fallback={null}>
           <InternalAnalyticsTracker />

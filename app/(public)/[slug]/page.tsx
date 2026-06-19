@@ -5,9 +5,8 @@ import type { JSONContent } from "@tiptap/react"
 import { CommentSection } from "@/components/comments/CommentSection"
 import { PageContainer } from "@/components/layout/PageContainer"
 import { AuthorBio } from "@/components/posts/AuthorBio"
+import { PostHero } from "@/components/posts/PostHero"
 import { PostBody } from "@/components/posts/PostBody"
-import { PostContentFrame } from "@/components/posts/PostContentFrame"
-import { PostHeader } from "@/components/posts/PostHeader"
 import { PostJsonLd } from "@/components/posts/PostJsonLd"
 import { PostReadTracker } from "@/components/posts/PostReadTracker"
 import { TableOfContents } from "@/components/posts/TableOfContents"
@@ -99,17 +98,29 @@ export default async function PostPage({ params }: PostPageProps) {
         updatedAt={post.updatedAt}
       />
       <PostReadTracker slug={post.slug} title={post.title} />
-      <PageContainer
-        as="div"
-        className="flex justify-center pb-20 pt-8 md:pt-12"
-        size="wide"
-      >
-        <div className="flex w-full max-w-[800px] flex-col gap-[48px] xl:max-w-[1048px] xl:flex-row">
-          <article className="min-w-0 flex-1 max-w-[800px]">
-            <PostContentFrame>
-              <PostHeader post={post} authorUsernames={authors} />
-              <PostBody content={content} />
-            </PostContentFrame>
+
+      <PostHero post={post} authorUsernames={authors} />
+
+      <div className="flex-1 w-full max-w-[1440px] mx-auto xl:px-12 flex justify-center pt-8 pb-20 relative">
+        <main className="w-full max-w-[720px] px-5 xl:px-0">
+          <header className="flex flex-col">
+            {post.coverAlt && (
+              <div className="text-right text-[11px] text-text-tertiary italic mb-4">
+                {post.coverAlt}
+              </div>
+            )}
+            <div className="flex flex-wrap gap-[6px]">
+              {post.tags.map(({ tag }) => (
+                <span key={tag.slug} className="px-[12px] py-[6px] bg-accent/10 border border-accent/20 text-accent text-[11px] font-semibold rounded-full hover:bg-accent hover:text-white transition-colors cursor-pointer">
+                  {tag.name}
+                </span>
+              ))}
+            </div>
+          </header>
+
+          <article className="mt-12 max-w-[68ch] mx-auto text-text-primary font-lora text-[16px] md:text-[17.5px] leading-[1.75] md:leading-[1.8] post-content">
+            <PostBody content={content} />
+
             <div className="mt-12 md:mt-16 flex flex-col gap-4">
               {[post.author, ...post.coAuthors.map(c => c.user)].map(author => (
                 <AuthorBio key={author.username} author={author} />
@@ -122,11 +133,12 @@ export default async function PostPage({ params }: PostPageProps) {
               postAuthorUsernames={authors}
             />
           </article>
-          <aside className="hidden w-[200px] shrink-0 xl:block">
-            <TableOfContents content={content} />
-          </aside>
-        </div>
-      </PageContainer>
+        </main>
+
+        <aside className="hidden w-[200px] shrink-0 xl:block ml-10 mt-12">
+          <TableOfContents content={content} />
+        </aside>
+      </div>
     </>
   )
 }

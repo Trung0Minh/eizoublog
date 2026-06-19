@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
 import { EditorTopBar } from "@/components/editor/EditorTopBar"
+import { EditorParticles } from "@/components/editor/EditorParticles"
 import {
   TiptapEditor,
   type JSONContent,
@@ -333,6 +334,7 @@ export function PostEditor({
       className="fixed inset-0 z-50 flex flex-col bg-background text-text-primary"
       data-testid="post-editor-shell"
     >
+      <EditorParticles />
       <EditorTopBar
         autosaveHint={autosaveHint}
         canSave={canSave}

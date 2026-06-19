@@ -4,7 +4,8 @@ import { PageContainer } from "@/components/layout/PageContainer"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { NewsletterForm } from "@/components/newsletter/NewsletterForm"
 import { HomePostList } from "@/app/(public)/HomePostList"
-import { getCachedSidebarData } from "@/lib/queries"
+import { getCachedSidebarData, getCachedPublishedPosts } from "@/lib/queries"
+import { HeroCarousel } from "@/components/posts/HeroCarousel"
 import { parsePostListSort } from "@/lib/postListSort"
 import { buildMetadata, getAppUrl } from "@/lib/seo"
 
@@ -57,10 +58,15 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const sort = parsePostListSort(sortParam)
   const archive = parseArchiveMonth(archiveParam)
 
+  const { posts: carouselPosts } = await getCachedPublishedPosts(1, 5, "latest")
+
   return (
     <PageContainer size="wide">
+      <div className="w-full flex justify-center">
+        <HeroCarousel posts={carouselPosts} />
+      </div>
       <div className="flex flex-col gap-12 lg:flex-row xl:gap-[48px]">
-        <section className="flex-1 lg:w-[calc(100%-288px)] xl:w-[calc(100%-288px)] flex flex-col" aria-label="Bài viết đã xuất bản">
+        <section className="flex-1 lg:w-[calc(100%-288px)] xl:w-[calc(100%-288px)] flex flex-col">
           <HomePostList archiveMonth={archive} page={page} sort={sort} />
         </section>
         <HomeSidebar />

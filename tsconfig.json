@@ -37,6 +37,7 @@
     ".next/dev/dev/types/**/*.ts"
   ],
   "exclude": [
+    "anime-blog*",
     "node_modules",
     "plan"
   ]

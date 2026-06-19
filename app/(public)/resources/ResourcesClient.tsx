@@ -8,12 +8,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { updateResourcesPage } from "./actions"
+import { TextReveal } from "@/components/ui/TextReveal"
 
 interface ResourceCard {
   url: string
   domain: string
   logo: string
   description: string
+  category?: string
   isLink?: boolean
 }
 
@@ -31,120 +33,143 @@ interface ResourcesClientProps {
 }
 
 const defaultResources: ResourceCard[] = [
+  // Blog / Editorial
   {
     url: "https://blog.sakugabooru.com/",
     domain: "Sakugabooru Blog",
     logo: "/logos/sakuga-blog.png",
     description: "Blog chuyên sâu về sakuga uy tín bậc nhất trong cộng đồng, cung cấp góc nhìn chuyên môn về hoạt hình và ngành công nghiệp anime. Đây cũng là nguồn tài liệu mà bọn mình tham khảo rất nhiều cho các bài viết.",
-  },
-  {
-    url: "https://www.sakugabooru.com/",
-    domain: "Sakugabooru",
-    logo: "/logos/sakugabooru.png",
-    description: "Thư viện lưu trữ và tổng hợp các đoạn clip (cut) sakuga đỉnh cao từ mọi bộ anime, giúp người xem dễ dàng chiêm ngưỡng kỹ năng của các họa sĩ diễn hoạt (animator).",
-  },
-  {
-    url: "https://keyframe-stafflist.com/",
-    domain: "Keyframe Stafflist",
-    logo: "/logos/keyframe.png",
-    description: "Trang web hàng đầu để theo dõi thông tin nhân sự (staff) và credit của các bộ anime dành cho những ai không rành tiếng Nhật. Giao diện trực quan, thông tin được trình bày đẹp mắt và vô cùng đầy đủ nhờ vào đội ngũ quản trị tâm huyết và cống hiến.",
-  },
-  {
-    url: "https://x.com",
-    domain: "Các tạp chí & X (Twitter)",
-    logo: "X",
-    description: "Rất nhiều thông tin giá trị đến từ các bài phỏng vấn không cố định trên các tạp chí chuyên đề hoặc báo điện tử. Cách tốt nhất để theo dõi là cập nhật thông tin từ tài khoản X (Twitter) chính thức của từng bộ anime, nơi họ sẽ đăng tải các liên kết phỏng vấn công khai mỗi khi có bài mới.",
-    isLink: false
-  },
-  {
-    url: "https://www.animenewsnetwork.com/",
-    domain: "Anime News Network",
-    logo: "/logos/ann.png",
-    description: "Nguồn tin tức anime quốc tế uy tín, đồng thời là một bách khoa toàn thư để tra cứu nhân sự tham gia sản xuất và tin tức chung.",
-  },
-  {
-    url: "https://anidb.net/",
-    domain: "AniDB",
-    logo: "/logos/anidb.png",
-    description: "Cơ sở dữ liệu đồ sộ để theo dõi staff. Dù thông tin đôi khi được cập nhật đầy đủ hơn cả ANN, nhưng tốc độ cập nhật với các bộ mới thường khá chậm. Nhìn chung, bọn mình vẫn ưu tiên sử dụng keyframe-stafflist hơn cho mục đích tra cứu.",
-  },
-  {
-    url: "https://anilist.co/",
-    domain: "AniList",
-    logo: "/logos/anilist.svg",
-    description: "Nền tảng tuyệt vời để theo dõi lịch chiếu phim, quản lý danh sách anime/manga đang xem, cũng như tương tác với cộng đồng người hâm mộ.",
+    category: "Blog",
   },
   {
     url: "https://artistunknown.info/",
     domain: "ArtistUnknown",
     logo: "/logos/artistunknown.jpg",
     description: "Trang blog chuyên sâu về phân tích sakuga và quy trình sản xuất anime. Đây là nơi chia sẻ những bài phân tích chi tiết về phong cách của các họa sĩ diễn hoạt (animator), đạo diễn, cùng các thông tin/phóng sự từ các sự kiện anime lớn như Otakon.",
+    category: "Blog",
   },
   {
     url: "https://fullfrontal.moe/",
     domain: "fullfrontal.moe",
     logo: "/logos/fullfrontal.png",
-    description: "Chuyên trang uy tín về diễn hoạt và văn hóa anime/manga, nổi bật with chuyên mục \"Sakuga Espresso\" phân tích chi tiết các phân cảnh hoạt họa ấn tượng. Trang web còn cung cấp nhiều bài phỏng vấn chuyên sâu với các nhân sự trong ngành cùng các phân tích sắc sảo về khía cạnh kinh doanh của anime.",
+    description: "Chuyên trang uy tín về diễn hoạt và văn hóa anime/manga, nổi bật với chuyên mục \"Sakuga Espresso\" phân tích chi tiết các phân cảnh hoạt họa ấn tượng. Trang web còn cung cấp nhiều bài phỏng vấn chuyên sâu với các nhân sự trong ngành cùng các phân tích sắc sảo về khía cạnh kinh doanh của anime.",
+    category: "Blog",
   },
   {
     url: "https://magicalstage.moe/",
     domain: "Magical Stage",
     logo: "/logos/magicalstage.jpg",
     description: "Nền tảng báo chí và bình luận anime độc lập được vận hành bởi buildknuckle và các cộng sự. Trang web nổi tiếng với phong cách viết hài hước xen lẫn các bài phỏng vấn dịch thuật nghiêm túc, sâu sắc về đội ngũ sản xuất và các xu hướng mới trong ngành công nghiệp anime.",
+    category: "Blog",
   },
   {
     url: "https://shinseiki.blog/",
     domain: "SHINSEIKI",
     logo: "/logos/shinseiki.png",
     description: "Dự án phi lợi nhuận chuyên dịch thuật các bài phỏng vấn đạo diễn, họa sĩ diễn hoạt và nhà sản xuất anime từ các nguồn tư liệu gốc tiếng Nhật (như sách, tạp chí, booklet). Đây là nguồn tài liệu vô cùng quý giá để tìm hiểu sâu về tư duy nghệ thuật và hậu trường sản xuất của nhiều tác phẩm kinh điển.",
+    category: "Blog",
   },
   {
     url: "https://ultimatemegax.wordpress.com/",
     domain: "Ultimate MegaX",
     logo: "/logos/ultimatemegax.png",
-    description: "Trang blog lâu đời và vô cùng uy tín trong cộng đồng nghiên cứu anime quốc tế. Blog nổi tiếng with những bài dịch phỏng vấn nhân sự và phân tích chi tiết về ban sản xuất (production committee), đặc biệt là các thông tin chuyên sâu xoay quanh studio Kyoto Animation.",
+    description: "Trang blog lâu đời và vô cùng uy tín trong cộng đồng nghiên cứu anime quốc tế. Blog nổi tiếng với những bài dịch phỏng vấn nhân sự và phân tích chi tiết về ban sản xuất (production committee), đặc biệt là các thông tin chuyên sâu xoay quanh studio Kyoto Animation.",
+    category: "Blog",
   },
   {
     url: "https://www.anime-atelier.com/author/sarca/",
     domain: "Sarca (Anime Atelier)",
     logo: "/logos/sarca.png",
     description: "Cây bút phân tích tự do trên chuyên trang Anime Atelier. Tác giả Sarca nổi tiếng với những bài viết nghiên cứu sâu sắc về hậu trường sản xuất, phân tích phong cách nghệ thuật của các đạo diễn (như Shin Oonuma, Satoshi Mori), và các bài thảo luận về chất lượng diễn họa của các dự án anime nổi tiếng.",
+    category: "Blog",
   },
+  // Database
+  {
+    url: "https://www.sakugabooru.com/",
+    domain: "Sakugabooru",
+    logo: "/logos/sakugabooru.png",
+    description: "Thư viện lưu trữ và tổng hợp các đoạn clip (cut) sakuga đỉnh cao từ mọi bộ anime, giúp người xem dễ dàng chiêm ngưỡng kỹ năng của các họa sĩ diễn hoạt (animator).",
+    category: "Cơ sở dữ liệu",
+  },
+  {
+    url: "https://keyframe-stafflist.com/",
+    domain: "Keyframe Stafflist",
+    logo: "/logos/keyframe.png",
+    description: "Trang web hàng đầu để theo dõi thông tin nhân sự (staff) và credit của các bộ anime dành cho những ai không rành tiếng Nhật. Giao diện trực quan, thông tin được trình bày đẹp mắt và vô cùng đầy đủ nhờ vào đội ngũ quản trị tâm huyết và cống hiến.",
+    category: "Cơ sở dữ liệu",
+  },
+  {
+    url: "https://www.animenewsnetwork.com/",
+    domain: "Anime News Network",
+    logo: "/logos/ann.png",
+    description: "Nguồn tin tức anime quốc tế uy tín, đồng thời là một bách khoa toàn thư để tra cứu nhân sự tham gia sản xuất và tin tức chung.",
+    category: "Cơ sở dữ liệu",
+  },
+  {
+    url: "https://anidb.net/",
+    domain: "AniDB",
+    logo: "/logos/anidb.png",
+    description: "Cơ sở dữ liệu đồ sộ để theo dõi staff. Dù thông tin đôi khi được cập nhật đầy đủ hơn cả ANN, nhưng tốc độ cập nhật với các bộ mới thường khá chậm. Nhìn chung, bọn mình vẫn ưu tiên sử dụng keyframe-stafflist hơn cho mục đích tra cứu.",
+    category: "Cơ sở dữ liệu",
+  },
+  {
+    url: "https://anilist.co/",
+    domain: "AniList",
+    logo: "/logos/anilist.svg",
+    description: "Nền tảng tuyệt vời để theo dõi lịch chiếu phim, quản lý danh sách anime/manga đang xem, cũng như tương tác với cộng đồng người hâm mộ.",
+    category: "Cơ sở dữ liệu",
+  },
+  // Misc
+  {
+    url: "https://x.com",
+    domain: "Các tạp chí & X (Twitter)",
+    logo: "X",
+    description: "Rất nhiều thông tin giá trị đến từ các bài phỏng vấn không cố định trên các tạp chí chuyên đề hoặc báo điện tử. Cách tốt nhất để theo dõi là cập nhật thông tin từ tài khoản X (Twitter) chính thức của từng bộ anime, nơi họ sẽ đăng tải các liên kết phỏng vấn công khai mỗi khi có bài mới.",
+    isLink: false,
+    category: "Khác",
+  },
+  // YouTube
   {
     url: "https://www.youtube.com/@RCAnime",
     domain: "RCAnime",
     logo: "/logos/rcanime.jpg",
     description: "Kênh video essay nổi tiếng về anime trên YouTube, tập trung vào nghệ thuật diễn hoạt, lịch sử ngành công nghiệp và các kỹ thuật kể chuyện bằng hình ảnh. RCAnime nổi bật với các bài phân tích sâu sắc về cách các đạo diễn sử dụng khung hình, nhịp điệu và màu sắc để truyền tải cảm xúc.",
+    category: "Kênh YouTube",
   },
   {
     url: "https://www.youtube.com/@LKR9029",
     domain: "LKR",
     logo: "/logos/lkr.jpg",
     description: "Kênh YouTube chuyên tổng hợp và thực hiện các video tri ân (tribute) dành riêng cho các họa sĩ diễn hoạt (animator) nổi tiếng trong ngành công nghiệp anime. LKR cung cấp các clip tuyển tập sakuga chất lượng cao kèm thông tin chi tiết về phong cách đặc trưng của từng họa sĩ.",
+    category: "Kênh YouTube",
   },
   {
     url: "https://www.youtube.com/@UnderTheScopeAnime",
     domain: "Under the Scope",
     logo: "/logos/uts.jpg",
     description: "Kênh YouTube chuyên về video essay phân tích nghệ thuật điện ảnh trong anime. Under the Scope được đánh giá cao nhờ những phân tích tỉ mỉ về ngôn ngữ hình ảnh, bố cục khung hình, kỹ thuật đạo diễn và âm nhạc trong các tác phẩm của Kyoto Animation cùng nhiều studio tên tuổi khác.",
+    category: "Kênh YouTube",
   },
   {
     url: "https://www.youtube.com/@TheCanipaEffect",
     domain: "The Canipa Effect",
     logo: "/logos/canipa.jpg",
     description: "Kênh YouTube uy tín hàng đầu được vận hành bởi nhà báo Callum May, chuyên thực hiện các phóng sự và phân tích chi tiết về quy trình sản xuất anime, lịch sử các studio hoạt hình và chân dung của những họa sĩ diễn hoạt (animator) tài ba. Đây là nguồn tư liệu chuẩn xác và phong phú cho cộng đồng yêu thích sakuga.",
+    category: "Kênh YouTube",
   },
   {
     url: "https://www.youtube.com/@HipHopSakuga",
     domain: "Hip-Hop Sakuga",
     logo: "/logos/hiphopsakuga.jpg",
     description: "Kênh YouTube độc đáo kết hợp các đoạn cắt sakuga đỉnh cao của anime với các bản nhạc hip-hop/lo-fi sôi động. Đây là nơi tuyệt vời để vừa thưởng thức kỹ năng diễn hoạt xuất sắc của các animator vừa tận hưởng không gian âm nhạc thư giãn.",
+    category: "Kênh YouTube",
   },
   {
     url: "https://www.youtube.com/@HobbesSakuga",
     domain: "Hobbes Sakuga",
     logo: "/logos/hobbessakuga.jpg",
     description: "Kênh YouTube chuyên thực hiện các video tổng hợp (sakuga MAD) chất lượng cao và phân tích ngắn về các phân cảnh hoạt họa xuất sắc trong anime. Kênh tập trung giới thiệu nét vẽ cá nhân của các họa sĩ diễn hoạt và sự phát triển của phong cách sakuga qua các thời kỳ.",
+    category: "Kênh YouTube",
   }
 ]
 
@@ -231,6 +256,7 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
             <Button
               variant="outline"
               size="sm"
+              className="rounded-full border-border-default font-bold"
               onClick={() => {
                 setData(initialData)
                 setIsEditing(false)
@@ -240,7 +266,7 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
               <X className="h-4 w-4 mr-2" />
               Hủy
             </Button>
-            <Button size="sm" onClick={handleSave} disabled={isSaving}>
+            <Button size="sm" className="rounded-full bg-accent text-white hover:bg-accent/90 font-bold" onClick={handleSave} disabled={isSaving}>
               <Save className="h-4 w-4 mr-2" />
               {isSaving ? "Đang lưu..." : "Lưu"}
             </Button>
@@ -250,19 +276,20 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
         <div className="space-y-6 max-w-4xl mt-6">
           <div>
             <label className="block text-sm font-semibold text-text-primary mb-2">Tiêu đề trang</label>
-            <Input 
+            <Input
               value={data.title}
               onChange={(e) => setData({ ...data, title: e.target.value })}
-              className="text-xl font-bold"
+              className="text-xl font-bold rounded-xl bg-background border-[2px] border-border-default"
             />
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-text-primary mb-2">Đoạn giới thiệu</label>
-            <Textarea 
+            <Textarea
               value={data.description}
               onChange={(e) => setData({ ...data, description: e.target.value })}
               rows={3}
+              className="rounded-xl bg-background border-[2px] border-border-default"
             />
           </div>
 
@@ -272,7 +299,7 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
               {data.resources.map((resource, index) => (
                 <div
                   className={[
-                    "flex gap-4 items-start p-4 border border-border-default rounded-md relative group bg-subtle-bg/30 transition-colors",
+                    "flex gap-4 items-start p-6 border-[2px] border-border-default rounded-[24px] relative group bg-subtle-bg/30 transition-colors",
                     draggedResourceIndex === index ? "opacity-60 border-accent" : "",
                   ].join(" ")}
                   data-testid={`resource-editor-card-${resource.domain || index}`}
@@ -298,7 +325,7 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
                     <div className="space-y-4">
                       <div>
                         <label className="block text-xs font-medium text-text-secondary mb-1">Tên trang web</label>
-                        <Input 
+                        <Input
                           value={resource.domain}
                           onChange={(e) => {
                             const newResources = [...data.resources]
@@ -306,12 +333,12 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
                             setData({ ...data, resources: newResources })
                           }}
                           placeholder="Tên web (VD: Sakugabooru)"
-                          className="bg-background"
+                          className="bg-background rounded-xl border-[2px] border-border-default"
                         />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-text-secondary mb-1">Đường dẫn URL</label>
-                        <Input 
+                        <Input
                           value={resource.url}
                           onChange={(e) => {
                             const newResources = [...data.resources]
@@ -319,12 +346,12 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
                             setData({ ...data, resources: newResources })
                           }}
                           placeholder="https://..."
-                          className="bg-background"
+                          className="bg-background rounded-xl border-[2px] border-border-default"
                         />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-text-secondary mb-1">Đường dẫn Logo (hoặc chữ &quot;X&quot;)</label>
-                        <Input 
+                        <Input
                           value={resource.logo}
                           onChange={(e) => {
                             const newResources = [...data.resources]
@@ -332,13 +359,26 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
                             setData({ ...data, resources: newResources })
                           }}
                           placeholder="/logos/..."
-                          className="bg-background"
+                          className="bg-background rounded-xl border-[2px] border-border-default"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-text-secondary mb-1">Phân loại (Category)</label>
+                        <Input
+                          value={resource.category || ""}
+                          onChange={(e) => {
+                            const newResources = [...data.resources]
+                            newResources[index].category = e.target.value
+                            setData({ ...data, resources: newResources })
+                          }}
+                          placeholder="Ví dụ: Cơ sở dữ liệu..."
+                          className="bg-background rounded-xl border-[2px] border-border-default"
                         />
                       </div>
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-text-secondary mb-1">Mô tả</label>
-                      <Textarea 
+                      <Textarea
                         value={resource.description}
                         onChange={(e) => {
                           const newResources = [...data.resources]
@@ -347,7 +387,7 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
                         }}
                         placeholder="Mô tả về trang web này..."
                         rows={7}
-                        className="bg-background"
+                        className="bg-background rounded-xl border-[2px] border-border-default"
                       />
                     </div>
                   </div>
@@ -367,7 +407,7 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
               ))}
               <Button
                 variant="outline"
-                className="w-full border-dashed"
+                className="w-full border-dashed rounded-[24px] py-8 text-text-secondary hover:text-text-primary"
                 onClick={() => {
                   setData({
                     ...data,
@@ -384,8 +424,12 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
     )
   }
 
+
+  // Group by category
+  const categories = Array.from(new Set(data.resources.map((r) => r.category || "Khác")));
+
   return (
-    <div className="relative group">
+    <div className="relative">
       {isAdmin && (
         <Button
           onClick={() => setIsEditing(true)}
@@ -398,65 +442,83 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
         </Button>
       )}
 
-      <section className="mb-12">
-        <h1 className="text-[32px] font-bold leading-tight tracking-tight md:text-[40px] text-text-primary">
-          {data.title}
-        </h1>
-        <p className="mt-4 text-[15px] text-text-secondary md:text-[16px] leading-relaxed max-w-3xl whitespace-pre-wrap">
-          {data.description}
-        </p>
-      </section>
+      <div className="min-h-screen flex flex-col pt-0">
+        <main className="flex-1 w-full max-w-[1200px] mx-auto px-5 pt-8 md:pt-16 pb-20">
+          <h1 className="text-[40px] md:text-[56px] font-bold font-display tracking-tight text-text-primary leading-[1.1] mb-6">
+            <TextReveal text={data.title.split(" ")[0] || "Nguồn"} /> <br />
+            <TextReveal text={data.title.split(" ").slice(1).join(" ") || "tham khảo"} className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-purple-500" />
+          </h1>
+          <p className="text-[18px] text-text-secondary leading-relaxed mb-16 max-w-[600px] whitespace-pre-wrap">
+            {data.description}
+          </p>
 
-      <div className="flex flex-col gap-6">
-        {data.resources.map((resource, index) => (
-          <div
-            key={index}
-            className="group flex flex-col sm:flex-row items-start rounded-[12px] border border-border-default bg-subtle-bg/30 p-6 transition-all hover:border-accent/40 hover:bg-subtle-bg/60 hover:shadow-sm gap-6"
-          >
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[10px] bg-background border border-border-default shadow-sm p-1.5 overflow-hidden">
-              {resource.logo === "X" ? (
-                <svg viewBox="0 0 24 24" aria-hidden="true" className="h-10 w-10 fill-current text-text-primary">
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.008 5.936H5.045z"></path>
-                </svg>
-              ) : resource.logo ? (
-                <img src={resource.logo} alt={`${resource.domain} logo`} className="max-h-full max-w-full object-contain" />
-              ) : null}
-            </div>
+          <div className="space-y-16">
+            {categories.map((category) => (
+              <div key={category}>
+                <h2 className="text-[24px] font-bold font-display text-text-primary mb-6 flex items-center gap-3">
+                  <span className="w-8 h-[2px] bg-accent rounded-full inline-block"></span>
+                  {category}
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {data.resources
+                    .filter((r) => (r.category || "Khác") === category)
+                    .map((resource, index) => {
+                      const isLink = resource.isLink !== false
 
-            <div className="flex flex-col flex-1">
-              {resource.isLink === false ? (
-                <h3 className="mb-2 text-[17px] font-bold text-text-primary">
-                  {resource.domain}
-                </h3>
-              ) : (
-                <a
-                  href={resource.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mb-2 inline-flex items-center text-[17px] font-bold text-text-primary hover:text-accent transition-colors"
-                >
-                  {resource.domain}
-                  <svg
-                    className="ml-1.5 h-4 w-4 opacity-50 group-hover:opacity-100 transition-opacity"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                    />
-                  </svg>
-                </a>
-              )}
-              <p className="text-[14px] sm:text-[15px] leading-relaxed text-text-secondary">
-                {resource.description}
-              </p>
-            </div>
+                      const CardContent = () => (
+                        <>
+                          <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0 duration-300">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
+                              <path d="M7 17l9.2-9.2M17 17V7H7" />
+                            </svg>
+                          </div>
+                          <div className="flex items-center gap-4 mb-4">
+                            <div className="w-12 h-12 bg-background rounded-full overflow-hidden flex items-center justify-center shrink-0 border border-border shadow-sm p-2">
+                              {resource.logo === "X" ? (
+                                <svg viewBox="0 0 24 24" aria-hidden="true" className="w-full h-full fill-current text-text-primary">
+                                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.008 5.936H5.045z"></path>
+                                </svg>
+                              ) : resource.logo ? (
+                                <img src={resource.logo} alt={`${resource.domain} logo`} className="w-full h-full object-contain" />
+                              ) : null}
+                            </div>
+                            <h3 className="text-[20px] font-bold font-display text-text-primary group-hover:text-accent transition-colors">
+                              {resource.domain}
+                            </h3>
+                          </div>
+                          <p className="text-[14px] leading-relaxed text-text-secondary">
+                            {resource.description}
+                          </p>
+                        </>
+                      )
+
+                      const commonClasses = "group block p-6 rounded-[24px] bg-subtle-bg/30 backdrop-blur-md border-[2px] border-border-default hover:border-accent/40 hover:shadow-lg transition-all duration-300 relative overflow-hidden"
+
+                      if (isLink) {
+                        return (
+                          <a
+                            key={index}
+                            href={resource.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={commonClasses}
+                          >
+                            <CardContent />
+                          </a>
+                        )
+                      }
+
+                      return (
+                        <div key={index} className={commonClasses}>
+                          <CardContent />
+                        </div>
+                      )
+                    })}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        </main>
       </div>
     </div>
   )

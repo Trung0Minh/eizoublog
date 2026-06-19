@@ -50,10 +50,9 @@ export function PostSortTabs({
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs font-medium text-text-tertiary">Sắp xếp:</span>
       <div
         aria-label="Sắp xếp bài viết"
-        className="flex rounded-md border border-border-default bg-subtle-bg/30 p-0.5"
+        className="flex rounded-full border-[2px] border-border-default bg-subtle-bg/30 p-1 backdrop-blur-sm"
         role="tablist"
       >
         {POST_LIST_SORT_OPTIONS.map((option) => {
@@ -64,10 +63,10 @@ export function PostSortTabs({
             <Link
               aria-selected={isActive}
               className={cn(
-                "inline-flex items-center gap-1 rounded-[4px] border px-2.5 py-1 text-[11px] font-semibold tracking-wide transition-all",
+                "inline-flex items-center gap-1 rounded-full px-4 py-1.5 text-[12px] font-bold uppercase tracking-wider transition-all duration-300",
                 isActive
-                  ? "border-border-default/60 bg-background text-editorial shadow-sm"
-                  : "border-transparent text-text-secondary hover:text-text-primary",
+                  ? "bg-accent text-white shadow-md"
+                  : "text-text-secondary hover:text-text-primary hover:bg-subtle-bg/50",
               )}
               href={buildSortHref(basePath, query, option.value)}
               key={option.value}

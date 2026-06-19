@@ -67,89 +67,83 @@ export function PostCard({ post }: PostCardProps) {
     post.tags.length > 0 ? post.tags.map(({ tag }) => tag) : fallbackTags
 
   return (
-    <article className="group flex flex-col rounded-xl border border-border-default/60 bg-subtle-bg/20 p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all hover:border-border-default hover:bg-subtle-bg/40 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] sm:p-5">
+    <article className="group flex flex-col bg-subtle-bg/30 p-4 border-[2px] border-transparent hover:border-border-default hover:shadow-lg rounded-[16px] transition-all duration-300">
       {post.coverUrl && (
-        <Link className="mb-4 block overflow-hidden rounded-[6px] border border-border-default/40" href={`/${post.slug}`}>
-          <div className="relative aspect-video w-full overflow-hidden bg-subtle-bg dark:brightness-[0.9]">
-            <div className="absolute inset-0 overflow-hidden transition-transform duration-500 ease-out group-hover:scale-[1.02]">
-              <img
-                alt={post.coverAlt ?? post.title}
-                className="h-full w-full"
-                style={getCoverStyle(post.coverUrl)}
-                decoding="async"
-                loading="lazy"
-                src={(post.coverUrl || "").split("?")[0]}
-              />
-            </div>
+        <Link className="mb-4 block overflow-hidden rounded-[8px]" href={`/${post.slug}`}>
+          <div className="relative w-full aspect-video isolate bg-subtle-bg rounded-[8px] overflow-hidden border-2 border-dashed border-border-default group-hover:border-accent/40 transition-colors">
+            <img
+              alt={post.coverAlt ?? post.title}
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+              style={getCoverStyle(post.coverUrl)}
+              decoding="async"
+              loading="lazy"
+              src={(post.coverUrl || "").split("?")[0]}
+            />
           </div>
         </Link>
       )}
 
       {post.category ? (
         <Link
-          className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.08em] text-accent transition-colors hover:text-accent/80"
+          className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.08em] text-accent transition-colors hover:text-accent/80"
           href={`/category/${post.category.slug}`}
         >
           {post.category.name}
         </Link>
       ) : (
-        <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-accent">
+        <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-accent">
           Animation Analysis
         </div>
       )}
 
-      <Link href={`/${post.slug}`}>
-        <h2 className="mb-3 line-clamp-2 text-[20px] font-bold leading-[1.3] text-text-primary transition-colors duration-200 group-hover:text-accent">
+      <Link className="group-hover:text-accent transition-colors block" href={`/${post.slug}`}>
+        <h2 className="text-[20px] font-display font-bold text-text-primary leading-[1.3] line-clamp-2">
           {post.title}
         </h2>
       </Link>
 
-      {post.excerpt && (
-        <p className="mb-4 hidden font-serif text-[14px] leading-[1.65] text-text-secondary line-clamp-3 md:block">
+      <Link href={`/${post.slug}`} className="block">
+        <p className="mt-2 text-[14px] text-text-secondary font-serif leading-[1.65] line-clamp-3 hidden md:block">
           {post.excerpt}
         </p>
-      )}
+      </Link>
 
-      <div className="mt-auto flex items-center justify-between text-[13px] text-text-secondary">
-        <div className="flex min-w-0 items-center gap-2">
-          <div className="flex -space-x-1.5">
-            {authors.slice(0, 3).map((author) => (
+      <div className="mt-4 flex items-center justify-between text-[13px] text-text-primary/80">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          {authors.map((author, i) => (
+            <div className="flex items-center gap-2" key={author.username}>
+              {i > 0 && <span className="text-text-tertiary">·</span>}
               <AuthorAvatar
                 avatarUrl={author.avatarUrl}
-                key={author.username}
                 name={author.name}
               />
-            ))}
-          </div>
-          <span className="truncate">
-            {authors.map((author, index) => (
-              <span key={author.username}>
-                {index > 0 && ", "}
-                <Link
-                  className="transition-colors hover:text-text-primary"
-                  href={`/authors/${author.username}`}
-                >
-                  {author.name}
-                </Link>
+              <span className="font-semibold text-text-primary">
+                {author.name}
               </span>
-            ))}
-          </span>
-          <span className="opacity-50">·</span>
-          {post.publishedAt && <span>{formatDate(post.publishedAt)}</span>}
+            </div>
+          ))}
+          <span className="text-text-tertiary px-1">&middot;</span>
+          <time
+            className="text-[12px] text-text-secondary"
+            dateTime={
+              post.publishedAt
+                ? new Date(post.publishedAt).toISOString()
+                : undefined
+            }
+          >
+            {post.publishedAt ? formatDate(post.publishedAt) : "Bản nháp"}
+          </time>
         </div>
-
-        <div className="flex shrink-0 items-center gap-3">
-          <span>
-            {post._count.comments} bình luận
-          </span>
+        <div className="text-text-secondary text-[12px]">
+          {post._count.comments} bình luận
         </div>
       </div>
 
       {tags.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           {tags.map((tag) => (
             <Link
-              className="cursor-pointer rounded-full bg-subtle-bg px-3 py-1 text-[11px] text-text-secondary transition-colors hover:bg-border-default"
+              className="px-3 py-1 bg-subtle-bg text-text-primary text-[11px] rounded-full hover:bg-border-default transition-colors"
               href={`/tag/${tag.slug}`}
               key={tag.slug}
             >

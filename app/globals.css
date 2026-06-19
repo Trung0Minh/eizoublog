@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 340 100% 99.4%;
     --foreground: 0 0% 6.7%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 6.7%;
@@ -35,26 +35,26 @@
     --font-size-3xl: 2.5rem;
 
     /* Redesign tokens */
-    --subtle-bg: #f7f7f7;
-    --text-primary: #111111;
-    --text-secondary: #6b6b6b;
-    --text-tertiary: #888888;
-    --border-default: #e5e5e5;
-    --border-strong: #d4d4d4;
-    --accent: #c0392b;
-    --button-bg: #111111;
+    --subtle-bg: #f4f0f2;
+    --text-primary: #3c3440;
+    --text-secondary: #6e6473;
+    --text-tertiary: #9c92a3;
+    --border-default: #e6e0e4;
+    --border-strong: #c8bec5;
+    --accent: var(--season-accent, #ff1493);
+    --button-bg: var(--season-brand, #ff1493);
     --button-text: #ffffff;
   }
 
   .dark {
-    --background: 0 0% 7.8%;
+    --background: 265 31.6% 11.6%;
     --foreground: 0 0% 91%;
     --card: 0 0% 11.8%;
     --card-foreground: 0 0% 91%;
     --popover: 0 0% 11.8%;
     --popover-foreground: 0 0% 91%;
     --primary: 0 0% 91%;
-    --primary-foreground: 0 0% 7.8%;
+    --primary-foreground: 265 31.6% 11.6%;
     --secondary: 0 0% 14.5%;
     --secondary-foreground: 0 0% 91%;
     --muted: 0 0% 11.8%;
@@ -70,15 +70,51 @@
     --editorial-hover: 7 55% 51%;
 
     /* Redesign tokens */
-    --subtle-bg: #1e1e1e;
-    --text-primary: #e8e8e8;
-    --text-secondary: #888888;
-    --text-tertiary: #a3a3a3;
-    --border-default: #2a2a2a;
-    --border-strong: #404040;
-    --accent: #e05c4a;
-    --button-bg: #e8e8e8;
-    --button-text: #141414;
+    --subtle-bg: #2d203e;
+    --text-primary: #f2edf5;
+    --text-secondary: #bbaec4;
+    --text-tertiary: #8b7d94;
+    --border-default: #4a305e;
+    --border-strong: #724b91;
+    --accent: var(--season-accent, #ff69b4);
+    --button-bg: var(--season-brand, #ff69b4);
+    --button-text: #1c1427;
+  }
+
+  /* Seasons - Light Mode */
+  :root[data-season="spring"] {
+    --season-accent: #ff1493;
+    --season-brand: #ff1493;
+  }
+  :root[data-season="summer"] {
+    --season-accent: #059669;
+    --season-brand: #059669;
+  }
+  :root[data-season="autumn"] {
+    --season-accent: #d97706;
+    --season-brand: #d97706;
+  }
+  :root[data-season="winter"] {
+    --season-accent: #2563eb;
+    --season-brand: #2563eb;
+  }
+
+  /* Seasons - Dark Mode */
+  .dark[data-season="spring"] {
+    --season-accent: #ff69b4;
+    --season-brand: #ff69b4;
+  }
+  .dark[data-season="summer"] {
+    --season-accent: #10b981;
+    --season-brand: #10b981;
+  }
+  .dark[data-season="autumn"] {
+    --season-accent: #f59e0b;
+    --season-brand: #f59e0b;
+  }
+  .dark[data-season="winter"] {
+    --season-accent: #60a5fa;
+    --season-brand: #3b82f6;
   }
 
   * {
@@ -92,6 +128,104 @@
   body {
     @apply overflow-x-clip bg-background text-text-primary antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Custom kawaii scrollbar */
+  ::-webkit-scrollbar {
+    width: 12px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--subtle-bg);
+    border-radius: 6px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 6px;
+    border: 3px solid var(--subtle-bg);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
+  }
+
+  /* Starry background */
+  .star-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: -1;
+    background-image:
+      radial-gradient(var(--border-default) 2px, transparent 2px),
+      radial-gradient(var(--border-default) 2px, transparent 2px);
+    background-size: 60px 60px;
+    background-position: 0 0, 30px 30px;
+    opacity: 0.5;
+  }
+
+  /* Sakura Petals (Spring) */
+  @keyframes falling {
+    0% { transform: translate3d(0, -10vh, 0) rotate(0deg) scale(var(--scale, 1)); }
+    100% { transform: translate3d(150px, 110vh, 0) rotate(720deg) scale(var(--scale, 1)); }
+  }
+  .sakura-petal {
+    width: 12px;
+    height: 12px;
+    background: var(--accent);
+    border-radius: 15px 0px 15px 15px;
+    opacity: 0.3;
+    animation: falling linear infinite;
+    box-shadow: 0 0 10px var(--accent);
+  }
+
+  /* Fireflies (Summer) */
+  @keyframes firefly-float {
+    0% { transform: translate3d(0, 110vh, 0) scale(var(--scale, 1)); opacity: 0; }
+    20% { opacity: 0.8; transform: translate3d(30px, 80vh, 0) scale(var(--scale, 1)); }
+    80% { opacity: 0.8; transform: translate3d(-30px, 20vh, 0) scale(var(--scale, 1)); }
+    100% { transform: translate3d(0, -20vh, 0) scale(var(--scale, 1)); opacity: 0; }
+  }
+  .summer-firefly {
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    opacity: 0;
+    animation: firefly-float linear infinite;
+    box-shadow: 0 0 12px 4px var(--accent);
+  }
+
+  /* Autumn Leaves (Autumn) */
+  @keyframes leaf-falling {
+    0% { transform: translate3d(0, -10vh, 0) rotate(0deg) scale(var(--scale, 1)); }
+    50% { transform: translate3d(-50px, 50vh, 0) rotate(180deg) scale(var(--scale, 1)); }
+    100% { transform: translate3d(50px, 110vh, 0) rotate(360deg) scale(var(--scale, 1)); }
+  }
+  .autumn-leaf {
+    width: 14px;
+    height: 14px;
+    background: var(--accent);
+    border-radius: 0 14px 0 14px;
+    opacity: 0.4;
+    animation: leaf-falling linear infinite;
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  /* Winter Snow (Winter) */
+  @keyframes snow-falling {
+    0% { transform: translate3d(0, -10vh, 0) scale(var(--scale, 1)); }
+    50% { transform: translate3d(20px, 50vh, 0) scale(var(--scale, 1)); }
+    100% { transform: translate3d(0, 110vh, 0) scale(var(--scale, 1)); }
+  }
+  .winter-snow {
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    opacity: 0.6;
+    animation: snow-falling linear infinite;
+    box-shadow: 0 0 6px var(--accent);
   }
 
   ::selection {
@@ -126,76 +260,7 @@
     display: none;
   }
 
-  .loader {
-    border-radius: 50%;
-    color: var(--text-primary);
-    display: inline-block;
-    perspective: 1000px;
-    position: relative;
-    transform: rotateZ(45deg);
-  }
 
-  .loader::before,
-  .loader::after {
-    animation: loader-spin 1s linear infinite;
-    border-radius: 50%;
-    content: "";
-    display: block;
-    height: inherit;
-    left: 0;
-    position: absolute;
-    top: 0;
-    transform: rotateX(70deg);
-    width: inherit;
-  }
-
-  .loader::after {
-    animation-delay: 0.4s;
-    color: var(--accent);
-    transform: rotateY(70deg);
-  }
-
-  @keyframes loader-spin {
-    0%,
-    100% {
-      box-shadow: 0.2em 0 0 0 currentcolor;
-    }
-
-    12% {
-      box-shadow: 0.2em 0.2em 0 0 currentcolor;
-    }
-
-    25% {
-      box-shadow: 0 0.2em 0 0 currentcolor;
-    }
-
-    37% {
-      box-shadow: -0.2em 0.2em 0 0 currentcolor;
-    }
-
-    50% {
-      box-shadow: -0.2em 0 0 0 currentcolor;
-    }
-
-    62% {
-      box-shadow: -0.2em -0.2em 0 0 currentcolor;
-    }
-
-    75% {
-      box-shadow: 0 -0.2em 0 0 currentcolor;
-    }
-
-    87% {
-      box-shadow: 0.2em -0.2em 0 0 currentcolor;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .loader::before,
-    .loader::after {
-      animation-duration: 2s;
-    }
-  }
 
   .prose-editor {
     color: var(--text-primary);
@@ -363,7 +428,7 @@
 
   .post-content {
     color: var(--text-primary);
-    font-family: var(--font-inter), system-ui, sans-serif;
+    font-family: var(--font-lora), ui-serif, Georgia, serif;
     font-size: 1rem;
     line-height: 1.65;
     max-width: 100%;

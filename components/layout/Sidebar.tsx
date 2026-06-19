@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { Sparkles } from "lucide-react"
 
 import { cn, formatDate } from "@/lib/utils"
 
@@ -33,7 +34,7 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        "flex w-full shrink-0 flex-col gap-12 lg:w-[240px]",
+        "flex w-full shrink-0 flex-col gap-10 mt-4 lg:mt-0 lg:w-[240px]",
         className,
       )}
     >
@@ -41,75 +42,79 @@ export function Sidebar({
         <SidebarSection title="Bản tin">{newsletter}</SidebarSection>
       )}
 
+      {newsletter && <SidebarDivider />}
+
       {categories.length > 0 && (
-        <SidebarSection title="Danh mục">
-          <ul className="flex flex-col text-sm">
-            {categories.map((category) => (
-              <li key={category.id} className="group">
-                <Link
-                  className="flex items-center justify-between border-b border-border-default py-2.5 transition-colors last:border-0 group-hover:text-accent"
-                  href={`/category/${category.slug}`}
-                >
-                  <span>{category.name}</span>
-                  <span className="text-[12px] text-text-tertiary">
-                    {category._count.posts}
-                  </span>
-                </Link>
-                {category.children.length > 0 && (
-                  <ul className="ml-3 mt-2 flex flex-col gap-2 border-l border-border-default pl-3">
-                    {category.children.map((child) => (
-                      <li key={child.id}>
-                        <Link
-                          className="block text-[13px] text-text-secondary transition-colors hover:text-accent"
-                          href={`/category/${child.slug}`}
-                        >
-                          {child.name}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </li>
-            ))}
-          </ul>
-        </SidebarSection>
+        <>
+          <SidebarSection title="Danh mục">
+            <ul className="flex flex-col gap-3 text-[13px]">
+              {categories.map((category) => (
+                <li key={category.id} className="flex flex-col">
+                  <Link
+                    className="flex justify-between text-text-primary hover:text-accent cursor-pointer group"
+                    href={`/category/${category.slug}`}
+                  >
+                    <span className="group-hover:text-accent transition-colors">{category.name}</span>
+                    <span className="text-text-tertiary">{category._count.posts}</span>
+                  </Link>
+                  {category.children.length > 0 && (
+                    <ul className="flex flex-col gap-2 mt-2 ml-[6px] pl-3 border-l-[1px] border-border-default">
+                      {category.children.map((child) => (
+                        <li key={child.id}>
+                          <Link
+                            className="flex justify-between text-text-secondary hover:text-accent cursor-pointer"
+                            href={`/category/${child.slug}`}
+                          >
+                            <span>{child.name}</span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </SidebarSection>
+          <SidebarDivider />
+        </>
       )}
 
       {recentPosts.length > 0 && (
-        <SidebarSection title="Bài viết gần đây">
-          <ul className="space-y-4">
-            {recentPosts.map((post) => (
-              <li key={post.slug}>
-                <Link
-                  className="line-clamp-2 text-[13px] font-medium leading-snug transition-colors hover:text-accent"
-                  href={`/${post.slug}`}
-                >
-                  {post.title}
-                </Link>
-                {post.publishedAt && (
-                  <p className="mt-1 text-[12px] text-text-tertiary">
-                    {formatDate(post.publishedAt)}
-                  </p>
-                )}
-              </li>
-            ))}
-          </ul>
-        </SidebarSection>
+        <>
+          <SidebarSection title="Bài viết gần đây">
+            <ul className="flex flex-col gap-4">
+              {recentPosts.map((post) => (
+                <li key={post.slug} className="flex flex-col group cursor-pointer">
+                  <Link
+                    className="text-[13px] text-text-primary group-hover:text-accent leading-tight line-clamp-2 transition-colors"
+                    href={`/${post.slug}`}
+                  >
+                    {post.title}
+                  </Link>
+                  {post.publishedAt && (
+                    <span className="text-[12px] text-text-secondary mt-1">
+                      {formatDate(post.publishedAt)}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </SidebarSection>
+          {archives.length > 0 && <SidebarDivider />}
+        </>
       )}
 
       {archives.length > 0 && (
         <SidebarSection title="Lưu trữ">
-          <ul className="flex flex-col text-sm">
+          <ul className="flex flex-col gap-3 text-[13px]">
             {archives.map((archive) => (
               <li key={archive.month}>
                 <Link
-                  className="flex items-center justify-between border-b border-border-default py-2.5 transition-colors last:border-0 hover:text-accent"
+                  className="flex justify-between text-text-primary hover:text-accent cursor-pointer group"
                   href={`/?archive=${archive.month}`}
                 >
-                  <span>{formatArchiveMonth(archive.month)}</span>
-                  <span className="text-[12px] text-text-tertiary">
-                    {archive.count}
-                  </span>
+                  <span className="group-hover:text-accent transition-colors">{formatArchiveMonth(archive.month)}</span>
+                  <span className="text-text-tertiary">{Number(archive.count)}</span>
                 </Link>
               </li>
             ))}
@@ -118,6 +123,10 @@ export function Sidebar({
       )}
     </aside>
   )
+}
+
+function SidebarDivider() {
+  return <div className="h-[1px] w-full bg-border-default" />
 }
 
 function formatArchiveMonth(month: string) {
@@ -143,11 +152,11 @@ function SidebarSection({
   title: string
 }) {
   return (
-    <section>
-      <h3 className="mb-4 text-[11px] font-semibold uppercase tracking-widest text-text-secondary">
-        {title}
+    <div className="flex flex-col">
+      <h3 className="text-[13px] font-display font-bold text-accent uppercase tracking-wider mb-4 flex items-center gap-1">
+        <Sparkles className="w-4 h-4" /> {title}
       </h3>
       {children}
-    </section>
+    </div>
   )
 }
