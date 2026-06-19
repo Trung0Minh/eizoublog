@@ -85,6 +85,12 @@ export default async function PostPage({ params }: PostPageProps) {
   const authors = [post.author.username, ...post.coAuthors.map(c => c.user.username)]
 
   const content = post.content as JSONContent
+  const fallbackTags = [
+    { name: "Animation Analysis", slug: "animation-analysis" },
+    { name: "Sakuga", slug: "sakuga" },
+  ]
+  const tags =
+    post.tags.length > 0 ? post.tags.map(({ tag }) => tag) : fallbackTags
 
   return (
     <>
@@ -110,7 +116,7 @@ export default async function PostPage({ params }: PostPageProps) {
               </div>
             )}
             <div className="flex flex-wrap gap-[6px]">
-              {post.tags.map(({ tag }) => (
+              {tags.map((tag) => (
                 <span key={tag.slug} className="px-[12px] py-[6px] bg-accent/10 border border-accent/20 text-accent text-[11px] font-semibold rounded-full hover:bg-accent hover:text-white transition-colors cursor-pointer">
                   {tag.name}
                 </span>

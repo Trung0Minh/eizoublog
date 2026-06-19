@@ -7,7 +7,6 @@ import { GripVertical, Pencil, Plus, Save, Trash2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { updateResourcesPage } from "./actions"
 import { TextReveal } from "@/components/ui/TextReveal"
 
 interface ResourceCard {
@@ -30,6 +29,19 @@ interface ResourcesClientProps {
   initialPage: { content: any } | null
   isAdmin: boolean
   appName: string
+}
+
+function getApiError(value: unknown) {
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "error" in value &&
+    typeof value.error === "string"
+  ) {
+    return value.error
+  }
+
+  return "Lỗi khi lưu. Vui lòng thử lại."
 }
 
 const defaultResources: ResourceCard[] = [
@@ -239,12 +251,22 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
   async function handleSave() {
     setIsSaving(true)
     try {
-      await updateResourcesPage(dataRef.current)
+      const response = await fetch("/api/admin/site-pages/resources", {
+        body: JSON.stringify({ content: dataRef.current }),
+        headers: { "Content-Type": "application/json" },
+        method: "PATCH",
+      })
+      const result: unknown = await response.json()
+
+      if (!response.ok) {
+        throw new Error(getApiError(result))
+      }
+
       setIsEditing(false)
       router.refresh()
     } catch (error) {
       console.error("Failed to save:", error)
-      alert("Lỗi khi lưu. Vui lòng thử lại.")
+      alert(error instanceof Error ? error.message : "Lỗi khi lưu. Vui lòng thử lại.")
     } finally {
       setIsSaving(false)
     }
@@ -438,7 +460,7 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
       {isAdmin && (
         <Button
           onClick={() => setIsEditing(true)}
-          className="absolute right-0 top-0 opacity-0 transition-opacity group-hover:opacity-100 z-10"
+          className="absolute right-0 top-0 z-10 shadow-sm"
           size="sm"
           variant="outline"
         >
@@ -472,7 +494,7 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
 
                       const CardContent = () => (
                         <>
-                          <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0 duration-300">
+                            <div className="absolute top-0 right-0 p-4 opacity-0 transition-opacity translate-x-2 duration-300 group-hover/resource:translate-x-0 group-hover/resource:opacity-100">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
                               <path d="M7 17l9.2-9.2M17 17V7H7" />
                             </svg>
@@ -487,7 +509,7 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
                                 <img src={resource.logo} alt={`${resource.domain} logo`} className="w-full h-full object-contain" />
                               ) : null}
                             </div>
-                            <h3 className="text-[20px] font-bold font-display text-text-primary group-hover:text-accent transition-colors">
+                            <h3 className="text-[20px] font-bold font-display text-text-primary transition-colors group-hover/resource:text-accent">
                               {resource.domain}
                             </h3>
                           </div>
@@ -497,7 +519,7 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
                         </>
                       )
 
-                      const commonClasses = "group block p-6 rounded-[24px] bg-subtle-bg/30 backdrop-blur-md border-[2px] border-border-default hover:border-accent/40 hover:shadow-lg transition-all duration-300 relative overflow-hidden"
+                      const commonClasses = "group/resource block p-6 rounded-[24px] bg-subtle-bg/30 backdrop-blur-md border-[2px] border-border-default hover:border-accent/40 hover:shadow-lg transition-all duration-300 relative overflow-hidden"
 
                       if (isLink) {
                         return (

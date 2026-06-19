@@ -9,9 +9,7 @@ import Link from "next/link"
 import { TiptapEditor } from "@/components/editor/TiptapEditor"
 import { PostBody } from "@/components/posts/PostBody"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { updateAboutPage } from "./actions"
 
 interface PublishingNote {
   text: string
@@ -81,6 +79,19 @@ function isAboutPageContent(value: unknown): value is AboutPageContent {
   )
 }
 
+function getApiError(value: unknown) {
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "error" in value &&
+    typeof value.error === "string"
+  ) {
+    return value.error
+  }
+
+  return "Lỗi khi lưu. Vui lòng thử lại."
+}
+
 export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps) {
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
@@ -133,12 +144,25 @@ export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps)
         setContentText(latestContentText)
       }
 
-      await updateAboutPage(dataRef.current, contentTextRef.current)
+      const response = await fetch("/api/admin/site-pages/about", {
+        body: JSON.stringify({
+          content: dataRef.current,
+          contentText: contentTextRef.current,
+        }),
+        headers: { "Content-Type": "application/json" },
+        method: "PATCH",
+      })
+      const result: unknown = await response.json()
+
+      if (!response.ok) {
+        throw new Error(getApiError(result))
+      }
+
       setIsEditing(false)
       router.refresh()
     } catch (error) {
       console.error("Failed to save:", error)
-      alert("Lỗi khi lưu. Vui lòng thử lại.")
+      alert(error instanceof Error ? error.message : "Lỗi khi lưu. Vui lòng thử lại.")
     } finally {
       setIsSaving(false)
     }

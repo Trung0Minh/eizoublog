@@ -48,13 +48,15 @@ describe("anime-blog-4 appearance parity", () => {
   it("keeps About body edits when other editable fields change", () => {
     const about = read("app/(public)/about/AboutClient.tsx")
     const editor = read("components/editor/TiptapEditor.tsx")
+    const sitePageApiPath = join(root, "app/api/admin/site-pages/[slug]/route.ts")
 
+    expect(existsSync(sitePageApiPath)).toBe(true)
     expect(editor).toContain("onEditorReady")
     expect(about).toContain("aboutEditorRef")
     expect(about).toContain("aboutEditorRef.current?.getJSON()")
     expect(about).toContain("dataRef.current")
     expect(about).toContain("contentTextRef.current")
-    expect(about).toContain("await updateAboutPage(dataRef.current")
+    expect(about).toContain('fetch("/api/admin/site-pages/about"')
     expect(about).toContain("updateData((currentData) => ({")
     expect(about).toContain("body: json")
     expect(about).not.toContain("setData({ ...data, body: json })")
@@ -65,6 +67,24 @@ describe("anime-blog-4 appearance parity", () => {
 
     expect(resources).toContain('className="relative group"')
     expect(resources).toContain("dataRef.current")
-    expect(resources).toContain("await updateResourcesPage(dataRef.current)")
+    expect(resources).toContain('fetch("/api/admin/site-pages/resources"')
+    expect(resources).toContain("group/resource")
+    expect(resources).toContain("group-hover/resource")
+    expect(resources).not.toContain("opacity-0 transition-opacity group-hover:opacity-100")
+  })
+
+  it("aligns home sort tabs with the post column", () => {
+    const homePostList = read("app/(public)/HomePostList.tsx")
+
+    expect(homePostList).toContain("mb-6 flex justify-start")
+    expect(homePostList).not.toContain("mb-6 flex justify-end")
+  })
+
+  it("shows fallback tags on post pages when a post has no tags", () => {
+    const postPage = read("app/(public)/[slug]/page.tsx")
+
+    expect(postPage).toContain("fallbackTags")
+    expect(postPage).toContain("post.tags.length > 0")
+    expect(postPage).toContain("Animation Analysis")
   })
 })

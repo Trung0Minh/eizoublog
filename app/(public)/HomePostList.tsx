@@ -23,7 +23,7 @@ export async function HomePostList({
 
   return (
     <div className="flex flex-col">
-      <div className="mb-6 flex justify-end gap-4 border-b pb-4">
+      <div className="mb-6 flex justify-start gap-4 border-b pb-4">
         <PostSortTabs
           basePath="/"
           query={{ archive: archiveMonth }}
