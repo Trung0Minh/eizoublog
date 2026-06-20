@@ -46,9 +46,16 @@ export function PostHero({ post, authorUsernames }: PostHeroProps) {
               </div>
             )}
           </ScrollReveal>
-          <h1 className="text-[28px] md:text-[44px] lg:text-[52px] font-display font-bold text-text-primary leading-[1.1] tracking-[-0.02em] drop-shadow-[0_2px_10px_rgba(255,255,255,0.1)] mb-6">
+          <h1 className="text-[28px] md:text-[44px] lg:text-[52px] font-display font-bold text-text-primary leading-[1.1] tracking-[-0.02em] drop-shadow-[0_2px_10px_rgba(255,255,255,0.1)] mb-4">
             <TextReveal text={post.title} />
           </h1>
+          {post.excerpt && (
+            <ScrollReveal delay={0.15}>
+              <p className="text-[15px] md:text-[18px] text-text-secondary leading-[1.6] mb-8 max-w-[90%]">
+                {post.excerpt}
+              </p>
+            </ScrollReveal>
+          )}
 
           <ScrollReveal delay={0.2} className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-[12px] bg-background/95 backdrop-blur-md p-2 pr-4 rounded-full border border-border-default shadow-md select-none">
