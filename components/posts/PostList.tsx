@@ -1,6 +1,7 @@
+import { motion } from "motion/react"
+
 import { PostCard, type PostCardPost } from "@/components/posts/PostCard"
 import { Pagination } from "@/components/ui/Pagination"
-import { ScrollReveal } from "@/components/ui/ScrollReveal"
 
 interface PostListProps {
   emptyMessage?: string
@@ -28,13 +29,24 @@ export function PostList({
 
   return (
     <div className="flex flex-col gap-6 md:gap-8">
-      <div className="flex flex-col gap-6 md:gap-8">
-        {posts.map((post, index) => (
-          <ScrollReveal key={post.slug} index={index}>
-            <PostCard post={post} />
-          </ScrollReveal>
+      <motion.div 
+        className="flex flex-col gap-6 md:gap-8"
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, margin: "-50px" }}
+        variants={{
+          hidden: {},
+          show: {
+            transition: {
+              staggerChildren: 0.1
+            }
+          }
+        }}
+      >
+        {posts.map((post) => (
+          <PostCard key={post.slug} post={post} />
         ))}
-      </div>
+      </motion.div>
 
       {pagination && (
         <Pagination

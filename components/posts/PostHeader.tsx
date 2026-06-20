@@ -1,4 +1,7 @@
+"use client"
+
 import Link from "next/link"
+import { motion, useScroll, useTransform } from "motion/react"
 
 import { PostEditLink } from "@/components/posts/PostEditLink"
 import { RelativeTime } from "@/components/ui/RelativeTime"
@@ -50,6 +53,9 @@ function Avatar({ author }: { author: HeaderAuthor }) {
 }
 
 export function PostHeader({ authorUsernames, post }: PostHeaderProps) {
+  const { scrollY } = useScroll()
+  const y = useTransform(scrollY, [0, 1000], [0, 200])
+
   const authors = [post.author, ...post.coAuthors.map(({ user }) => user)]
   const fallbackTags = [
     { name: "Animation Analysis", slug: "animation-analysis" },
@@ -132,7 +138,7 @@ export function PostHeader({ authorUsernames, post }: PostHeaderProps) {
       {post.coverUrl && (
         <div className="mt-7">
           <div className="relative -ml-4 aspect-video w-screen overflow-hidden bg-subtle-bg md:ml-0 md:w-full md:rounded-[8px]">
-            <div className="absolute inset-0 overflow-hidden">
+            <motion.div className="absolute -top-[20%] -bottom-[20%] left-0 right-0" style={{ y }}>
               <img
                 alt={post.coverAlt ?? post.title}
                 className="h-full w-full"
@@ -142,7 +148,7 @@ export function PostHeader({ authorUsernames, post }: PostHeaderProps) {
                 loading="eager"
                 src={(post.coverUrl || "").split("?")[0]}
               />
-            </div>
+            </motion.div>
           </div>
           <div className="px-4 md:px-0">
             <div className="mt-1.5 text-right text-[11px] italic text-text-tertiary">

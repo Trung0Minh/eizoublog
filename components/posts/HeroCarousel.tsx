@@ -5,6 +5,7 @@ import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
 import Link from 'next/link';
 import { Sparkles } from 'lucide-react';
+import { motion } from 'motion/react';
 
 interface HeroCarouselPost {
   category: { name: string } | null
@@ -69,7 +70,13 @@ export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
                   fetchPriority="high"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-6 md:p-12">
-                  <div className="transform transition-transform duration-700 ease-out md:translate-y-6 md:group-hover:translate-y-0">
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    className="transform transition-transform duration-700 ease-out md:translate-y-6 md:group-hover:translate-y-0"
+                  >
                     <span className="bg-accent text-white text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full w-max mb-3 flex items-center gap-1 shadow-lg md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-700 md:delay-100">
                       <Sparkles className="w-3 h-3" /> {post.category?.name || 'Featured'}
                     </span>
@@ -82,7 +89,7 @@ export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
                     <span className="text-white/60 text-[12px] md:text-[14px] font-medium md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-700 md:delay-300">
                       {formatCarouselDate(post)}
                     </span>
-                  </div>
+                  </motion.div>
                 </div>
               </Link>
             </div>

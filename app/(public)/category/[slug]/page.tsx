@@ -1,9 +1,12 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
+import { SearchX } from "lucide-react"
+
 import { PageContainer } from "@/components/layout/PageContainer"
 import { PostList } from "@/components/posts/PostList"
 import { PostSortTabs } from "@/components/posts/PostSortTabs"
+import { EmptyState } from "@/components/ui/EmptyState"
 import {
   getCachedCategoryBySlug,
   getCachedCategoryPosts,
@@ -83,16 +86,23 @@ export default async function CategoryPage({
         <div className="flex justify-end">
           <PostSortTabs basePath={`/category/${slug}`} sort={sort} />
         </div>
-        <PostList
-          emptyMessage="No published posts in this category yet."
-          pagination={{
-            page,
-            pageSize: PAGE_SIZE,
-            query: { sort: sort === "latest" ? undefined : sort },
-            total,
-          }}
-          posts={posts}
-        />
+        {posts.length === 0 ? (
+          <EmptyState
+            description="There are no published posts in this category yet. Check back later!"
+            icon={SearchX}
+            title="No posts found"
+          />
+        ) : (
+          <PostList
+            pagination={{
+              page,
+              pageSize: PAGE_SIZE,
+              query: { sort: sort === "latest" ? undefined : sort },
+              total,
+            }}
+            posts={posts}
+          />
+        )}
       </section>
     </PageContainer>
   )

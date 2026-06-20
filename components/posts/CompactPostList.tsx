@@ -1,5 +1,8 @@
+'use client'
+
 import Link from "next/link"
 import { MessageSquare } from "lucide-react"
+import { motion } from "motion/react"
 
 import { getCoverStyle } from "@/lib/cover-style"
 import { Pagination } from "@/components/ui/Pagination"
@@ -32,12 +35,29 @@ export function CompactPostList({
 
   return (
     <div className="space-y-4">
-      <div className="divide-y divide-border-default overflow-hidden rounded-[6px] border border-border-default bg-background">
+      <motion.div 
+        className="divide-y divide-border-default overflow-hidden rounded-[6px] border border-border-default bg-background"
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, margin: "-50px" }}
+        variants={{
+          hidden: {},
+          show: {
+            transition: {
+              staggerChildren: 0.05
+            }
+          }
+        }}
+      >
         {posts.map((post, index) => {
           const tags = post.tags.map(({ tag }) => tag)
 
           return (
-            <article
+            <motion.article
+              variants={{
+                hidden: { opacity: 0, y: 15 },
+                show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+              }}
               className="grid grid-cols-[34px_64px_minmax(0,1fr)] gap-2 px-2 py-2 transition-colors hover:bg-subtle-bg/60 sm:grid-cols-[42px_84px_minmax(0,1fr)] sm:gap-3"
               key={post.slug}
             >
@@ -108,10 +128,10 @@ export function CompactPostList({
                   </div>
                 )}
               </div>
-            </article>
+            </motion.article>
           )
         })}
-      </div>
+      </motion.div>
 
       {pagination && (
         <Pagination

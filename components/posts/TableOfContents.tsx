@@ -86,7 +86,7 @@ export function TableOfContents({ content }: TableOfContentsProps) {
               className={cn(
                 "py-1.5 text-[13px] relative flex items-center transition-colors",
                 activeId === id
-                  ? "font-medium text-accent"
+                  ? "font-semibold text-accent"
                   : "text-text-secondary hover:text-text-primary",
               )}
               style={{ paddingLeft: `${Math.max(0, level - 2) * 12 + 8}px` }}

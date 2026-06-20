@@ -1,6 +1,9 @@
+'use client'
+
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
+import { motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
 
@@ -41,12 +44,23 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button"
+    if (asChild) {
+      return (
+        <Slot
+          className={cn(buttonVariants({ variant, size, className }))}
+          ref={ref}
+          {...props}
+        />
+      )
+    }
+
     return (
-      <Comp
+      <motion.button
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
-        {...props}
+        whileTap={{ scale: 0.95 }}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        {...(props as any)}
       />
     )
   }

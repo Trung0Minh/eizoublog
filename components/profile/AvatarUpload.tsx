@@ -121,10 +121,7 @@ function AvatarCropperModal({
     width: number
     height: number
   } | null>(null)
-  const [mounted, setMounted] = useState(false)
-
   useEffect(() => {
-    setMounted(true)
     document.body.style.overflow = "hidden"
     return () => {
       document.body.style.overflow = ""
@@ -144,8 +141,6 @@ function AvatarCropperModal({
     el.addEventListener("wheel", handleWheel, { passive: false })
     return () => el.removeEventListener("wheel", handleWheel)
   }, [handleWheel])
-
-  if (!mounted) return null
 
   return createPortal(
     <div className="fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-black/90 p-4">

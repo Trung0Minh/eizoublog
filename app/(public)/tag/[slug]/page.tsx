@@ -1,9 +1,12 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
+import { SearchX } from "lucide-react"
+
 import { PageContainer } from "@/components/layout/PageContainer"
 import { PostList } from "@/components/posts/PostList"
 import { PostSortTabs } from "@/components/posts/PostSortTabs"
+import { EmptyState } from "@/components/ui/EmptyState"
 import { getCachedTagBySlug, getCachedTagPosts } from "@/lib/queries"
 import { parsePostListSort } from "@/lib/postListSort"
 import { buildMetadata } from "@/lib/seo"
@@ -66,16 +69,23 @@ export default async function TagPage({ params, searchParams }: TagPageProps) {
         <div className="flex justify-end">
           <PostSortTabs basePath={`/tag/${slug}`} sort={sort} />
         </div>
-        <PostList
-          emptyMessage="No published posts with this tag yet."
-          pagination={{
-            page,
-            pageSize: PAGE_SIZE,
-            query: { sort: sort === "latest" ? undefined : sort },
-            total,
-          }}
-          posts={posts}
-        />
+        {posts.length === 0 ? (
+          <EmptyState
+            description="There are no published posts with this tag yet. Check back later!"
+            icon={SearchX}
+            title="No posts found"
+          />
+        ) : (
+          <PostList
+            pagination={{
+              page,
+              pageSize: PAGE_SIZE,
+              query: { sort: sort === "latest" ? undefined : sort },
+              total,
+            }}
+            posts={posts}
+          />
+        )}
       </section>
     </PageContainer>
   )

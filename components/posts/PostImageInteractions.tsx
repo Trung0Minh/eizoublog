@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react"
 import type { ReactNode } from "react"
 
+import { AnimatePresence } from "motion/react"
+
 import {
   ImageLightbox,
   type LightboxImage,
@@ -101,13 +103,15 @@ export function PostImageInteractions({
         {children}
       </div>
 
-      {lightbox ? (
-        <ImageLightbox
-          images={lightbox.images}
-          initialIndex={lightbox.index}
-          onClose={() => setLightbox(null)}
-        />
-      ) : null}
+      <AnimatePresence>
+        {lightbox ? (
+          <ImageLightbox
+            images={lightbox.images}
+            initialIndex={lightbox.index}
+            onClose={() => setLightbox(null)}
+          />
+        ) : null}
+      </AnimatePresence>
     </>
   )
 }

@@ -13,12 +13,7 @@ interface VideoEmbedModalProps {
 }
 
 export function VideoEmbedModal({ onClose, onInsert }: VideoEmbedModalProps) {
-  const [mounted, setMounted] = useState(false)
   const [url, setUrl] = useState("")
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   function handleSubmit() {
     const trimmedUrl = url.trim()
@@ -35,10 +30,6 @@ export function VideoEmbedModal({ onClose, onInsert }: VideoEmbedModalProps) {
       event.preventDefault()
       handleSubmit()
     }
-  }
-
-  if (!mounted) {
-    return null
   }
 
   return createPortal(

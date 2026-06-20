@@ -1,4 +1,7 @@
+'use client'
+
 import Link from "next/link"
+import { motion } from "motion/react"
 
 import { RelativeTime } from "@/components/ui/RelativeTime"
 import { getCoverStyle } from "@/lib/cover-style"
@@ -67,7 +70,13 @@ export function PostCard({ post }: PostCardProps) {
     post.tags.length > 0 ? post.tags.map(({ tag }) => tag) : fallbackTags
 
   return (
-    <article className="group flex flex-col bg-subtle-bg/30 p-4 border-[2px] border-transparent hover:border-border-default hover:shadow-lg rounded-[16px] transition-all duration-300">
+    <motion.article 
+      variants={{
+        hidden: { opacity: 0, y: 20 },
+        show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
+      }}
+      className="group flex flex-col bg-subtle-bg/30 p-4 border-[2px] border-transparent hover:border-border-default hover:shadow-lg rounded-[16px] transition-all duration-300"
+    >
       {post.coverUrl && (
         <Link className="mb-4 block overflow-hidden rounded-[8px]" href={`/${post.slug}`}>
           <div className="relative w-full aspect-video isolate bg-subtle-bg rounded-[8px] overflow-hidden border-2 border-dashed border-border-default group-hover:border-accent/40 transition-colors">
@@ -150,6 +159,6 @@ export function PostCard({ post }: PostCardProps) {
           ))}
         </div>
       )}
-    </article>
+    </motion.article>
   )
 }

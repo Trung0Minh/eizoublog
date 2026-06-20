@@ -71,6 +71,7 @@ describe("ThemeToggle", () => {
         ready: Promise.resolve(),
       }
     })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     document.startViewTransition = startTransitionSpy as any
 
     const animateSpy = vi.fn()
@@ -89,7 +90,9 @@ describe("ThemeToggle", () => {
     await new Promise((resolve) => setTimeout(resolve, 0))
     expect(animateSpy).toHaveBeenCalled()
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (document as any).startViewTransition
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (document as any).documentElement.animate
   })
 })

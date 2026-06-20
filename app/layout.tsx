@@ -11,6 +11,8 @@ import { DEFAULT_DESCRIPTION, getAppName, getAppUrl } from "@/lib/seo"
 
 import { BackToTop } from "@/components/ui/BackToTop"
 import { GlobalEffects } from "@/components/ui/GlobalEffects"
+import { Toaster } from "@/components/ui/Toaster"
+import { CommandMenu } from "@/components/ui/CommandMenu"
 
 import "./globals.css"
 
@@ -119,6 +121,8 @@ export default function RootLayout({
         <Suspense fallback={null}>
           <InternalAnalyticsTracker />
         </Suspense>
+        <Toaster />
+        <CommandMenu />
       </body>
     </html>
   )

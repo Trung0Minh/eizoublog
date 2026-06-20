@@ -9,6 +9,7 @@ import { PostHero } from "@/components/posts/PostHero"
 import { PostBody } from "@/components/posts/PostBody"
 import { PostJsonLd } from "@/components/posts/PostJsonLd"
 import { PostReadTracker } from "@/components/posts/PostReadTracker"
+import { ReadingProgress } from "@/components/posts/ReadingProgress"
 import { TableOfContents } from "@/components/posts/TableOfContents"
 import { prisma } from "@/lib/prisma"
 import {
@@ -94,6 +95,7 @@ export default async function PostPage({ params }: PostPageProps) {
 
   return (
     <>
+      <ReadingProgress />
       <PostJsonLd
         authorName={post.author.name}
         coverUrl={post.coverUrl}

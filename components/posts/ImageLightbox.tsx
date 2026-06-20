@@ -7,6 +7,7 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react"
+import { motion } from "motion/react"
 import { useCallback, useEffect, useState } from "react"
 
 export interface LightboxImage {
@@ -83,7 +84,11 @@ export function ImageLightbox({
   }
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
       aria-label="Image viewer"
       aria-modal="true"
       className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/90 p-4"
@@ -200,7 +205,11 @@ export function ImageLightbox({
           e.currentTarget.releasePointerCapture(e.pointerId);
         }}
       >
-        <img
+        <motion.img
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
           alt={current.alt || "Expanded post image"}
           className="max-h-[80vh] max-w-[90vw] select-none rounded object-contain transition-transform duration-100 ease-linear"
           draggable={false}
@@ -230,6 +239,6 @@ export function ImageLightbox({
           <ChevronRight aria-hidden="true" className="h-6 w-6" />
         </button>
       ) : null}
-    </div>
+    </motion.div>
   )
 }
