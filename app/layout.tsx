@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Nunito, Lora, M_PLUS_Rounded_1c } from "next/font/google"
+import { Nunito, M_PLUS_Rounded_1c } from "next/font/google"
 import { Suspense } from "react"
 
 import { InternalAnalyticsTracker } from "@/components/analytics/InternalAnalyticsTracker"
@@ -20,11 +20,6 @@ const nunito = Nunito({
   variable: "--font-inter", // Keep this variable name so tailwind config still works, or update tailwind config.
 })
 
-const lora = Lora({
-  subsets: ["latin", "vietnamese"],
-  display: "swap",
-  variable: "--font-lora",
-})
 
 const mPlusRounded = M_PLUS_Rounded_1c({
   weight: ['700', '800'],
@@ -70,7 +65,7 @@ export default function RootLayout({
   return (
     <html
       lang="vi"
-      className={`${nunito.variable} ${lora.variable} ${mPlusRounded.variable}`}
+      className={`${nunito.variable} ${mPlusRounded.variable}`}
       suppressHydrationWarning
     >
       <head>
