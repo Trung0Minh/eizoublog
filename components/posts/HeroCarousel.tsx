@@ -22,13 +22,12 @@ interface HeroCarouselPost {
 function formatCarouselDate(post: HeroCarouselPost) {
   const date = post.publishedAt ?? post.createdAt
 
-  return date
-    ? new Date(date).toLocaleDateString('en-US', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      })
-    : null
+  // Return ISO string or fixed string for server to prevent hydration mismatch,
+  // or rely on a client-side only render. But for now, let's just return a simpler string 
+  // without relying on user's local timezone, or use suppressHydrationWarning on the element.
+  if (!date) return null;
+  const d = new Date(date);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
 }
 
 export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
