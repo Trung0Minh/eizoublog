@@ -2,6 +2,14 @@ import { render } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 interface UseEditorOptions {
+  content?: {
+    content?: Array<{
+      attrs?: Record<string, unknown>
+      content?: Array<{ attrs?: Record<string, unknown>; type?: string }>
+      type?: string
+    }>
+    type?: string
+  }
   editorProps?: {
       attributes?: {
         class?: string
@@ -79,5 +87,29 @@ describe("TiptapEditor", () => {
     expect(getEditorClass()).toContain("prose prose-lg")
     expect(getEditorClass()).toContain("dark:prose-invert")
     expect(getEditorClass()).not.toContain("prose-editor")
+  })
+
+  it("normalizes legacy image nodes before initializing Tiptap", () => {
+    render(
+      <TiptapEditor
+        content={{
+          content: [
+            { attrs: { alt: "Frame", src: "/frame.webp" }, type: "image" },
+            {
+              content: [
+                { attrs: { alt: "Nested", src: "/nested.webp" }, type: "image" },
+              ],
+              type: "blockquote",
+            },
+          ],
+          type: "doc",
+        }}
+      />,
+    )
+
+    const options = useEditorMock.calls.at(-1) as UseEditorOptions
+
+    expect(options.content?.content?.[0]?.type).toBe("customImage")
+    expect(options.content?.content?.[1]?.content?.[0]?.type).toBe("customImage")
   })
 })

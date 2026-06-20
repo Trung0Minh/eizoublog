@@ -16,7 +16,6 @@ import { TagInput, type TagOption } from "@/components/posts/TagInput"
 import { useAutosave } from "@/hooks/useAutosave"
 import { useWarnUnsaved } from "@/hooks/useWarnUnsaved"
 import { cn } from "@/lib/utils"
-import { motion } from "motion/react"
 
 interface CategoryOption {
   children: { id: string; name: string; slug?: string }[]
@@ -332,7 +331,7 @@ export function PostEditor({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col bg-background text-text-primary"
+      className="fixed inset-0 z-50 flex h-dvh min-h-dvh flex-col bg-background text-text-primary"
       data-testid="post-editor-shell"
     >
       <EditorParticles />
@@ -351,7 +350,7 @@ export function PostEditor({
         titlePreview={title}
       />
 
-      <main className="relative mt-14 flex w-full h-full min-h-0 flex-1 overflow-hidden bg-subtle-bg/10 dark:bg-black/40">
+      <main className="relative mt-14 flex w-full min-h-0 flex-1 overflow-hidden bg-subtle-bg/10 dark:bg-black/40">
         <button
           aria-label={isSettingsOpen ? "Đóng cài đặt" : "Mở cài đặt"}
           className={cn(

@@ -19,8 +19,9 @@ import {
 import StarterKit from "@tiptap/starter-kit"
 
 import { common, createLowlight } from "lowlight"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
+import { normalizeEditorContent } from "@/components/editor/content"
 import { EditorToolbar } from "@/components/editor/EditorToolbar"
 import {
   CustomImageExtension,
@@ -54,15 +55,14 @@ export function TiptapEditor({
   placeholder = "Bắt đầu viết bài...",
   ariaLabel,
 }: TiptapEditorProps) {
-  const [mounted, setMounted] = useState(false)
   const [spellcheckEnabled, setSpellcheckEnabled] = useState(false)
+  const normalizedContent = useMemo(
+    () => (content ? normalizeEditorContent(content) : ""),
+    [content],
+  )
   
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
   const editor = useEditor({
-    content: content ?? "",
+    content: normalizedContent,
     editable,
     editorProps: {
       attributes: {
@@ -140,7 +140,6 @@ export function TiptapEditor({
     const dom = editor.view?.dom
     if (!dom) return
 
-    dom.spellcheck = spellcheckEnabled
     dom.setAttribute("spellcheck", String(spellcheckEnabled))
   }, [editor, spellcheckEnabled])
 
@@ -152,7 +151,7 @@ export function TiptapEditor({
     }
   }, [editor, onEditorReady])
 
-  const isReady = mounted && !!editor
+  const isReady = !!editor
 
   const words = isReady ? editor!.storage.characterCount.words() : 0
   const readingTime = Math.max(1, Math.ceil(words / 200))

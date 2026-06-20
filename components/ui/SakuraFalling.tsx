@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from 'react';
 
+import { useReducedVisualEffects } from '@/hooks/useReducedVisualEffects';
+
 export function SeasonalEffects() {
   const [season, setSeason] = useState('spring');
   const [particles, setParticles] = useState<Array<{ id: number, left: string, animationDuration: string, animationDelay: string, scale: number }>>([]);
+  const shouldReduce = useReducedVisualEffects();
 
   useEffect(() => {
     const detectSeason = () => {
@@ -29,8 +32,12 @@ export function SeasonalEffects() {
   }, []);
 
   useEffect(() => {
+    if (shouldReduce) {
+      return;
+    }
+
     const timer = setTimeout(() => {
-      const length = season === 'winter' ? 40 : season === 'summer' ? 25 : 30;
+      const length = 16;
       const newParticles = Array.from({ length }).map((_, i) => ({
         id: i,
         left: `${Math.random() * 100}vw`,
@@ -41,13 +48,15 @@ export function SeasonalEffects() {
       setParticles(newParticles);
     }, 0);
     return () => clearTimeout(timer);
-  }, [season]);
+  }, [season, shouldReduce]);
 
-  if (particles.length === 0) return null;
+  const visibleParticles = shouldReduce ? [] : particles;
+
+  if (visibleParticles.length === 0) return null;
 
   return (
     <div className="fixed inset-0 pointer-events-none z-[100] overflow-hidden" aria-hidden="true">
-      {particles.map((particle) => {
+      {visibleParticles.map((particle) => {
         let className = "absolute top-0";
         if (season === 'spring') className = "sakura-petal absolute top-0";
         else if (season === 'summer') className = "summer-firefly absolute top-0";
@@ -56,6 +65,7 @@ export function SeasonalEffects() {
 
         return (
           <div
+            data-testid="seasonal-particle"
             key={particle.id}
             className={className}
             style={{

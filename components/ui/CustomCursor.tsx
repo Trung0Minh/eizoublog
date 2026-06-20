@@ -2,7 +2,10 @@
 import { useEffect, useState } from 'react';
 import { motion, useMotionValue, useSpring } from 'motion/react';
 
+import { useReducedVisualEffects } from '@/hooks/useReducedVisualEffects';
+
 export function CustomCursor() {
+  const shouldReduce = useReducedVisualEffects();
   const [isVisible, setIsVisible] = useState(false);
   const cursorX = useMotionValue(-100);
   const cursorY = useMotionValue(-100);
@@ -13,12 +16,8 @@ export function CustomCursor() {
   const cursorXSpring = useSpring(cursorX, springConfig);
   const cursorYSpring = useSpring(cursorY, springConfig);
 
-  const [isMounted, setIsMounted] = useState(false);
-
   useEffect(() => {
-    setIsMounted(true);
-    // Check if on touch device
-    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+    if (shouldReduce) {
       return;
     }
 
@@ -27,7 +26,7 @@ export function CustomCursor() {
       cursorY.set(e.clientY - 16);
       cursorXDot.set(e.clientX - 4);
       cursorYDot.set(e.clientY - 4);
-      if (!isVisible) setIsVisible(true);
+      setIsVisible(true);
     };
 
     document.body.addEventListener('mousemove', moveCursor);
@@ -35,13 +34,14 @@ export function CustomCursor() {
     return () => {
       document.body.removeEventListener('mousemove', moveCursor);
     };
-  }, [cursorX, cursorY, cursorXDot, cursorYDot, isVisible]);
+  }, [cursorX, cursorY, cursorXDot, cursorYDot, shouldReduce]);
 
-  if (!isMounted) return null;
+  if (shouldReduce) return null;
 
   return (
     <>
       <motion.div
+        data-testid="custom-cursor"
         className="fixed top-0 left-0 w-8 h-8 pointer-events-none z-[9999] hidden md:flex items-center justify-center border-2 border-accent/50 rounded-full"
         style={{
           x: cursorXSpring,

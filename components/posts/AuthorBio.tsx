@@ -39,7 +39,7 @@ export function AuthorBio({ author }: AuthorBioProps) {
       {author.avatarUrl ? (
         <img
           alt={author.name}
-          className="h-14 w-14 shrink-0 rounded-full object-cover"
+          className="!m-0 h-14 w-14 shrink-0 rounded-full object-cover !cursor-default hover:!opacity-100"
           decoding="async"
           loading="lazy"
           src={author.avatarUrl}
@@ -49,7 +49,7 @@ export function AuthorBio({ author }: AuthorBioProps) {
           {author.name.charAt(0)}
         </div>
       )}
-      <div>
+      <div className="min-w-0 flex-1">
         <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-text-tertiary">
           Viết bởi
         </div>

@@ -9,12 +9,8 @@ import { NavbarWrapper } from "@/components/layout/NavbarWrapper"
 import { ThemeProvider } from "@/components/layout/ThemeProvider"
 import { DEFAULT_DESCRIPTION, getAppName, getAppUrl } from "@/lib/seo"
 
-import { SeasonalEffects } from "@/components/ui/SakuraFalling"
 import { BackToTop } from "@/components/ui/BackToTop"
-import { ReadingProgress } from "@/components/ui/ReadingProgress"
-import { CustomCursor } from "@/components/ui/CustomCursor"
-import { NoiseOverlay } from "@/components/ui/NoiseOverlay"
-import { AmbientBackground } from "@/components/ui/AmbientBackground"
+import { GlobalEffects } from "@/components/ui/GlobalEffects"
 
 import "./globals.css"
 
@@ -31,7 +27,7 @@ const lora = Lora({
 })
 
 const mPlusRounded = M_PLUS_Rounded_1c({
-  weight: ['400', '500', '700', '800'],
+  weight: ['700', '800'],
   subsets: ['latin', 'vietnamese'],
   variable: '--font-display',
 })
@@ -88,11 +84,7 @@ export default function RootLayout({
           disableTransitionOnChange
           enableSystem
         >
-          <NoiseOverlay />
-          <AmbientBackground />
-          <SeasonalEffects />
-          <CustomCursor />
-          <ReadingProgress />
+          <GlobalEffects />
           <div className="flex min-h-screen flex-col relative z-10">
             <NavbarWrapper>
               <Navbar />

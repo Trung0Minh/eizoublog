@@ -98,4 +98,24 @@ describe("anime-blog-4 appearance parity", () => {
     expect(titleIndex).toBeLessThan(tiptapIndex)
     expect(editor).not.toContain("</TiptapEditor>")
   })
+
+  it("keeps route transitions from containing fixed overlays", () => {
+    const templates = [read("app/template.tsx"), read("app/(public)/template.tsx")]
+
+    templates.forEach((template) => {
+      expect(template).toContain("opacity")
+      expect(template).not.toContain("filter:")
+      expect(template).not.toMatch(/\b(?:initial|animate|exit)=\{\{[^}]*\by:/)
+    })
+  })
+
+  it("routes global decoration through a tool-aware effects boundary", () => {
+    const layout = read("app/layout.tsx")
+
+    expect(layout).toContain('import { GlobalEffects } from "@/components/ui/GlobalEffects"')
+    expect(layout).toContain("<GlobalEffects />")
+    expect(layout).not.toContain("<AmbientBackground />")
+    expect(layout).not.toContain("<SeasonalEffects />")
+    expect(layout).not.toContain("<NoiseOverlay />")
+  })
 })

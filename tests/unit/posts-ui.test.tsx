@@ -474,11 +474,13 @@ describe("PostEditor", () => {
     expect(screen.getByTestId("post-editor-shell")).toHaveClass(
       "fixed",
       "inset-0",
+      "h-dvh",
+      "min-h-dvh",
       "z-50",
     )
     expect(screen.getByLabelText("Tiêu đề")).toHaveClass(
-      "text-[22px]",
-      "md:text-[28px]",
+      "text-[32px]",
+      "md:text-[40px]",
     )
 
     const saveDraftButton = screen.getByRole("button", { name: /Lưu nháp/ })
@@ -491,15 +493,15 @@ describe("PostEditor", () => {
       "fixed",
       "top-0",
       "z-[100]",
-      "border-border-default",
+      "border-border-default/60",
     )
-    expect(screen.getByRole("link", { name: "Bảng điều khiển" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Bảng điều khiển/ })).toHaveAttribute(
       "href",
       "/dashboard",
     )
     expect(screen.getByTestId("editor-writing-surface")).toHaveClass(
-      "md:rounded-[8px]",
-      "md:border",
+      "md:rounded-[24px]",
+      "md:border-[2px]",
     )
     expect(screen.queryByLabelText("Danh mục")).not.toBeInTheDocument()
 
@@ -516,9 +518,9 @@ describe("PostEditor", () => {
     expect(
       screen.getAllByRole("button", { name: /^Ẩn cài đặt bài viết/ }),
     ).toHaveLength(2)
-    expect(saveDraftButton).toHaveClass("h-8")
+    expect(saveDraftButton).toHaveClass("h-9")
     expect(screen.getByRole("button", { name: "Xuất bản" })).toHaveClass(
-      "h-8",
+      "h-9",
     )
   })
 

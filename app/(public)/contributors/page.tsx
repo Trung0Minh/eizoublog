@@ -2,7 +2,6 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { Sparkles } from "lucide-react"
 
-import { PageContainer } from "@/components/layout/PageContainer"
 import { TextReveal } from "@/components/ui/TextReveal"
 import { StaticPostContent } from "@/components/posts/StaticPostContent"
 import { getCachedContributors } from "@/lib/queries"
@@ -110,20 +109,20 @@ export default async function ContributorsPage({ searchParams }: ContributorsPag
                 )}
               </Link>
 
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
+              <div className="min-w-0 flex-1">
+                <div className="mb-2 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                  <Link href={`/authors/${contributor.username}`}>
+                    <h2 className="text-[22px] font-display font-bold text-text-primary group-hover:text-accent transition-colors">
+                      {contributor.name}
+                    </h2>
+                  </Link>
                   {contributor.role === "ADMIN" && (
-                    <span className="rounded-md bg-red-100 px-2 py-0.5 text-[11px] font-bold text-red-700 tracking-wider">ADMIN</span>
+                    <span className="shrink-0 rounded-md bg-red-100 px-2 py-0.5 text-[11px] font-bold text-red-700 tracking-wider">ADMIN</span>
                   )}
                   {contributor.role === "WRITER" && (
-                    <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700 tracking-wider">WRITER</span>
+                    <span className="shrink-0 rounded-md bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700 tracking-wider">WRITER</span>
                   )}
                 </div>
-                <Link href={`/authors/${contributor.username}`}>
-                  <h2 className="text-[22px] font-display font-bold text-text-primary mb-2 group-hover:text-accent transition-colors">
-                    {contributor.name}
-                  </h2>
-                </Link>
                 <div className="text-[14px] text-text-secondary mb-4 line-clamp-3">
                   {contributor.bio ? (
                     <div className="[&_.ProseMirror]:!ml-0 [&_.ProseMirror>p]:!ml-0">

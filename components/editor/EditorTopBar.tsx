@@ -73,7 +73,7 @@ export function EditorTopBar({
           <span className="text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">✨</span>
         </Link>
 
-        <div className="absolute left-1/2 flex h-full -translate-x-1/2 items-center">
+        <div className="absolute left-1/2 hidden h-full -translate-x-1/2 items-center md:flex">
           <div className="flex min-w-[70px] justify-end">
             {isPending ? (
               <span className="text-xs text-text-tertiary">Đang lưu...</span>

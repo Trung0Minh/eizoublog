@@ -2,12 +2,15 @@
 import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 
+import { useReducedVisualEffects } from '@/hooks/useReducedVisualEffects';
+
 export function AmbientBackground() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [isClient, setIsClient] = useState(false);
+  const shouldReduce = useReducedVisualEffects();
 
   useEffect(() => {
-    setIsClient(true);
+    if (shouldReduce) return;
+
     const updateMousePosition = (e: MouseEvent) => {
       setMousePosition({
         x: e.clientX,
@@ -16,14 +19,15 @@ export function AmbientBackground() {
     };
     window.addEventListener('mousemove', updateMousePosition);
     return () => window.removeEventListener('mousemove', updateMousePosition);
-  }, []);
-
-  if (!isClient) return null;
+  }, [shouldReduce]);
 
   return (
     <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
       {/* Decorative Orbs */}
-      <div className="absolute inset-0 opacity-40 dark:opacity-20 mix-blend-screen dark:mix-blend-color-dodge blur-[120px]">
+      {!shouldReduce && <div
+        className="absolute inset-0 opacity-40 dark:opacity-20 mix-blend-screen dark:mix-blend-color-dodge blur-[120px]"
+        data-testid="ambient-motion-layer"
+      >
         {/* Top Left Orb */}
         <motion.div
            className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-purple-500/20"
@@ -48,16 +52,17 @@ export function AmbientBackground() {
         <motion.div
            className="absolute w-[30vw] h-[30vw] rounded-full bg-blue-500/10 mix-blend-screen"
            animate={{
-             x: mousePosition.x - window.innerWidth * 0.15,
-             y: mousePosition.y - window.innerHeight * 0.15,
+             x: mousePosition.x,
+             y: mousePosition.y,
            }}
            transition={{ type: "spring", stiffness: 40, damping: 20 }}
         />
-      </div>
+      </div>}
 
       {/* Dynamic Grid Overlay */}
       <div
         className="absolute inset-0 z-0 opacity-[0.25] dark:opacity-[0.1]"
+        data-testid="ambient-grid"
         style={{
           backgroundImage: `radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)`,
           backgroundSize: '40px 40px',
