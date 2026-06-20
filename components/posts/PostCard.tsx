@@ -75,7 +75,7 @@ export function PostCard({ post }: PostCardProps) {
         hidden: { opacity: 0, y: 20 },
         show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
       }}
-      className="group flex flex-col bg-subtle-bg/30 p-4 border-[2px] border-transparent hover:border-border-default hover:shadow-lg rounded-[16px] transition-all duration-300"
+      className="group flex flex-col bg-subtle-bg/30 p-4 border-[2px] border-transparent hover:border-border-default hover:shadow-xl hover:-translate-y-1 rounded-[16px] transition-all duration-300"
     >
       {post.coverUrl && (
         <Link className="mb-4 block overflow-hidden rounded-[8px]" href={`/${post.slug}`}>

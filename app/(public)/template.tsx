@@ -2,7 +2,7 @@
 
 import { motion } from 'motion/react';
 
-export default function Template({ children }: { children: React.ReactNode }) {
+export default function PublicTemplate({ children }: { children: React.ReactNode }) {
   return (
     <motion.div
       initial={{ opacity: 0 }}

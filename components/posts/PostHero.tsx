@@ -1,4 +1,7 @@
+'use client';
+
 import { Sparkles } from "lucide-react"
+import { motion, useScroll, useTransform } from "motion/react"
 
 import { RelativeTime } from "@/components/ui/RelativeTime"
 import { getCoverStyle } from "@/lib/cover-style"
@@ -14,10 +17,13 @@ export function PostHero({ post, authorUsernames }: PostHeroProps) {
   const author = post.author
   const coAuthor = post.coAuthors[0]?.user
 
+  const { scrollY } = useScroll()
+  const y = useTransform(scrollY, [0, 1000], [0, 400])
+
   return (
-    <div className="w-full h-[40vh] md:h-[60vh] lg:h-[70vh] relative -mt-[1px]">
+    <div className="w-full h-[40vh] md:h-[60vh] lg:h-[70vh] relative -mt-[1px] overflow-hidden">
       {post.coverUrl && (
-        <div className="absolute inset-0 overflow-hidden">
+        <motion.div style={{ y }} className="absolute inset-0 right-0 left-0 bottom-0 top-[-20vh] h-[120%]">
           <img
             src={(post.coverUrl || "").split('?')[0]}
             alt={post.coverAlt || post.title}
@@ -27,7 +33,7 @@ export function PostHero({ post, authorUsernames }: PostHeroProps) {
             fetchPriority="high"
             loading="eager"
           />
-        </div>
+        </motion.div>
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent flex flex-col justify-end pb-8 md:pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-[720px] mx-auto w-full">

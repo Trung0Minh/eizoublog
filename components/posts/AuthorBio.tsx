@@ -40,13 +40,13 @@ export function AuthorBio({ author }: AuthorBioProps) {
       {author.avatarUrl ? (
         <img
           alt={author.name}
-          className="!m-0 h-14 w-14 shrink-0 rounded-full object-cover !cursor-default hover:!opacity-100"
+          className="!m-0 h-14 w-14 shrink-0 rounded-full object-cover !cursor-default transition-all duration-300 hover:scale-110 hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-accent/50"
           decoding="async"
           loading="lazy"
           src={author.avatarUrl}
         />
       ) : (
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#2d6e7e] text-xl font-bold text-white">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#2d6e7e] text-xl font-bold text-white transition-all duration-300 hover:scale-110 hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-accent/50">
           {author.name.charAt(0)}
         </div>
       )}
