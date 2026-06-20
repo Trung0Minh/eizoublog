@@ -145,6 +145,38 @@ describe("CommentSection", () => {
     expect(screen.getByText("2 bình luận")).toHaveClass("text-text-secondary")
   })
 
+  it("renders account avatars in comments when available", () => {
+    render(
+      <CommentSection
+        initialComments={[
+          {
+            ...topComment,
+            author: {
+              avatarUrl: "https://cdn.example.com/avatars/mina.png",
+              role: "WRITER",
+              username: "mina",
+            },
+          },
+          {
+            ...topComment,
+            author: null,
+            authorName: "Guest",
+            id: "comment-guest",
+            replies: [],
+          },
+        ]}
+        postId="post-1"
+        postSlug="frieren-memory"
+      />,
+    )
+
+    expect(screen.getByRole("img", { name: "Mina" })).toHaveAttribute(
+      "src",
+      "https://cdn.example.com/avatars/mina.png",
+    )
+    expect(screen.getByText("G")).toBeVisible()
+  })
+
   it("sorts top-level comments and replies latest first", () => {
     render(
       <CommentSection

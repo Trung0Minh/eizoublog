@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => {
     prisma,
     revalidateTag: vi.fn(),
     sendCommentReplyEmail: vi.fn(),
+    sendPostCommentEmail: vi.fn(),
   }
 })
 
@@ -30,6 +31,7 @@ vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }))
 vi.mock("next/cache", () => ({ revalidateTag: mocks.revalidateTag }))
 vi.mock("@/lib/resend", () => ({
   sendCommentReplyEmail: mocks.sendCommentReplyEmail,
+  sendPostCommentEmail: mocks.sendPostCommentEmail,
 }))
 
 import { DELETE } from "@/app/api/comments/[id]/route"
@@ -48,6 +50,11 @@ function routeContext(id: string) {
 }
 
 const publishedPost = {
+  author: {
+    email: "mina@example.com",
+    id: "user-1",
+    name: "Mina",
+  },
   id: "post-1",
   slug: "frieren",
   title: "Frieren and memory",
@@ -104,6 +111,13 @@ describe("comments API", () => {
       status: "APPROVED",
     })
     expect(createCall?.select).not.toHaveProperty("authorEmail")
+    expect(createCall?.select).toMatchObject({
+      author: {
+        select: {
+          avatarUrl: true,
+        },
+      },
+    })
     expect(mocks.revalidateTag).toHaveBeenCalledWith("comments", "max")
   })
 

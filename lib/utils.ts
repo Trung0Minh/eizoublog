@@ -10,11 +10,23 @@ export function cn(...inputs: ClassValue[]) {
 export function formatDate(date: Date | string): string {
   const value = new Date(date)
   const diffMs = Date.now() - value.getTime()
-  const hourMs = 60 * 60 * 1000
+  const secondMs = 1000
+  const minuteMs = 60 * secondMs
+  const hourMs = 60 * minuteMs
   const dayMs = 24 * hourMs
 
-  if (diffMs >= 0 && diffMs < dayMs) {
-    const hours = Math.max(1, Math.floor(diffMs / hourMs))
+  if (diffMs >= 0 && diffMs < minuteMs) {
+    const seconds = Math.max(1, Math.floor(diffMs / secondMs))
+    return `${seconds} giây trước`
+  }
+
+  if (diffMs >= minuteMs && diffMs < hourMs) {
+    const minutes = Math.floor(diffMs / minuteMs)
+    return `${minutes} phút trước`
+  }
+
+  if (diffMs >= hourMs && diffMs < dayMs) {
+    const hours = Math.floor(diffMs / hourMs)
     return `${hours} giờ trước`
   }
 

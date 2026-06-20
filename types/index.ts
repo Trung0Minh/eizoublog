@@ -11,6 +11,7 @@ export type PublicComment = Pick<
   | "status"
 > & {
   author: {
+    avatarUrl: string | null
     role: string
     username: string | null
   } | null

@@ -33,11 +33,9 @@ function avatarColor(name: string) {
 
 function CommentBubble({
   comment,
-  isReply,
   postAuthorUsernames = [],
 }: {
   comment: PublicComment
-  isReply?: boolean
   postAuthorUsernames?: string[]
 }) {
   const isPostAuthor = comment.author?.username && postAuthorUsernames.includes(comment.author.username)
@@ -45,13 +43,21 @@ function CommentBubble({
 
   return (
     <div className="flex gap-3">
-      <div
-        aria-hidden="true"
-        className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
-        style={{ backgroundColor: avatarColor(comment.authorName) }}
-      >
-        {getInitial(comment.authorName)}
-      </div>
+      {comment.author?.avatarUrl ? (
+        <img
+          alt={comment.authorName}
+          className="mt-0.5 h-8 w-8 shrink-0 rounded-full object-cover"
+          src={comment.author.avatarUrl}
+        />
+      ) : (
+        <div
+          aria-hidden="true"
+          className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
+          style={{ backgroundColor: avatarColor(comment.authorName) }}
+        >
+          {getInitial(comment.authorName)}
+        </div>
+      )}
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
           <span className="text-[13px] font-semibold text-text-primary">
@@ -150,7 +156,7 @@ function CommentThread({
               id={`comment-${reply.id}`}
               key={reply.id}
             >
-              <CommentBubble comment={reply} isReply postAuthorUsernames={postAuthorUsernames} />
+              <CommentBubble comment={reply} postAuthorUsernames={postAuthorUsernames} />
             </article>
           ))}
         </div>

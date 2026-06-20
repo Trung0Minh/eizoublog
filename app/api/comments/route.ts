@@ -26,6 +26,7 @@ const createCommentSchema = z.object({
 const publicCommentSelect = {
   author: {
     select: {
+      avatarUrl: true,
       role: true,
       username: true,
     },

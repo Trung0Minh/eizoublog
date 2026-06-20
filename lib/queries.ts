@@ -249,6 +249,7 @@ export const publishedPostDetailSelect = {
     select: {
       author: {
         select: {
+          avatarUrl: true,
           role: true,
           username: true,
         },
@@ -264,6 +265,7 @@ export const publishedPostDetailSelect = {
         select: {
           author: {
             select: {
+              avatarUrl: true,
               role: true,
               username: true,
             },

@@ -24,6 +24,28 @@ describe("generateSlug", () => {
 })
 
 describe("formatDate", () => {
+  it("shows relative seconds for dates within a minute", () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date("2026-06-18T12:00:00.000Z"))
+
+    try {
+      expect(formatDate(new Date("2026-06-18T11:59:42.000Z"))).toBe("18 giây trước")
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it("shows relative minutes for dates within an hour", () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date("2026-06-18T12:00:00.000Z"))
+
+    try {
+      expect(formatDate(new Date("2026-06-18T11:38:00.000Z"))).toBe("22 phút trước")
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it("shows relative hours for dates within 24 hours", () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date("2026-06-18T12:00:00.000Z"))
