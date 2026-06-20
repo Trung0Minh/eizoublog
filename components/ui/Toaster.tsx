@@ -9,6 +9,7 @@ export function Toaster() {
       position="bottom-right"
       richColors
       theme="system"
+      expand={true}
       toastOptions={{
         classNames: {
           toast:

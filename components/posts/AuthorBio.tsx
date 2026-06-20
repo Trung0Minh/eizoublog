@@ -40,7 +40,7 @@ export function AuthorBio({ author }: AuthorBioProps) {
       {author.avatarUrl ? (
         <img
           alt={author.name}
-          className="!m-0 h-14 w-14 shrink-0 rounded-full object-cover !cursor-default transition-all duration-300 hover:scale-110 hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-accent/50"
+          className="!m-0 h-14 w-14 shrink-0 rounded-full object-cover !cursor-default hover:!opacity-100 transition-all duration-300 hover:scale-110 hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-accent/50"
           decoding="async"
           loading="lazy"
           src={author.avatarUrl}

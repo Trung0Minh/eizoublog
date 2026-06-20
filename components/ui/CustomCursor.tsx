@@ -7,6 +7,7 @@ import { useReducedVisualEffects } from '@/hooks/useReducedVisualEffects';
 export function CustomCursor() {
   const shouldReduce = useReducedVisualEffects();
   const [isVisible, setIsVisible] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
   const cursorX = useMotionValue(-100);
   const cursorY = useMotionValue(-100);
   const cursorXDot = useMotionValue(-100);
@@ -29,10 +30,28 @@ export function CustomCursor() {
       setIsVisible(true);
     };
 
+    const handleMouseOver = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName.toLowerCase() === 'a' ||
+        target.tagName.toLowerCase() === 'button' ||
+        target.closest('a') ||
+        target.closest('button') ||
+        target.getAttribute('role') === 'button' ||
+        target.closest('[role="button"]')
+      ) {
+        setIsHovering(true);
+      } else {
+        setIsHovering(false);
+      }
+    };
+
     document.body.addEventListener('mousemove', moveCursor);
+    document.body.addEventListener('mouseover', handleMouseOver);
 
     return () => {
       document.body.removeEventListener('mousemove', moveCursor);
+      document.body.removeEventListener('mouseover', handleMouseOver);
     };
   }, [cursorX, cursorY, cursorXDot, cursorYDot, shouldReduce]);
 
@@ -42,7 +61,11 @@ export function CustomCursor() {
     <>
       <motion.div
         data-testid="custom-cursor"
-        className="fixed top-0 left-0 w-8 h-8 pointer-events-none z-[9999] hidden md:flex items-center justify-center border-2 border-accent/50 rounded-full"
+        className="fixed top-0 left-0 w-8 h-8 pointer-events-none z-[9999] hidden md:flex items-center justify-center border-2 border-accent/50 rounded-full transition-colors duration-300"
+        animate={{
+          scale: isHovering ? 1.5 : 1,
+          backgroundColor: isHovering ? 'rgba(var(--accent-rgb), 0.1)' : 'transparent',
+        }}
         style={{
           x: cursorXSpring,
           y: cursorYSpring,
@@ -51,6 +74,9 @@ export function CustomCursor() {
       />
       <motion.div
         className="fixed top-0 left-0 w-2 h-2 bg-accent pointer-events-none z-[9999] hidden md:block rounded-full shadow-[0_0_10px_var(--accent)]"
+        animate={{
+          scale: isHovering ? 0 : 1,
+        }}
         style={{
           x: cursorXDot,
           y: cursorYDot,
