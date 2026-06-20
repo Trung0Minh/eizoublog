@@ -7,6 +7,8 @@ import { PageContainer } from "@/components/layout/PageContainer"
 import { PostList } from "@/components/posts/PostList"
 import { PostSortTabs } from "@/components/posts/PostSortTabs"
 import { EmptyState } from "@/components/ui/EmptyState"
+import { TextReveal } from "@/components/ui/TextReveal"
+import { ScrollReveal } from "@/components/ui/ScrollReveal"
 import { getCachedTagBySlug, getCachedTagPosts } from "@/lib/queries"
 import { parsePostListSort } from "@/lib/postListSort"
 import { buildMetadata } from "@/lib/seo"
@@ -59,17 +61,22 @@ export default async function TagPage({ params, searchParams }: TagPageProps) {
   return (
     <PageContainer>
       <section className="mb-10 border-b pb-8">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-editorial">
-          Tag
-        </p>
-        <h1 className="text-[32px] font-bold leading-tight tracking-tight">#{tag.name}</h1>
+        <ScrollReveal>
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-editorial">
+            Tag
+          </p>
+          <h1 className="text-[32px] font-bold leading-tight tracking-tight">
+            <TextReveal text={`#${tag.name}`} />
+          </h1>
+        </ScrollReveal>
       </section>
 
-      <section className="space-y-6">
-        <div className="flex justify-end">
-          <PostSortTabs basePath={`/tag/${slug}`} sort={sort} />
-        </div>
-        {posts.length === 0 ? (
+      <ScrollReveal delay={0.2}>
+        <section className="space-y-6">
+          <div className="flex justify-end">
+            <PostSortTabs basePath={`/tag/${slug}`} sort={sort} />
+          </div>
+          {posts.length === 0 ? (
           <EmptyState
             description="There are no published posts with this tag yet. Check back later!"
             icon={SearchX}
@@ -86,7 +93,8 @@ export default async function TagPage({ params, searchParams }: TagPageProps) {
             posts={posts}
           />
         )}
-      </section>
+        </section>
+      </ScrollReveal>
     </PageContainer>
   )
 }

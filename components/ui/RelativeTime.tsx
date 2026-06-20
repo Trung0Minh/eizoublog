@@ -13,6 +13,7 @@ export function RelativeTime({ className, date }: RelativeTimeProps) {
       className={className}
       dateTime={value.toISOString()}
       title={formatExactDateTime(value)}
+      suppressHydrationWarning
     >
       {formatDate(value)}
     </time>

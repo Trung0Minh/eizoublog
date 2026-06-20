@@ -2,6 +2,8 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { PageContainer } from "@/components/layout/PageContainer"
+import { TextReveal } from "@/components/ui/TextReveal"
+import { ScrollReveal } from "@/components/ui/ScrollReveal"
 import { CompactPostList } from "@/components/posts/CompactPostList"
 import { PostSortTabs } from "@/components/posts/PostSortTabs"
 import { StaticPostContent } from "@/components/posts/StaticPostContent"
@@ -102,8 +104,11 @@ export default async function AuthorPage({
           </div>
         )}
         <div>
+        <ScrollReveal>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight">{author.name}</h1>
+            <h1 className="text-2xl font-bold tracking-tight">
+              <TextReveal text={author.name} />
+            </h1>
             <div className="flex items-center gap-2">
               {author.role === "ADMIN" && (
                 <span className="rounded-md bg-red-100 px-1.5 py-0.5 text-[11px] font-bold text-red-700 tracking-wider">ADMIN</span>
@@ -129,13 +134,14 @@ export default async function AuthorPage({
               })()}
             </div>
           )}
-        </div>
+        </ScrollReveal>
       </section>
 
-      <section className="space-y-6">
-        <div className="flex justify-end">
-          <PostSortTabs basePath={`/authors/${username}`} sort={sort} />
-        </div>
+      <ScrollReveal delay={0.2}>
+        <section className="space-y-6">
+          <div className="flex justify-end">
+            <PostSortTabs basePath={`/authors/${username}`} sort={sort} />
+          </div>
         <CompactPostList
           emptyMessage="This author has no published posts yet."
           pagination={{
@@ -146,7 +152,8 @@ export default async function AuthorPage({
           }}
           posts={posts}
         />
-      </section>
+        </section>
+      </ScrollReveal>
     </PageContainer>
   )
 }

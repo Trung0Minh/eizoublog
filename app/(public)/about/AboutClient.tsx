@@ -10,6 +10,8 @@ import { TiptapEditor } from "@/components/editor/TiptapEditor"
 import { PostBody } from "@/components/posts/PostBody"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { TextReveal } from "@/components/ui/TextReveal"
+import { ScrollReveal } from "@/components/ui/ScrollReveal"
 
 interface PublishingNote {
   text: string
@@ -295,41 +297,48 @@ export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps)
                 <Sparkles className="w-6 h-6 text-accent animate-pulse" />
                 <h1 className="text-[32px] md:text-[42px] font-display font-bold text-text-primary leading-tight">
                   {data.title.includes('Eizou Blog!') ? (
-                    <>Chào mừng bạn đến với <span className="text-accent">Eizou Blog!</span></>
+                    <>Chào mừng bạn đến với <TextReveal className="text-accent" text="Eizou Blog!" /></>
                   ) : (
-                    <span className="text-accent">{data.title}</span>
+                    <TextReveal className="text-accent" text={data.title} />
                   )}
                 </h1>
               </div>
 
               <div className="space-y-4 text-[16px] text-text-secondary font-sans [&_.post-content]:!mx-0 [&_.post-content]:!max-w-none [&_.ProseMirror_p]:!mx-0 [&_.ProseMirror_ul]:!mx-0 [&_.ProseMirror_ol]:!mx-0 [&_.ProseMirror_p]:!max-w-none">
-                <PostBody content={data.body} />
+                <ScrollReveal>
+                  <PostBody content={data.body} />
+                </ScrollReveal>
 
                 {data.whyWeDoThis && (
-                  <div className="bg-background/60 p-4 rounded-xl border border-border mt-6">
-                    <h3 className="font-display font-bold text-text-primary flex items-center gap-2 text-[18px] mb-2">
-                      <Heart className="w-5 h-5 text-accent" /> Tại sao chúng mình làm blog này
-                    </h3>
-                    <p className="text-[14px]">
-                      {data.whyWeDoThis}
-                    </p>
-                  </div>
+                  <ScrollReveal delay={0.2}>
+                    <div className="bg-background/60 p-4 rounded-xl border border-border mt-6">
+                      <h3 className="font-display font-bold text-text-primary flex items-center gap-2 text-[18px] mb-2">
+                        <Heart className="w-5 h-5 text-accent" /> Tại sao chúng mình làm blog này
+                      </h3>
+                      <p className="text-[14px]">
+                        {data.whyWeDoThis}
+                      </p>
+                    </div>
+                  </ScrollReveal>
                 )}
 
-                <div className="mt-6 flex flex-col gap-3 sm:flex-row pt-4 border-t border-border/50">
-                  <Link
-                    className="inline-flex h-10 items-center justify-center rounded-[5px] bg-accent px-4 text-[13px] font-bold text-white transition-colors hover:bg-accent/90"
-                    href="/"
-                  >
-                    Bài viết mới nhất
-                  </Link>
-                  <Link
-                    className="inline-flex h-10 items-center justify-center rounded-[5px] border border-border px-4 text-[13px] font-bold text-text-primary transition-colors hover:bg-subtle-bg"
-                    href="/contributors"
-                  >
-                    Người đóng góp
-                  </Link>
-                </div>
+                <ScrollReveal delay={0.3}>
+                  <div className="mt-6 flex flex-col gap-3 sm:flex-row pt-4 border-t border-border/50">
+                    <Link
+                      className="inline-flex h-10 items-center justify-center rounded-[5px] bg-accent px-4 text-[13px] font-bold text-white transition-colors hover:bg-accent/90"
+                      href="/"
+                    >
+                      Bài viết mới nhất
+                    </Link>
+                    <Link
+                      className="inline-flex h-10 items-center justify-center rounded-[5px] border border-border px-4 text-[13px] font-bold text-text-primary transition-colors hover:bg-subtle-bg"
+                      href="/contributors"
+                    >
+                      Người đóng góp
+                    </Link>
+                  </div>
+                </ScrollReveal>
+
 
               </div>
             </div>

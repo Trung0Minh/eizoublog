@@ -3,6 +3,8 @@ import Link from "next/link"
 
 import { PageContainer } from "@/components/layout/PageContainer"
 import { SearchPageTracker } from "@/components/search/SearchPageTracker"
+import { TextReveal } from "@/components/ui/TextReveal"
+import { ScrollReveal } from "@/components/ui/ScrollReveal"
 import { Pagination } from "@/components/ui/Pagination"
 import { RelativeTime } from "@/components/ui/RelativeTime"
 import { getCachedSearchResults } from "@/lib/queries"
@@ -95,10 +97,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   if (!query || !tsQuery) {
     return (
       <PageContainer className="py-10">
-        <h1 className="text-[32px] font-bold leading-tight tracking-tight">Tìm kiếm</h1>
-        <div className="mt-8">
-          <EmptySearchState query={query} />
-        </div>
+        <ScrollReveal>
+          <h1 className="text-[32px] font-bold leading-tight tracking-tight">
+            <TextReveal text="Tìm kiếm" />
+          </h1>
+          <div className="mt-8">
+            <EmptySearchState query={query} />
+          </div>
+        </ScrollReveal>
       </PageContainer>
     )
   }
@@ -112,17 +118,20 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   return (
     <PageContainer className="py-10">
       <SearchPageTracker query={query} />
-      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-editorial">
-        Tìm kiếm kho lưu trữ
-      </p>
-      <h1 className="mt-2 text-[32px] font-bold leading-tight tracking-tight">
-        Kết quả cho &quot;{query}&quot;
-      </h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Tìm thấy {total} kết quả
-      </p>
+      <ScrollReveal>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-editorial">
+          Tìm kiếm kho lưu trữ
+        </p>
+        <h1 className="mt-2 text-[32px] font-bold leading-tight tracking-tight">
+          <TextReveal text={`Kết quả cho "${query}"`} />
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Tìm thấy {total} kết quả
+        </p>
+      </ScrollReveal>
 
-      <div className="mt-8">
+      <ScrollReveal delay={0.2}>
+        <div className="mt-8">
         {results.length === 0 ? (
           <EmptySearchState query={query} />
         ) : (
@@ -132,14 +141,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             ))}
           </div>
         )}
-      </div>
+        </div>
 
-      <Pagination
-        page={page}
-        pageSize={PAGE_SIZE}
-        query={{ q: query }}
-        total={total}
-      />
+        <Pagination
+          page={page}
+          pageSize={PAGE_SIZE}
+          query={{ q: query }}
+          total={total}
+        />
+      </ScrollReveal>
     </PageContainer>
   )
 }

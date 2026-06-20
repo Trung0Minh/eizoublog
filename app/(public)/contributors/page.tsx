@@ -3,6 +3,7 @@ import Link from "next/link"
 import { Sparkles } from "lucide-react"
 
 import { TextReveal } from "@/components/ui/TextReveal"
+import { ScrollReveal } from "@/components/ui/ScrollReveal"
 import { StaticPostContent } from "@/components/posts/StaticPostContent"
 import { getCachedContributors } from "@/lib/queries"
 import { buildMetadata, getAppName } from "@/lib/seo"
@@ -91,9 +92,10 @@ export default async function ContributorsPage({ searchParams }: ContributorsPag
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
-          {sortedContributors.map((contributor) => (
-            <div key={contributor.username} className="group bg-subtle-bg/30 backdrop-blur-md transition-all duration-300 border-[2px] border-border-default hover:border-accent/40 rounded-[24px] p-6 flex flex-col sm:flex-row gap-6 items-center sm:items-start text-center sm:text-left hover:shadow-lg relative overflow-hidden">
-              <Link href={`/authors/${contributor.username}`} className="w-[120px] h-[120px] shrink-0 relative rounded-full overflow-hidden border-4 border-background shadow-md group-hover:scale-105 transition-transform block">
+          {sortedContributors.map((contributor, index) => (
+            <ScrollReveal key={contributor.username} delay={index * 0.1}>
+              <div className="group bg-subtle-bg/30 backdrop-blur-md transition-all duration-300 border-[2px] border-border-default hover:border-accent/40 rounded-[24px] p-6 flex flex-col sm:flex-row gap-6 items-center sm:items-start text-center sm:text-left hover:shadow-lg relative overflow-hidden">
+                <Link href={`/authors/${contributor.username}`} className="w-[120px] h-[120px] shrink-0 relative rounded-full overflow-hidden border-4 border-background shadow-md group-hover:scale-105 transition-transform block">
                 {contributor.avatarUrl ? (
                   <img
                     alt={contributor.name}
@@ -149,7 +151,7 @@ export default async function ContributorsPage({ searchParams }: ContributorsPag
                   </div>
                 </div>
               </div>
-            </div>
+            </ScrollReveal>
           ))}
         </div>
       </main>

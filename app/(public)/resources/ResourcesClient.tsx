@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { TextReveal } from "@/components/ui/TextReveal"
+import { ScrollReveal } from "@/components/ui/ScrollReveal"
 
 interface ResourceCard {
   url: string
@@ -523,22 +524,25 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
 
                       if (isLink) {
                         return (
-                          <a
-                            key={index}
-                            href={resource.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={commonClasses}
-                          >
-                            <CardContent />
-                          </a>
+                          <ScrollReveal key={index} delay={index * 0.1}>
+                            <a
+                              href={resource.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={commonClasses}
+                            >
+                              <CardContent />
+                            </a>
+                          </ScrollReveal>
                         )
                       }
 
                       return (
-                        <div key={index} className={commonClasses}>
-                          <CardContent />
-                        </div>
+                        <ScrollReveal key={index} delay={index * 0.1}>
+                          <div className={commonClasses}>
+                            <CardContent />
+                          </div>
+                        </ScrollReveal>
                       )
                     })}
                 </div>

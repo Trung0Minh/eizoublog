@@ -1,0 +1,128 @@
+
+> animeblog@0.1.0 build
+> prisma generate && next build
+
+Loaded Prisma config from prisma.config.ts.
+
+Prisma config detected, skipping environment variable loading.
+Prisma schema loaded from prisma/schema.prisma
+
+✔ Generated Prisma Client (v6.19.3) to ./node_modules/@prisma/client in 403ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Need your database queries to be 1000x faster? Accelerate offers you that and more: https://pris.ly/tip-2-accelerate
+
+▲ Next.js 16.2.9 (Turbopack)
+- Environments: .env.local
+- Experiments (use with caution):
+  · staticGenerationMaxConcurrency: 1
+  · staticGenerationMinPagesPerWorker: 1000
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 11.1s
+  Running TypeScript ...
+  Finished TypeScript in 18.9s ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/56) ...
+  Generating static pages using 15 workers (14/56) 
+  Generating static pages using 15 workers (28/56) 
+  Generating static pages using 15 workers (42/56) 
+✓ Generating static pages using 15 workers (56/56) in 30.8s
+  Finalizing page optimization ...
+
+Route (app)                                   Revalidate  Expire
+┌ ƒ /
+├ ○ /_not-found
+├ ● /[slug]                                           5m      1y
+│ ├ /anh-duc-dap-chai                                 5m      1y
+│ ├ /nun-la-nguoi-dep-trai-nhat-the-gioi              5m      1y
+│ ├ /yuusuke-matsuo                                   5m      1y
+│ └ [+6 more paths]
+├ ƒ /about
+├ ƒ /admin
+├ ƒ /admin/analytics
+├ ƒ /admin/comments
+├ ƒ /admin/content
+├ ƒ /admin/events
+├ ƒ /admin/events/[id]
+├ ƒ /admin/newsletter
+├ ƒ /admin/posts
+├ ƒ /admin/writers
+├ ƒ /api/admin/content/categories
+├ ƒ /api/admin/content/categories/[id]
+├ ƒ /api/admin/content/tags
+├ ƒ /api/admin/content/tags/[id]
+├ ƒ /api/admin/events
+├ ƒ /api/admin/events/[id]
+├ ƒ /api/admin/events/[id]/publish
+├ ƒ /api/admin/events/[id]/shuffle
+├ ƒ /api/admin/site-pages/[slug]
+├ ƒ /api/admin/writers/[id]
+├ ƒ /api/analytics/events
+├ ƒ /api/auth/[...nextauth]
+├ ƒ /api/auth/password/forgot
+├ ƒ /api/auth/password/reset
+├ ƒ /api/comments
+├ ƒ /api/comments/[id]
+├ ƒ /api/events
+├ ƒ /api/events/[id]/join
+├ ƒ /api/events/[id]/room
+├ ƒ /api/events/[id]/rooms/[roomId]/comments
+├ ƒ /api/invite
+├ ƒ /api/invite/[id]
+├ ƒ /api/invite/accept
+├ ƒ /api/newsletter/broadcast
+├ ƒ /api/newsletter/subscribe
+├ ƒ /api/newsletter/unsubscribe
+├ ƒ /api/posts
+├ ƒ /api/posts/[id]
+├ ƒ /api/posts/[id]/archive
+├ ƒ /api/posts/[id]/co-authors/accept
+├ ƒ /api/posts/[id]/co-authors/decline
+├ ƒ /api/posts/bulk
+├ ƒ /api/profile
+├ ƒ /api/search
+├ ƒ /api/tags
+├ ƒ /api/test/login
+├ ƒ /api/test/newsletter-token
+├ ƒ /api/upload
+├ ƒ /api/upload/presigned
+├ ƒ /api/user/event-notifications/seen
+├ ƒ /api/user/mark-comments-read
+├ ƒ /api/user/notification-counts
+├ ƒ /api/user/notifications
+├ ƒ /api/user/notifications/mark-read
+├ ƒ /api/user/pending-invites-count
+├ ƒ /api/user/unread-comments-count
+├ ƒ /authors/[username]
+├ ƒ /category/[slug]
+├ ƒ /contributors
+├ ƒ /dashboard
+├ ƒ /dashboard/edit/[id]
+├ ƒ /dashboard/events
+├ ƒ /dashboard/events/[id]
+├ ƒ /dashboard/events/[id]/edit
+├ ƒ /dashboard/events/[id]/rooms/[roomId]
+├ ƒ /dashboard/new
+├ ƒ /dashboard/notifications
+├ ƒ /dashboard/preview/[id]
+├ ƒ /dashboard/profile
+├ ○ /forgot-password
+├ ƒ /invite/[token]
+├ ƒ /login
+├ ƒ /reset-password/[token]
+├ ƒ /resources
+├ ○ /robots.txt
+├ ƒ /search
+├ ○ /sitemap.xml
+├ ƒ /tag/[slug]
+└ ƒ /unsubscribe
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+
