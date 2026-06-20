@@ -89,11 +89,6 @@ export default async function AdminPostsPage({
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <PostSortTabs
-            basePath="/admin/posts"
-            query={{ status }}
-            sort={sort}
-          />
           <div className="relative w-full md:w-[220px]">
             <Search
               aria-hidden="true"

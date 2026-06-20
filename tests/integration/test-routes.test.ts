@@ -17,9 +17,7 @@ const mocks = vi.hoisted(() => {
 vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }))
 vi.mock("@auth/core/jwt", () => ({ encode: mocks.encodeJwt }))
 
-// @ts-expect-error - missing test files
 import { POST as login } from "@/app/api/test/login/route"
-// @ts-expect-error - missing test files
 import { GET as getNewsletterToken } from "@/app/api/test/newsletter-token/route"
 
 function postRequest(body: unknown) {

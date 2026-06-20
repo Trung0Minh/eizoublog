@@ -45,7 +45,7 @@ export async function generateMetadata({
 
 import type { JSONContent } from "@tiptap/react"
 
-/** Strip image/video/embed nodes from Tiptap JSON so bios only show text. */
+/** Strip image/video/embed/hr nodes from Tiptap JSON so bios only show text. */
 function stripMediaNodes(node: JSONContent): JSONContent {
   return {
     ...node,
@@ -55,7 +55,8 @@ function stripMediaNodes(node: JSONContent): JSONContent {
           child.type !== "image" &&
           child.type !== "customImage" &&
           child.type !== "imageGallery" &&
-          child.type !== "videoEmbed",
+          child.type !== "videoEmbed" &&
+          child.type !== "horizontalRule",
       )
       .map(stripMediaNodes),
   }

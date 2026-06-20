@@ -6,6 +6,12 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface Writer {
   _count: { posts: number }
@@ -78,7 +84,7 @@ export function WritersTable({ writers }: { writers: Writer[] }) {
           <div className="w-[120px] shrink-0">Role</div>
           <div className="w-[100px] shrink-0 text-right">Posts</div>
           <div className="w-[120px] shrink-0 text-right">Status</div>
-          <div className="w-[96px] shrink-0 pr-2 text-right">Actions</div>
+          <div className="w-[120px] shrink-0 pr-2 text-right">Actions</div>
         </div>
 
         <div className="flex flex-col">
@@ -134,7 +140,7 @@ export function WritersTable({ writers }: { writers: Writer[] }) {
                   Active
                 </div>
 
-                <div className="flex w-[96px] shrink-0 items-center justify-end gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
+                <div className="flex w-[120px] shrink-0 items-center justify-end gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 pr-1">
                   <Button
                     asChild
                     className="h-8 w-8 border border-transparent p-0 text-text-tertiary hover:border-border-default hover:bg-background"
@@ -158,16 +164,27 @@ export function WritersTable({ writers }: { writers: Writer[] }) {
                   >
                     <ShieldOff aria-hidden="true" className="h-3.5 w-3.5" />
                   </Button>
-                  <Button
-                    aria-label="More options"
-                    className="h-8 w-8 border border-transparent p-0 text-text-tertiary hover:border-border-default hover:bg-background"
-                    size="sm"
-                    title="More options"
-                    type="button"
-                    variant="ghost"
-                  >
-                    <MoreHorizontal aria-hidden="true" className="h-4 w-4" />
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        aria-label="More options"
+                        className="h-8 w-8 border border-transparent p-0 text-text-tertiary hover:border-border-default hover:bg-background"
+                        size="sm"
+                        title="More options"
+                        type="button"
+                        variant="ghost"
+                      >
+                        <MoreHorizontal aria-hidden="true" className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem asChild>
+                        <a href={`/authors/${writer.username}`} target="_blank" rel="noopener noreferrer">
+                          Xem hồ sơ
+                        </a>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             )

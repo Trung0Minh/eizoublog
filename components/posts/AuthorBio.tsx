@@ -17,7 +17,7 @@ function fallbackBio(authorName: string) {
   return `${authorName} viết về quá trình sản xuất anime, nghệ thuật kể chuyện qua hình ảnh và kỹ thuật đằng sau hoạt hình đương đại.`
 }
 
-/** Strip image/video/embed nodes from Tiptap JSON so bios only show text. */
+/** Strip image/video/embed/hr nodes from Tiptap JSON so bios only show text. */
 function stripMediaNodes(node: JSONContent): JSONContent {
   return {
     ...node,
@@ -27,7 +27,8 @@ function stripMediaNodes(node: JSONContent): JSONContent {
           child.type !== "image" &&
           child.type !== "customImage" &&
           child.type !== "imageGallery" &&
-          child.type !== "videoEmbed",
+          child.type !== "videoEmbed" &&
+          child.type !== "horizontalRule",
       )
       .map(stripMediaNodes),
   }

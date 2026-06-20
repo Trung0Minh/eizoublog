@@ -36,8 +36,24 @@ function getApiError(value: unknown) {
   return "Something went wrong"
 }
 
+import { useSearchParams } from "next/navigation"
+
 export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const currentSort = searchParams.get("sort") || "latest"
+  const currentStatus = searchParams.get("status")
+
+  const createSortLink = (sortType: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (sortType === "latest") {
+      params.delete("sort")
+    } else {
+      params.set("sort", sortType)
+    }
+    return `/admin/posts?${params.toString()}`
+  }
+
   const [archivingId, setArchivingId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [archiveTarget, setArchiveTarget] = useState<AdminPost | null>(null)
@@ -209,8 +225,20 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
             <div className="min-w-0 flex-1 pr-4">Title</div>
             <div className="hidden w-[140px] shrink-0 md:block">Author</div>
             <div className="w-[100px] shrink-0">Status</div>
-            <div className="hidden w-[120px] shrink-0 lg:block">Date</div>
-            <div className="hidden w-[80px] shrink-0 text-right lg:block">Comments</div>
+            <Link 
+              href={createSortLink(currentSort === "oldest" ? "latest" : "oldest")}
+              className="hidden w-[120px] shrink-0 lg:flex items-center gap-1 hover:text-text-primary transition-colors cursor-pointer"
+            >
+              Date
+              {currentSort === "oldest" ? " ↑" : " ↓"}
+            </Link>
+            <Link 
+              href={createSortLink(currentSort === "comments" ? "latest" : "comments")}
+              className="hidden w-[80px] shrink-0 lg:flex items-center justify-end gap-1 hover:text-text-primary transition-colors cursor-pointer"
+            >
+              Comments
+              {currentSort === "comments" && " ↓"}
+            </Link>
             <div className="w-[80px] shrink-0 text-right">Actions</div>
           </div>
 

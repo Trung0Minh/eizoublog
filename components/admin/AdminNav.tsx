@@ -18,6 +18,9 @@ import { useState } from "react"
 
 import { WriterMenu } from "@/components/layout/WriterMenu"
 import type { WriterMenuUser } from "@/components/layout/WriterMenu"
+import { ThemeToggle } from "@/components/layout/ThemeToggle"
+import { ParticleToggle } from "@/components/ui/ParticleToggle"
+import { SeasonToggle } from "@/components/ui/SeasonToggle"
 
 import { cn } from "@/lib/utils"
 
@@ -87,7 +90,12 @@ export function AdminNav({ user }: { user?: WriterMenuUser | null }) {
         </nav>
 
         <div className="flex items-center gap-2">
-          <div className="hidden md:block">
+          <div className="hidden md:flex items-center">
+            <SeasonToggle />
+            <ParticleToggle />
+            <ThemeToggle />
+          </div>
+          <div className="hidden md:block ml-2">
             <WriterMenu user={user} />
           </div>
 

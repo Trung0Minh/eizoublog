@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 
 import { EditorTopBar } from "@/components/editor/EditorTopBar"
 import { EditorParticles } from "@/components/editor/EditorParticles"
+import { SeasonalEffects } from "@/components/ui/SakuraFalling"
 import {
   TiptapEditor,
   type JSONContent,
@@ -335,6 +336,7 @@ export function PostEditor({
       data-testid="post-editor-shell"
     >
       <EditorParticles />
+      <SeasonalEffects />
       <EditorTopBar
         autosaveHint={autosaveHint}
         canSave={canSave}
