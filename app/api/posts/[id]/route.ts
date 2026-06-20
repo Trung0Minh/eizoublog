@@ -299,6 +299,37 @@ export async function PATCH(
         }
       }
 
+      if (data.tagIds) {
+        const uniqueTags = uniqueIds(data.tagIds)
+        const existingTags = await tx.postTag.findMany({
+          where: { postId: existing.id },
+        })
+
+        const toDelete = existingTags.filter(
+          (t) => !uniqueTags.includes(t.tagId)
+        )
+        if (toDelete.length > 0) {
+          await tx.postTag.deleteMany({
+            where: {
+              postId: existing.id,
+              tagId: { in: toDelete.map((t) => t.tagId) },
+            },
+          })
+        }
+
+        const tagsToCreate = uniqueTags.filter(
+          (tagId) => !existingTags.find((t) => t.tagId === tagId)
+        )
+        if (tagsToCreate.length > 0) {
+          await tx.postTag.createMany({
+            data: tagsToCreate.map((tagId) => ({
+              postId: existing.id,
+              tagId,
+            })),
+          })
+        }
+      }
+
       return tx.post.update({
         data: {
           ...(data.categoryId !== undefined && {
@@ -323,14 +354,6 @@ export async function PATCH(
           ...(shouldUpdateLastSavedAt && { lastSavedAt: new Date() }),
           ...(publishedAt !== undefined && { publishedAt }),
           ...(data.status && { status: data.status }),
-          ...(data.tagIds && {
-            tags: {
-              create: uniqueIds(data.tagIds).map((tagId) => ({
-                tag: { connect: { id: tagId } },
-              })),
-              deleteMany: {},
-            },
-          }),
           ...(data.title && { title: data.title }),
           ...(newSlug && { slug: newSlug }),
         },
