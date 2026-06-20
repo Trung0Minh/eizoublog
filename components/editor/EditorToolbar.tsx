@@ -66,10 +66,10 @@ function ToolbarButton({
   return (
     <button
       className={[
-        "flex h-[30px] w-[30px] items-center justify-center rounded-[5px] transition-colors",
+        "flex h-[36px] w-[36px] items-center justify-center rounded-[8px] transition-all duration-200",
         active
-          ? "bg-subtle-bg/70 text-text-primary"
-          : "text-text-secondary hover:bg-subtle-bg hover:text-text-primary",
+          ? "bg-accent/10 text-accent shadow-sm"
+          : "text-text-secondary hover:bg-subtle-bg hover:text-text-primary hover:shadow-sm hover:scale-105",
         disabled ? "cursor-not-allowed opacity-40" : "",
       ].join(" ")}
       disabled={disabled}
@@ -181,7 +181,7 @@ export function EditorToolbar({
 
   return (
     <>
-      <div className="no-scrollbar sticky top-0 z-[60] mb-6 flex min-h-11 flex-wrap items-center gap-0.5 overflow-x-auto bg-background pb-2 md:-mt-9 md:border-b md:border-border-default/50 md:pt-4 shadow-sm">
+      <div className="no-scrollbar sticky top-4 z-[60] mb-8 mx-auto flex w-max max-w-full flex-wrap items-center justify-center gap-1 overflow-x-auto rounded-[12px] md:rounded-full bg-background/80 backdrop-blur-xl px-4 py-2 border-[2px] border-border-default/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] md:-mt-4 transition-all duration-300">
         <ToolbarButton
           active={editor.isActive("bold")}
           onClick={() => editor.chain().focus().toggleBold().run()}

@@ -8,6 +8,7 @@ const profileSchema = z.object({
   avatarUrl: z.string().url().nullable().optional(),
   bio: z.string().trim().optional(),
   name: z.string().trim().min(2).max(50),
+  username: z.string().trim().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/, "Username must contain only letters, numbers, and underscores").optional(),
 })
 
 export async function PATCH(request: Request) {
@@ -19,11 +20,20 @@ export async function PATCH(request: Request) {
 
   try {
     const data = profileSchema.parse(await request.json())
+
+    if (data.username) {
+      const existing = await prisma.user.findUnique({ where: { username: data.username } })
+      if (existing && existing.id !== activeSession.user.id) {
+        return Response.json({ error: "Tên người dùng đã tồn tại." }, { status: 400 })
+      }
+    }
+
     const user = await prisma.user.update({
       data: {
         avatarUrl: data.avatarUrl ?? null,
         bio: data.bio || null,
         name: data.name,
+        ...(data.username && { username: data.username }),
       },
       select: {
         avatarUrl: true,

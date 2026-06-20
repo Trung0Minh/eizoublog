@@ -168,7 +168,7 @@ export default async function DashboardEventRoomPage({
           <h2 className="text-sm font-bold uppercase tracking-wider text-text-tertiary">
             Your Room
           </h2>
-          <div className="rounded-xl border-2 border-accent/20 bg-accent/5 p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+          <div className="rounded-[20px] border-[2px] border-accent/20 bg-background/80 backdrop-blur-sm p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
             <div className="flex items-start gap-4">
               {session.user.avatarUrl ? (
                 <img
@@ -274,7 +274,7 @@ export default async function DashboardEventRoomPage({
               {otherParticipants.map((pr) => (
                 <div
                   key={pr.id}
-                  className="rounded-xl border border-border-default bg-background p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                  className="rounded-[20px] border-[2px] border-transparent hover:border-border-default bg-subtle-bg/30 p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
                 >
                   <div className="flex items-center gap-3">
                     {pr.writer.avatarUrl ? (

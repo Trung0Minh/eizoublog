@@ -4,6 +4,7 @@ import { FormEvent, useMemo, useState } from "react"
 import { AvatarUpload } from "@/components/profile/AvatarUpload"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { ScrollReveal } from "@/components/ui/ScrollReveal"
 import { TiptapEditor } from "@/components/editor/TiptapEditor"
 import type { JSONContent } from "@tiptap/react"
 
@@ -38,6 +39,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
     type: "error" | "success"
   } | null>(null)
   const [name, setName] = useState(user.name)
+  const [username, setUsername] = useState(user.username)
   const [saving, setSaving] = useState(false)
 
   const initialBioContent = useMemo(() => {
@@ -71,6 +73,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
           avatarUrl: avatarUrl || null,
           bio,
           name,
+          username,
         }),
         headers: { "Content-Type": "application/json" },
         method: "PATCH",
@@ -107,68 +110,77 @@ export function ProfileForm({ user }: ProfileFormProps) {
         </div>
       )}
 
-      <section className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6 sm:p-8">
-        <label className="mb-3 block text-sm font-medium">Ảnh đại diện</label>
-        <AvatarUpload name={name} onChange={setAvatarUrl} value={avatarUrl} />
-      </section>
+      <ScrollReveal delay={0.1}>
+        <section className="rounded-[24px] border-[2px] border-border-default bg-background/80 backdrop-blur-md p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow">
+          <label className="mb-3 block text-sm font-medium">Ảnh đại diện</label>
+          <AvatarUpload name={name} onChange={setAvatarUrl} value={avatarUrl} />
+        </section>
+      </ScrollReveal>
 
-      <div className="grid gap-5">
-        <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="profile-name">
-            Tên hiển thị
-          </label>
-          <Input
-            autoComplete="name"
-            id="profile-name"
-            maxLength={50}
-            minLength={2}
-            onChange={(event) => setName(event.target.value)}
-            required
-            value={name}
-            className="rounded-[12px] border-[2px] border-border-default focus-visible:border-accent focus-visible:ring-accent"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Giới thiệu</label>
-          <div className="rounded-md border border-border bg-background shadow-sm overflow-hidden [&_.prose-editor]:min-h-[200px] [&_.prose-editor]:p-4 [&_.prose-editor]:!ml-0 [&_.prose-editor>p]:!ml-0">
-            <TiptapEditor
-              content={initialBioContent}
-              onChange={(json) => setBio(JSON.stringify(json))}
-              placeholder="Chia sẻ với độc giả về những chủ đề bạn viết."
-              ariaLabel="Giới thiệu"
+      <ScrollReveal delay={0.2}>
+        <div className="grid gap-5 rounded-[24px] border-[2px] border-border-default bg-background/80 backdrop-blur-md p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow">
+          <div className="space-y-2">
+            <label className="text-sm font-medium" htmlFor="profile-name">
+              Tên hiển thị
+            </label>
+            <Input
+              autoComplete="name"
+              id="profile-name"
+              maxLength={50}
+              minLength={2}
+              onChange={(event) => setName(event.target.value)}
+              required
+              value={name}
+              className="rounded-[12px] border-[2px] border-border-default focus-visible:border-accent focus-visible:ring-accent"
             />
           </div>
-        </div>
-      </div>
 
-      <div className="grid gap-5 border-t pt-6 sm:grid-cols-2">
-        <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="profile-username">
-            Tên người dùng
-          </label>
-          <Input
-            disabled
-            id="profile-username"
-            readOnly
-            value={`@${user.username}`}
-            className="rounded-[12px] border-[2px] border-border-default bg-muted/50"
-          />
-          <p className="text-xs text-muted-foreground">
-            Đây là một phần của URL hồ sơ công khai của bạn.
-          </p>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Giới thiệu</label>
+            <div className="rounded-[16px] border-[2px] border-border-default bg-background shadow-sm overflow-hidden [&_.prose-editor]:min-h-[200px] [&_.prose-editor]:p-4 [&_.prose-editor]:!ml-0 [&_.prose-editor>p]:!ml-0 focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-all">
+              <TiptapEditor
+                content={initialBioContent}
+                onChange={(json) => setBio(JSON.stringify(json))}
+                placeholder="Chia sẻ với độc giả về những chủ đề bạn viết."
+                ariaLabel="Giới thiệu"
+              />
+            </div>
+          </div>
         </div>
+      </ScrollReveal>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="profile-email">
-            Email
-          </label>
-          <Input disabled id="profile-email" readOnly value={user.email} className="rounded-[12px] border-[2px] border-border-default bg-muted/50" />
-          <p className="text-xs text-muted-foreground">
-            Email được liên kết với tài khoản đăng nhập của bạn.
-          </p>
+      <ScrollReveal delay={0.3}>
+        <div className="grid gap-5 border-t border-border-default pt-6 sm:grid-cols-2">
+          <div className="space-y-2">
+            <label className="text-sm font-medium" htmlFor="profile-username">
+              Tên người dùng
+            </label>
+            <Input
+              id="profile-username"
+              maxLength={30}
+              minLength={3}
+              pattern="^@?[a-zA-Z0-9_]+$"
+              onChange={(event) => setUsername(event.target.value.replace(/^@/, ''))}
+              required
+              value={username ? `@${username}` : ""}
+              className="rounded-[12px] border-[2px] border-border-default focus-visible:border-accent focus-visible:ring-accent"
+            />
+            <p className="text-xs text-muted-foreground">
+              Đây là một phần của URL hồ sơ công khai của bạn.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium" htmlFor="profile-email">
+              Email
+            </label>
+            <Input disabled id="profile-email" readOnly value={user.email} className="rounded-[12px] border-[2px] border-border-default bg-muted/50 cursor-not-allowed opacity-70" />
+            <p className="text-xs text-muted-foreground">
+              Email được liên kết với tài khoản đăng nhập của bạn.
+            </p>
+          </div>
         </div>
-      </div>
+      </ScrollReveal>
 
       <Button className="w-full sm:w-auto rounded-full bg-accent text-white hover:bg-accent/90" disabled={saving || !name.trim()}>
         {saving ? "Đang lưu..." : "Lưu thay đổi"}

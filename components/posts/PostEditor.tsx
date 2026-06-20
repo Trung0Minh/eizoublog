@@ -394,7 +394,7 @@ export function PostEditor({
               </div>
 
               <div className="flex flex-col gap-6">
-                <div className="flex flex-col gap-2 bg-subtle-bg/30 p-4 rounded-[16px] border border-border-default">
+                <div className="flex flex-col gap-2 bg-background p-5 rounded-[20px] border border-border-default shadow-sm hover:shadow-md transition-all duration-300">
                     <CoverImageUpload
                       onChange={(url) => {
                         setCoverUrl(url)
@@ -425,7 +425,7 @@ export function PostEditor({
                     )}
                 </div>
 
-                <div className="space-y-4 bg-subtle-bg/30 p-4 rounded-[16px] border border-border-default">
+                <div className="space-y-4 bg-background p-5 rounded-[20px] border border-border-default shadow-sm hover:shadow-md transition-all duration-300">
                       <label
                         className="text-[12px] font-semibold text-text-secondary"
                         htmlFor="post-category"
@@ -464,7 +464,7 @@ export function PostEditor({
                 </div>
 
                 {availableWriters.length > 0 && (!initialData || currentUserId === initialData.authorId) && (
-                  <div className="space-y-4 bg-subtle-bg/30 p-4 rounded-[16px] border border-border-default">
+                  <div className="space-y-4 bg-background p-5 rounded-[20px] border border-border-default shadow-sm hover:shadow-md transition-all duration-300">
                     <div className="text-[12px] font-semibold text-text-secondary">
                           Đồng tác giả
                         </div>
