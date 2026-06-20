@@ -11,6 +11,7 @@ import {
 import { AdminMetricCard, AdminPageHeader } from "@/components/admin/AdminPrimitives"
 import { NewsletterBroadcastForm } from "@/components/admin/NewsletterBroadcastForm"
 import { getCachedAdminNewsletterData } from "@/lib/queries"
+import { ScrollReveal } from "@/components/ui/ScrollReveal"
 
 export default async function AdminNewsletterPage() {
   const { activeCount, recentPosts } = await getCachedAdminNewsletterData()
@@ -19,7 +20,7 @@ export default async function AdminNewsletterPage() {
     <div className="animate-in fade-in duration-300">
       <AdminPageHeader
         action={
-          <button className="flex h-[34px] w-full shrink-0 items-center justify-center gap-1.5 rounded-[5px] bg-button-bg px-3.5 text-[13px] font-semibold text-button-text transition-opacity hover:opacity-90 md:w-auto">
+          <button className="flex h-[34px] w-full shrink-0 items-center justify-center gap-1.5 rounded-full bg-accent px-4 text-[13px] font-semibold text-white transition-opacity hover:opacity-90 md:w-auto">
             <Plus aria-hidden="true" className="h-3.5 w-3.5" />
             New Email
           </button>
@@ -28,7 +29,7 @@ export default async function AdminNewsletterPage() {
         title="Newsletter"
       />
 
-      <section className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+      <ScrollReveal index={0} className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
         <AdminMetricCard
           icon={Users}
           label="TOTAL SUBSCRIBERS"
@@ -49,9 +50,9 @@ export default async function AdminNewsletterPage() {
           trendTone="neutral"
           value="0%"
         />
-      </section>
+      </ScrollReveal>
 
-      <section className="mb-8">
+      <ScrollReveal index={1} className="mb-8 rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-[16px] font-semibold text-text-primary">
             Recent Broadcasts
@@ -62,14 +63,14 @@ export default async function AdminNewsletterPage() {
               className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-tertiary"
             />
             <input
-              className="h-[30px] w-full rounded-[5px] border border-border-default bg-transparent pl-8 pr-2.5 text-[12px] outline-none transition-colors placeholder:text-text-tertiary focus:border-accent"
+              className="h-[30px] w-full rounded-full border border-border-default bg-transparent pl-8 pr-2.5 text-[12px] outline-none transition-colors placeholder:text-text-tertiary focus:border-accent"
               placeholder="Search emails..."
               type="text"
             />
           </div>
         </div>
 
-        <div className="w-full overflow-x-auto rounded-[8px] border border-border-default bg-background">
+        <div className="w-full overflow-x-auto overflow-hidden rounded-[16px] border border-border-default bg-background">
           <div className="min-w-[700px]">
             <div className="flex h-[40px] items-center border-b border-border-default bg-subtle-bg px-4 text-[11px] font-semibold uppercase tracking-[0.05em] text-text-secondary">
               <div className="min-w-0 flex-1 pr-4">Subject</div>
@@ -130,14 +131,14 @@ export default async function AdminNewsletterPage() {
             </div>
           </div>
         </div>
-      </section>
+      </ScrollReveal>
 
-      <section className="rounded-[8px] border border-border-default bg-background p-5">
+      <ScrollReveal index={2} className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6">
         <h2 className="mb-4 text-[16px] font-semibold text-text-primary">
           Compose broadcast
         </h2>
         <NewsletterBroadcastForm recentPosts={recentPosts} />
-      </section>
+      </ScrollReveal>
     </div>
   )
 }
