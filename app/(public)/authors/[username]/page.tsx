@@ -135,6 +135,7 @@ export default async function AuthorPage({
             </div>
           )}
         </ScrollReveal>
+        </div>
       </section>
 
       <ScrollReveal delay={0.2}>

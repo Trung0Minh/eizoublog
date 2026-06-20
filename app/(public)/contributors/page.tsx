@@ -151,8 +151,9 @@ export default async function ContributorsPage({ searchParams }: ContributorsPag
                   </div>
                 </div>
               </div>
-            </ScrollReveal>
-          ))}
+            </div>
+          </ScrollReveal>
+        ))}
         </div>
       </main>
     </div>
