@@ -31,24 +31,11 @@ export function PostList({
 
   return (
     <div className="flex flex-col gap-6 md:gap-8">
-      <motion.div 
-        className="flex flex-col gap-6 md:gap-8"
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true, margin: "-50px" }}
-        variants={{
-          hidden: {},
-          show: {
-            transition: {
-              staggerChildren: 0.1
-            }
-          }
-        }}
-      >
+      <div className="flex flex-col gap-6 md:gap-8">
         {posts.map((post) => (
           <PostCard key={post.slug} post={post} />
         ))}
-      </motion.div>
+      </div>
 
       {pagination && (
         <Pagination

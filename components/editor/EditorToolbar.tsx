@@ -181,7 +181,7 @@ export function EditorToolbar({
 
   return (
     <>
-      <div className="no-scrollbar sticky top-4 z-[60] mb-8 mx-auto flex w-max max-w-full flex-wrap items-center justify-center gap-1 overflow-x-auto rounded-[12px] md:rounded-full bg-background/80 backdrop-blur-xl px-4 py-2 border-[2px] border-border-default/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] md:-mt-4 transition-all duration-300">
+      <div className="no-scrollbar sticky top-0 z-[60] mb-4 flex w-full flex-nowrap items-center gap-1 overflow-x-auto rounded-[16px] bg-background/80 backdrop-blur-xl px-3 py-2 border-[2px] border-border-default/50 shadow-sm transition-all duration-300">
         <ToolbarButton
           active={editor.isActive("bold")}
           onClick={() => editor.chain().focus().toggleBold().run()}
