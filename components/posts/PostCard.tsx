@@ -1,6 +1,6 @@
 import Link from "next/link"
 
-import { formatDate } from "@/lib/utils"
+import { RelativeTime } from "@/components/ui/RelativeTime"
 import { getCoverStyle } from "@/lib/cover-style"
 
 export interface PostCardPost {
@@ -123,16 +123,14 @@ export function PostCard({ post }: PostCardProps) {
             </div>
           ))}
           <span className="text-text-tertiary px-1">&middot;</span>
-          <time
-            className="text-[12px] text-text-secondary"
-            dateTime={
-              post.publishedAt
-                ? new Date(post.publishedAt).toISOString()
-                : undefined
-            }
-          >
-            {post.publishedAt ? formatDate(post.publishedAt) : "Bản nháp"}
-          </time>
+          {post.publishedAt ? (
+            <RelativeTime
+              className="text-[12px] text-text-secondary"
+              date={post.publishedAt}
+            />
+          ) : (
+            <span className="text-[12px] text-text-secondary">Bản nháp</span>
+          )}
         </div>
         <div className="text-text-secondary text-[12px]">
           {post._count.comments} bình luận

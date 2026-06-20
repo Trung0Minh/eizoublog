@@ -1,7 +1,7 @@
 import Link from "next/link"
 
 import { PostEditLink } from "@/components/posts/PostEditLink"
-import { formatDate } from "@/lib/utils"
+import { RelativeTime } from "@/components/ui/RelativeTime"
 import { getCoverStyle } from "@/lib/cover-style"
 
 interface HeaderAuthor {
@@ -107,9 +107,10 @@ export function PostHeader({ authorUsernames, post }: PostHeaderProps) {
             {post.publishedAt && (
               <>
                 <span className="hidden md:inline" aria-hidden="true">·</span>
-                <time className="w-full md:w-auto text-text-secondary" dateTime={new Date(post.publishedAt).toISOString()}>
-                  {formatDate(post.publishedAt)}
-                </time>
+                <RelativeTime
+                  className="w-full md:w-auto text-text-secondary"
+                  date={post.publishedAt}
+                />
               </>
             )}
             {post._count && (

@@ -1,7 +1,8 @@
 import Link from "next/link"
 import { Sparkles } from "lucide-react"
 
-import { cn, formatDate } from "@/lib/utils"
+import { RelativeTime } from "@/components/ui/RelativeTime"
+import { cn } from "@/lib/utils"
 
 interface SidebarProps {
   archives?: {
@@ -92,9 +93,10 @@ export function Sidebar({
                     {post.title}
                   </Link>
                   {post.publishedAt && (
-                    <span className="text-[12px] text-text-secondary mt-1">
-                      {formatDate(post.publishedAt)}
-                    </span>
+                    <RelativeTime
+                      className="text-[12px] text-text-secondary mt-1"
+                      date={post.publishedAt}
+                    />
                   )}
                 </li>
               ))}

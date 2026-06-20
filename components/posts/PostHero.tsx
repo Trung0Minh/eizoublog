@@ -1,6 +1,6 @@
 import { Sparkles } from "lucide-react"
 
-import { formatDate } from "@/lib/utils"
+import { RelativeTime } from "@/components/ui/RelativeTime"
 import { getCoverStyle } from "@/lib/cover-style"
 import { PostHeaderPost } from "./PostHeader"
 import { PostEditLink } from "./PostEditLink"
@@ -66,7 +66,7 @@ export function PostHero({ post, authorUsernames }: PostHeroProps) {
                 <div className="flex items-center text-text-secondary font-medium">
                   {post.publishedAt && (
                     <>
-                      <span>{formatDate(post.publishedAt)}</span>
+                      <RelativeTime date={post.publishedAt} />
                     </>
                   )}
                   {post._count !== undefined && (

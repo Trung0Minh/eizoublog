@@ -4,9 +4,9 @@ import { useState } from "react"
 import { AlertCircle, Loader2, Lock, MessageSquare } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { RelativeTime } from "@/components/ui/RelativeTime"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { formatDate } from "@/lib/utils"
 
 interface CommentAuthor {
   name: string
@@ -116,9 +116,10 @@ export function RoomFeedbackSection({
                         🔒 Private Feedback
                       </Badge>
                     )}
-                    <span className="text-xs text-text-tertiary">
-                      {formatDate(comment.createdAt)}
-                    </span>
+                    <RelativeTime
+                      className="text-xs text-text-tertiary"
+                      date={comment.createdAt}
+                    />
                   </div>
                 </div>
                 <p className="text-sm text-text-secondary whitespace-pre-wrap leading-relaxed">

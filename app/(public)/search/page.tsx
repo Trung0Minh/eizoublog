@@ -4,6 +4,7 @@ import Link from "next/link"
 import { PageContainer } from "@/components/layout/PageContainer"
 import { SearchPageTracker } from "@/components/search/SearchPageTracker"
 import { Pagination } from "@/components/ui/Pagination"
+import { RelativeTime } from "@/components/ui/RelativeTime"
 import { getCachedSearchResults } from "@/lib/queries"
 import {
   buildSearchQuery,
@@ -11,7 +12,6 @@ import {
   type SearchResult,
 } from "@/lib/search"
 import { buildMetadata } from "@/lib/seo"
-import { formatDate } from "@/lib/utils"
 
 interface SearchPageProps {
   searchParams: Promise<{ page?: string; q?: string }>
@@ -72,7 +72,7 @@ function SearchResultCard({ result }: { result: SearchResult }) {
             {result.title}
           </Link>
           <p className="mt-1 text-xs text-muted-foreground">
-            {result.authorName} · {formatDate(result.publishedAt)}
+            {result.authorName} · <RelativeTime date={result.publishedAt} />
           </p>
           {snippet && (
             <p

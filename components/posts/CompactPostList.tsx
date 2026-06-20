@@ -2,8 +2,8 @@ import Link from "next/link"
 import { MessageSquare } from "lucide-react"
 
 import { getCoverStyle } from "@/lib/cover-style"
-import { formatDate } from "@/lib/utils"
 import { Pagination } from "@/components/ui/Pagination"
+import { RelativeTime } from "@/components/ui/RelativeTime"
 import type { PostCardPost } from "@/components/posts/PostCard"
 
 interface CompactPostListProps {
@@ -82,7 +82,7 @@ export function CompactPostList({
                   )}
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-secondary">
-                  {post.publishedAt && <span>{formatDate(post.publishedAt)}</span>}
+                  {post.publishedAt && <RelativeTime date={post.publishedAt} />}
                   <span>by {post.author.name}</span>
                   <span className="inline-flex items-center gap-1 font-semibold">
                     <MessageSquare aria-hidden="true" className="h-3 w-3" />

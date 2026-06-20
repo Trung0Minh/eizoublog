@@ -1,7 +1,13 @@
 import type { PrismaClient } from "@prisma/client"
 import { describe, expect, it, vi } from "vitest"
 
-import { cn, ensureUniqueSlug, formatDate, generateSlug } from "@/lib/utils"
+import {
+  cn,
+  ensureUniqueSlug,
+  formatDate,
+  formatExactDateTime,
+  generateSlug,
+} from "@/lib/utils"
 
 describe("cn", () => {
   it("merges conditional classes and resolves Tailwind conflicts", () => {
@@ -57,23 +63,34 @@ describe("formatDate", () => {
     }
   })
 
-  it("shows yesterday for dates between 24 and 48 hours ago", () => {
+  it("shows relative days for dates within a month", () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date("2026-06-18T12:00:00.000Z"))
 
     try {
-      expect(formatDate(new Date("2026-06-17T10:00:00.000Z"))).toBe("Hôm qua")
+      expect(formatDate(new Date("2026-06-16T10:00:00.000Z"))).toBe("2 ngày trước")
     } finally {
       vi.useRealTimers()
     }
   })
 
-  it("formats older dates as dd/mm/yy", () => {
+  it("shows relative months for dates within a year", () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date("2026-06-18T12:00:00.000Z"))
 
     try {
-      expect(formatDate(new Date("2026-06-16T00:00:00.000Z"))).toBe("16/06/26")
+      expect(formatDate(new Date("2026-04-18T12:00:00.000Z"))).toBe("2 tháng trước")
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it("shows relative years for older dates", () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date("2026-06-18T12:00:00.000Z"))
+
+    try {
+      expect(formatDate(new Date("2024-06-18T12:00:00.000Z"))).toBe("2 năm trước")
     } finally {
       vi.useRealTimers()
     }
@@ -81,6 +98,12 @@ describe("formatDate", () => {
 
   it("accepts date strings", () => {
     expect(() => formatDate("2024-04-01")).not.toThrow()
+  })
+
+  it("formats exact date time for timestamp titles", () => {
+    expect(formatExactDateTime(new Date(2026, 5, 20, 12, 42))).toBe(
+      "20/06/2026 12:42",
+    )
   })
 })
 

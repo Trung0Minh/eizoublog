@@ -14,6 +14,8 @@ export function formatDate(date: Date | string): string {
   const minuteMs = 60 * secondMs
   const hourMs = 60 * minuteMs
   const dayMs = 24 * hourMs
+  const monthMs = 30 * dayMs
+  const yearMs = 365 * dayMs
 
   if (diffMs >= 0 && diffMs < minuteMs) {
     const seconds = Math.max(1, Math.floor(diffMs / secondMs))
@@ -30,15 +32,29 @@ export function formatDate(date: Date | string): string {
     return `${hours} giờ trước`
   }
 
-  if (diffMs >= dayMs && diffMs < 2 * dayMs) {
-    return "Hôm qua"
+  if (diffMs >= dayMs && diffMs < monthMs) {
+    const days = Math.floor(diffMs / dayMs)
+    return `${days} ngày trước`
   }
 
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "2-digit",
-  }).format(value)
+  if (diffMs >= monthMs && diffMs < yearMs) {
+    const months = Math.floor(diffMs / monthMs)
+    return `${months} tháng trước`
+  }
+
+  if (diffMs >= yearMs) {
+    const years = Math.floor(diffMs / yearMs)
+    return `${years} năm trước`
+  }
+
+  return formatExactDateTime(value)
+}
+
+export function formatExactDateTime(date: Date | string): string {
+  const value = new Date(date)
+  const pad = (number: number) => String(number).padStart(2, "0")
+
+  return `${pad(value.getDate())}/${pad(value.getMonth() + 1)}/${value.getFullYear()} ${pad(value.getHours())}:${pad(value.getMinutes())}`
 }
 
 export function generateSlug(title: string): string {

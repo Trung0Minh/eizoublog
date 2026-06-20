@@ -5,7 +5,7 @@ import { Reply } from "lucide-react"
 
 import { CommentForm } from "@/components/comments/CommentForm"
 import { Button } from "@/components/ui/button"
-import { formatDate } from "@/lib/utils"
+import { RelativeTime } from "@/components/ui/RelativeTime"
 import type { CommentWithReplies, PublicComment } from "@/types"
 
 interface CommentListProps {
@@ -78,12 +78,10 @@ function CommentBubble({
               WRITER
             </span>
           )}
-          <time
+          <RelativeTime
             className="text-[12px] text-text-tertiary"
-            dateTime={new Date(comment.createdAt).toISOString()}
-          >
-            {formatDate(comment.createdAt)}
-          </time>
+            date={comment.createdAt}
+          />
         </div>
         <p className="mt-1 whitespace-pre-wrap break-words text-[14px] leading-[1.6] text-text-secondary">
           {comment.content}

@@ -7,11 +7,11 @@ import { MarkCommentsReadButton } from "@/components/notifications/MarkCommentsR
 import { ViewLink } from "@/components/notifications/ViewLink"
 import { CoAuthorInviteActions } from "@/components/posts/CoAuthorInviteActions"
 import { Button } from "@/components/ui/button"
+import { RelativeTime } from "@/components/ui/RelativeTime"
 import { ScrollReveal } from "@/components/ui/ScrollReveal"
 import { TextReveal } from "@/components/ui/TextReveal"
 import { getActiveSession } from "@/lib/authz"
 import { getNotifications } from "@/lib/notifications"
-import { formatDate } from "@/lib/utils"
 
 function excerpt(value: string) {
   const trimmed = value.trim()
@@ -96,7 +96,7 @@ export default async function NotificationsPage() {
                   </p>
                   <p className="mt-1 text-sm text-text-secondary">
                     {invite.post.author.name} mời bạn cộng tác · cập nhật{" "}
-                    {formatDate(invite.post.updatedAt)}
+                    <RelativeTime date={invite.post.updatedAt} />
                   </p>
                 </div>
                 <CoAuthorInviteActions postId={invite.postId} />
@@ -160,7 +160,7 @@ export default async function NotificationsPage() {
                       )}
                     </p>
                     <p className="mt-2 text-xs text-text-tertiary">
-                      {formatDate(event.createdAt)}
+                      <RelativeTime date={event.createdAt} />
                     </p>
                   </div>
                   {postHref && (
@@ -220,7 +220,7 @@ export default async function NotificationsPage() {
                       {excerpt(comment.content)}
                     </p>
                     <p className="mt-2 text-xs text-text-tertiary">
-                      {formatDate(comment.createdAt)}
+                      <RelativeTime date={comment.createdAt} />
                     </p>
                   </div>
                   <Button asChild size="sm" variant="outline">

@@ -6,11 +6,11 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ScrollReveal } from "@/components/ui/ScrollReveal"
 import { TextReveal } from "@/components/ui/TextReveal"
+import { RelativeTime } from "@/components/ui/RelativeTime"
 import { CoAuthorInviteActions } from "@/components/posts/CoAuthorInviteActions"
 import { PostOwnerActions } from "@/components/posts/PostOwnerActions"
 import { getCachedWriterDashboardPosts } from "@/lib/queries"
 import { getCurrentSession } from "@/lib/session"
-import { formatDate } from "@/lib/utils"
 
 export default async function DashboardPage() {
   const session = await getCurrentSession()
@@ -54,15 +54,15 @@ export default async function DashboardPage() {
                 <div className="min-w-0">
                   <h2 className="truncate font-medium">{post.title}</h2>
                   <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-                    {post.status === "PUBLISHED" && post.publishedAt
-                      ? `Đã xuất bản ${formatDate(post.publishedAt)}`
-                      : (
-                        <>
-                          <span>
-                            Bản nháp · Đã cập nhật {formatDate(post.updatedAt)}
-                          </span>
-                        </>
-                      )}
+                    {post.status === "PUBLISHED" && post.publishedAt ? (
+                      <span>
+                        Đã xuất bản <RelativeTime date={post.publishedAt} />
+                      </span>
+                    ) : (
+                      <span>
+                        Bản nháp · Đã cập nhật <RelativeTime date={post.updatedAt} />
+                      </span>
+                    )}
                     {" · "}
                     {post._count.comments} bình luận
                   </p>
