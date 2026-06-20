@@ -4,6 +4,8 @@ import { Sparkles } from "lucide-react"
 import { motion, useScroll, useTransform } from "motion/react"
 
 import { RelativeTime } from "@/components/ui/RelativeTime"
+import { TextReveal } from "@/components/ui/TextReveal"
+import { ScrollReveal } from "@/components/ui/ScrollReveal"
 import { getCoverStyle } from "@/lib/cover-style"
 import { PostHeaderPost } from "./PostHeader"
 import { PostEditLink } from "./PostEditLink"
@@ -37,16 +39,18 @@ export function PostHero({ post, authorUsernames }: PostHeroProps) {
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent flex flex-col justify-end pb-8 md:pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-[720px] mx-auto w-full">
-          {post.category && (
-            <div className="text-[11px] font-bold text-white bg-accent px-3 py-1 rounded-full uppercase tracking-[0.1em] w-max mb-4 shadow-lg flex items-center gap-1">
-              <Sparkles className="w-3 h-3"/> {post.category.name}
-            </div>
-          )}
+          <ScrollReveal delay={0.1}>
+            {post.category && (
+              <div className="text-[11px] font-bold text-white bg-accent px-3 py-1 rounded-full uppercase tracking-[0.1em] w-max mb-4 shadow-lg flex items-center gap-1">
+                <Sparkles className="w-3 h-3"/> {post.category.name}
+              </div>
+            )}
+          </ScrollReveal>
           <h1 className="text-[28px] md:text-[44px] lg:text-[52px] font-display font-bold text-text-primary leading-[1.1] tracking-[-0.02em] drop-shadow-[0_2px_10px_rgba(255,255,255,0.1)] mb-6">
-            {post.title}
+            <TextReveal text={post.title} />
           </h1>
 
-          <div className="flex items-center gap-3 flex-wrap">
+          <ScrollReveal delay={0.2} className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-[12px] bg-background/95 backdrop-blur-md p-2 pr-4 rounded-full border border-border-default shadow-md select-none">
               <div className="flex items-center">
                 <div className="w-9 h-9 rounded-full bg-[#2d6e7e] flex justify-center items-center text-white text-[14px] outline outline-2 outline-background z-10 font-bold overflow-hidden">
@@ -88,7 +92,7 @@ export function PostHero({ post, authorUsernames }: PostHeroProps) {
             {authorUsernames && (
               <PostEditLink authorUsernames={authorUsernames} postId={post.id} />
             )}
-          </div>
+          </ScrollReveal>
         </div>
       </div>
     </div>
