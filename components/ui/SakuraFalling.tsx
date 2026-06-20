@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from 'react';
 
-import { useReducedVisualEffects } from '@/hooks/useReducedVisualEffects';
+import { useParticleEffects } from '@/hooks/useParticleEffects';
 
 export function SeasonalEffects() {
   const [season, setSeason] = useState('spring');
   const [particles, setParticles] = useState<Array<{ id: number, left: string, animationDuration: string, animationDelay: string, scale: number }>>([]);
-  const shouldReduce = useReducedVisualEffects();
+  const { enabled: particlesEnabled } = useParticleEffects();
 
   useEffect(() => {
     const detectSeason = () => {
@@ -32,7 +32,7 @@ export function SeasonalEffects() {
   }, []);
 
   useEffect(() => {
-    if (shouldReduce) {
+    if (!particlesEnabled) {
       return;
     }
 
@@ -48,9 +48,9 @@ export function SeasonalEffects() {
       setParticles(newParticles);
     }, 0);
     return () => clearTimeout(timer);
-  }, [season, shouldReduce]);
+  }, [season, particlesEnabled]);
 
-  const visibleParticles = shouldReduce ? [] : particles;
+  const visibleParticles = particlesEnabled ? particles : [];
 
   if (visibleParticles.length === 0) return null;
 

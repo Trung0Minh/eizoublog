@@ -118,4 +118,21 @@ describe("anime-blog-4 appearance parity", () => {
     expect(layout).not.toContain("<SeasonalEffects />")
     expect(layout).not.toContain("<NoiseOverlay />")
   })
+
+  it("keeps particle controls between season and theme controls", () => {
+    const navbar = read("components/layout/Navbar.tsx")
+    const editorTopBar = read("components/editor/EditorTopBar.tsx")
+
+    const sources = [navbar, editorTopBar]
+
+    sources.forEach((source) => {
+      const seasonIndex = source.indexOf("<SeasonToggle />")
+      const particleIndex = source.indexOf("<ParticleToggle />")
+      const themeIndex = source.indexOf("<ThemeToggle />")
+
+      expect(seasonIndex).toBeGreaterThan(-1)
+      expect(particleIndex).toBeGreaterThan(seasonIndex)
+      expect(themeIndex).toBeGreaterThan(particleIndex)
+    })
+  })
 })

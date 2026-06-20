@@ -41,10 +41,12 @@ function setMedia({ coarse = false, reduced = false } = {}) {
 describe("responsive visual effects", () => {
   beforeEach(() => {
     setMedia()
+    document.cookie = "particleEffects=; path=/; max-age=0"
     document.documentElement.setAttribute("data-season", "summer")
   })
 
   afterEach(() => {
+    document.cookie = "particleEffects=; path=/; max-age=0"
     vi.unstubAllGlobals()
   })
 
@@ -81,6 +83,16 @@ describe("responsive visual effects", () => {
     rerender(<CustomCursor />)
     await waitFor(() => {
       expect(container.innerHTML).toBe("")
+    })
+  })
+
+  it("allows touch devices to opt particles back in", async () => {
+    setMedia({ coarse: true })
+    document.cookie = "particleEffects=on; path=/"
+    render(<SeasonalEffects />)
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId("seasonal-particle")).toHaveLength(16)
     })
   })
 

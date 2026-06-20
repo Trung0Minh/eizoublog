@@ -5,6 +5,7 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle"
 import { WriterNavControls } from "@/components/layout/WriterNavControls"
 import type { WriterMenuUser } from "@/components/layout/WriterMenu"
 import { SearchBar } from "@/components/search/SearchBar"
+import { ParticleToggle } from "@/components/ui/ParticleToggle"
 import { SeasonToggle } from "@/components/ui/SeasonToggle"
 import { MagneticEffect } from "@/components/ui/MagneticEffect"
 
@@ -54,6 +55,7 @@ export function Navbar({ user }: { user?: WriterMenuUser | null }) {
           </div>
           <div className="flex items-center">
             <SeasonToggle />
+            <ParticleToggle />
             <ThemeToggle />
           </div>
           <WriterNavControls links={NAV_LINKS} user={user} />

@@ -72,6 +72,17 @@ export default function RootLayout({
                   else season = 'winter';
                 }
                 document.documentElement.setAttribute('data-season', season);
+                let particles = document.cookie
+                  .split('; ')
+                  .find((entry) => entry.indexOf('particleEffects=') === 0)
+                  ?.split('=')[1];
+                if (particles !== 'on' && particles !== 'off') {
+                  particles = window.matchMedia('(pointer: coarse)').matches ? 'off' : 'on';
+                }
+                if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                  particles = 'off';
+                }
+                document.documentElement.setAttribute('data-particles', particles);
               } catch (_) {}
             `,
           }}
