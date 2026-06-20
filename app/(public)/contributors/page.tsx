@@ -62,33 +62,37 @@ export default async function ContributorsPage({ searchParams }: ContributorsPag
             </h1>
             <Sparkles className="w-8 h-8 text-accent animate-pulse" />
           </div>
-          <p className="text-[16px] text-text-secondary max-w-2xl mx-auto mb-6">
-            Những người được mời viết phân tích, đánh giá và ghi chú sản xuất cho ấn phẩm này.
-          </p>
+          <ScrollReveal delay={0.2}>
+            <p className="text-[16px] text-text-secondary max-w-2xl mx-auto mb-6">
+              Những người được mời viết phân tích, đánh giá và ghi chú sản xuất cho ấn phẩm này.
+            </p>
+          </ScrollReveal>
 
-          <div className="flex justify-center items-center gap-2">
-            <div className="flex rounded-full border-[2px] border-border-default bg-subtle-bg/30 p-1 backdrop-blur-sm" role="tablist" aria-label="Sắp xếp tác giả">
-              {sortOptions.map((option) => {
-                const isActive = sort === option.value
-                const queryStr = option.value !== "role" ? `?sort=${option.value}` : "/contributors"
-                return (
-                  <Link
-                    href={queryStr}
-                    key={option.value}
-                    role="tab"
-                    aria-selected={isActive}
-                    className={`inline-flex items-center gap-1 rounded-full px-4 py-1.5 text-[12px] font-bold uppercase tracking-wider transition-all duration-300 ${
-                      isActive
-                        ? "bg-accent text-white shadow-md"
-                        : "text-text-secondary hover:text-text-primary hover:bg-subtle-bg/50"
-                    }`}
-                  >
-                    {option.label}
-                  </Link>
-                )
-              })}
+          <ScrollReveal delay={0.3}>
+            <div className="flex justify-center items-center gap-2">
+              <div className="flex rounded-full border-[2px] border-border-default bg-subtle-bg/30 p-1 backdrop-blur-sm" role="tablist" aria-label="Sắp xếp tác giả">
+                {sortOptions.map((option) => {
+                  const isActive = sort === option.value
+                  const queryStr = option.value !== "role" ? `?sort=${option.value}` : "/contributors"
+                  return (
+                    <Link
+                      href={queryStr}
+                      key={option.value}
+                      role="tab"
+                      aria-selected={isActive}
+                      className={`inline-flex items-center gap-1 rounded-full px-4 py-1.5 text-[12px] font-bold uppercase tracking-wider transition-all duration-300 ${
+                        isActive
+                          ? "bg-accent text-white shadow-md"
+                          : "text-text-secondary hover:text-text-primary hover:bg-subtle-bg/50"
+                      }`}
+                    >
+                      {option.label}
+                    </Link>
+                  )
+                })}
+              </div>
             </div>
-          </div>
+          </ScrollReveal>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">

@@ -279,30 +279,34 @@ export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps)
 
           <div className="flex flex-col md:flex-row gap-10 items-center md:items-start">
 
-            <div className="w-full md:w-[40%] relative aspect-[3/4] rounded-[16px] overflow-hidden border-4 border-white dark:border-border shadow-lg rotate-[-2deg] hover:rotate-0 transition-transform duration-300">
-               <img
-                  src="https://picsum.photos/seed/animekawaiigirl/800/1000"
-                  alt="Mascot"
-                  className="object-cover w-full h-full"
-                  referrerPolicy="no-referrer"
-               />
-               {/* Cute sticker overlay */}
-               <div className="absolute -bottom-4 -right-4 bg-accent text-white w-16 h-16 rounded-full flex items-center justify-center font-display font-bold shadow-md rotate-12">
-                 Hi!
-               </div>
-            </div>
+            <ScrollReveal delay={0.2} className="w-full md:w-[40%]">
+              <div className="relative aspect-[3/4] rounded-[16px] overflow-hidden border-4 border-white dark:border-border shadow-lg rotate-[-2deg] hover:rotate-0 transition-transform duration-300">
+                 <img
+                    src="https://picsum.photos/seed/animekawaiigirl/800/1000"
+                    alt="Mascot"
+                    className="object-cover w-full h-full"
+                    referrerPolicy="no-referrer"
+                 />
+                 {/* Cute sticker overlay */}
+                 <div className="absolute -bottom-4 -right-4 bg-accent text-white w-16 h-16 rounded-full flex items-center justify-center font-display font-bold shadow-md rotate-12">
+                   Hi!
+                 </div>
+              </div>
+            </ScrollReveal>
 
             <div className="w-full md:w-[60%] flex flex-col">
-              <div className="flex items-center gap-2 mb-4">
-                <Sparkles className="w-6 h-6 text-accent animate-pulse" />
-                <h1 className="text-[32px] md:text-[42px] font-display font-bold text-text-primary leading-tight">
-                  {data.title.includes('Eizou Blog!') ? (
-                    <>Chào mừng bạn đến với <TextReveal className="text-accent" text="Eizou Blog!" /></>
-                  ) : (
-                    <TextReveal className="text-accent" text={data.title} />
-                  )}
-                </h1>
-              </div>
+              <ScrollReveal>
+                <div className="flex items-center gap-2 mb-4">
+                  <Sparkles className="w-6 h-6 text-accent animate-pulse" />
+                  <h1 className="text-[32px] md:text-[42px] font-display font-bold text-text-primary leading-tight">
+                    {data.title.includes('Eizou Blog!') ? (
+                      <>Chào mừng bạn đến với <TextReveal className="text-accent" text="Eizou Blog!" /></>
+                    ) : (
+                      <TextReveal className="text-accent" text={data.title} />
+                    )}
+                  </h1>
+                </div>
+              </ScrollReveal>
 
               <div className="space-y-4 text-[16px] text-text-secondary font-sans [&_.post-content]:!mx-0 [&_.post-content]:!max-w-none [&_.ProseMirror_p]:!mx-0 [&_.ProseMirror_ul]:!mx-0 [&_.ProseMirror_ol]:!mx-0 [&_.ProseMirror_p]:!max-w-none">
                 <ScrollReveal>

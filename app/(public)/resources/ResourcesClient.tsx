@@ -476,17 +476,21 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
             <TextReveal text={data.title.split(" ")[0] || "Nguồn"} /> <br />
             <TextReveal text={data.title.split(" ").slice(1).join(" ") || "tham khảo"} className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-purple-500" />
           </h1>
-          <p className="text-[18px] text-text-secondary leading-relaxed mb-16 max-w-[600px] whitespace-pre-wrap">
-            {data.description}
-          </p>
+          <ScrollReveal delay={0.2}>
+            <p className="text-[18px] text-text-secondary leading-relaxed mb-16 max-w-[600px] whitespace-pre-wrap">
+              {data.description}
+            </p>
+          </ScrollReveal>
 
           <div className="space-y-16">
             {categories.map((category) => (
               <div key={category}>
-                <h2 className="text-[24px] font-bold font-display text-text-primary mb-6 flex items-center gap-3">
-                  <span className="w-8 h-[2px] bg-accent rounded-full inline-block"></span>
-                  {category}
-                </h2>
+                <ScrollReveal delay={0.1}>
+                  <h2 className="text-[24px] font-bold font-display text-text-primary mb-6 flex items-center gap-3">
+                    <span className="w-8 h-[2px] bg-accent rounded-full inline-block"></span>
+                    {category}
+                  </h2>
+                </ScrollReveal>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {data.resources
                     .filter((r) => (r.category || "Khác") === category)
