@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Reply } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
 
 import { CommentForm } from "@/components/comments/CommentForm"
 import { Button } from "@/components/ui/button"
@@ -132,19 +133,27 @@ function CommentThread({
         </Button>
       </div>
 
-      {isReplying && (
-        <div className="mt-4 border-l border-border-default pl-4 sm:ml-11">
-          <CommentForm
-            ariaLabel={`Trả lời ${comment.authorName}`}
-            onCancel={() => setIsReplying(false)}
-            onSuccess={handleReply}
-            parentId={comment.id}
-            postId={postId}
-            postSlug={postSlug}
-            isAuthenticated={isAuthenticated}
-          />
-        </div>
-      )}
+      <AnimatePresence>
+        {isReplying && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
+            animate={{ opacity: 1, height: 'auto', overflow: 'visible' }}
+            exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="mt-4 border-l border-border-default pl-4 sm:ml-11"
+          >
+            <CommentForm
+              ariaLabel={`Trả lời ${comment.authorName}`}
+              onCancel={() => setIsReplying(false)}
+              onSuccess={handleReply}
+              parentId={comment.id}
+              postId={postId}
+              postSlug={postSlug}
+              isAuthenticated={isAuthenticated}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {comment.replies.length > 0 && (
         <div className="mt-5 space-y-4 border-l border-border-default pl-4 sm:ml-11">

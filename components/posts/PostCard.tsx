@@ -82,7 +82,7 @@ export function PostCard({ post }: PostCardProps) {
           <div className="relative w-full aspect-video isolate bg-subtle-bg rounded-[8px] overflow-hidden border-2 border-dashed border-border-default group-hover:border-accent/40 transition-colors">
             <img
               alt={post.coverAlt ?? post.title}
-              className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05] group-hover:-rotate-1"
               style={getCoverStyle(post.coverUrl)}
               decoding="async"
               loading="lazy"
