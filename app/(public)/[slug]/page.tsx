@@ -131,7 +131,7 @@ export default async function PostPage({ params }: PostPageProps) {
 
           <article className="mt-12 max-w-[68ch] mx-auto text-text-primary font-lora text-[16px] md:text-[17.5px] leading-[1.75] md:leading-[1.8] post-content">
             <ScrollReveal delay={0.2}>
-              <div className="bg-background dark:bg-[#1f162b] rounded-[24px] border border-border-default shadow-lg p-6 sm:p-8 md:p-12 mb-12 relative z-30 overflow-hidden">
+              <div className="bg-white dark:bg-[#1f162b] rounded-[24px] border border-border-default shadow-lg p-6 sm:p-8 md:p-12 mb-12 relative z-30 overflow-hidden" style={{ backgroundColor: 'var(--card, #ffffff)' }}>
                 <PostBody content={content} />
               </div>
             </ScrollReveal>
