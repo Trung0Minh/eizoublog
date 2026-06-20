@@ -1,4 +1,5 @@
 import Link from "next/link"
+import type { JSONContent } from "@tiptap/react"
 import { StaticPostContent } from "@/components/posts/StaticPostContent"
 
 interface AuthorBioAuthor {
@@ -14,6 +15,22 @@ interface AuthorBioProps {
 
 function fallbackBio(authorName: string) {
   return `${authorName} viết về quá trình sản xuất anime, nghệ thuật kể chuyện qua hình ảnh và kỹ thuật đằng sau hoạt hình đương đại.`
+}
+
+/** Strip image/video/embed nodes from Tiptap JSON so bios only show text. */
+function stripMediaNodes(node: JSONContent): JSONContent {
+  return {
+    ...node,
+    content: node.content
+      ?.filter(
+        (child) =>
+          child.type !== "image" &&
+          child.type !== "customImage" &&
+          child.type !== "imageGallery" &&
+          child.type !== "videoEmbed",
+      )
+      .map(stripMediaNodes),
+  }
 }
 
 export function AuthorBio({ author }: AuthorBioProps) {
@@ -48,12 +65,12 @@ export function AuthorBio({ author }: AuthorBioProps) {
               return <p>{fallbackBio(author.name)}</p>
             }
             if (author.bio.startsWith("{")) {
-              let json: unknown = null
+              let json: JSONContent | null = null
               try {
-                json = JSON.parse(author.bio)
+                json = JSON.parse(author.bio) as JSONContent
               } catch {}
               if (json) {
-                return <StaticPostContent content={json} />
+                return <StaticPostContent content={stripMediaNodes(json)} />
               }
             }
             return <p>{author.bio}</p>
