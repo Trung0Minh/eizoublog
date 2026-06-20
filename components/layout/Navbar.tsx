@@ -7,6 +7,7 @@ import type { WriterMenuUser } from "@/components/layout/WriterMenu"
 import { ParticleToggle } from "@/components/ui/ParticleToggle"
 import { SeasonToggle } from "@/components/ui/SeasonToggle"
 import { MagneticEffect } from "@/components/ui/MagneticEffect"
+import { CommandMenuTrigger } from "@/components/ui/CommandMenuTrigger"
 
 const NAV_LINKS = [
   { href: "/contributors", label: "Đóng góp" },
@@ -50,16 +51,7 @@ export function Navbar({ user }: { user?: WriterMenuUser | null }) {
 
         <div className="ml-auto flex items-center gap-3">
           <div className="hidden w-[280px] md:block">
-            <button
-              onClick={() => document.dispatchEvent(new CustomEvent("open-command-menu"))}
-              className="group flex h-9 w-full items-center gap-2 rounded-full border border-border-default bg-subtle-bg px-3 text-sm text-text-tertiary transition-colors hover:border-accent hover:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            >
-              <Search className="h-4 w-4 shrink-0" />
-              <span className="flex-1 text-left">Tìm kiếm...</span>
-              <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border border-border-default bg-background px-1.5 font-mono text-[10px] font-medium text-text-tertiary opacity-100 sm:flex">
-                <span className="text-xs">⌘</span>K
-              </kbd>
-            </button>
+            <CommandMenuTrigger />
           </div>
           <div className="flex items-center">
             <SeasonToggle />
