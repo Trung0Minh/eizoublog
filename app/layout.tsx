@@ -40,9 +40,25 @@ export const metadata: Metadata = {
   description: DEFAULT_DESCRIPTION,
   metadataBase: new URL(getAppUrl()),
   openGraph: {
+    description: DEFAULT_DESCRIPTION,
+    images: [
+      {
+        alt: "Eizou Blog",
+        height: 630,
+        url: "/og-default.png",
+        width: 1200,
+      },
+    ],
     locale: "vi_VN",
     siteName: getAppName(),
+    title: getAppName(),
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    description: DEFAULT_DESCRIPTION,
+    images: ["/og-default.png"],
+    title: getAppName(),
   },
 }
 

@@ -135,4 +135,16 @@ describe("anime-blog-4 appearance parity", () => {
       expect(themeIndex).toBeGreaterThan(particleIndex)
     })
   })
+
+  it("uses Vietnamese default social preview metadata", () => {
+    const layout = read("app/layout.tsx")
+    const seo = read("lib/seo.ts")
+
+    expect(seo).toContain("Phân tích anime")
+    expect(seo).not.toContain("In-depth anime analysis")
+    expect(layout).toContain('url: "/og-default.png"')
+    expect(layout).toContain('images: ["/og-default.png"]')
+    expect(layout).toContain('alt: "Eizou Blog"')
+    expect(layout).toContain('card: "summary_large_image"')
+  })
 })

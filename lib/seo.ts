@@ -4,7 +4,7 @@ const FALLBACK_APP_NAME = "Anime Blog"
 const FALLBACK_APP_URL = "http://localhost:3000"
 
 export const DEFAULT_DESCRIPTION =
-  "In-depth anime analysis, production insight, interviews, and reviews."
+  "Phân tích anime, hậu trường sản xuất, phỏng vấn và bài bình luận chuyên sâu."
 
 export function getAppName() {
   return process.env.NEXT_PUBLIC_APP_NAME ?? FALLBACK_APP_NAME
