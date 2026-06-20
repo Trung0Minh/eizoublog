@@ -196,6 +196,7 @@ const adminContentTagSelect = {
 
 const adminDashboardRecentPostSelect = {
   author: { select: { name: true } },
+  id: true,
   status: true,
   title: true,
   updatedAt: true,

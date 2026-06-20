@@ -113,7 +113,7 @@ export default async function AdminDashboardPage() {
             {recentPosts.map((post, index) => (
               <div
                 className="flex items-start gap-3 border-b border-border-default py-2.5 last:border-0"
-                key={`${post.title}-${post.updatedAt.toISOString()}`}
+                key={post.id ?? `${post.title}-${String(post.updatedAt)}`}
               >
                 <AdminStatusBadge
                   status={

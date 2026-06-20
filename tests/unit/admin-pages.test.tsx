@@ -142,11 +142,12 @@ describe("admin server pages", () => {
       {
         _count: { comments: 4 },
         author: { name: "Mina", username: "mina" },
+        id: "recent-post-id",
         publishedAt: new Date("2026-01-01T00:00:00Z"),
         slug: "recent-post",
         status: "PUBLISHED",
         title: "Recent post",
-        updatedAt: new Date("2026-01-02T00:00:00Z"),
+        updatedAt: "2026-01-02T00:00:00.000Z",
       },
     ])
     mocks.prisma.comment.findMany.mockResolvedValue([
