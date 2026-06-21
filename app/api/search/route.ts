@@ -7,6 +7,8 @@ const searchSchema = z.object({
   limit: z.coerce.number().int().min(1).max(20).default(10),
   page: z.coerce.number().int().min(1).default(1),
   q: z.string().max(200).optional().default(""),
+  category: z.string().optional(),
+  tag: z.string().optional(),
 })
 
 function emptySearchPayload(page = 1, limit = 10) {
@@ -20,7 +22,7 @@ function emptySearchPayload(page = 1, limit = 10) {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const { limit, page, q } = searchSchema.parse(
+    const { limit, page, q, category, tag } = searchSchema.parse(
       Object.fromEntries(searchParams),
     )
     const query = q.trim()
@@ -34,6 +36,8 @@ export async function GET(request: Request) {
       tsQuery,
       page,
       limit,
+      category,
+      tag,
     )
 
     return Response.json({

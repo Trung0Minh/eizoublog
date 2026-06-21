@@ -1004,8 +1004,29 @@ export const getCachedAuthorPosts = unstable_cache(
 )
 
 export const getCachedSearchResults = unstable_cache(
-  async (tsQuery: string, page: number, pageSize: number) => {
+  async (
+    tsQuery: string,
+    page: number,
+    pageSize: number,
+    categorySlug?: string,
+    tagSlug?: string,
+  ) => {
     const offset = (page - 1) * pageSize
+    const categoryCondition = categorySlug
+      ? Prisma.sql`AND EXISTS (
+          SELECT 1 FROM categories c
+          WHERE c.id = p."categoryId" AND c.slug = ${categorySlug}
+        )`
+      : Prisma.empty
+
+    const tagCondition = tagSlug
+      ? Prisma.sql`AND EXISTS (
+          SELECT 1 FROM post_tags pt
+          JOIN tags t ON t.id = pt."tagId"
+          WHERE pt."postId" = p.id AND t.slug = ${tagSlug}
+        )`
+      : Prisma.empty
+
     const [results, countResult] = await Promise.all([
       prisma.$queryRaw<SearchResult[]>`
         SELECT
@@ -1030,6 +1051,8 @@ export const getCachedSearchResults = unstable_cache(
         WHERE
           p.status = 'PUBLISHED'
           AND p.search_vector @@ to_tsquery('simple', ${tsQuery})
+          ${categoryCondition}
+          ${tagCondition}
         ORDER BY rank DESC, p."publishedAt" DESC
         LIMIT ${pageSize}
         OFFSET ${offset}
@@ -1040,6 +1063,8 @@ export const getCachedSearchResults = unstable_cache(
         WHERE
           p.status = 'PUBLISHED'
           AND p.search_vector @@ to_tsquery('simple', ${tsQuery})
+          ${categoryCondition}
+          ${tagCondition}
       `,
     ])
     const total = Number(countResult[0]?.count ?? 0)

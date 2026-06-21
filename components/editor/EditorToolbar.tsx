@@ -101,10 +101,12 @@ export function EditorToolbar({
   editor,
   onToggleSpellcheck,
   spellcheckEnabled = false,
+  mode = "default",
 }: {
   editor: Editor
   onToggleSpellcheck?: () => void
   spellcheckEnabled?: boolean
+  mode?: "default" | "profile"
 }) {
   const [showVideoModal, setShowVideoModal] = useState(false)
   const [showLinkModal, setShowLinkModal] = useState(false)
@@ -178,6 +180,69 @@ export function EditorToolbar({
         document.body,
       )
     : null
+
+  if (mode === "profile") {
+    return (
+      <>
+        <div className="no-scrollbar sticky top-0 z-[60] mb-4 flex w-full flex-wrap justify-start gap-1 rounded-[16px] bg-background/80 backdrop-blur-xl px-3 py-2 border-[2px] border-border-default/50 shadow-sm transition-all duration-300">
+          <ToolbarButton
+            active={editor.isActive("bold")}
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            title="Bold"
+          >
+            <Bold aria-hidden="true" className="h-[15px] w-[15px]" />
+          </ToolbarButton>
+          <ToolbarButton
+            active={editor.isActive("italic")}
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            title="Italic"
+          >
+            <Italic aria-hidden="true" className="h-[15px] w-[15px]" />
+          </ToolbarButton>
+          <ToolbarButton
+            active={editor.isActive("underline")}
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
+            title="Underline"
+          >
+            <Underline aria-hidden="true" className="h-[15px] w-[15px]" />
+          </ToolbarButton>
+          <ToolbarButton
+            active={editor.isActive("strike")}
+            onClick={() => editor.chain().focus().toggleStrike().run()}
+            title="Strikethrough"
+          >
+            <Strikethrough aria-hidden="true" className="h-[15px] w-[15px]" />
+          </ToolbarButton>
+          <ToolbarButton
+            active={editor.isActive("link")}
+            onClick={() => setShowLinkModal(true)}
+            title="Link"
+          >
+            <Link2 aria-hidden="true" className="h-[15px] w-[15px]" />
+          </ToolbarButton>
+        </div>
+
+        {showLinkModal && (
+          <LinkEditModal
+            initialUrl={
+              typeof editor.getAttributes("link").href === "string"
+                ? editor.getAttributes("link").href
+                : ""
+            }
+            onClose={() => setShowLinkModal(false)}
+            onRemove={() => {
+              editor.chain().focus().unsetLink().run()
+              setShowLinkModal(false)
+            }}
+            onSubmit={(url) => {
+              editor.chain().focus().setLink({ href: url }).run()
+              setShowLinkModal(false)
+            }}
+          />
+        )}
+      </>
+    )
+  }
 
   return (
     <>

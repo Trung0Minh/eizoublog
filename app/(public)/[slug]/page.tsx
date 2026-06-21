@@ -111,7 +111,7 @@ export default async function PostPage({ params }: PostPageProps) {
       <PostHero post={post} authorUsernames={authors} />
 
       <div className="flex-1 w-full max-w-[1440px] mx-auto xl:px-12 flex justify-center pt-8 pb-20 relative">
-        <main className="w-full max-w-[720px] px-5 xl:px-0">
+        <main className="w-full max-w-[840px] px-5 xl:px-0">
           <header className="flex flex-col">
             <ScrollReveal delay={0.1}>
               {post.coverAlt && (
@@ -129,7 +129,7 @@ export default async function PostPage({ params }: PostPageProps) {
             </ScrollReveal>
           </header>
 
-          <article className="mt-12 max-w-[68ch] mx-auto text-text-primary font-lora text-[16px] md:text-[17.5px] leading-[1.75] md:leading-[1.8] post-content">
+          <article className="mt-12 max-w-[80ch] mx-auto text-text-primary font-lora text-[16px] md:text-[17.5px] leading-[1.75] md:leading-[1.8] post-content">
             <ScrollReveal delay={0.2}>
               <div className="bg-card rounded-[24px] border border-border-default shadow-lg p-6 sm:p-8 md:p-12 mb-12 relative z-30 overflow-hidden">
                 <PostBody content={content} />
@@ -137,7 +137,7 @@ export default async function PostPage({ params }: PostPageProps) {
             </ScrollReveal>
           </article>
 
-          <div className="max-w-[68ch] mx-auto">
+          <div className="max-w-[80ch] mx-auto">
             <ScrollReveal delay={0.3}>
               <div className="mt-12 md:mt-16 flex flex-col gap-4">
                 {[post.author, ...post.coAuthors.map(c => c.user)].map(author => (

@@ -44,6 +44,7 @@ interface TiptapEditorProps {
   onEditorReady?: (editor: Editor | null) => void
   placeholder?: string
   ariaLabel?: string
+  mode?: "default" | "profile"
 }
 
 export function TiptapEditor({
@@ -54,6 +55,7 @@ export function TiptapEditor({
   onEditorReady,
   placeholder = "Bắt đầu viết bài...",
   ariaLabel,
+  mode = "default",
 }: TiptapEditorProps) {
   const [spellcheckEnabled, setSpellcheckEnabled] = useState(false)
   const normalizedContent = useMemo(
@@ -166,6 +168,7 @@ export function TiptapEditor({
               setSpellcheckEnabled((current) => !current)
             }
             spellcheckEnabled={spellcheckEnabled}
+            mode={mode}
           />
         </>
       )}

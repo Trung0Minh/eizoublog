@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { ScrollReveal } from "@/components/ui/ScrollReveal"
 import { TiptapEditor } from "@/components/editor/TiptapEditor"
 import type { JSONContent } from "@tiptap/react"
+import { clearSessionUserCache } from "@/lib/clientSession"
 
 interface ProfileFormProps {
   user: {
@@ -85,6 +86,10 @@ export function ProfileForm({ user }: ProfileFormProps) {
       }
 
       setMessage({ text: "Cập nhật hồ sơ thành công.", type: "success" })
+      clearSessionUserCache()
+      setTimeout(() => {
+        window.location.reload()
+      }, 1000)
     } catch (saveError) {
       setMessage({
         text: saveError instanceof Error ? saveError.message : "Lưu hồ sơ thất bại",
@@ -143,6 +148,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 onChange={(json) => setBio(JSON.stringify(json))}
                 placeholder="Chia sẻ với độc giả về những chủ đề bạn viết."
                 ariaLabel="Giới thiệu"
+                mode="profile"
               />
             </div>
           </div>

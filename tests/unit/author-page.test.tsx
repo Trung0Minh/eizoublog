@@ -25,6 +25,12 @@ vi.mock("@/lib/queries", () => ({
   getCachedAuthorByUsername: mocks.getCachedAuthorByUsername,
   getCachedAuthorPosts: mocks.getCachedAuthorPosts,
 }))
+vi.mock("@/components/ui/ScrollReveal", () => ({
+  ScrollReveal: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}))
+vi.mock("@/components/ui/TextReveal", () => ({
+  TextReveal: ({ text }: { text: string }) => <>{text}</>,
+}))
 
 import AuthorPage from "@/app/(public)/authors/[username]/page"
 
@@ -32,6 +38,12 @@ describe("AuthorPage", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.getCachedAuthorPosts.mockResolvedValue({ posts: [], total: 0 })
+    class MockIntersectionObserver {
+      observe = vi.fn()
+      unobserve = vi.fn()
+      disconnect = vi.fn()
+    }
+    global.IntersectionObserver = MockIntersectionObserver as any
   })
 
   it("shows only an uppercase ADMIN badge for admin profiles", async () => {
@@ -73,7 +85,7 @@ describe("AuthorPage", () => {
       }),
     )
 
-    expect(screen.getByText("Writer")).toBeVisible()
+    expect(screen.getByText("WRITER")).toBeVisible()
     expect(screen.queryByText("ADMIN")).not.toBeInTheDocument()
   })
 

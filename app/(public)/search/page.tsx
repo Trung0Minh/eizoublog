@@ -14,9 +14,10 @@ import {
   type SearchResult,
 } from "@/lib/search"
 import { buildMetadata } from "@/lib/seo"
+import { prisma } from "@/lib/prisma"
 
 interface SearchPageProps {
-  searchParams: Promise<{ page?: string; q?: string }>
+  searchParams: Promise<{ page?: string; q?: string; category?: string; tag?: string }>
 }
 
 const PAGE_SIZE = 10
@@ -89,67 +90,147 @@ function SearchResultCard({ result }: { result: SearchResult }) {
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const { page: pageParam, q } = await searchParams
+  const [{ page: pageParam, q, category, tag }, categories, tags] = await Promise.all([
+    searchParams,
+    prisma.category.findMany({
+      orderBy: { name: "asc" },
+      select: { name: true, slug: true },
+    }),
+    prisma.tag.findMany({
+      orderBy: { name: "asc" },
+      select: { name: true, slug: true },
+    }),
+  ])
+
   const query = (q ?? "").trim()
   const page = parsePage(pageParam)
   const tsQuery = buildSearchQuery(query)
 
-  if (!query || !tsQuery) {
-    return (
-      <PageContainer className="py-10">
-        <ScrollReveal>
-          <h1 className="text-[32px] font-bold leading-tight tracking-tight">
-            <TextReveal text="Tìm kiếm" />
-          </h1>
-          <div className="mt-8">
-            <EmptySearchState query={query} />
-          </div>
-        </ScrollReveal>
-      </PageContainer>
-    )
-  }
+  let results: SearchResult[] = []
+  let total = 0
 
-  const { results, total } = await getCachedSearchResults(
-    tsQuery,
-    page,
-    PAGE_SIZE,
-  )
+  if (query && tsQuery) {
+    const searchData = await getCachedSearchResults(
+      tsQuery,
+      page,
+      PAGE_SIZE,
+      category,
+      tag,
+    )
+    results = searchData.results
+    total = searchData.total
+  }
 
   return (
     <PageContainer className="py-10">
-      <SearchPageTracker query={query} />
+      {query && <SearchPageTracker query={query} />}
+      
       <ScrollReveal>
         <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-editorial">
           Tìm kiếm kho lưu trữ
         </p>
         <h1 className="mt-2 text-[32px] font-bold leading-tight tracking-tight">
-          <TextReveal text={`Kết quả cho "${query}"`} />
+          <TextReveal text={query ? `Kết quả cho "${query}"` : "Tìm kiếm"} />
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Tìm thấy {total} kết quả
-        </p>
-      </ScrollReveal>
-
-      <ScrollReveal delay={0.2}>
-        <div className="mt-8">
-        {results.length === 0 ? (
-          <EmptySearchState query={query} />
-        ) : (
-          <div>
-            {results.map((result) => (
-              <SearchResultCard key={result.id} result={result} />
-            ))}
-          </div>
+        {query && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            Tìm thấy {total} kết quả
+          </p>
         )}
-        </div>
-
-        <Pagination
-          page={page}
-          pageSize={PAGE_SIZE}
-          query={{ q: query }}
-          total={total}
-        />
       </ScrollReveal>
+
+      {/* Beautiful Search Form with Category & Tag Filters */}
+      <ScrollReveal delay={0.1}>
+        <div className="mt-8 mb-10 rounded-[24px] border-[2px] border-border-default bg-background/80 backdrop-blur-md p-6 sm:p-8 shadow-sm">
+          <form action="/search" method="GET" className="flex flex-col gap-4 md:flex-row md:items-end">
+            <div className="flex-1 space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-wider text-text-tertiary" htmlFor="search-q">
+                Từ khóa tìm kiếm
+              </label>
+              <input
+                id="search-q"
+                name="q"
+                type="text"
+                defaultValue={query}
+                placeholder="Nhập từ khóa tìm kiếm..."
+                className="w-full h-10 rounded-[12px] border-[2px] border-border-default bg-background px-4 text-[14px] focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all"
+              />
+            </div>
+
+            <div className="w-full md:w-[200px] space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-wider text-text-tertiary" htmlFor="search-category">
+                Danh mục
+              </label>
+              <select
+                id="search-category"
+                name="category"
+                defaultValue={category ?? ""}
+                className="w-full h-10 rounded-[12px] border-[2px] border-border-default bg-background px-3 text-[14px] focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all cursor-pointer"
+              >
+                <option value="">Tất cả danh mục</option>
+                {categories.map((c) => (
+                  <option key={c.slug} value={c.slug}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="w-full md:w-[200px] space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-wider text-text-tertiary" htmlFor="search-tag">
+                Thẻ
+              </label>
+              <select
+                id="search-tag"
+                name="tag"
+                defaultValue={tag ?? ""}
+                className="w-full h-10 rounded-[12px] border-[2px] border-border-default bg-background px-3 text-[14px] focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all cursor-pointer"
+              >
+                <option value="">Tất cả thẻ</option>
+                {tags.map((t) => (
+                  <option key={t.slug} value={t.slug}>
+                    #{t.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <button
+              type="submit"
+              className="h-10 rounded-full bg-accent hover:bg-accent/95 px-6 font-display font-bold text-white text-[14px] tracking-wide shadow-sm hover:shadow-md transition-all flex items-center justify-center shrink-0"
+            >
+              Tìm kiếm
+            </button>
+          </form>
+        </div>
+      </ScrollReveal>
+
+      {query ? (
+        <ScrollReveal delay={0.2}>
+          <div>
+          {results.length === 0 ? (
+            <EmptySearchState query={query} />
+          ) : (
+            <div>
+              {results.map((result) => (
+                <SearchResultCard key={result.id} result={result} />
+              ))}
+            </div>
+          )}
+          </div>
+
+          <Pagination
+            page={page}
+            pageSize={PAGE_SIZE}
+            query={{ q: query, category, tag }}
+            total={total}
+          />
+        </ScrollReveal>
+      ) : (
+        <ScrollReveal delay={0.2}>
+          <EmptySearchState query={query} />
+        </ScrollReveal>
+      )}
     </PageContainer>
   )
 }
