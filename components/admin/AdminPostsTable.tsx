@@ -2,7 +2,7 @@
 
 import { Archive, ArchiveRestore, ExternalLink, Trash2 } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import { useState } from "react"
 
 import {
@@ -36,13 +36,11 @@ function getApiError(value: unknown) {
   return "Something went wrong"
 }
 
-import { useSearchParams } from "next/navigation"
-
 export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const currentSort = searchParams.get("sort") || "latest"
   const currentStatus = searchParams.get("status")
+  const [visiblePosts, setVisiblePosts] = useState(posts)
 
   const createSortLink = (sortType: string) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -63,11 +61,30 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
   const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false)
   const [bulkArchiveConfirm, setBulkArchiveConfirm] = useState(false)
 
+  const keepStatusInCurrentFilter = (
+    status: AdminPost["status"],
+  ) => !currentStatus || currentStatus === status
+
+  const removePostsLocally = (ids: Set<string>) => {
+    setVisiblePosts((current) => current.filter((post) => !ids.has(post.id)))
+  }
+
+  const updatePostStatusesLocally = (
+    ids: Set<string>,
+    status: AdminPost["status"],
+  ) => {
+    setVisiblePosts((current) =>
+      current
+        .map((post) => (ids.has(post.id) ? { ...post, status } : post))
+        .filter((post) => keepStatusInCurrentFilter(post.status)),
+    )
+  }
+
   const toggleSelectAll = () => {
-    if (selectedIds.size === posts.length) {
+    if (selectedIds.size === visiblePosts.length) {
       setSelectedIds(new Set())
     } else {
-      setSelectedIds(new Set(posts.map((p) => p.id)))
+      setSelectedIds(new Set(visiblePosts.map((p) => p.id)))
     }
   }
 
@@ -91,10 +108,18 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
       if (!response.ok) {
         throw new Error(getApiError(result))
       }
+      const selectedIdSnapshot = new Set(selectedIds)
+      if (action === "DELETE") {
+        removePostsLocally(selectedIdSnapshot)
+      } else {
+        updatePostStatusesLocally(
+          selectedIdSnapshot,
+          action === "ARCHIVE" ? "ARCHIVED" : "DRAFT",
+        )
+      }
       setSelectedIds(new Set())
       setBulkDeleteConfirm(false)
       setBulkArchiveConfirm(false)
-      router.refresh()
     } catch (error) {
       alert(error instanceof Error ? error.message : "Bulk action failed")
     } finally {
@@ -114,7 +139,7 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
         throw new Error(getApiError(result))
       }
 
-      router.refresh()
+      updatePostStatusesLocally(new Set([post.id]), "ARCHIVED")
       setArchiveTarget(null)
     } catch (error) {
       alert(error instanceof Error ? error.message : "Failed to archive post")
@@ -135,7 +160,7 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
         throw new Error(getApiError(result))
       }
 
-      router.refresh()
+      updatePostStatusesLocally(new Set([post.id]), "DRAFT")
       setArchiveTarget(null)
     } catch (error) {
       alert(error instanceof Error ? error.message : "Failed to restore post")
@@ -156,7 +181,7 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
         throw new Error(getApiError(result))
       }
 
-      router.refresh()
+      removePostsLocally(new Set([post.id]))
       setDeleteTarget(null)
     } catch (error) {
       alert(error instanceof Error ? error.message : "Failed to delete post")
@@ -165,7 +190,7 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
     }
   }
 
-  if (posts.length === 0) {
+  if (visiblePosts.length === 0) {
     return (
       <div className="rounded-[8px] border border-dashed p-8 text-center text-sm text-muted-foreground">
         No posts found for this filter.
@@ -218,7 +243,7 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
               <input
                 type="checkbox"
                 className="h-4 w-4 rounded border-border-default text-accent focus:ring-accent"
-                checked={selectedIds.size === posts.length && posts.length > 0}
+                checked={selectedIds.size === visiblePosts.length && visiblePosts.length > 0}
                 onChange={toggleSelectAll}
               />
             </div>
@@ -243,7 +268,7 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
           </div>
 
           <div className="flex flex-col">
-            {posts.map((post) => {
+            {visiblePosts.map((post) => {
               const statusLabel =
                 post.status === "PUBLISHED"
                   ? "Published"

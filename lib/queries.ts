@@ -871,13 +871,12 @@ export const getCachedAdminPosts = unstable_cache(
     const statusFilter = status
       ? Prisma.sql`WHERE p.status::text = ${status}`
       : Prisma.empty
-    const orderBy =
-      sort === "oldest"
-        ? Prisma.sql`ORDER BY "publishedAt" ASC NULLS LAST, "updatedAt" ASC`
-        : sort === "comments"
-          ? Prisma.sql`ORDER BY "commentCount" DESC, "publishedAt" DESC NULLS LAST`
-          : Prisma.sql`ORDER BY "publishedAt" DESC NULLS FIRST, "updatedAt" DESC`
-    const rows = await prisma.$queryRaw<AdminPostRow[]>`
+    const chronologicalOrderBy = sort === "oldest"
+      ? Prisma.sql`ORDER BY "publishedAt" ASC NULLS LAST, "updatedAt" ASC`
+      : Prisma.sql`ORDER BY "publishedAt" DESC NULLS FIRST, "updatedAt" DESC`
+    const commentsOrderBy = Prisma.sql`ORDER BY "commentCount" DESC, "publishedAt" DESC NULLS LAST`
+    const rows = sort === "comments"
+      ? await prisma.$queryRaw<AdminPostRow[]>`
       WITH filtered AS (
         SELECT
           p.id,
@@ -901,12 +900,48 @@ export const getCachedAdminPosts = unstable_cache(
       paged AS (
         SELECT *
         FROM filtered
-        ${orderBy}
+        ${commentsOrderBy}
         LIMIT ${pageSize} OFFSET ${offset}
       )
       SELECT counted."totalCount", paged.*
       FROM counted
       LEFT JOIN paged ON TRUE
+    `
+      : await prisma.$queryRaw<AdminPostRow[]>`
+      WITH filtered AS (
+        SELECT
+          p.id,
+          p.title,
+          p.slug,
+          p.status::text AS status,
+          p."publishedAt",
+          p."updatedAt",
+          u.name AS "authorName",
+          u.username AS "authorUsername"
+        FROM posts p
+        JOIN users u ON u.id = p."authorId"
+        ${statusFilter}
+      ),
+      counted AS (
+        SELECT COUNT(*) AS "totalCount" FROM filtered
+      ),
+      paged AS (
+        SELECT *
+        FROM filtered
+        ${chronologicalOrderBy}
+        LIMIT ${pageSize} OFFSET ${offset}
+      )
+      SELECT
+        counted."totalCount",
+        p.*,
+        COALESCE(comment_counts.count, 0) AS "commentCount"
+      FROM counted
+      LEFT JOIN paged p ON TRUE
+      LEFT JOIN LATERAL (
+        SELECT COUNT(*)::int AS count
+        FROM comments c
+        WHERE c."postId" = p.id
+      ) comment_counts ON p.id IS NOT NULL
     `
     const posts: AdminPostListItem[] = []
 

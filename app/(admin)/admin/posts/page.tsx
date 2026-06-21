@@ -4,7 +4,6 @@ import Link from "next/link"
 
 import { AdminPageHeader } from "@/components/admin/AdminPrimitives"
 import { AdminPostsTable } from "@/components/admin/AdminPostsTable"
-import { PostSortTabs } from "@/components/posts/PostSortTabs"
 import { Pagination } from "@/components/ui/Pagination"
 import {
   getCachedAdminDashboardStats,
@@ -57,6 +56,12 @@ export default async function AdminPostsPage({
     "/admin/posts?status=DRAFT": `Drafts (${counts.draftPosts})`,
     "/admin/posts?status=PUBLISHED": `Published (${counts.publishedPosts})`,
   }
+  const tableStateKey = [
+    page,
+    status ?? "all",
+    sort,
+    posts.map((post) => `${post.id}:${post.status}`).join(","),
+  ].join("|")
 
   return (
     <div>
@@ -112,7 +117,7 @@ export default async function AdminPostsPage({
       </div>
 
       <ScrollReveal index={0} className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6">
-        <AdminPostsTable posts={posts} />
+        <AdminPostsTable key={tableStateKey} posts={posts} />
 
         <Pagination
           page={page}

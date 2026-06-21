@@ -111,9 +111,9 @@ describe("admin client components", () => {
     })
   })
 
-  it("deletes posts through the shared posts API and refreshes", async () => {
+  it("deletes posts through the shared posts API and removes the row locally", async () => {
     const user = userEvent.setup()
-    const fetchMock = vi.fn().mockResolvedValue(okResponse())
+    const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(okResponse()))
     vi.stubGlobal("fetch", fetchMock)
 
     render(
@@ -149,13 +149,14 @@ describe("admin client components", () => {
       method: "DELETE",
     })
     await waitFor(() => {
-      expect(routerMocks.refresh).toHaveBeenCalled()
+      expect(screen.queryByText("Published post")).toBeNull()
     })
+    expect(routerMocks.refresh).not.toHaveBeenCalled()
   })
 
-  it("archives and restores posts from the admin posts table", async () => {
+  it("archives and restores posts from the admin posts table without a full refresh", async () => {
     const user = userEvent.setup()
-    const fetchMock = vi.fn().mockResolvedValue(okResponse())
+    const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(okResponse()))
     vi.stubGlobal("fetch", fetchMock)
 
     render(
@@ -196,21 +197,25 @@ describe("admin client components", () => {
     expect(fetchMock).toHaveBeenCalledWith("/api/posts/post-1/archive", {
       method: "POST",
     })
+    await waitFor(() => {
+      expect(screen.getAllByText("Archived")).toHaveLength(2)
+    })
 
     await user.click(
-      screen.getByRole("button", { name: /restore post to draft/i }),
+      screen.getAllByRole("button", { name: /restore post to draft/i })[0],
     )
     expect(screen.getByRole("heading", { name: "Restore post?" })).toBeVisible()
     await user.click(
       within(screen.getByRole("heading", { name: "Restore post?" }).closest("div")!)
         .getByRole("button", { name: "Restore post" }),
     )
-    expect(fetchMock).toHaveBeenCalledWith("/api/posts/post-2/archive", {
+    expect(fetchMock).toHaveBeenCalledWith("/api/posts/post-1/archive", {
       method: "DELETE",
     })
     await waitFor(() => {
-      expect(routerMocks.refresh).toHaveBeenCalled()
+      expect(screen.getAllByText("Archived")).toHaveLength(1)
     })
+    expect(routerMocks.refresh).not.toHaveBeenCalled()
   })
 
   it("sends writer invites and resets the email on success", async () => {

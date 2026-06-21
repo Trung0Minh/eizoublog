@@ -524,6 +524,55 @@ describe("cached Prisma query helpers", () => {
     expect(rawSql).toContain('ORDER BY "commentCount" DESC, "publishedAt" DESC NULLS LAST')
   })
 
+  it("defers admin post comment counts until after pagination for latest and oldest sorts", async () => {
+    mocks.prisma.$queryRaw.mockResolvedValue([
+      {
+        authorName: null,
+        authorUsername: null,
+        commentCount: null,
+        id: null,
+        publishedAt: null,
+        slug: null,
+        status: null,
+        title: null,
+        totalCount: BigInt(0),
+        updatedAt: null,
+      },
+    ])
+
+    await getCachedAdminPosts(1, undefined, 20, "latest")
+    await getCachedAdminPosts(1, undefined, 20, "oldest")
+    await getCachedAdminPosts(1, undefined, 20, "comments")
+
+    const [latestCall, oldestCall, commentsCall] = mocks.prisma.$queryRaw.mock.calls.map(
+      (call) =>
+        call
+          .flatMap((value) => {
+            if (
+              typeof value === "object" &&
+              value !== null &&
+              "strings" in value &&
+              Array.isArray(value.strings)
+            ) {
+              return value.strings.map(String)
+            }
+
+            return [String(value)]
+          })
+          .join("\n"),
+    )
+
+    expect(latestCall).toContain("JOIN paged p")
+    expect(latestCall).toContain("WHERE c.\"postId\" = p.id")
+    expect(latestCall).not.toContain("COUNT(c.id) AS \"commentCount\"")
+
+    expect(oldestCall).toContain("JOIN paged p")
+    expect(oldestCall).toContain("WHERE c.\"postId\" = p.id")
+    expect(oldestCall).not.toContain("COUNT(c.id) AS \"commentCount\"")
+
+    expect(commentsCall).toContain("COUNT(c.id) AS \"commentCount\"")
+  })
+
   it("caches admin writer and newsletter data with matching tags", async () => {
     mocks.prisma.user.findMany.mockResolvedValue([{ username: "writer" }])
     mocks.prisma.invite.findMany.mockResolvedValue([{ email: "new@example.com" }])
