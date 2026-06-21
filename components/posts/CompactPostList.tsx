@@ -58,7 +58,7 @@ export function CompactPostList({
                 hidden: { opacity: 0, y: 15 },
                 show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
               }}
-              className="grid grid-cols-[34px_64px_minmax(0,1fr)] gap-2 px-2 py-2 transition-colors hover:bg-subtle-bg/60 sm:grid-cols-[42px_84px_minmax(0,1fr)] sm:gap-3"
+              className="grid grid-cols-[34px_80px_minmax(0,1fr)] gap-2 px-2 py-2 transition-colors hover:bg-subtle-bg/60 sm:grid-cols-[42px_120px_minmax(0,1fr)] sm:gap-3"
               key={post.slug}
             >
               <div className="pt-1 text-center text-xs font-semibold text-text-tertiary">
@@ -66,20 +66,20 @@ export function CompactPostList({
               </div>
               <Link
                 aria-label={post.title}
-                className="block relative overflow-hidden rounded-[3px] border border-border-default bg-subtle-bg"
+                className="block relative overflow-hidden rounded-[3px] border border-border-default bg-subtle-bg w-[80px] h-[45px] aspect-[16/9] sm:w-[120px] sm:h-[68px]"
                 href={`/${post.slug}`}
               >
                 {post.coverUrl ? (
                   <img
                     alt={post.coverAlt ?? post.title}
-                    className="aspect-square h-16 w-16 object-cover sm:h-[84px] sm:w-[84px]"
+                    className="w-full h-full object-cover"
                     decoding="async"
                     loading="lazy"
                     src={(post.coverUrl || "").split("?")[0]}
                     style={getCoverStyle(post.coverUrl)}
                   />
                 ) : (
-                  <div className="flex aspect-square h-16 w-16 items-center justify-center text-[10px] uppercase tracking-[0.08em] text-text-tertiary sm:h-[84px] sm:w-[84px]">
+                  <div className="flex w-full h-full items-center justify-center text-[10px] uppercase tracking-[0.08em] text-text-tertiary">
                     Post
                   </div>
                 )}
