@@ -28,6 +28,7 @@ vi.mock("motion/react", () => {
             whileHover,
             whileTap,
             viewport,
+            whileInView,
             ...htmlProps
           } = props
           return React.createElement(prop, { ref, ...htmlProps }, children)
