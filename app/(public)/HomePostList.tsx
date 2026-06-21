@@ -4,22 +4,21 @@ import { getCachedPublishedPosts } from "@/lib/queries"
 import type { PostListSort } from "@/lib/postListSort"
 
 const PAGE_SIZE = 10
+type HomePostListData = Awaited<ReturnType<typeof getCachedPublishedPosts>>
 
 export async function HomePostList({
   archiveMonth,
+  data,
   page,
   sort,
 }: {
   archiveMonth?: string
+  data?: HomePostListData
   page: number
   sort: PostListSort
 }) {
-  const { posts, total } = await getCachedPublishedPosts(
-    page,
-    PAGE_SIZE,
-    sort,
-    archiveMonth,
-  )
+  const { posts, total } =
+    data ?? (await getCachedPublishedPosts(page, PAGE_SIZE, sort, archiveMonth))
 
   return (
     <div className="flex flex-col">

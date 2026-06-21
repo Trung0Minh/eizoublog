@@ -7,6 +7,7 @@ import { HomePostList } from "@/app/(public)/HomePostList"
 import { getCachedSidebarData, getCachedPublishedPosts } from "@/lib/queries"
 import { HeroCarousel } from "@/components/posts/HeroCarousel"
 import { parsePostListSort } from "@/lib/postListSort"
+import type { PostListSort } from "@/lib/postListSort"
 import { buildMetadata, getAppUrl } from "@/lib/seo"
 
 interface HomePageProps {
@@ -21,6 +22,31 @@ function parsePage(page?: string) {
 
 function parseArchiveMonth(archive?: string) {
   return archive && /^\d{4}-\d{2}$/.test(archive) ? archive : undefined
+}
+
+export async function getHomePageData({
+  archive,
+  page,
+  sort,
+}: {
+  archive?: string
+  page: number
+  sort: PostListSort
+}) {
+  const listDataPromise = getCachedPublishedPosts(page, 10, sort, archive)
+  const sidebarDataPromise = getCachedSidebarData()
+  const carouselPostsPromise =
+    page === 1 && sort === "latest" && !archive
+      ? listDataPromise.then(({ posts }) => posts.slice(0, 5))
+      : getCachedPublishedPosts(1, 5, "latest").then(({ posts }) => posts)
+
+  const [listData, sidebarData, carouselPosts] = await Promise.all([
+    listDataPromise,
+    sidebarDataPromise,
+    carouselPostsPromise,
+  ])
+
+  return { carouselPosts, listData, sidebarData }
 }
 
 export async function generateMetadata({
@@ -58,7 +84,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const sort = parsePostListSort(sortParam)
   const archive = parseArchiveMonth(archiveParam)
 
-  const { posts: carouselPosts } = await getCachedPublishedPosts(1, 5, "latest")
+  const { carouselPosts, listData, sidebarData } = await getHomePageData({
+    archive,
+    page,
+    sort,
+  })
 
   return (
     <PageContainer size="wide">
@@ -67,23 +97,30 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       </div>
       <div className="flex flex-col gap-12 lg:flex-row xl:gap-[48px]">
         <section className="flex-1 lg:w-[calc(100%-288px)] xl:w-[calc(100%-288px)] flex flex-col">
-          <HomePostList archiveMonth={archive} page={page} sort={sort} />
+          <HomePostList
+            archiveMonth={archive}
+            data={listData}
+            page={page}
+            sort={sort}
+          />
         </section>
-        <HomeSidebar />
+        <HomeSidebar data={sidebarData} />
       </div>
     </PageContainer>
   )
 }
 
-async function HomeSidebar() {
-  const { archives, categories, recentPosts } = await getCachedSidebarData()
-
+function HomeSidebar({
+  data,
+}: {
+  data: Awaited<ReturnType<typeof getCachedSidebarData>>
+}) {
   return (
     <Sidebar
-      archives={archives}
-      categories={categories}
+      archives={data.archives}
+      categories={data.categories}
       newsletter={<NewsletterForm />}
-      recentPosts={recentPosts}
+      recentPosts={data.recentPosts}
     />
   )
 }

@@ -43,7 +43,8 @@ describe("AuthorPage", () => {
       unobserve = vi.fn()
       disconnect = vi.fn()
     }
-    global.IntersectionObserver = MockIntersectionObserver as any
+    global.IntersectionObserver =
+      MockIntersectionObserver as unknown as typeof IntersectionObserver
   })
 
   it("shows only an uppercase ADMIN badge for admin profiles", async () => {
@@ -107,7 +108,7 @@ describe("AuthorPage", () => {
     )
 
     expect(mocks.getCachedAuthorPosts).toHaveBeenCalledWith(
-      "writer-1",
+      "mina",
       2,
       10,
       "comments",

@@ -468,7 +468,7 @@ export const getCachedPublishedPosts = unstable_cache(
     return getPublishedPostListByWhere(where, page, pageSize, sort)
   },
   ["published-posts"],
-  { revalidate: 60, tags: ["posts"] },
+  { revalidate: 300, tags: ["posts"] },
 )
 
 export const getCachedSidebarData = unstable_cache(
@@ -925,19 +925,29 @@ export const getCachedCategoryBySlug = unstable_cache(
 
 export const getCachedCategoryPosts = unstable_cache(
   async (
-    categoryId: string,
+    categorySlug: string,
     page: number,
     pageSize: number,
     sort: PostListSort = "latest",
   ) =>
     getPublishedPostListByWhere(
-      { categoryId, status: "PUBLISHED" },
+      {
+        category: {
+          is: {
+            OR: [
+              { slug: categorySlug },
+              { parent: { is: { slug: categorySlug } } },
+            ],
+          },
+        },
+        status: "PUBLISHED",
+      },
       page,
       pageSize,
       sort,
     ),
   ["category-posts"],
-  { revalidate: 60, tags: ["posts", "categories"] },
+  { revalidate: 300, tags: ["posts", "categories"] },
 )
 
 export const getCachedTagBySlug = unstable_cache(
@@ -952,7 +962,7 @@ export const getCachedTagBySlug = unstable_cache(
 
 export const getCachedTagPosts = unstable_cache(
   async (
-    tagId: string,
+    tagSlug: string,
     page: number,
     pageSize: number,
     sort: PostListSort = "latest",
@@ -960,14 +970,14 @@ export const getCachedTagPosts = unstable_cache(
     getPublishedPostListByWhere(
       {
         status: "PUBLISHED",
-        tags: { some: { tagId } },
+        tags: { some: { tag: { slug: tagSlug } } },
       },
       page,
       pageSize,
       sort,
     ),
   ["tag-posts"],
-  { revalidate: 60, tags: ["posts", "tags"] },
+  { revalidate: 300, tags: ["posts", "tags"] },
 )
 
 export const getCachedAuthorByUsername = unstable_cache(
@@ -982,7 +992,7 @@ export const getCachedAuthorByUsername = unstable_cache(
 
 export const getCachedAuthorPosts = unstable_cache(
   async (
-    authorId: string,
+    username: string,
     page: number,
     pageSize: number,
     sort: PostListSort = "latest",
@@ -990,8 +1000,8 @@ export const getCachedAuthorPosts = unstable_cache(
     getPublishedPostListByWhere(
       {
         OR: [
-          { authorId },
-          { coAuthors: { some: { userId: authorId } } },
+          { author: { username } },
+          { coAuthors: { some: { user: { username } } } },
         ],
         status: "PUBLISHED",
       },
@@ -1000,7 +1010,7 @@ export const getCachedAuthorPosts = unstable_cache(
       sort,
     ),
   ["author-posts"],
-  { revalidate: 60, tags: ["posts", "users"] },
+  { revalidate: 300, tags: ["posts", "users"] },
 )
 
 export const getCachedSearchResults = unstable_cache(

@@ -1,8 +1,6 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
-import { SearchX } from "lucide-react"
-
 import { PageContainer } from "@/components/layout/PageContainer"
 import { PostList } from "@/components/posts/PostList"
 import { PostSortTabs } from "@/components/posts/PostSortTabs"
@@ -50,13 +48,14 @@ export default async function TagPage({ params, searchParams }: TagPageProps) {
   ])
   const page = parsePage(pageParam)
   const sort = parsePostListSort(sortParam)
-  const tag = await getCachedTagBySlug(slug)
+  const [tag, { posts, total }] = await Promise.all([
+    getCachedTagBySlug(slug),
+    getCachedTagPosts(slug, page, PAGE_SIZE, sort),
+  ])
 
   if (!tag) {
     notFound()
   }
-
-  const { posts, total } = await getCachedTagPosts(tag.id, page, PAGE_SIZE, sort)
 
   return (
     <PageContainer>
@@ -79,7 +78,6 @@ export default async function TagPage({ params, searchParams }: TagPageProps) {
           {posts.length === 0 ? (
           <EmptyState
             description="There are no published posts with this tag yet. Check back later!"
-            icon={SearchX}
             title="No posts found"
           />
         ) : (

@@ -1,16 +1,16 @@
 "use client"
 
 import { motion } from "motion/react"
-import { LucideIcon } from "lucide-react"
+import { type LucideIcon, SearchX } from "lucide-react"
 
 interface EmptyStateProps {
-  icon: LucideIcon
+  icon?: LucideIcon
   title: string
   description?: string
   className?: string
 }
 
-export function EmptyState({ icon: Icon, title, description, className }: EmptyStateProps) {
+export function EmptyState({ icon: Icon = SearchX, title, description, className }: EmptyStateProps) {
   return (
     <div className={`flex flex-col items-center justify-center rounded-[32px] bg-subtle-bg/40 px-8 py-24 text-center ${className || ''}`}>
       <motion.div

@@ -133,7 +133,7 @@ describe("cached Prisma query helpers", () => {
     expect(select.author.select).not.toHaveProperty("email")
     expect(mocks.cacheEntries).toContainEqual({
       keyParts: ["published-posts"],
-      options: { revalidate: 60, tags: ["posts"] },
+      options: { revalidate: 300, tags: ["posts"] },
     })
   })
 
@@ -576,7 +576,7 @@ describe("cached Prisma query helpers", () => {
       name: "Production",
       slug: "production",
     })
-    await expect(getCachedCategoryPosts("category-1", 2, 10, "comments")).resolves.toEqual({
+    await expect(getCachedCategoryPosts("production", 2, 10, "comments")).resolves.toEqual({
       posts: [{ slug: "essay" }],
       total: 1,
     })
@@ -585,12 +585,23 @@ describe("cached Prisma query helpers", () => {
       select: { description: true, id: true, name: true, slug: true },
       where: { slug: "production" },
     })
+    expect(mocks.prisma.category.findMany).not.toHaveBeenCalled()
     expect(mocks.prisma.post.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         orderBy: [{ comments: { _count: "desc" } }, { publishedAt: "desc" }],
         skip: 10,
         take: 10,
-        where: { categoryId: "category-1", status: "PUBLISHED" },
+        where: {
+          category: {
+            is: {
+              OR: [
+                { slug: "production" },
+                { parent: { is: { slug: "production" } } },
+              ],
+            },
+          },
+          status: "PUBLISHED",
+        },
       }),
     )
     expect(mocks.cacheEntries).toContainEqual({
@@ -599,7 +610,7 @@ describe("cached Prisma query helpers", () => {
     })
     expect(mocks.cacheEntries).toContainEqual({
       keyParts: ["category-posts"],
-      options: { revalidate: 60, tags: ["posts", "categories"] },
+      options: { revalidate: 300, tags: ["posts", "categories"] },
     })
   })
 
@@ -617,7 +628,7 @@ describe("cached Prisma query helpers", () => {
       name: "Sakuga",
       slug: "sakuga",
     })
-    await expect(getCachedTagPosts("tag-1", 1, 10, "oldest")).resolves.toEqual({
+    await expect(getCachedTagPosts("sakuga", 1, 10, "oldest")).resolves.toEqual({
       posts: [{ slug: "essay" }],
       total: 1,
     })
@@ -627,7 +638,7 @@ describe("cached Prisma query helpers", () => {
         orderBy: [{ publishedAt: "asc" }, { updatedAt: "asc" }],
         where: {
           status: "PUBLISHED",
-          tags: { some: { tagId: "tag-1" } },
+          tags: { some: { tag: { slug: "sakuga" } } },
         },
       }),
     )
@@ -637,7 +648,7 @@ describe("cached Prisma query helpers", () => {
     })
     expect(mocks.cacheEntries).toContainEqual({
       keyParts: ["tag-posts"],
-      options: { revalidate: 60, tags: ["posts", "tags"] },
+      options: { revalidate: 300, tags: ["posts", "tags"] },
     })
   })
 
@@ -656,7 +667,7 @@ describe("cached Prisma query helpers", () => {
     await expect(getCachedAuthorByUsername("mina")).resolves.toEqual(
       expect.objectContaining({ id: "user-1", username: "mina" }),
     )
-    await expect(getCachedAuthorPosts("user-1", 1, 10, "comments")).resolves.toEqual({
+    await expect(getCachedAuthorPosts("mina", 1, 10, "comments")).resolves.toEqual({
       posts: [{ slug: "essay" }],
       total: 1,
     })
@@ -666,8 +677,8 @@ describe("cached Prisma query helpers", () => {
         orderBy: [{ comments: { _count: "desc" } }, { publishedAt: "desc" }],
         where: {
           OR: [
-            { authorId: "user-1" },
-            { coAuthors: { some: { userId: "user-1" } } },
+            { author: { username: "mina" } },
+            { coAuthors: { some: { user: { username: "mina" } } } },
           ],
           status: "PUBLISHED",
         },
@@ -679,7 +690,7 @@ describe("cached Prisma query helpers", () => {
     })
     expect(mocks.cacheEntries).toContainEqual({
       keyParts: ["author-posts"],
-      options: { revalidate: 60, tags: ["posts", "users"] },
+      options: { revalidate: 300, tags: ["posts", "users"] },
     })
   })
 

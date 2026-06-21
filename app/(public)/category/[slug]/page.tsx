@@ -1,8 +1,6 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
-import { SearchX } from "lucide-react"
-
 import { PageContainer } from "@/components/layout/PageContainer"
 import { PostList } from "@/components/posts/PostList"
 import { PostSortTabs } from "@/components/posts/PostSortTabs"
@@ -57,18 +55,14 @@ export default async function CategoryPage({
   ])
   const page = parsePage(pageParam)
   const sort = parsePostListSort(sortParam)
-  const category = await getCachedCategoryBySlug(slug)
+  const [category, { posts, total }] = await Promise.all([
+    getCachedCategoryBySlug(slug),
+    getCachedCategoryPosts(slug, page, PAGE_SIZE, sort),
+  ])
 
   if (!category) {
     notFound()
   }
-
-  const { posts, total } = await getCachedCategoryPosts(
-    category.id,
-    page,
-    PAGE_SIZE,
-    sort,
-  )
 
   return (
     <PageContainer>
@@ -96,7 +90,6 @@ export default async function CategoryPage({
           {posts.length === 0 ? (
           <EmptyState
             description="There are no published posts in this category yet. Check back later!"
-            icon={SearchX}
             title="No posts found"
           />
         ) : (

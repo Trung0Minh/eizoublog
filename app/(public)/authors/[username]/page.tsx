@@ -76,18 +76,14 @@ export default async function AuthorPage({
   const username = decodeURIComponent(rawUsername)
   const page = parsePage(pageParam)
   const sort = parsePostListSort(sortParam)
-  const author = await getCachedAuthorByUsername(username)
+  const [author, { posts, total }] = await Promise.all([
+    getCachedAuthorByUsername(username),
+    getCachedAuthorPosts(username, page, PAGE_SIZE, sort),
+  ])
 
   if (!author) {
     notFound()
   }
-
-  const { posts, total } = await getCachedAuthorPosts(
-    author.id,
-    page,
-    PAGE_SIZE,
-    sort,
-  )
 
   return (
     <PageContainer>

@@ -34,6 +34,7 @@ describe("taxonomy pages", () => {
 
   it("passes shared post sorting through to category post queries", async () => {
     mocks.getCachedCategoryBySlug.mockResolvedValue({
+      children: [{ id: "child-1" }],
       description: null,
       id: "category-1",
       name: "Production",
@@ -48,7 +49,7 @@ describe("taxonomy pages", () => {
     )
 
     expect(mocks.getCachedCategoryPosts).toHaveBeenCalledWith(
-      "category-1",
+      "production",
       2,
       10,
       "oldest",
@@ -70,7 +71,7 @@ describe("taxonomy pages", () => {
     )
 
     expect(mocks.getCachedTagPosts).toHaveBeenCalledWith(
-      "tag-1",
+      "sakuga",
       1,
       10,
       "comments",
