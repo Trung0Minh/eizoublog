@@ -2,10 +2,25 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
+  cacheEntries: [] as Array<{
+    keyParts: string[]
+    options: { revalidate?: number; tags?: string[] }
+  }>,
   userFindUnique: vi.fn(),
+  unstableCache: vi.fn(
+    <Args extends unknown[], Result>(
+      callback: (...args: Args) => Promise<Result>,
+      keyParts: string[],
+      options: { revalidate?: number; tags?: string[] },
+    ) => {
+      mocks.cacheEntries.push({ keyParts, options })
+      return callback
+    },
+  ),
 }))
 
 vi.mock("@/lib/auth", () => ({ auth: mocks.auth }))
+vi.mock("next/cache", () => ({ unstable_cache: mocks.unstableCache }))
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     user: {
@@ -71,6 +86,10 @@ describe("getActiveSession", () => {
         username: true,
       },
       where: { id: "writer-1" },
+    })
+    expect(mocks.cacheEntries).toContainEqual({
+      keyParts: ["active-session-user"],
+      options: { revalidate: 60, tags: ["users"] },
     })
   })
 

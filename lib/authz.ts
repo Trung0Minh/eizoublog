@@ -1,5 +1,6 @@
 import type { Role } from "@prisma/client"
 import type { Session } from "next-auth"
+import { unstable_cache } from "next/cache"
 
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
@@ -18,6 +19,23 @@ export interface ActiveSession {
   user: ActiveSessionUser
 }
 
+export const getCachedActiveSessionUser = unstable_cache(
+  async (userId: string) =>
+    prisma.user.findUnique({
+      select: {
+        avatarUrl: true,
+        email: true,
+        id: true,
+        name: true,
+        role: true,
+        username: true,
+      },
+      where: { id: userId },
+    }),
+  ["active-session-user"],
+  { revalidate: 60, tags: ["users"] },
+)
+
 export async function getActiveSession(
   allowedRoles?: readonly Role[],
 ): Promise<ActiveSession | null> {
@@ -27,17 +45,7 @@ export async function getActiveSession(
     return null
   }
 
-  const user = await prisma.user.findUnique({
-    select: {
-      avatarUrl: true,
-      email: true,
-      id: true,
-      name: true,
-      role: true,
-      username: true,
-    },
-    where: { id: session.user.id },
-  })
+  const user = await getCachedActiveSessionUser(session.user.id)
 
   if (!user || user.role === "REVOKED") {
     return null

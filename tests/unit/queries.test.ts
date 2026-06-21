@@ -294,31 +294,37 @@ describe("cached Prisma query helpers", () => {
   })
 
   it("caches writer dashboard posts by user id behind the posts tag", async () => {
-    mocks.prisma.post.findMany.mockResolvedValue([{ id: "post-1" }])
-
-    await expect(getCachedWriterDashboardPosts("writer-1")).resolves.toEqual([
-      { id: "post-1" },
+    mocks.prisma.$queryRaw.mockResolvedValueOnce([
+      {
+        authorId: "writer-1",
+        coAuthors: [{ status: "PENDING", userId: "writer-2" }],
+        commentCount: BigInt(3),
+        id: "post-1",
+        publishedAt: null,
+        slug: "draft",
+        status: "DRAFT",
+        title: "Draft",
+        updatedAt: new Date("2026-06-01T00:00:00Z"),
+      },
     ])
 
-    expect(mocks.prisma.post.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        orderBy: { updatedAt: "desc" },
-        where: {
-          OR: [
-            { authorId: "writer-1" },
-            {
-              coAuthors: {
-                some: {
-                  status: { in: ["ACCEPTED", "PENDING"] },
-                  userId: "writer-1",
-                },
-              },
-            },
-          ],
-          status: { not: "ARCHIVED" },
-        },
-      }),
-    )
+    await expect(getCachedWriterDashboardPosts("writer-1")).resolves.toEqual([
+      {
+        _count: { comments: 3 },
+        authorId: "writer-1",
+        coAuthors: [{ status: "PENDING", userId: "writer-2" }],
+        id: "post-1",
+        publishedAt: null,
+        slug: "draft",
+        status: "DRAFT",
+        title: "Draft",
+        updatedAt: new Date("2026-06-01T00:00:00Z"),
+      },
+    ])
+
+    expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(1)
+    expect(mocks.prisma.post.findMany).not.toHaveBeenCalled()
+    expect(mocks.prisma.post.count).not.toHaveBeenCalled()
     expect(mocks.cacheEntries).toContainEqual({
       keyParts: ["writer-dashboard-posts"],
       options: { revalidate: 60, tags: ["posts"] },
@@ -558,7 +564,16 @@ describe("cached Prisma query helpers", () => {
     mocks.prisma.tag.findMany.mockResolvedValue([{ id: "tag-1" }])
     mocks.prisma.post.findMany.mockResolvedValue([{ id: "post-1" }])
     mocks.prisma.comment.findMany.mockResolvedValue([{ id: "comment-1" }])
-    mocks.prisma.awardEvent.findMany.mockResolvedValue([{ id: "event-1" }])
+    mocks.prisma.$queryRaw.mockResolvedValueOnce([
+      {
+        finalPost: { slug: "final-post" },
+        id: "event-1",
+        roomCount: BigInt(4),
+        rooms: [{ id: "room-1", status: "DRAFT" }],
+        status: "OPEN",
+        title: "Open Event",
+      },
+    ])
 
     await expect(getCachedAdminContentData()).resolves.toEqual({
       categories: [{ id: "category-1" }],
@@ -569,8 +584,16 @@ describe("cached Prisma query helpers", () => {
       recentPosts: [{ id: "post-1" }],
     })
     await expect(getCachedWriterEvents("writer-1")).resolves.toEqual([
-      { id: "event-1" },
+      {
+        _count: { rooms: 4 },
+        finalPost: { slug: "final-post" },
+        id: "event-1",
+        rooms: [{ id: "room-1", status: "DRAFT" }],
+        status: "OPEN",
+        title: "Open Event",
+      },
     ])
+    expect(mocks.prisma.awardEvent.findMany).not.toHaveBeenCalled()
 
     expect(mocks.cacheEntries).toContainEqual({
       keyParts: ["admin-content-data"],

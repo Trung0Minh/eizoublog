@@ -1,5 +1,12 @@
 import { unstable_cache } from "next/cache"
-import { Prisma, type CommentStatus, type PostStatus } from "@prisma/client"
+import {
+  Prisma,
+  type AwardEventRoomStatus,
+  type AwardEventStatus,
+  type CoAuthorStatus,
+  type CommentStatus,
+  type PostStatus,
+} from "@prisma/client"
 
 import {
   adminAwardEventDetailSelect,
@@ -100,18 +107,6 @@ const editorWriterSelect = {
   username: true,
 } satisfies Prisma.UserSelect
 
-const writerDashboardPostSelect = {
-  _count: { select: { comments: true } },
-  authorId: true,
-  coAuthors: { select: { status: true, userId: true } },
-  id: true,
-  publishedAt: true,
-  slug: true,
-  status: true,
-  title: true,
-  updatedAt: true,
-} satisfies Prisma.PostSelect
-
 const profileUserSelect = {
   avatarUrl: true,
   bio: true,
@@ -195,17 +190,6 @@ const adminDashboardRecentCommentSelect = {
   id: true,
   post: { select: { slug: true, title: true } },
 } satisfies Prisma.CommentSelect
-
-const writerAwardEventSelect = {
-  _count: { select: { rooms: true } },
-  finalPost: { select: { slug: true } },
-  id: true,
-  rooms: {
-    select: { id: true, status: true },
-  },
-  status: true,
-  title: true,
-} satisfies Prisma.AwardEventSelect
 
 export const publishedPostDetailSelect = {
   _count: { select: { comments: true } },
@@ -333,6 +317,27 @@ export interface AdminCommentListItem {
   status: CommentStatus
 }
 
+export interface WriterDashboardPostItem {
+  _count: { comments: number }
+  authorId: string
+  coAuthors: { status: CoAuthorStatus; userId: string }[]
+  id: string
+  publishedAt: Date | null
+  slug: string
+  status: PostStatus
+  title: string
+  updatedAt: Date
+}
+
+export interface WriterEventItem {
+  _count: { rooms: number }
+  finalPost: { slug: string } | null
+  id: string
+  rooms: { id: string; status: AwardEventRoomStatus }[]
+  status: AwardEventStatus
+  title: string
+}
+
 type DbCount = bigint | number | null | undefined
 
 interface AdminDashboardStatsRow {
@@ -388,6 +393,27 @@ interface PublishedPostListRow {
   totalCount: DbCount
 }
 
+interface WriterDashboardPostRow {
+  authorId: string | null
+  coAuthors: WriterDashboardPostItem["coAuthors"]
+  commentCount: DbCount
+  id: string | null
+  publishedAt: Date | null
+  slug: string | null
+  status: string | null
+  title: string | null
+  updatedAt: Date | null
+}
+
+interface WriterEventRow {
+  finalPost: WriterEventItem["finalPost"]
+  id: string | null
+  roomCount: DbCount
+  rooms: { id: string; status: string }[]
+  status: string | null
+  title: string | null
+}
+
 function countToNumber(value: DbCount) {
   if (typeof value === "bigint") {
     return Number(value)
@@ -414,6 +440,28 @@ function parseCommentStatus(value: string | null): CommentStatus {
   }
 
   throw new Error(`Unexpected comment status: ${String(value)}`)
+}
+
+function parseAwardEventStatus(value: string | null): AwardEventStatus {
+  if (
+    value === "DRAFT" ||
+    value === "OPEN" ||
+    value === "CLOSED" ||
+    value === "PUBLISHED" ||
+    value === "ARCHIVED"
+  ) {
+    return value
+  }
+
+  throw new Error(`Unexpected award event status: ${String(value)}`)
+}
+
+function parseAwardEventRoomStatus(value: string): AwardEventRoomStatus {
+  if (value === "DRAFT" || value === "SUBMITTED") {
+    return value
+  }
+
+  throw new Error(`Unexpected award event room status: ${String(value)}`)
 }
 
 function getPublishedPostOrderSql(sort: PostListSort) {
@@ -701,22 +749,78 @@ export const getCachedEditorReferenceData = unstable_cache(
 )
 
 export const getCachedWriterDashboardPosts = unstable_cache(
-  async (userId: string) =>
-    prisma.post.findMany({
-      orderBy: { updatedAt: "desc" },
-      select: writerDashboardPostSelect,
-      where: {
-        OR: [
-          { authorId: userId },
-          {
-            coAuthors: {
-              some: { status: { in: ["ACCEPTED", "PENDING"] }, userId },
-            },
-          },
-        ],
-        status: { not: "ARCHIVED" },
-      },
-    }),
+  async (userId: string) => {
+    const rows = await prisma.$queryRaw<WriterDashboardPostRow[]>`
+      SELECT
+        p.id,
+        p."authorId",
+        p."publishedAt",
+        p.slug,
+        p.status::text AS status,
+        p.title,
+        p."updatedAt",
+        COALESCE(comment_counts.count, 0) AS "commentCount",
+        COALESCE(co_authors.items, '[]'::json) AS "coAuthors"
+      FROM posts p
+      LEFT JOIN LATERAL (
+        SELECT COUNT(*)::int AS count
+        FROM comments c
+        WHERE c."postId" = p.id
+      ) comment_counts ON TRUE
+      LEFT JOIN LATERAL (
+        SELECT json_agg(
+          json_build_object(
+            'status', pa.status::text,
+            'userId', pa."userId"
+          )
+          ORDER BY pa.order ASC
+        ) AS items
+        FROM post_authors pa
+        WHERE pa."postId" = p.id
+      ) co_authors ON TRUE
+      WHERE p.status::text <> 'ARCHIVED'
+        AND (
+          p."authorId" = ${userId}
+          OR EXISTS (
+            SELECT 1
+            FROM post_authors invited
+            WHERE invited."postId" = p.id
+              AND invited."userId" = ${userId}
+              AND invited.status::text IN ('ACCEPTED', 'PENDING')
+          )
+        )
+      ORDER BY p."updatedAt" DESC
+    `
+
+    return rows
+      .filter(
+        (row): row is WriterDashboardPostRow & {
+          authorId: string
+          id: string
+          slug: string
+          status: string
+          title: string
+          updatedAt: Date
+        } =>
+          row.authorId !== null &&
+          row.id !== null &&
+          row.slug !== null &&
+          row.status !== null &&
+          row.title !== null &&
+          row.updatedAt !== null,
+      )
+      .map((row): WriterDashboardPostItem => ({
+        _count: { comments: countToNumber(row.commentCount) },
+        authorId: row.authorId,
+        coAuthors: row.coAuthors,
+        id: row.id,
+        publishedAt: row.publishedAt,
+        slug: row.slug,
+        status: parsePostStatus(row.status),
+        title: row.title,
+        updatedAt: row.updatedAt,
+      }))
+  },
   ["writer-dashboard-posts"],
   { revalidate: 60, tags: ["posts"] },
 )
@@ -1036,18 +1140,61 @@ export const getCachedAdminEventsData = unstable_cache(
 )
 
 export const getCachedWriterEvents = unstable_cache(
-  async (userId: string) =>
-    prisma.awardEvent.findMany({
-      orderBy: { createdAt: "desc" },
-      select: {
-        ...writerAwardEventSelect,
-        rooms: {
-          select: { id: true, status: true },
-          where: { writerId: userId },
-        },
-      },
-      where: { status: { in: ["OPEN", "PUBLISHED"] } },
-    }),
+  async (userId: string) => {
+    const rows = await prisma.$queryRaw<WriterEventRow[]>`
+      SELECT
+        e.id,
+        CASE
+          WHEN final_post.slug IS NULL THEN NULL
+          ELSE json_build_object('slug', final_post.slug)
+        END AS "finalPost",
+        COALESCE(room_counts.count, 0) AS "roomCount",
+        COALESCE(writer_rooms.items, '[]'::json) AS rooms,
+        e.status::text AS status,
+        e.title
+      FROM award_events e
+      LEFT JOIN posts final_post ON final_post.id = e."finalPostId"
+      LEFT JOIN LATERAL (
+        SELECT COUNT(*)::int AS count
+        FROM award_event_rooms room_count
+        WHERE room_count."eventId" = e.id
+      ) room_counts ON TRUE
+      LEFT JOIN LATERAL (
+        SELECT json_agg(
+          json_build_object(
+            'id', room.id,
+            'status', room.status::text
+          )
+          ORDER BY room."updatedAt" DESC
+        ) AS items
+        FROM award_event_rooms room
+        WHERE room."eventId" = e.id
+          AND room."writerId" = ${userId}
+      ) writer_rooms ON TRUE
+      WHERE e.status::text IN ('OPEN', 'PUBLISHED')
+      ORDER BY e."createdAt" DESC
+    `
+
+    return rows
+      .filter(
+        (row): row is WriterEventRow & {
+          id: string
+          status: string
+          title: string
+        } => row.id !== null && row.status !== null && row.title !== null,
+      )
+      .map((row): WriterEventItem => ({
+        _count: { rooms: countToNumber(row.roomCount) },
+        finalPost: row.finalPost,
+        id: row.id,
+        rooms: row.rooms.map((room) => ({
+          id: room.id,
+          status: parseAwardEventRoomStatus(room.status),
+        })),
+        status: parseAwardEventStatus(row.status),
+        title: row.title,
+      }))
+  },
   ["writer-events"],
   { revalidate: 60, tags: ["award-events"] },
 )
