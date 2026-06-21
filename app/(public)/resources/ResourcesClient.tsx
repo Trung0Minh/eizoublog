@@ -62,6 +62,23 @@ function isAvatarLogo(logoPath: string) {
   return avatarLogos.some(name => logoPath.toLowerCase().includes(name))
 }
 
+const backfilledBlogResources: ResourceCard[] = [
+  {
+    url: "https://washiblog.wordpress.com/",
+    domain: "Washi's Blog",
+    logo: "/logos/washi-blog.svg",
+    description: "Blog cá nhân với tagline \"Good at Anime\", tập trung vào các bài viết, ghi chú và phân tích về anime từ góc nhìn của một cây bút lâu năm. Đây là nguồn tham khảo hữu ích khi cần thêm bối cảnh phê bình và quan sát chi tiết về các tác phẩm hoặc xu hướng trong cộng đồng anime.",
+    category: "Blog",
+  },
+  {
+    url: "https://animetudes.com/",
+    domain: "Animétudes",
+    logo: "/logos/animetudes.svg",
+    description: "Blog nghiên cứu về nghệ thuật và lịch sử hoạt hình, nổi bật với các series dài hơi về Mushi Pro, Tatsunoko, trường phái Kanada, TMS và nhiều bài dịch/phân tích chuyên sâu. Đây là nguồn rất giá trị cho các bài viết cần bối cảnh lịch sử, lý thuyết hoạt hình và nghiên cứu sakuga nghiêm túc.",
+    category: "Blog",
+  },
+]
+
 const defaultResources: ResourceCard[] = [
   // Blog / Editorial
   {
@@ -113,6 +130,7 @@ const defaultResources: ResourceCard[] = [
     description: "Cây bút phân tích tự do trên chuyên trang Anime Atelier. Tác giả Sarca nổi tiếng với những bài viết nghiên cứu sâu sắc về hậu trường sản xuất, phân tích phong cách nghệ thuật của các đạo diễn (như Shin Oonuma, Satoshi Mori), và các bài thảo luận về chất lượng diễn họa của các dự án anime nổi tiếng.",
     category: "Blog",
   },
+  ...backfilledBlogResources,
   // Database
   {
     url: "https://www.sakugabooru.com/",
@@ -203,17 +221,39 @@ const defaultResources: ResourceCard[] = [
   }
 ]
 
+function withMissingDefaultResources(resources: ResourceCard[]) {
+  const defaultUrls = new Set(defaultResources.map((resource) => resource.url))
+  const existingUrls = new Set(resources.map((resource) => resource.url))
+  const usesDefaultResourceSet = resources.some((resource) =>
+    defaultUrls.has(resource.url),
+  )
+
+  if (!usesDefaultResourceSet) {
+    return resources
+  }
+
+  return [
+    ...resources,
+    ...backfilledBlogResources.filter((resource) => !existingUrls.has(resource.url)),
+  ]
+}
+
 export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClientProps) {
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [draggedResourceIndex, setDraggedResourceIndex] = useState<number | null>(null)
 
-  const initialData: ResourcesData = initialPage?.content || {
-    title: "Nguồn tham khảo",
-    description: `Dưới đây là danh sách các trang web, thư viện lưu trữ và cộng đồng uy tín mà ${appName} thường xuyên tham khảo để thu thập thông tin, nghiên cứu chuyên sâu về hoạt hình và ngành công nghiệp anime.`,
-    resources: defaultResources
-  }
+  const initialData: ResourcesData = initialPage?.content
+    ? {
+        ...initialPage.content,
+        resources: withMissingDefaultResources(initialPage.content.resources ?? []),
+      }
+    : {
+        title: "Nguồn tham khảo",
+        description: `Dưới đây là danh sách các trang web, thư viện lưu trữ và cộng đồng uy tín mà ${appName} thường xuyên tham khảo để thu thập thông tin, nghiên cứu chuyên sâu về hoạt hình và ngành công nghiệp anime.`,
+        resources: defaultResources
+      }
 
   const [data, setData] = useState<ResourcesData>(initialData)
   const dataRef = useRef(data)

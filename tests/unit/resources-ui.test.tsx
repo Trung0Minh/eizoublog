@@ -102,4 +102,37 @@ describe("ResourcesClient", () => {
     })
     scrollBy.mockRestore()
   })
+
+  it("adds new default blog sources to saved default-like resources", () => {
+    render(
+      <ResourcesClient
+        appName="Anime Blog"
+        initialPage={{
+          content: {
+            description: "Useful links",
+            resources: [
+              {
+                category: "Blog",
+                description: "Sakuga source",
+                domain: "Sakugabooru Blog",
+                logo: "/logos/sakuga-blog.png",
+                url: "https://blog.sakugabooru.com/",
+              },
+            ],
+            title: "Nguồn tham khảo",
+          },
+        }}
+        isAdmin={false}
+      />,
+    )
+
+    expect(screen.getByRole("link", { name: /Washi's Blog/i })).toHaveAttribute(
+      "href",
+      "https://washiblog.wordpress.com/",
+    )
+    expect(screen.getByRole("link", { name: /Animétudes/i })).toHaveAttribute(
+      "href",
+      "https://animetudes.com/",
+    )
+  })
 })
