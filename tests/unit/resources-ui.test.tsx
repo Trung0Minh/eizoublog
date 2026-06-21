@@ -142,5 +142,15 @@ describe("ResourcesClient", () => {
       "href",
       "https://setteidreams.net/",
     )
+    expect(screen.getByRole("link", { name: /Archipel/i })).toHaveAttribute(
+      "href",
+      "https://www.youtube.com/@ArchipelDocumentaries",
+    )
+    expect(
+      screen.getByRole("link", { name: /NHK World Anime Manga Explosion/i }),
+    ).toHaveAttribute(
+      "href",
+      "https://www3.nhk.or.jp/nhkworld/en/shows/anime_manga/",
+    )
   })
 })

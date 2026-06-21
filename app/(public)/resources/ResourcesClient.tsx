@@ -96,6 +96,26 @@ const backfilledDatabaseResources: ResourceCard[] = [
   },
 ]
 
+const backfilledYoutubeResources: ResourceCard[] = [
+  {
+    url: "https://www.youtube.com/@ArchipelDocumentaries",
+    domain: "Archipel",
+    logo: "/logos/archipel.svg",
+    description: "Kênh tài liệu chuyên phỏng vấn và ghi lại chân dung các nghệ sĩ, nhà sáng tạo và nhân sự trong ngành văn hóa đại chúng Nhật Bản. Archipel đặc biệt hữu ích khi cần tư liệu dạng documentary về quá trình sáng tạo, tư duy nghề nghiệp và bối cảnh làm việc của các cá nhân trong ngành anime, manga, game và nghệ thuật thị giác.",
+    category: "Kênh YouTube",
+  },
+]
+
+const backfilledNewsResources: ResourceCard[] = [
+  {
+    url: "https://www3.nhk.or.jp/nhkworld/en/shows/anime_manga/",
+    domain: "NHK World Anime Manga Explosion",
+    logo: "/logos/nhk-anime-manga.svg",
+    description: "Chuyên mục của NHK World về anime và manga, gồm các video giới thiệu, phỏng vấn và phóng sự ngắn về tác phẩm, tác giả và xu hướng trong ngành. Lưu ý là series thật sự có nhiều tập hơn, nhưng trang này thường chỉ giữ một phần các tập mới và gỡ bớt tập cũ; nếu cần video cũ hơn thì nên tìm lại trên YouTube, nếu may mắn vẫn còn bản lưu.",
+    category: "Tin tức",
+  },
+]
+
 const defaultResources: ResourceCard[] = [
   // Blog / Editorial
   {
@@ -236,7 +256,9 @@ const defaultResources: ResourceCard[] = [
     logo: "/logos/hobbessakuga.jpg",
     description: "Kênh YouTube chuyên thực hiện các video tổng hợp (sakuga MAD) chất lượng cao và phân tích ngắn về các phân cảnh hoạt họa xuất sắc trong anime. Kênh tập trung giới thiệu nét vẽ cá nhân của các họa sĩ diễn hoạt và sự phát triển của phong cách sakuga qua các thời kỳ.",
     category: "Kênh YouTube",
-  }
+  },
+  ...backfilledYoutubeResources,
+  ...backfilledNewsResources,
 ]
 
 function withMissingDefaultResources(resources: ResourceCard[]) {
@@ -252,9 +274,12 @@ function withMissingDefaultResources(resources: ResourceCard[]) {
 
   return [
     ...resources,
-    ...[...backfilledBlogResources, ...backfilledDatabaseResources].filter(
-      (resource) => !existingUrls.has(resource.url),
-    ),
+    ...[
+      ...backfilledBlogResources,
+      ...backfilledDatabaseResources,
+      ...backfilledYoutubeResources,
+      ...backfilledNewsResources,
+    ].filter((resource) => !existingUrls.has(resource.url)),
   ]
 }
 
