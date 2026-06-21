@@ -83,7 +83,7 @@ describe("DashboardPostPreviewPage", () => {
       }),
     )
 
-    expect(screen.getByText("Draft preview")).toBeVisible()
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(/Draft\s*preview/i)
     expect(screen.getByText("Draft body")).toBeVisible()
   })
 

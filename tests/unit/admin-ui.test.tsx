@@ -21,6 +21,7 @@ vi.mock("next/link", () => ({
 vi.mock("next/navigation", () => ({
   usePathname: () => "/admin/posts",
   useRouter: () => routerMocks,
+  useSearchParams: () => new URLSearchParams(),
 }))
 vi.mock("next-auth/react", () => ({
   signOut: signOutMock,

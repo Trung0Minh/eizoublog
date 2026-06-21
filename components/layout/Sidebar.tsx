@@ -11,7 +11,12 @@ interface SidebarProps {
   }[]
   categories: {
     _count: { posts: number }
-    children: { id: string; name: string; slug: string }[]
+    children: {
+      id: string
+      name: string
+      slug: string
+      _count?: { posts: number }
+    }[]
     id: string
     name: string
     slug: string
@@ -35,7 +40,7 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        "flex w-full shrink-0 flex-col gap-10 mt-4 lg:mt-0 lg:w-[240px]",
+        "flex w-full shrink-0 flex-col gap-12 mt-4 lg:mt-0 lg:w-[240px]",
         className,
       )}
     >
@@ -63,10 +68,13 @@ export function Sidebar({
                       {category.children.map((child) => (
                         <li key={child.id}>
                           <Link
-                            className="flex justify-between text-text-secondary hover:text-accent cursor-pointer"
+                            className="flex justify-between text-text-secondary hover:text-accent cursor-pointer group/child"
                             href={`/category/${child.slug}`}
                           >
-                            <span>{child.name}</span>
+                            <span className="group-hover/child:text-accent transition-colors">{child.name}</span>
+                            {child._count !== undefined && (
+                              <span className="text-text-tertiary">{child._count.posts}</span>
+                            )}
                           </Link>
                         </li>
                       ))}

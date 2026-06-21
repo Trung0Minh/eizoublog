@@ -28,6 +28,22 @@ vi.mock("@/lib/queries", () => ({
   getCachedPublishedPosts: queriesMocks.getCachedPublishedPosts,
   getCachedSidebarData: queriesMocks.getCachedSidebarData,
 }))
+
+beforeEach(() => {
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn().mockImplementation((query) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  )
+})
 vi.mock("@/lib/seo", () => ({
   buildMetadata: vi.fn(),
   getAppUrl: vi.fn(() => "https://example.com"),
@@ -117,11 +133,11 @@ describe("PostCard", () => {
       "data-prefetch",
       "undefined",
     )
-    expect(screen.getByRole("link", { name: "Mina" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Mina/ })).toHaveAttribute(
       "href",
       "/authors/mina",
     )
-    expect(screen.getByRole("link", { name: "Mina" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Mina/ })).toHaveAttribute(
       "data-prefetch",
       "undefined",
     )
@@ -194,16 +210,16 @@ describe("Pagination", () => {
   it("renders previous and next links with the current page window", () => {
     render(<Pagination page={2} pageSize={10} total={35} />)
 
-    const previous = screen.getByRole("link", { name: "Previous" })
+    const previous = screen.getByRole("link", { name: "Trang trước" })
     expect(previous).toHaveAttribute("href", "?page=1")
-    expect(previous).toHaveClass("h-8", "min-w-8")
-    expect(screen.getByRole("link", { name: "Next" })).toHaveAttribute(
+    expect(previous).toHaveClass("h-8", "w-auto")
+    expect(screen.getByRole("link", { name: "Trang sau" })).toHaveAttribute(
       "href",
       "?page=3",
     )
     const pageFour = screen.getByRole("link", { name: "Page 4" })
     expect(pageFour).toHaveAttribute("href", "?page=4")
-    expect(pageFour).toHaveClass("h-8", "min-w-8")
+    expect(pageFour).toHaveClass("h-8", "w-8")
   })
 })
 
@@ -212,6 +228,7 @@ describe("TableOfContents", () => {
     class MockIntersectionObserver {
       disconnect() {}
       observe() {}
+      unobserve() {}
     }
     vi.stubGlobal("IntersectionObserver", MockIntersectionObserver)
   })

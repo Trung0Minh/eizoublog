@@ -43,7 +43,7 @@ describe("DashboardPage", () => {
   it("excludes archived posts from the writer dashboard", async () => {
     render(await DashboardPage())
 
-    expect(screen.getByText("Bài viết của tôi")).toBeVisible()
+    expect(screen.getByText("Bảng điều khiển")).toBeVisible()
     expect(mocks.prisma.post.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {

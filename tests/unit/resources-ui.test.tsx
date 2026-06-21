@@ -4,26 +4,31 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 const mocks = vi.hoisted(() => ({
   refresh: vi.fn(),
-  updateResourcesPage: vi.fn(),
 }))
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: mocks.refresh }),
 }))
-vi.mock("@/app/(public)/resources/actions", () => ({
-  updateResourcesPage: mocks.updateResourcesPage,
-}))
 
 import { ResourcesClient } from "@/app/(public)/resources/ResourcesClient"
 
 describe("ResourcesClient", () => {
+  let mockFetch: any
+
   beforeEach(() => {
     vi.clearAllMocks()
-    mocks.updateResourcesPage.mockResolvedValue({ id: "resources" })
+    mockFetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ data: { id: "resources" } }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      })
+    )
+    vi.stubGlobal("fetch", mockFetch)
   })
 
   afterEach(() => {
     vi.restoreAllMocks()
+    vi.unstubAllGlobals()
   })
 
   it("reorders resources by dragging before saving", async () => {
@@ -75,18 +80,25 @@ describe("ResourcesClient", () => {
     fireEvent.drop(screen.getByTestId("resource-editor-card-Third"), {
       dataTransfer,
     })
-    await user.click(screen.getByRole("button", { name: /^Lưu$/ }))
+    const saveBtn = screen.getByRole("button", { name: /^Lưu$/ })
+    fireEvent.click(saveBtn)
 
     await waitFor(() => {
-      expect(mocks.updateResourcesPage).toHaveBeenCalledWith(
-        expect.objectContaining({
-          resources: [
-            expect.objectContaining({ domain: "Second" }),
-            expect.objectContaining({ domain: "Third" }),
-            expect.objectContaining({ domain: "First" }),
-          ],
-        }),
-      )
+      expect(mockFetch).toHaveBeenCalled()
+      const lastCall = mockFetch.mock.calls[mockFetch.mock.calls.length - 1]
+      expect(lastCall[0]).toBe("/api/admin/site-pages/resources")
+      const options = lastCall[1]
+      expect(options.method).toBe("PATCH")
+      const parsedBody = JSON.parse(options.body)
+      expect(parsedBody.content).toEqual({
+        title: "Nguồn tham khảo",
+        description: "Useful links",
+        resources: [
+          { description: "Second", domain: "Second", logo: "", url: "https://second.test" },
+          { description: "Third", domain: "Third", logo: "", url: "https://third.test" },
+          { description: "First", domain: "First", logo: "", url: "https://first.test" },
+        ],
+      })
     })
     scrollBy.mockRestore()
   })

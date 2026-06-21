@@ -20,6 +20,16 @@ const mocks = vi.hoisted(() => {
     user: {
       findUnique: vi.fn(),
     },
+    postAuthor: {
+      create: vi.fn(),
+      deleteMany: vi.fn(),
+      update: vi.fn(),
+    },
+    postTag: {
+      createMany: vi.fn(),
+      deleteMany: vi.fn(),
+      findMany: vi.fn(),
+    },
     awardEventRoom: {
       findFirst: vi.fn(),
     },
@@ -55,6 +65,7 @@ function routeContext(id: string) {
 describe("posts API", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.prisma.postTag.findMany.mockResolvedValue([])
     mocks.auth.mockResolvedValue(null)
     mocks.prisma.user.findUnique.mockImplementation(async (query: unknown) => {
       const where =
@@ -476,9 +487,13 @@ describe("single post API", () => {
       user: { id: "writer-1", role: "WRITER" },
     })
     mocks.prisma.post.findUnique.mockResolvedValue({
+      id: "post-1",
       authorId: "writer-1",
       status: "DRAFT",
     })
+    mocks.prisma.postTag.findMany.mockResolvedValue([
+      { tagId: "tag-1", postId: "post-1" },
+    ])
     mocks.prisma.post.update.mockResolvedValue({
       id: "post-1",
       slug: "draft-title",
@@ -504,14 +519,19 @@ describe("single post API", () => {
         data: expect.objectContaining({
           publishedAt: expect.any(Date),
           status: "PUBLISHED",
-          tags: {
-            create: [{ tag: { connect: { id: "tag-2" } } }],
-            deleteMany: {},
-          },
         }),
         where: { id: "post-1" },
       }),
     )
+    expect(mocks.prisma.postTag.deleteMany).toHaveBeenCalledWith({
+      where: {
+        postId: "post-1",
+        tagId: { in: ["tag-1"] },
+      },
+    })
+    expect(mocks.prisma.postTag.createMany).toHaveBeenCalledWith({
+      data: [{ postId: "post-1", tagId: "tag-2" }],
+    })
     expect(mocks.revalidateTag).toHaveBeenCalledWith("posts", "max")
   })
 

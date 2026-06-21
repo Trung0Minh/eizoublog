@@ -83,7 +83,7 @@ describe("POST /api/upload", () => {
 
     expect(response.status).toBe(400)
     await expect(response.json()).resolves.toEqual({
-      error: "Only JPEG, PNG, GIF, and WebP images are allowed",
+      error: "Only JPEG, PNG, GIF, WebP images and MP4, WebM videos are allowed",
     })
   })
 

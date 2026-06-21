@@ -73,6 +73,15 @@ describe("PATCH /api/profile", () => {
   })
 
   it("updates only the authenticated user's editable profile fields", async () => {
+    mocks.userUpdate.mockResolvedValue({
+      avatarUrl: "https://cdn.example.com/avatars/mina.png",
+      bio: "Animation writer.",
+      email: "writer@example.com",
+      id: "writer-1",
+      name: "Mina Revised",
+      username: "changed",
+    })
+
     const response = await PATCH(
       patchRequest({
         avatarUrl: "https://cdn.example.com/avatars/mina.png",
@@ -92,7 +101,7 @@ describe("PATCH /api/profile", () => {
         email: "writer@example.com",
         id: "writer-1",
         name: "Mina Revised",
-        username: "mina",
+        username: "changed",
       },
     })
     expect(mocks.userUpdate).toHaveBeenCalledWith({
@@ -100,6 +109,7 @@ describe("PATCH /api/profile", () => {
         avatarUrl: "https://cdn.example.com/avatars/mina.png",
         bio: "Animation writer.",
         name: "Mina Revised",
+        username: "changed",
       },
       select: {
         avatarUrl: true,

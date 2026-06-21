@@ -22,6 +22,11 @@ export async function HomePostList({
 
   return (
     <div className="flex flex-col">
+      {archiveMonth && (
+        <h1 className="text-2xl font-bold mb-4">
+          Bài viết {formatArchiveHeading(archiveMonth)}
+        </h1>
+      )}
       <div className="mb-6 flex justify-start gap-4 border-b pb-4">
         <PostSortTabs
           basePath="/"

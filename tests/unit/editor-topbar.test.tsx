@@ -32,7 +32,7 @@ describe("EditorTopBar", () => {
       />,
     )
 
-    expect(screen.getByRole("link", { name: "Bảng điều khiển" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Bảng điều khiển/ })).toHaveAttribute(
       "href",
       "/dashboard",
     )

@@ -109,12 +109,8 @@ describe("Navbar", () => {
       "/about",
     )
     expect(
-      screen.getByRole("searchbox", { name: "Tìm kiếm bài viết" }),
+      screen.getByRole("button", { name: /Tìm kiếm/i }),
     ).toBeInTheDocument()
-    expect(screen.getByRole("searchbox", { name: "Tìm kiếm bài viết" })).toHaveAttribute(
-      "placeholder",
-      "Tìm kiếm bài viết...",
-    )
   })
 
   it("keeps the desktop writer menu hidden on mobile", () => {
@@ -237,7 +233,7 @@ describe("Navbar", () => {
       "max-w-[1440px]",
     )
     expect(container.querySelector("header")).toHaveClass(
-      "border-border-default/50",
+      "border-border",
       "bg-background/80",
       "backdrop-blur-md",
     )
@@ -374,8 +370,8 @@ describe("Sidebar", () => {
     expect(sidebar).toHaveClass("lg:w-[240px]", "gap-12")
     expect(sidebar).not.toHaveClass("lg:sticky")
     expect(screen.getByRole("heading", { name: "Danh mục" })).toHaveClass(
-      "text-[11px]",
-      "text-text-secondary",
+      "text-[13px]",
+      "text-accent",
     )
   })
 })

@@ -5,8 +5,46 @@ import { Command } from "cmdk"
 import { Search } from "lucide-react"
 import { useRouter } from "next/navigation"
 
+interface SearchPost {
+  id: string
+  title: string
+  slug: string
+  excerpt: string | null
+}
+
+interface SearchCategory {
+  id: string
+  name: string
+  slug: string
+}
+
+let categoryCache: SearchCategory[] | null = null
+let categoryRequest: Promise<SearchCategory[]> | null = null
+
+async function loadCategories() {
+  if (categoryCache) {
+    return categoryCache
+  }
+
+  categoryRequest ??= fetch("/api/categories")
+    .then((res) => res.json())
+    .then((res: { data?: SearchCategory[] }) => {
+      categoryCache = res.data ?? []
+      return categoryCache
+    })
+    .finally(() => {
+      categoryRequest = null
+    })
+
+  return categoryRequest
+}
+
 export function CommandMenu() {
   const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState("")
+  const [results, setResults] = useState<SearchPost[]>([])
+  const [categories, setCategories] = useState<SearchCategory[]>([])
+  const [loading, setLoading] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -27,20 +65,74 @@ export function CommandMenu() {
     return () => document.removeEventListener("open-command-menu", handleOpen)
   }, [])
 
+  useEffect(() => {
+    if (!open || categories.length > 0) {
+      return
+    }
+
+    let cancelled = false
+
+    loadCategories()
+      .then((nextCategories) => {
+        if (!cancelled) {
+          setCategories(nextCategories)
+        }
+      })
+      .catch((err) => console.error("Failed to load categories in CommandMenu", err))
+
+    return () => {
+      cancelled = true
+    }
+  }, [categories.length, open])
+
+  // Fetch dynamic search results when query changes
+  useEffect(() => {
+    if (!query.trim()) {
+      return
+    }
+
+    const debounceTimer = setTimeout(() => {
+      setLoading(true)
+      fetch(`/api/search?q=${encodeURIComponent(query.trim())}`)
+        .then((res) => res.json())
+        .then((res) => {
+          if (res.data?.results) {
+            setResults(res.data.results)
+          } else {
+            setResults([])
+          }
+        })
+        .catch((err) => {
+          console.error("Search failed in CommandMenu", err)
+          setResults([])
+        })
+        .finally(() => {
+          setLoading(false)
+        })
+    }, 250)
+
+    return () => clearTimeout(debounceTimer)
+  }, [query])
+
   if (!open) return null
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] sm:pt-[20vh] bg-background/80 backdrop-blur-sm transition-all duration-200">
       <div 
         className="fixed inset-0" 
-        onClick={() => setOpen(false)} 
+        onClick={() => {
+          setOpen(false)
+          setQuery("")
+        }}
       />
       <Command
+        shouldFilter={false}
         className="relative z-50 w-full max-w-[640px] overflow-hidden rounded-xl border border-border-default bg-background shadow-2xl mx-4"
         label="Global Command Menu"
         onKeyDown={(e) => {
           if (e.key === "Escape") {
             setOpen(false)
+            setQuery("")
           }
         }}
       >
@@ -48,44 +140,80 @@ export function CommandMenu() {
           <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
           <Command.Input
             autoFocus
+            value={query}
+            onValueChange={setQuery}
             className="flex h-12 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-text-tertiary disabled:cursor-not-allowed disabled:opacity-50"
-            placeholder="Tìm kiếm..."
+            placeholder="Tìm kiếm bài viết hoặc danh mục..."
           />
         </div>
         <Command.List className="max-h-[300px] overflow-y-auto overflow-x-hidden p-2">
-          <Command.Empty className="py-6 text-center text-sm text-text-secondary">
-            Không tìm thấy kết quả.
-          </Command.Empty>
+          {loading && (
+            <div className="py-6 text-center text-sm text-text-tertiary">
+              Đang tìm kiếm...
+            </div>
+          )}
+
+          {!loading && query && results.length === 0 && (
+            <Command.Empty className="py-6 text-center text-sm text-text-secondary">
+              Không tìm thấy bài viết nào.
+            </Command.Empty>
+          )}
           
-          <Command.Group heading="Điều hướng" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-text-tertiary">
-            <Command.Item
-              className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm outline-none data-[selected=true]:bg-accent/10 data-[selected=true]:text-accent data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 transition-colors"
-              onSelect={() => {
-                setOpen(false)
-                router.push("/")
-              }}
-            >
-              Trang chủ
-            </Command.Item>
-            <Command.Item
-              className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm outline-none data-[selected=true]:bg-accent/10 data-[selected=true]:text-accent data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 transition-colors"
-              onSelect={() => {
-                setOpen(false)
-                router.push("/categories")
-              }}
-            >
-              Danh mục
-            </Command.Item>
-            <Command.Item
-              className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm outline-none data-[selected=true]:bg-accent/10 data-[selected=true]:text-accent data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 transition-colors"
-              onSelect={() => {
-                setOpen(false)
-                router.push("/dashboard")
-              }}
-            >
-              Dashboard
-            </Command.Item>
-          </Command.Group>
+          {!query && (
+            <>
+              <Command.Group heading="Điều hướng" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-text-tertiary">
+                <Command.Item
+                  className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm outline-none data-[selected=true]:bg-accent/10 data-[selected=true]:text-accent data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 transition-colors"
+                  onSelect={() => {
+                    setOpen(false)
+                    router.push("/")
+                  }}
+                >
+                  Trang chủ
+                </Command.Item>
+              </Command.Group>
+
+              {categories.length > 0 && (
+                <Command.Group heading="Danh mục" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-text-tertiary mt-2">
+                  {categories.map((category) => (
+                    <Command.Item
+                      key={category.id}
+                      className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm outline-none data-[selected=true]:bg-accent/10 data-[selected=true]:text-accent data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 transition-colors"
+                      onSelect={() => {
+                        setOpen(false)
+                        router.push(`/category/${category.slug}`)
+                      }}
+                    >
+                      {category.name}
+                    </Command.Item>
+                  ))}
+                </Command.Group>
+              )}
+            </>
+          )}
+
+          {query && results.length > 0 && (
+            <Command.Group heading="Bài viết" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-text-tertiary">
+              {results.map((post) => (
+                <Command.Item
+                  key={post.id}
+                  className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm outline-none data-[selected=true]:bg-accent/10 data-[selected=true]:text-accent data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 transition-colors"
+                  onSelect={() => {
+                    setOpen(false)
+                    setQuery("")
+                    router.push(`/${post.slug}`)
+                  }}
+                >
+                  <div className="flex flex-col">
+                    <span className="font-medium text-text-primary">{post.title}</span>
+                    {post.excerpt && (
+                      <span className="text-xs text-text-tertiary line-clamp-1">{post.excerpt}</span>
+                    )}
+                  </div>
+                </Command.Item>
+              ))}
+            </Command.Group>
+          )}
         </Command.List>
       </Command>
     </div>

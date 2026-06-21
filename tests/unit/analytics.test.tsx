@@ -31,10 +31,7 @@ const prismaMocks = vi.hoisted(() => {
   return { prisma }
 })
 
-vi.mock("next/font/google", () => ({
-  Inter: () => ({ variable: "--font-inter" }),
-  Lora: () => ({ variable: "--font-lora" }),
-}))
+
 vi.mock("next-themes", () => ({
   ThemeProvider: ({ children }: { children: React.ReactNode }) => children,
 }))
@@ -51,6 +48,10 @@ vi.mock("@/components/layout/Footer", () => ({
   Footer: () => <footer>Footer</footer>,
 }))
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMocks.prisma }))
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
+  useRouter: () => ({ push: vi.fn() }),
+}))
 
 import RootLayout from "@/app/layout"
 import { trackEvent } from "@/lib/analytics"

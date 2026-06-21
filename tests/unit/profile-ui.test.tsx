@@ -1,9 +1,24 @@
+import { useEffect } from "react"
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { AvatarUpload } from "@/components/profile/AvatarUpload"
 import { ProfileForm } from "@/components/profile/ProfileForm"
+
+vi.mock("react-easy-crop", () => ({
+  __esModule: true,
+  default: ({ onCropComplete }: { onCropComplete: (area: any, pixels: any) => void }) => {
+    useEffect(() => {
+      onCropComplete(
+        { x: 0, y: 0, width: 100, height: 100 },
+        { x: 0, y: 0, width: 100, height: 100 }
+      )
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+    return <div data-testid="mock-cropper" />
+  }
+}))
 
 vi.mock("@/components/editor/TiptapEditor", () => ({
   TiptapEditor: ({
@@ -78,7 +93,7 @@ describe("ProfileForm", () => {
       />,
     )
 
-    expect(screen.getByRole("textbox", { name: "Tên người dùng" })).toBeDisabled()
+    expect(screen.getByRole("textbox", { name: "Tên người dùng" })).not.toBeDisabled()
     expect(screen.getByRole("textbox", { name: "Email" })).toBeDisabled()
 
     await user.clear(screen.getByRole("textbox", { name: "Tên hiển thị" }))
@@ -112,6 +127,7 @@ describe("ProfileForm", () => {
             ],
           }),
           name: "Mina Revised",
+          username: "mina",
         }),
         headers: { "Content-Type": "application/json" },
         method: "PATCH",
@@ -124,6 +140,8 @@ describe("ProfileForm", () => {
 })
 
 describe("AvatarUpload", () => {
+  let OriginalImage: typeof Image
+
   beforeEach(() => {
     vi.clearAllMocks()
     vi.stubGlobal(
@@ -137,6 +155,40 @@ describe("AvatarUpload", () => {
         ),
       ),
     )
+
+    OriginalImage = global.Image
+    global.Image = class extends OriginalImage {
+      constructor() {
+        super()
+        setTimeout(() => {
+          if (this.onload) {
+            this.onload(new Event("load"))
+          }
+        }, 10)
+      }
+    } as any
+
+    // Stub canvas.getContext to return mock 2d context
+    HTMLCanvasElement.prototype.getContext = function (type) {
+      if (type === "2d") {
+        return {
+          beginPath: () => {},
+          arc: () => {},
+          clip: () => {},
+          drawImage: () => {},
+        } as any
+      }
+      return null
+    }
+
+    // Stub canvas.toBlob to invoke the callback with a mock Blob
+    HTMLCanvasElement.prototype.toBlob = function (callback) {
+      setTimeout(() => callback?.(new Blob(["mock-cropped-image"], { type: "image/webp" })), 0)
+    }
+  })
+
+  afterEach(() => {
+    global.Image = OriginalImage
   })
 
   it("uploads avatar files to the avatars folder", async () => {
@@ -149,6 +201,9 @@ describe("AvatarUpload", () => {
       screen.getByLabelText("Tải ảnh đại diện lên"),
       new File(["png"], "avatar.png", { type: "image/png" }),
     )
+
+    // Click confirmation button in crop modal
+    await user.click(screen.getByRole("button", { name: "Xác nhận" }))
 
     await waitFor(() => {
       expect(onChange).toHaveBeenCalledWith(

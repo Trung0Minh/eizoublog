@@ -46,7 +46,14 @@ const sidebarCategorySelect = {
   },
   children: {
     orderBy: { name: "asc" },
-    select: { id: true, name: true, slug: true },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      _count: {
+        select: { posts: { where: { status: "PUBLISHED" } } },
+      },
+    },
   },
   id: true,
   name: true,
@@ -58,6 +65,12 @@ const recentPostSelect = {
   slug: true,
   title: true,
 } satisfies Prisma.PostSelect
+
+const commandCategorySelect = {
+  id: true,
+  name: true,
+  slug: true,
+} satisfies Prisma.CategorySelect
 
 type SidebarArchiveRow = {
   count: bigint
@@ -503,10 +516,36 @@ export const getCachedSidebarData = unstable_cache(
       month: archive.month,
     }))
 
-    return { archives, categories, recentPosts }
+    const categoriesWithCount = categories.map((cat) => {
+      const childCount = (cat.children ?? []).reduce(
+        (sum, child) => sum + (child._count?.posts ?? 0),
+        0,
+      )
+      if (cat._count === undefined) {
+        return cat
+      }
+      return {
+        ...cat,
+        _count: {
+          posts: cat._count.posts + childCount,
+        },
+      }
+    })
+
+    return { archives, categories: categoriesWithCount, recentPosts }
   },
   ["sidebar-data"],
   { revalidate: 300, tags: ["posts", "categories"] },
+)
+
+export const getCachedCommandCategories = unstable_cache(
+  async () =>
+    prisma.category.findMany({
+      orderBy: { name: "asc" },
+      select: commandCategorySelect,
+    }),
+  ["command-categories"],
+  { revalidate: 300, tags: ["categories"] },
 )
 
 export const getCachedPublishedPost = unstable_cache(

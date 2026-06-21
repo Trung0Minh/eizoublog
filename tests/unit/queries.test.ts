@@ -54,6 +54,7 @@ import {
   getCachedAdminWritersData,
   getCachedAuthorByUsername,
   getCachedAuthorPosts,
+  getCachedCommandCategories,
   getCachedCategoryBySlug,
   getCachedCategoryPosts,
   getCachedContributors,
@@ -188,6 +189,25 @@ describe("cached Prisma query helpers", () => {
     expect(mocks.cacheEntries).toContainEqual({
       keyParts: ["sidebar-data"],
       options: { revalidate: 300, tags: ["posts", "categories"] },
+    })
+  })
+
+  it("caches command menu categories with a lightweight select", async () => {
+    mocks.prisma.category.findMany.mockResolvedValue([
+      { id: "category-1", name: "Production", slug: "production" },
+    ])
+
+    await expect(getCachedCommandCategories()).resolves.toEqual([
+      { id: "category-1", name: "Production", slug: "production" },
+    ])
+
+    expect(mocks.prisma.category.findMany).toHaveBeenCalledWith({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, slug: true },
+    })
+    expect(mocks.cacheEntries).toContainEqual({
+      keyParts: ["command-categories"],
+      options: { revalidate: 300, tags: ["categories"] },
     })
   })
 

@@ -25,7 +25,7 @@ export function Loader({
   return (
     <svg
       aria-label={label}
-      className={cn("animate-spin text-accent drop-shadow-[0_0_8px_rgba(var(--accent),0.5)]", sizeClass[size], className)}
+      className={cn("loader animate-spin text-accent drop-shadow-[0_0_8px_rgba(var(--accent),0.5)]", sizeClass[size], className)}
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"

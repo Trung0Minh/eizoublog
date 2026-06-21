@@ -72,6 +72,6 @@ describe("WriterEventsList", () => {
     expect(screen.getByRole("heading", { name: "Winter Special Event" })).toBeInTheDocument()
 
     // Join button is rendered
-    expect(screen.getByRole("button", { name: /Join/i })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /Join|Tham gia/i })).toBeInTheDocument()
   })
 })

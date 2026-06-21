@@ -149,13 +149,13 @@ describe("public page metadata", () => {
     })
     await expect(contributorsMetadata()).resolves.toMatchObject({
       description: "Meet the writers behind Eizou Blog.",
-      title: "Contributors",
+      title: "Người đóng góp",
     })
     await expect(
       searchMetadata({ searchParams: Promise.resolve({ q: "frieren" }) }),
     ).resolves.toMatchObject({
       robots: { follow: false, index: false },
-      title: "Search: frieren",
+      title: "Tìm kiếm: frieren",
     })
   })
 })

@@ -105,16 +105,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return Boolean(existingUser && existingUser.role !== "REVOKED")
     },
     async jwt({ token, user }) {
-      if (!user) {
-        return token
-      }
-
       const userId =
-        typeof token.sub === "string"
-          ? token.sub
-          : typeof user.id === "string"
-            ? user.id
-            : null
+        (typeof token.sub === "string" ? token.sub : null) ||
+        (user?.id && typeof user.id === "string" ? user.id : null)
 
       if (!userId) {
         return token

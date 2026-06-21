@@ -122,13 +122,18 @@ export function PostCard({ post }: PostCardProps) {
           {authors.map((author, i) => (
             <div className="flex items-center gap-2" key={author.username}>
               {i > 0 && <span className="text-text-tertiary">·</span>}
-              <AuthorAvatar
-                avatarUrl={author.avatarUrl}
-                name={author.name}
-              />
-              <span className="font-semibold text-text-primary">
-                {author.name}
-              </span>
+              <Link
+                className="flex items-center gap-2 hover:text-accent transition-colors"
+                href={`/authors/${author.username}`}
+              >
+                <AuthorAvatar
+                  avatarUrl={author.avatarUrl}
+                  name={author.name}
+                />
+                <span className="font-semibold text-text-primary hover:text-accent">
+                  {author.name}
+                </span>
+              </Link>
             </div>
           ))}
           <span className="text-text-tertiary px-1">&middot;</span>
