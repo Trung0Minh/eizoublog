@@ -13,33 +13,6 @@ import type { PostListSort } from "@/lib/postListSort"
 import { prisma } from "@/lib/prisma"
 import type { SearchResult } from "@/lib/search"
 
-const publishedPostListSelect = {
-  _count: { select: { comments: true } },
-  author: {
-    select: { avatarUrl: true, name: true, username: true },
-  },
-  category: { select: { id: true, name: true, slug: true } },
-  coAuthors: {
-    orderBy: { order: "asc" },
-    select: {
-      user: {
-        select: { avatarUrl: true, name: true, username: true },
-      },
-    },
-  },
-  coverAlt: true,
-  coverUrl: true,
-  excerpt: true,
-  publishedAt: true,
-  slug: true,
-  tags: {
-    select: {
-      tag: { select: { id: true, name: true, slug: true } },
-    },
-  },
-  title: true,
-} satisfies Prisma.PostSelect
-
 const sidebarCategorySelect = {
   _count: {
     select: { posts: { where: { status: "PUBLISHED" } } },
@@ -314,9 +287,21 @@ export const publishedPostDetailSelect = {
   updatedAt: true,
 } satisfies Prisma.PostSelect
 
-export type PublishedPostListItem = Prisma.PostGetPayload<{
-  select: typeof publishedPostListSelect
-}>
+export interface PublishedPostListItem {
+  _count: { comments: number }
+  author: { avatarUrl: string | null; name: string; username: string }
+  category: { id: string; name: string; slug: string } | null
+  coAuthors: {
+    user: { avatarUrl: string | null; name: string; username: string }
+  }[]
+  coverAlt: string | null
+  coverUrl: string | null
+  excerpt: string | null
+  publishedAt: Date | null
+  slug: string
+  tags: { tag: { id: string; name: string; slug: string } }[]
+  title: string
+}
 export type PublishedPostDetail = Prisma.PostGetPayload<{
   select: typeof publishedPostDetailSelect
 }>
@@ -388,6 +373,21 @@ interface AdminCommentCountsRow {
   spamComments: DbCount
 }
 
+interface PublishedPostListRow {
+  author: PublishedPostListItem["author"] | null
+  category: PublishedPostListItem["category"] | null
+  coAuthors: PublishedPostListItem["coAuthors"]
+  commentCount: DbCount
+  coverAlt: string | null
+  coverUrl: string | null
+  excerpt: string | null
+  publishedAt: Date | null
+  slug: string | null
+  tags: PublishedPostListItem["tags"]
+  title: string | null
+  totalCount: DbCount
+}
+
 function countToNumber(value: DbCount) {
   if (typeof value === "bigint") {
     return Number(value)
@@ -416,33 +416,139 @@ function parseCommentStatus(value: string | null): CommentStatus {
   throw new Error(`Unexpected comment status: ${String(value)}`)
 }
 
-async function getPublishedPostListByWhere(
-  where: Prisma.PostWhereInput,
+function getPublishedPostOrderSql(sort: PostListSort) {
+  if (sort === "oldest") {
+    return Prisma.sql`ORDER BY p."publishedAt" ASC NULLS LAST, p."updatedAt" ASC`
+  }
+
+  if (sort === "comments") {
+    return Prisma.sql`ORDER BY "commentCount" DESC, p."publishedAt" DESC NULLS LAST`
+  }
+
+  return Prisma.sql`ORDER BY p."publishedAt" DESC NULLS LAST, p."updatedAt" DESC`
+}
+
+async function getPublishedPostListBySql(
+  where: Prisma.Sql,
   page: number,
   pageSize: number,
   sort: PostListSort = "latest",
 ) {
-  let orderBy: Prisma.PostOrderByWithRelationInput | Prisma.PostOrderByWithRelationInput[]
-  if (sort === "oldest") {
-    orderBy = [{ publishedAt: "asc" }, { updatedAt: "asc" }]
-  } else if (sort === "comments") {
-    orderBy = [{ comments: { _count: "desc" } }, { publishedAt: "desc" }]
-  } else {
-    orderBy = [{ publishedAt: "desc" }, { updatedAt: "desc" }]
-  }
+  const offset = (page - 1) * pageSize
+  const orderBy = getPublishedPostOrderSql(sort)
+  const rows = await prisma.$queryRaw<PublishedPostListRow[]>`
+    WITH filtered_posts AS (
+      SELECT
+        p.id,
+        p."authorId",
+        p."categoryId",
+        p."coverAlt",
+        p."coverUrl",
+        p.excerpt,
+        p."publishedAt",
+        p.slug,
+        p.title,
+        p."updatedAt",
+        COALESCE(comment_counts.count, 0) AS "commentCount"
+      FROM posts p
+      LEFT JOIN LATERAL (
+        SELECT COUNT(*)::int AS count
+        FROM comments c
+        WHERE c."postId" = p.id
+      ) comment_counts ON TRUE
+      WHERE ${where}
+    ),
+    counted AS (
+      SELECT COUNT(*) AS "totalCount" FROM filtered_posts
+    ),
+    paged AS (
+      SELECT *
+      FROM filtered_posts p
+      ${orderBy}
+      LIMIT ${pageSize} OFFSET ${offset}
+    )
+    SELECT
+      json_build_object(
+        'avatarUrl', author."avatarUrl",
+        'name', author.name,
+        'username', author.username
+      ) AS author,
+      CASE
+        WHEN category.id IS NULL THEN NULL
+        ELSE json_build_object(
+          'id', category.id,
+          'name', category.name,
+          'slug', category.slug
+        )
+      END AS category,
+      COALESCE(co_authors.items, '[]'::json) AS "coAuthors",
+      p."commentCount",
+      p."coverAlt",
+      p."coverUrl",
+      p.excerpt,
+      p."publishedAt",
+      p.slug,
+      COALESCE(tags.items, '[]'::json) AS tags,
+      p.title,
+      counted."totalCount"
+    FROM counted
+    LEFT JOIN paged p ON TRUE
+    LEFT JOIN users author ON author.id = p."authorId"
+    LEFT JOIN categories category ON category.id = p."categoryId"
+    LEFT JOIN LATERAL (
+      SELECT json_agg(
+        json_build_object(
+          'user', json_build_object(
+            'avatarUrl', co_author."avatarUrl",
+            'name', co_author.name,
+            'username', co_author.username
+          )
+        )
+        ORDER BY pa.order ASC
+      ) AS items
+      FROM post_authors pa
+      JOIN users co_author ON co_author.id = pa."userId"
+      WHERE pa."postId" = p.id
+    ) co_authors ON TRUE
+    LEFT JOIN LATERAL (
+      SELECT json_agg(
+        json_build_object(
+          'tag', json_build_object(
+            'id', t.id,
+            'name', t.name,
+            'slug', t.slug
+          )
+        )
+        ORDER BY t.name ASC
+      ) AS items
+      FROM post_tags pt
+      JOIN tags t ON t.id = pt."tagId"
+      WHERE pt."postId" = p.id
+    ) tags ON TRUE
+  `
+  const posts: PublishedPostListItem[] = rows
+    .filter(
+      (row): row is PublishedPostListRow & {
+        author: PublishedPostListItem["author"]
+        slug: string
+        title: string
+      } => row.author !== null && row.slug !== null && row.title !== null,
+    )
+    .map((row) => ({
+      _count: { comments: countToNumber(row.commentCount) },
+      author: row.author,
+      category: row.category,
+      coAuthors: row.coAuthors,
+      coverAlt: row.coverAlt,
+      coverUrl: row.coverUrl,
+      excerpt: row.excerpt,
+      publishedAt: row.publishedAt,
+      slug: row.slug,
+      tags: row.tags,
+      title: row.title,
+    }))
 
-  const [posts, total] = await Promise.all([
-    prisma.post.findMany({
-      orderBy,
-      select: publishedPostListSelect,
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-      where,
-    }),
-    prisma.post.count({ where }),
-  ])
-
-  return { posts, total }
+  return { posts, total: countToNumber(rows[0]?.totalCount) }
 }
 
 function getArchiveMonthRange(archiveMonth?: string) {
@@ -472,13 +578,17 @@ export const getCachedPublishedPosts = unstable_cache(
     archiveMonth?: string,
   ) => {
     const archiveRange = getArchiveMonthRange(archiveMonth)
-    const where = {
-      ...(archiveRange && {
-        publishedAt: { gte: archiveRange.start, lt: archiveRange.end },
-      }),
-      status: "PUBLISHED",
-    } satisfies Prisma.PostWhereInput
-    return getPublishedPostListByWhere(where, page, pageSize, sort)
+    return getPublishedPostListBySql(
+      Prisma.sql`
+        p.status::text = 'PUBLISHED'
+        ${archiveRange
+          ? Prisma.sql`AND p."publishedAt" >= ${archiveRange.start} AND p."publishedAt" < ${archiveRange.end}`
+          : Prisma.empty}
+      `,
+      page,
+      pageSize,
+      sort,
+    )
   },
   ["published-posts"],
   { revalidate: 300, tags: ["posts"] },
@@ -969,18 +1079,17 @@ export const getCachedCategoryPosts = unstable_cache(
     pageSize: number,
     sort: PostListSort = "latest",
   ) =>
-    getPublishedPostListByWhere(
-      {
-        category: {
-          is: {
-            OR: [
-              { slug: categorySlug },
-              { parent: { is: { slug: categorySlug } } },
-            ],
-          },
-        },
-        status: "PUBLISHED",
-      },
+    getPublishedPostListBySql(
+      Prisma.sql`
+        p.status::text = 'PUBLISHED'
+        AND EXISTS (
+          SELECT 1
+          FROM categories c
+          LEFT JOIN categories parent ON parent.id = c."parentId"
+          WHERE c.id = p."categoryId"
+            AND (c.slug = ${categorySlug} OR parent.slug = ${categorySlug})
+        )
+      `,
       page,
       pageSize,
       sort,
@@ -1006,11 +1115,17 @@ export const getCachedTagPosts = unstable_cache(
     pageSize: number,
     sort: PostListSort = "latest",
   ) =>
-    getPublishedPostListByWhere(
-      {
-        status: "PUBLISHED",
-        tags: { some: { tag: { slug: tagSlug } } },
-      },
+    getPublishedPostListBySql(
+      Prisma.sql`
+        p.status::text = 'PUBLISHED'
+        AND EXISTS (
+          SELECT 1
+          FROM post_tags pt
+          JOIN tags t ON t.id = pt."tagId"
+          WHERE pt."postId" = p.id
+            AND t.slug = ${tagSlug}
+        )
+      `,
       page,
       pageSize,
       sort,
@@ -1036,14 +1151,25 @@ export const getCachedAuthorPosts = unstable_cache(
     pageSize: number,
     sort: PostListSort = "latest",
   ) =>
-    getPublishedPostListByWhere(
-      {
-        OR: [
-          { author: { username } },
-          { coAuthors: { some: { user: { username } } } },
-        ],
-        status: "PUBLISHED",
-      },
+    getPublishedPostListBySql(
+      Prisma.sql`
+        p.status::text = 'PUBLISHED'
+        AND (
+          EXISTS (
+            SELECT 1
+            FROM users u
+            WHERE u.id = p."authorId"
+              AND u.username = ${username}
+          )
+          OR EXISTS (
+            SELECT 1
+            FROM post_authors pa
+            JOIN users co_author ON co_author.id = pa."userId"
+            WHERE pa."postId" = p.id
+              AND co_author.username = ${username}
+          )
+        )
+      `,
       page,
       pageSize,
       sort,

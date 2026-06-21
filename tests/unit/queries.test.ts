@@ -71,6 +71,21 @@ import {
 } from "@/lib/queries"
 
 describe("cached Prisma query helpers", () => {
+  const rawPostRow = {
+    author: { avatarUrl: null, name: "Mina", username: "mina" },
+    category: { id: "category-1", name: "Production", slug: "production" },
+    coAuthors: [],
+    commentCount: BigInt(2),
+    coverAlt: null,
+    coverUrl: null,
+    excerpt: "Summary",
+    publishedAt: new Date("2026-06-01T00:00:00Z"),
+    slug: "essay",
+    tags: [{ tag: { id: "tag-1", name: "Sakuga", slug: "sakuga" } }],
+    title: "Essay",
+    totalCount: BigInt(1),
+  }
+
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.prisma.$queryRaw.mockReset()
@@ -96,42 +111,40 @@ describe("cached Prisma query helpers", () => {
   })
 
   it("caches paginated published post lists behind the posts tag", async () => {
-    mocks.prisma.post.findMany.mockResolvedValue([{ slug: "essay" }])
-    mocks.prisma.post.count.mockResolvedValue(1)
+    mocks.prisma.$queryRaw
+      .mockResolvedValueOnce([rawPostRow])
+      .mockResolvedValueOnce([rawPostRow])
 
     // Test default sorting (latest)
     await expect(getCachedPublishedPosts(2, 10)).resolves.toEqual({
-      posts: [{ slug: "essay" }],
+      posts: [
+        {
+          _count: { comments: 2 },
+          author: { avatarUrl: null, name: "Mina", username: "mina" },
+          category: { id: "category-1", name: "Production", slug: "production" },
+          coAuthors: [],
+          coverAlt: null,
+          coverUrl: null,
+          excerpt: "Summary",
+          publishedAt: new Date("2026-06-01T00:00:00Z"),
+          slug: "essay",
+          tags: [{ tag: { id: "tag-1", name: "Sakuga", slug: "sakuga" } }],
+          title: "Essay",
+        },
+      ],
       total: 1,
     })
-
-    expect(mocks.prisma.post.findMany).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        orderBy: [{ publishedAt: "desc" }, { updatedAt: "desc" }],
-        skip: 10,
-        take: 10,
-        where: { status: "PUBLISHED" },
-      }),
-    )
 
     // Test comments sorting
     await expect(getCachedPublishedPosts(1, 10, "comments")).resolves.toEqual({
-      posts: [{ slug: "essay" }],
+      posts: [expect.objectContaining({ _count: { comments: 2 }, slug: "essay" })],
       total: 1,
     })
 
-    expect(mocks.prisma.post.findMany).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        orderBy: [{ comments: { _count: "desc" } }, { publishedAt: "desc" }],
-        skip: 0,
-        take: 10,
-        where: { status: "PUBLISHED" },
-      }),
-    )
-
+    expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(2)
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled()
-    const select = mocks.prisma.post.findMany.mock.calls[0]?.[0].select
-    expect(select.author.select).not.toHaveProperty("email")
+    expect(mocks.prisma.post.findMany).not.toHaveBeenCalled()
+    expect(mocks.prisma.post.count).not.toHaveBeenCalled()
     expect(mocks.cacheEntries).toContainEqual({
       keyParts: ["published-posts"],
       options: { revalidate: 300, tags: ["posts"] },
@@ -139,27 +152,20 @@ describe("cached Prisma query helpers", () => {
   })
 
   it("filters published post lists by archive month", async () => {
-    mocks.prisma.post.findMany.mockResolvedValue([{ slug: "june-essay" }])
-    mocks.prisma.post.count.mockResolvedValue(1)
+    mocks.prisma.$queryRaw.mockResolvedValueOnce([
+      { ...rawPostRow, slug: "june-essay" },
+    ])
 
     await expect(
       getCachedPublishedPosts(1, 10, "latest", "2026-06"),
     ).resolves.toEqual({
-      posts: [{ slug: "june-essay" }],
+      posts: [expect.objectContaining({ slug: "june-essay" })],
       total: 1,
     })
 
-    expect(mocks.prisma.post.findMany).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        where: {
-          publishedAt: {
-            gte: new Date("2026-06-01T00:00:00.000Z"),
-            lt: new Date("2026-07-01T00:00:00.000Z"),
-          },
-          status: "PUBLISHED",
-        },
-      }),
-    )
+    expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(1)
+    expect(mocks.prisma.post.findMany).not.toHaveBeenCalled()
+    expect(mocks.prisma.post.count).not.toHaveBeenCalled()
   })
 
   it("caches sidebar data behind posts and categories tags", async () => {
@@ -587,8 +593,7 @@ describe("cached Prisma query helpers", () => {
       name: "Production",
       slug: "production",
     })
-    mocks.prisma.post.findMany.mockResolvedValue([{ slug: "essay" }])
-    mocks.prisma.post.count.mockResolvedValue(1)
+    mocks.prisma.$queryRaw.mockResolvedValueOnce([rawPostRow])
 
     await expect(getCachedCategoryBySlug("production")).resolves.toEqual({
       description: "Production essays",
@@ -597,7 +602,7 @@ describe("cached Prisma query helpers", () => {
       slug: "production",
     })
     await expect(getCachedCategoryPosts("production", 2, 10, "comments")).resolves.toEqual({
-      posts: [{ slug: "essay" }],
+      posts: [expect.objectContaining({ _count: { comments: 2 }, slug: "essay" })],
       total: 1,
     })
 
@@ -606,24 +611,9 @@ describe("cached Prisma query helpers", () => {
       where: { slug: "production" },
     })
     expect(mocks.prisma.category.findMany).not.toHaveBeenCalled()
-    expect(mocks.prisma.post.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        orderBy: [{ comments: { _count: "desc" } }, { publishedAt: "desc" }],
-        skip: 10,
-        take: 10,
-        where: {
-          category: {
-            is: {
-              OR: [
-                { slug: "production" },
-                { parent: { is: { slug: "production" } } },
-              ],
-            },
-          },
-          status: "PUBLISHED",
-        },
-      }),
-    )
+    expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(1)
+    expect(mocks.prisma.post.findMany).not.toHaveBeenCalled()
+    expect(mocks.prisma.post.count).not.toHaveBeenCalled()
     expect(mocks.cacheEntries).toContainEqual({
       keyParts: ["category-by-slug"],
       options: { revalidate: 300, tags: ["categories"] },
@@ -640,8 +630,7 @@ describe("cached Prisma query helpers", () => {
       name: "Sakuga",
       slug: "sakuga",
     })
-    mocks.prisma.post.findMany.mockResolvedValue([{ slug: "essay" }])
-    mocks.prisma.post.count.mockResolvedValue(1)
+    mocks.prisma.$queryRaw.mockResolvedValueOnce([rawPostRow])
 
     await expect(getCachedTagBySlug("sakuga")).resolves.toEqual({
       id: "tag-1",
@@ -649,19 +638,13 @@ describe("cached Prisma query helpers", () => {
       slug: "sakuga",
     })
     await expect(getCachedTagPosts("sakuga", 1, 10, "oldest")).resolves.toEqual({
-      posts: [{ slug: "essay" }],
+      posts: [expect.objectContaining({ _count: { comments: 2 }, slug: "essay" })],
       total: 1,
     })
 
-    expect(mocks.prisma.post.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        orderBy: [{ publishedAt: "asc" }, { updatedAt: "asc" }],
-        where: {
-          status: "PUBLISHED",
-          tags: { some: { tag: { slug: "sakuga" } } },
-        },
-      }),
-    )
+    expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(1)
+    expect(mocks.prisma.post.findMany).not.toHaveBeenCalled()
+    expect(mocks.prisma.post.count).not.toHaveBeenCalled()
     expect(mocks.cacheEntries).toContainEqual({
       keyParts: ["tag-by-slug"],
       options: { revalidate: 300, tags: ["tags"] },
@@ -681,29 +664,19 @@ describe("cached Prisma query helpers", () => {
       name: "Mina",
       username: "mina",
     })
-    mocks.prisma.post.findMany.mockResolvedValue([{ slug: "essay" }])
-    mocks.prisma.post.count.mockResolvedValue(1)
+    mocks.prisma.$queryRaw.mockResolvedValueOnce([rawPostRow])
 
     await expect(getCachedAuthorByUsername("mina")).resolves.toEqual(
       expect.objectContaining({ id: "user-1", username: "mina" }),
     )
     await expect(getCachedAuthorPosts("mina", 1, 10, "comments")).resolves.toEqual({
-      posts: [{ slug: "essay" }],
+      posts: [expect.objectContaining({ _count: { comments: 2 }, slug: "essay" })],
       total: 1,
     })
 
-    expect(mocks.prisma.post.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        orderBy: [{ comments: { _count: "desc" } }, { publishedAt: "desc" }],
-        where: {
-          OR: [
-            { author: { username: "mina" } },
-            { coAuthors: { some: { user: { username: "mina" } } } },
-          ],
-          status: "PUBLISHED",
-        },
-      }),
-    )
+    expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(1)
+    expect(mocks.prisma.post.findMany).not.toHaveBeenCalled()
+    expect(mocks.prisma.post.count).not.toHaveBeenCalled()
     expect(mocks.cacheEntries).toContainEqual({
       keyParts: ["author-by-username"],
       options: { revalidate: 300, tags: ["users"] },
