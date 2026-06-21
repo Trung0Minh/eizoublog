@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { JSONContent } from "@tiptap/react"
 
@@ -121,9 +122,13 @@ export default async function PostPage({ params }: PostPageProps) {
               )}
               <div className="flex flex-wrap gap-[6px]">
                 {tags.map((tag) => (
-                  <span key={tag.slug} className="px-[12px] py-[6px] bg-accent/10 border border-accent/20 text-accent text-[11px] font-semibold rounded-full hover:bg-accent hover:text-white transition-colors cursor-pointer">
+                  <Link
+                    href={`/tag/${tag.slug}`}
+                    key={tag.slug}
+                    className="px-[12px] py-[6px] bg-accent/10 border border-accent/20 text-accent text-[11px] font-semibold rounded-full hover:bg-accent hover:text-white transition-colors cursor-pointer"
+                  >
                     {tag.name}
-                  </span>
+                  </Link>
                 ))}
               </div>
             </ScrollReveal>
