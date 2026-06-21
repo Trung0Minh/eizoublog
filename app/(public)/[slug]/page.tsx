@@ -4,7 +4,6 @@ import { notFound } from "next/navigation"
 import type { JSONContent } from "@tiptap/react"
 
 import { CommentSection } from "@/components/comments/CommentSection"
-import { PageContainer } from "@/components/layout/PageContainer"
 import { AuthorBio } from "@/components/posts/AuthorBio"
 import { PostHero } from "@/components/posts/PostHero"
 import { PostBody } from "@/components/posts/PostBody"
