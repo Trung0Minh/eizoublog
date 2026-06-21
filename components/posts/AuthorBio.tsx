@@ -55,7 +55,7 @@ export function AuthorBio({ author }: AuthorBioProps) {
           Viết bởi
         </div>
         <Link
-          className="mb-2 block text-[16px] font-bold text-text-primary hover:underline"
+          className="mb-2 inline-block text-[16px] font-bold text-text-primary hover:underline"
           href={`/authors/${author.username}`}
         >
           {author.name}

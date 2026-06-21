@@ -125,6 +125,15 @@ export function PostEditor({
   const [coverUrl, setCoverUrl] = useState(initialData?.coverUrl ?? "")
   const [error, setError] = useState("")
   const [excerpt, setExcerpt] = useState(initialData?.excerpt ?? "")
+  const excerptRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    const textarea = excerptRef.current
+    if (textarea) {
+      textarea.style.height = "auto"
+      textarea.style.height = `${textarea.scrollHeight}px`
+    }
+  }, [excerpt])
   const [isDirty, setIsDirty] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [savingAction, setSavingAction] = useState<"draft" | "publish" | null>(null)
@@ -578,7 +587,7 @@ export function PostEditor({
                     Đoạn trích
                   </label>
                   <Textarea
-                    className="h-16 min-h-16 resize-none border-none bg-transparent px-0 text-[16px] text-text-secondary/80 shadow-none placeholder:text-text-tertiary focus-visible:border-transparent focus-visible:ring-0 leading-relaxed"
+                    className="min-h-10 resize-none overflow-hidden border-none bg-transparent px-0 text-[16px] text-text-secondary/80 shadow-none placeholder:text-text-tertiary focus-visible:border-transparent focus-visible:ring-0 leading-relaxed"
                     id="post-excerpt"
                     maxLength={500}
                     onChange={(event) => {
@@ -586,6 +595,7 @@ export function PostEditor({
                       markDirtyAndAutosave()
                     }}
                     placeholder="Đoạn trích ngắn hiển thị trên trang danh sách..."
+                    ref={excerptRef}
                     value={excerpt}
                   />
                 </div>

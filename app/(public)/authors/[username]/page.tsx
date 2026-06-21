@@ -30,7 +30,8 @@ function parsePage(page?: string) {
 export async function generateMetadata({
   params,
 }: AuthorPageProps): Promise<Metadata> {
-  const { username } = await params
+  const { username: rawUsername } = await params
+  const username = decodeURIComponent(rawUsername)
   const author = await getCachedAuthorByUsername(username)
 
   if (!author) {
@@ -68,10 +69,11 @@ export default async function AuthorPage({
   params,
   searchParams,
 }: AuthorPageProps) {
-  const [{ username }, { page: pageParam, sort: sortParam }] = await Promise.all([
+  const [{ username: rawUsername }, { page: pageParam, sort: sortParam }] = await Promise.all([
     params,
     searchParams,
   ])
+  const username = decodeURIComponent(rawUsername)
   const page = parsePage(pageParam)
   const sort = parsePostListSort(sortParam)
   const author = await getCachedAuthorByUsername(username)

@@ -131,11 +131,13 @@ export default async function PostPage({ params }: PostPageProps) {
 
           <article className="mt-12 max-w-[68ch] mx-auto text-text-primary font-lora text-[16px] md:text-[17.5px] leading-[1.75] md:leading-[1.8] post-content">
             <ScrollReveal delay={0.2}>
-              <div className="bg-white dark:bg-[#1f162b] rounded-[24px] border border-border-default shadow-lg p-6 sm:p-8 md:p-12 mb-12 relative z-30 overflow-hidden" style={{ backgroundColor: 'var(--card, #ffffff)' }}>
+              <div className="bg-card rounded-[24px] border border-border-default shadow-lg p-6 sm:p-8 md:p-12 mb-12 relative z-30 overflow-hidden">
                 <PostBody content={content} />
               </div>
             </ScrollReveal>
+          </article>
 
+          <div className="max-w-[68ch] mx-auto">
             <ScrollReveal delay={0.3}>
               <div className="mt-12 md:mt-16 flex flex-col gap-4">
                 {[post.author, ...post.coAuthors.map(c => c.user)].map(author => (
@@ -152,7 +154,7 @@ export default async function PostPage({ params }: PostPageProps) {
                 postAuthorUsernames={authors}
               />
             </ScrollReveal>
-          </article>
+          </div>
         </main>
 
         <aside className="hidden w-[200px] shrink-0 xl:block ml-10 mt-12 sticky top-24 self-start max-h-[calc(100vh-120px)] overflow-y-auto no-scrollbar">
