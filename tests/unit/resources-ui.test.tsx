@@ -103,7 +103,7 @@ describe("ResourcesClient", () => {
     scrollBy.mockRestore()
   })
 
-  it("adds new default blog sources to saved default-like resources", () => {
+  it("adds new default sources to saved default-like resources", () => {
     render(
       <ResourcesClient
         appName="Anime Blog"
@@ -133,6 +133,14 @@ describe("ResourcesClient", () => {
     expect(screen.getByRole("link", { name: /Animétudes/i })).toHaveAttribute(
       "href",
       "https://animetudes.com/",
+    )
+    expect(screen.getByRole("link", { name: /Sakuga Wiki/i })).toHaveAttribute(
+      "href",
+      "https://sakuga.fandom.com/wiki/Sakuga_Wiki",
+    )
+    expect(screen.getByRole("link", { name: /Settei Dreams/i })).toHaveAttribute(
+      "href",
+      "https://setteidreams.net/",
     )
   })
 })

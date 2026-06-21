@@ -77,6 +77,23 @@ const backfilledBlogResources: ResourceCard[] = [
     description: "Blog nghiên cứu về nghệ thuật và lịch sử hoạt hình, nổi bật với các series dài hơi về Mushi Pro, Tatsunoko, trường phái Kanada, TMS và nhiều bài dịch/phân tích chuyên sâu. Đây là nguồn rất giá trị cho các bài viết cần bối cảnh lịch sử, lý thuyết hoạt hình và nghiên cứu sakuga nghiêm túc.",
     category: "Blog",
   },
+  {
+    url: "https://sakuga.fandom.com/wiki/Sakuga_Wiki",
+    domain: "Sakuga Wiki",
+    logo: "/logos/sakuga-wiki.svg",
+    description: "Bách khoa toàn thư cộng đồng về quy trình và kỹ thuật sản xuất anime, giải thích các thuật ngữ như e-konte, genga, douga, shiage, settei và nhiều khái niệm trong pipeline. Đây là nguồn tra cứu nhanh hữu ích khi cần chuẩn hóa thuật ngữ hoặc giải thích các bước sản xuất trong bài viết.",
+    category: "Blog",
+  },
+]
+
+const backfilledDatabaseResources: ResourceCard[] = [
+  {
+    url: "https://setteidreams.net/",
+    domain: "Settei Dreams",
+    logo: "/logos/settei-dreams.svg",
+    description: "Kho lưu trữ lớn về tư liệu sản xuất hoạt hình, bao gồm settei, color design, artbook, storyboard và production sketch. Trang rất hữu ích để tham khảo thiết kế nhân vật, đạo cụ, bối cảnh và các sheet hậu trường phục vụ nghiên cứu, fan art, dựng hình 3D hoặc cosplay.",
+    category: "Cơ sở dữ liệu",
+  },
 ]
 
 const defaultResources: ResourceCard[] = [
@@ -167,6 +184,7 @@ const defaultResources: ResourceCard[] = [
     description: "Nền tảng tuyệt vời để theo dõi lịch chiếu phim, quản lý danh sách anime/manga đang xem, cũng như tương tác với cộng đồng người hâm mộ.",
     category: "Cơ sở dữ liệu",
   },
+  ...backfilledDatabaseResources,
   // Misc
   {
     url: "https://x.com",
@@ -234,7 +252,9 @@ function withMissingDefaultResources(resources: ResourceCard[]) {
 
   return [
     ...resources,
-    ...backfilledBlogResources.filter((resource) => !existingUrls.has(resource.url)),
+    ...[...backfilledBlogResources, ...backfilledDatabaseResources].filter(
+      (resource) => !existingUrls.has(resource.url),
+    ),
   ]
 }
 

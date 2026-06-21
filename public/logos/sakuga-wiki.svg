@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title desc">
+  <title id="title">Sakuga Wiki logo</title>
+  <desc id="desc">A simple SW wordmark for Sakuga Wiki.</desc>
+  <rect width="96" height="96" rx="24" fill="#f0f5ff"/>
+  <circle cx="48" cy="48" r="34" fill="#ffffff" stroke="#27364a" stroke-width="3"/>
+  <path d="M27 65c3 3 8 5 14 5 9 0 15-5 15-12 0-6-4-9-12-12l-5-2c-4-1-6-3-6-5 0-3 3-5 7-5 4 0 7 1 10 4l5-6c-4-4-9-6-15-6-8 0-14 5-14 12 0 6 4 10 11 12l5 2c4 2 6 3 6 6 0 3-3 5-8 5-4 0-8-2-11-5l-2 7Z" fill="#27364a"/>
+  <path d="M57 28h7l4 26 6-26h7l-9 40h-7l-5-25-5 25h-7l9-40Z" fill="#3f6fb5"/>
+</svg>
