@@ -1,10 +1,10 @@
 import type { Prisma, Role } from "@prisma/client"
-import { revalidateTag } from "next/cache"
 import { ZodError, z } from "zod"
 
 import { auth } from "@/lib/auth"
 import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
 import { canViewPost } from "@/lib/postAccess"
+import { revalidatePostMutationPaths } from "@/lib/postRevalidation"
 import { prisma } from "@/lib/prisma"
 import { ensureUniqueSlug, generateSlug } from "@/lib/utils"
 
@@ -180,6 +180,7 @@ export async function PATCH(
     const { id } = await params
     const data = updateSchema.parse(await request.json())
     let shouldRevalidatePosts = false
+    let existingSlug: string | null = null
 
     const post = await prisma.$transaction(async (tx) => {
       const existing = await tx.post.findUnique({
@@ -187,6 +188,7 @@ export async function PATCH(
           authorId: true,
           status: true,
           id: true,
+          slug: true,
           title: true,
           coAuthors: { select: { userId: true, status: true } },
         },
@@ -232,6 +234,7 @@ export async function PATCH(
       }
 
       const nextStatus = data.status ?? existing.status
+      existingSlug = existing.slug
       shouldRevalidatePosts =
         existing.status === "PUBLISHED" ||
         nextStatus === "PUBLISHED" ||
@@ -369,7 +372,7 @@ export async function PATCH(
     })
 
     if (shouldRevalidatePosts) {
-      revalidateTag("posts", "max")
+      revalidatePostMutationPaths([existingSlug, post.slug])
     }
 
     return Response.json({ data: post })
@@ -399,11 +402,13 @@ export async function DELETE(
 
   try {
     const { id } = await params
+    let existingSlug: string | null = null
 
     await prisma.$transaction(async (tx) => {
       const existing = await tx.post.findUnique({
         select: {
           authorId: true,
+          slug: true,
           coAuthors: { select: { userId: true, status: true } },
         },
         where: { id },
@@ -420,13 +425,15 @@ export async function DELETE(
         throw new RouteError("Forbidden", 403)
       }
 
+      existingSlug = existing.slug
+
       await tx.post.delete({
         select: { id: true },
         where: { id },
       })
     })
 
-    revalidateTag("posts", "max")
+    revalidatePostMutationPaths([existingSlug])
 
     return Response.json({ data: { message: "Post deleted" } })
   } catch (error) {

@@ -1,6 +1,5 @@
-import { revalidateTag } from "next/cache"
-
 import { getActiveSession } from "@/lib/authz"
+import { revalidatePostMutationPaths } from "@/lib/postRevalidation"
 import { prisma } from "@/lib/prisma"
 
 class RouteError extends Error {
@@ -28,7 +27,7 @@ export async function POST(
     await requireAdmin()
     const { id } = await params
     const post = await prisma.post.findUnique({
-      select: { id: true, status: true },
+      select: { id: true, slug: true, status: true },
       where: { id },
     })
 
@@ -40,12 +39,12 @@ export async function POST(
       throw new RouteError("Post is already archived", 400)
     }
 
-    await prisma.post.update({
+    const updatedPost = await prisma.post.update({
       data: { status: "ARCHIVED" },
-      select: { id: true, status: true },
+      select: { id: true, slug: true, status: true },
       where: { id },
     })
-    revalidateTag("posts", "max")
+    revalidatePostMutationPaths([post.slug, updatedPost.slug])
 
     return Response.json({ data: { message: "Post archived" } })
   } catch (error) {
@@ -66,7 +65,7 @@ export async function DELETE(
     await requireAdmin()
     const { id } = await params
     const post = await prisma.post.findUnique({
-      select: { id: true, status: true },
+      select: { id: true, slug: true, status: true },
       where: { id },
     })
 
@@ -78,12 +77,12 @@ export async function DELETE(
       throw new RouteError("Post is not archived", 400)
     }
 
-    await prisma.post.update({
+    const updatedPost = await prisma.post.update({
       data: { status: "DRAFT" },
-      select: { id: true, status: true },
+      select: { id: true, slug: true, status: true },
       where: { id },
     })
-    revalidateTag("posts", "max")
+    revalidatePostMutationPaths([post.slug, updatedPost.slug])
 
     return Response.json({ data: { message: "Post restored to draft" } })
   } catch (error) {

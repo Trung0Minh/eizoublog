@@ -9,9 +9,11 @@ const mocks = vi.hoisted(() => {
       count: vi.fn(),
       create: vi.fn(),
       delete: vi.fn(),
+      deleteMany: vi.fn(),
       findMany: vi.fn(),
       findUnique: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
     tag: {
       findMany: vi.fn(),
@@ -38,13 +40,18 @@ const mocks = vi.hoisted(() => {
   return {
     auth: vi.fn(),
     prisma,
+    revalidatePath: vi.fn(),
     revalidateTag: vi.fn(),
   }
 })
 
 vi.mock("@/lib/auth", () => ({ auth: mocks.auth }))
 vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }))
-vi.mock("next/cache", () => ({ revalidateTag: mocks.revalidateTag }))
+vi.mock("next/cache", () => ({
+  revalidatePath: mocks.revalidatePath,
+  revalidateTag: mocks.revalidateTag,
+  unstable_cache: (fn: unknown) => fn,
+}))
 
 import { DELETE, GET as GET_POST, PATCH } from "@/app/api/posts/[id]/route"
 import { GET as GET_POSTS, POST as CREATE_POST } from "@/app/api/posts/route"
@@ -248,6 +255,11 @@ describe("posts API", () => {
       }),
     )
     expect(mocks.revalidateTag).toHaveBeenCalledWith("posts", "max")
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/")
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/my-title-1")
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/dashboard")
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin")
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/posts")
   })
 
   it("rejects unauthenticated post creation", async () => {
@@ -533,6 +545,11 @@ describe("single post API", () => {
       data: [{ postId: "post-1", tagId: "tag-2" }],
     })
     expect(mocks.revalidateTag).toHaveBeenCalledWith("posts", "max")
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/")
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/draft-title")
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/dashboard")
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin")
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/posts")
   })
 
   it("lets post authors withdraw published posts to drafts", async () => {
@@ -570,6 +587,9 @@ describe("single post API", () => {
         where: { id: "post-1" },
       }),
     )
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/published-post")
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/dashboard")
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/posts")
   })
 
   it("lets post authors archive their own posts from the dashboard", async () => {
@@ -607,6 +627,9 @@ describe("single post API", () => {
         where: { id: "post-1" },
       }),
     )
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/published-post")
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/dashboard")
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/posts")
   })
 
   it("forbids accepted co-authors from withdrawing or archiving posts", async () => {
@@ -688,7 +711,10 @@ describe("single post API", () => {
     mocks.auth.mockResolvedValue({
       user: { id: "writer-2", role: "WRITER" },
     })
-    mocks.prisma.post.findUnique.mockResolvedValue({ authorId: "writer-1" })
+    mocks.prisma.post.findUnique.mockResolvedValue({
+      authorId: "writer-1",
+      slug: "published-post",
+    })
 
     const response = await DELETE(
       new Request("https://example.test/api/posts/post-1"),
@@ -723,7 +749,10 @@ describe("single post API", () => {
     mocks.auth.mockResolvedValue({
       user: { id: "admin-1", role: "ADMIN" },
     })
-    mocks.prisma.post.findUnique.mockResolvedValue({ authorId: "writer-1" })
+    mocks.prisma.post.findUnique.mockResolvedValue({
+      authorId: "writer-1",
+      slug: "published-post",
+    })
     mocks.prisma.post.delete.mockResolvedValue({ id: "post-1" })
 
     const response = await DELETE(
@@ -740,6 +769,9 @@ describe("single post API", () => {
       where: { id: "post-1" },
     })
     expect(mocks.revalidateTag).toHaveBeenCalledWith("posts", "max")
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/published-post")
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/dashboard")
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/posts")
   })
 
   it("archives posts through the admin-only archive route", async () => {
@@ -751,6 +783,7 @@ describe("single post API", () => {
     })
     mocks.prisma.post.findUnique.mockResolvedValue({
       id: "post-1",
+      slug: "published-post",
       status: "PUBLISHED",
     })
     mocks.prisma.post.update.mockResolvedValue({
@@ -769,10 +802,12 @@ describe("single post API", () => {
     })
     expect(mocks.prisma.post.update).toHaveBeenCalledWith({
       data: { status: "ARCHIVED" },
-      select: { id: true, status: true },
+      select: { id: true, slug: true, status: true },
       where: { id: "post-1" },
     })
     expect(mocks.revalidateTag).toHaveBeenCalledWith("posts", "max")
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/published-post")
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/posts")
   })
 
   it("restores archived posts to draft through the archive route", async () => {
@@ -784,6 +819,7 @@ describe("single post API", () => {
     })
     mocks.prisma.post.findUnique.mockResolvedValue({
       id: "post-1",
+      slug: "published-post",
       status: "ARCHIVED",
     })
     mocks.prisma.post.update.mockResolvedValue({
@@ -802,10 +838,12 @@ describe("single post API", () => {
     })
     expect(mocks.prisma.post.update).toHaveBeenCalledWith({
       data: { status: "DRAFT" },
-      select: { id: true, status: true },
+      select: { id: true, slug: true, status: true },
       where: { id: "post-1" },
     })
     expect(mocks.revalidateTag).toHaveBeenCalledWith("posts", "max")
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/published-post")
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/posts")
   })
 })
 
@@ -886,5 +924,61 @@ describe("tags API", () => {
       update: {},
       where: { slug: "dao-dien" },
     })
+  })
+})
+
+describe("bulk post API", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.auth.mockResolvedValue({
+      user: { id: "admin-1", role: "ADMIN" },
+    })
+  })
+
+  it("invalidates affected post paths after bulk delete", async () => {
+    const { POST: BULK_POST } = await import("@/app/api/posts/bulk/route")
+    mocks.prisma.post.findMany.mockResolvedValue([
+      { slug: "published-post" },
+      { slug: "another-post" },
+    ])
+    mocks.prisma.post.deleteMany.mockResolvedValue({ count: 2 })
+
+    const response = await BULK_POST(
+      jsonRequest("https://example.test/api/posts/bulk", {
+        action: "DELETE",
+        postIds: ["post-1", "post-2"],
+      }),
+    )
+
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toEqual({ success: true })
+    expect(mocks.prisma.post.findMany).toHaveBeenCalledWith({
+      select: { slug: true },
+      where: { id: { in: ["post-1", "post-2"] } },
+    })
+    expect(mocks.prisma.post.deleteMany).toHaveBeenCalledWith({
+      where: { id: { in: ["post-1", "post-2"] } },
+    })
+    expect(mocks.revalidateTag).toHaveBeenCalledWith("posts", "max")
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/published-post")
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/another-post")
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/posts")
+  })
+
+  it("rejects invalid bulk actions without invalidating caches", async () => {
+    const { POST: BULK_POST } = await import("@/app/api/posts/bulk/route")
+
+    const response = await BULK_POST(
+      jsonRequest("https://example.test/api/posts/bulk", {
+        action: "BAD_ACTION",
+        postIds: ["post-1"],
+      }),
+    )
+
+    expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toEqual({ error: "Invalid action" })
+    expect(mocks.prisma.post.findMany).not.toHaveBeenCalled()
+    expect(mocks.revalidateTag).not.toHaveBeenCalled()
+    expect(mocks.revalidatePath).not.toHaveBeenCalled()
   })
 })

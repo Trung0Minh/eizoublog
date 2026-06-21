@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
+
 import { auth } from "@/lib/auth"
+import { revalidatePostMutationPaths } from "@/lib/postRevalidation"
 import { prisma } from "@/lib/prisma"
 
 export async function POST(req: Request) {
@@ -13,6 +15,15 @@ export async function POST(req: Request) {
     if (!Array.isArray(postIds) || postIds.length === 0) {
       return NextResponse.json({ error: "No posts selected" }, { status: 400 })
     }
+
+    if (!["DELETE", "ARCHIVE", "UNARCHIVE"].includes(action)) {
+      return NextResponse.json({ error: "Invalid action" }, { status: 400 })
+    }
+
+    const affectedPosts = await prisma.post.findMany({
+      select: { slug: true },
+      where: { id: { in: postIds } },
+    })
 
     if (action === "DELETE") {
       await prisma.post.deleteMany({
@@ -28,12 +39,12 @@ export async function POST(req: Request) {
         where: { id: { in: postIds } },
         data: { status: "DRAFT" },
       })
-    } else {
-      return NextResponse.json({ error: "Invalid action" }, { status: 400 })
     }
 
+    revalidatePostMutationPaths(affectedPosts.map((post) => post.slug))
+
     return NextResponse.json({ success: true })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Action failed" }, { status: 500 })
   }
 }

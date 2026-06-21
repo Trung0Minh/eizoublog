@@ -1,10 +1,10 @@
 import type { Prisma, PostStatus } from "@prisma/client"
 import type { Session } from "next-auth"
-import { revalidateTag } from "next/cache"
 import { ZodError, z } from "zod"
 
 import { auth } from "@/lib/auth"
 import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
+import { revalidatePostMutationPaths } from "@/lib/postRevalidation"
 import { prisma } from "@/lib/prisma"
 import { ensureUniqueSlug, generateSlug } from "@/lib/utils"
 
@@ -212,7 +212,7 @@ export async function POST(request: Request) {
       })
     })
 
-    revalidateTag("posts", "max")
+    revalidatePostMutationPaths([post.slug])
 
     return Response.json({ data: post }, { status: 201 })
   } catch (error) {
