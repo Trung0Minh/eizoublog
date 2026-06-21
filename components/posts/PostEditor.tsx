@@ -227,6 +227,13 @@ export function PostEditor({
   }, [scheduleDebounce])
 
   async function savePost(status: "DRAFT" | "PUBLISHED") {
+    if (status === "PUBLISHED") {
+      if (!contentText || !contentText.trim()) {
+        setError("Nội dung bài viết không được để trống khi đăng.")
+        setSavingAction(null)
+        return
+      }
+    }
     setSavingAction(status === "PUBLISHED" ? "publish" : "draft")
     setError("")
     let isNavigatingAway = false

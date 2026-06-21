@@ -190,6 +190,7 @@ export async function PATCH(
           id: true,
           slug: true,
           title: true,
+          contentText: true,
           coAuthors: { select: { userId: true, status: true } },
         },
         where: { id },
@@ -234,6 +235,12 @@ export async function PATCH(
       }
 
       const nextStatus = data.status ?? existing.status
+      if (nextStatus === "PUBLISHED") {
+        const contentTextToCheck = data.contentText !== undefined ? data.contentText : existing.contentText
+        if (!contentTextToCheck || !contentTextToCheck.trim()) {
+          throw new RouteError("Nội dung bài viết không được để trống khi đăng.", 400)
+        }
+      }
       existingSlug = existing.slug
       shouldRevalidatePosts =
         existing.status === "PUBLISHED" ||

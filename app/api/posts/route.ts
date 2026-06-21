@@ -176,6 +176,9 @@ export async function POST(request: Request) {
 
   try {
     const data = createSchema.parse(await request.json())
+    if (data.status === "PUBLISHED" && (!data.contentText || !data.contentText.trim())) {
+      return Response.json({ error: "Nội dung bài viết không được để trống khi đăng." }, { status: 400 })
+    }
     const post = await prisma.$transaction(async (tx) => {
       const baseSlug = generateSlug(data.title) || "post"
       const slug = await ensureUniqueSlug(baseSlug, tx)

@@ -721,6 +721,24 @@ describe("PostEditor", () => {
       status: "DRAFT",
     })
   })
+
+  it("shows an error and prevents publishing if contentText is empty", async () => {
+    const user = userEvent.setup()
+
+    render(
+      <PostEditor
+        categories={[]}
+        currentUserId="writer-1"
+        writers={[]}
+      />,
+    )
+
+    await user.type(screen.getByLabelText("Tiêu đề"), "Test Post")
+    await user.click(screen.getByRole("button", { name: "Xuất bản" }))
+
+    await screen.findByText("Nội dung bài viết không được để trống khi đăng.")
+    expect(fetch).not.toHaveBeenCalled()
+  })
 })
 
 import { HomePostList } from "@/app/(public)/HomePostList"

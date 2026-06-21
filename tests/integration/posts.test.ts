@@ -262,6 +262,26 @@ describe("posts API", () => {
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/posts")
   })
 
+  it("rejects published post creation if contentText is empty", async () => {
+    mocks.auth.mockResolvedValue({
+      user: { id: "writer-1", role: "WRITER" },
+    })
+
+    const response = await CREATE_POST(
+      jsonRequest("https://example.test/api/posts", {
+        content: { content: [], type: "doc" },
+        contentText: "",
+        status: "PUBLISHED",
+        title: "My Title",
+      }),
+    )
+
+    expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toEqual({
+      error: "Nội dung bài viết không được để trống khi đăng.",
+    })
+  })
+
   it("rejects unauthenticated post creation", async () => {
     const response = await CREATE_POST(
       jsonRequest("https://example.test/api/posts", {
@@ -502,6 +522,7 @@ describe("single post API", () => {
       id: "post-1",
       authorId: "writer-1",
       status: "DRAFT",
+      contentText: "Nội dung bài viết",
     })
     mocks.prisma.postTag.findMany.mockResolvedValue([
       { tagId: "tag-1", postId: "post-1" },
@@ -550,6 +571,34 @@ describe("single post API", () => {
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/dashboard")
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin")
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/posts")
+  })
+
+  it("rejects publishing an owned draft if contentText is empty", async () => {
+    mocks.auth.mockResolvedValue({
+      user: { id: "writer-1", role: "WRITER" },
+    })
+    mocks.prisma.post.findUnique.mockResolvedValue({
+      id: "post-1",
+      authorId: "writer-1",
+      status: "DRAFT",
+      contentText: "",
+    })
+
+    const response = await PATCH(
+      jsonRequest(
+        "https://example.test/api/posts/post-1",
+        {
+          status: "PUBLISHED",
+        },
+        "PATCH",
+      ),
+      routeContext("post-1"),
+    )
+
+    expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toEqual({
+      error: "Nội dung bài viết không được để trống khi đăng.",
+    })
   })
 
   it("lets post authors withdraw published posts to drafts", async () => {
