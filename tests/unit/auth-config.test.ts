@@ -302,6 +302,39 @@ describe("NextAuth configuration", () => {
     })
   })
 
+  it("reuses complete JWT claims during navigation without a database lookup", async () => {
+    const jwtCallback = config.callbacks?.jwt as unknown as (options: {
+      token: {
+        avatarUrl?: string | null
+        role?: "ADMIN" | "WRITER" | "REVOKED"
+        sub?: string
+        username?: string
+      }
+    }) => Promise<{
+      avatarUrl?: string | null
+      role?: "ADMIN" | "WRITER" | "REVOKED"
+      sub?: string
+      username?: string
+    }>
+
+    const result = await jwtCallback({
+      token: {
+        avatarUrl: "https://example.com/avatar.png",
+        role: "WRITER",
+        sub: "writer-1",
+        username: "writer",
+      },
+    })
+
+    expect(result).toMatchObject({
+      avatarUrl: "https://example.com/avatar.png",
+      role: "WRITER",
+      sub: "writer-1",
+      username: "writer",
+    })
+    expect(mocks.userFindUnique).not.toHaveBeenCalled()
+  })
+
   it("uses JWT fields in sessions without an extra lookup", async () => {
     const session = {
       expires: new Date(Date.now() + 60_000).toISOString(),

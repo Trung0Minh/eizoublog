@@ -232,7 +232,7 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/dashboard" prefetch={false} className="flex items-center justify-between">
+          <Link href="/dashboard" className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <FileText aria-hidden="true" />
               Bài viết của tôi
@@ -244,7 +244,6 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
             className="flex items-center justify-between"
             href="/dashboard/events"
             onClick={markEventNotificationsSeen}
-            prefetch={false}
           >
             <div className="flex items-center gap-2">
               <PartyPopper aria-hidden="true" />
@@ -260,7 +259,6 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
         <DropdownMenuItem asChild>
           <Link
             href="/dashboard/notifications"
-            prefetch={false}
             className="flex items-center justify-between"
           >
             <div className="flex items-center gap-2">
@@ -276,14 +274,14 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
         </DropdownMenuItem>
         {menuUser.role === "ADMIN" && (
           <DropdownMenuItem asChild>
-            <Link href="/admin" prefetch={false}>
+            <Link href="/admin">
               <Shield aria-hidden="true" />
               Quản trị
             </Link>
           </DropdownMenuItem>
         )}
         <DropdownMenuItem asChild>
-          <Link href="/dashboard/profile" prefetch={false}>
+          <Link href="/dashboard/profile">
             <User aria-hidden="true" />
             Sửa hồ sơ
           </Link>

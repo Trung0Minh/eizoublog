@@ -126,6 +126,43 @@ describe("Navbar", () => {
     )
   })
 
+  it("allows protected account menu destinations to prefetch", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(JSON.stringify({ data: { counts: {} } })))
+
+    try {
+      render(
+        <WriterMenu
+          user={{
+            avatarUrl: null,
+            name: "Mina Writer",
+            role: "ADMIN",
+            username: "mina",
+          }}
+        />,
+      )
+
+      const user = userEvent.setup()
+      await user.click(screen.getByRole("button", { name: "Mở menu tác giả" }))
+
+      for (const name of [
+        "Bài viết của tôi",
+        "Sự kiện viết",
+        "Thông báo",
+        "Quản trị",
+        "Sửa hồ sơ",
+      ]) {
+        expect(screen.getByRole("menuitem", { name })).toHaveAttribute(
+          "data-prefetch",
+          "undefined",
+        )
+      }
+    } finally {
+      fetchMock.mockRestore()
+    }
+  })
+
   it("loads the writer session after a short delay without requiring a readable cookie", async () => {
     vi.useFakeTimers()
     Object.defineProperty(document, "cookie", {
@@ -296,14 +333,14 @@ describe("WriterMenu", () => {
     )
     expect(screen.getByRole("menuitem", { name: "Bài viết của tôi" })).toHaveAttribute(
       "data-prefetch",
-      "false",
+      "undefined",
     )
     expect(
       screen.getByRole("menuitem", { name: "Sửa hồ sơ" }),
     ).toHaveAttribute("href", "/dashboard/profile")
     expect(
       screen.getByRole("menuitem", { name: "Sửa hồ sơ" }),
-    ).toHaveAttribute("data-prefetch", "false")
+    ).toHaveAttribute("data-prefetch", "undefined")
     expect(
       screen.getByRole("menuitem", { name: "Hồ sơ công khai" }),
     ).toHaveAttribute("href", "/authors/mina")
@@ -338,7 +375,7 @@ describe("WriterMenu", () => {
     )
     expect(screen.getByRole("menuitem", { name: "Quản trị" })).toHaveAttribute(
       "data-prefetch",
-      "false",
+      "undefined",
     )
   })
 })

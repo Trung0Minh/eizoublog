@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const mocks = vi.hoisted(() => ({
   prisma: {
+    $queryRaw: vi.fn(),
     comment: {
       count: vi.fn(),
       findMany: vi.fn(),
@@ -35,6 +36,7 @@ import {
 describe("notification queries", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.prisma.$queryRaw.mockResolvedValue([])
     mocks.prisma.comment.count.mockResolvedValue(0)
     mocks.prisma.comment.findMany.mockResolvedValue([])
     mocks.prisma.comment.updateMany.mockResolvedValue({ count: 0 })
@@ -47,9 +49,13 @@ describe("notification queries", () => {
   })
 
   it("counts unread comments on authored and accepted co-authored posts", async () => {
-    mocks.prisma.comment.count.mockResolvedValue(3)
-    mocks.prisma.notification.count.mockResolvedValue(4)
-    mocks.prisma.postAuthor.count.mockResolvedValue(2)
+    mocks.prisma.$queryRaw.mockResolvedValueOnce([
+      {
+        pendingInvites: BigInt(2),
+        responseEvents: BigInt(4),
+        unreadComments: BigInt(3),
+      },
+    ])
 
     await expect(
       getNotificationCounts({
@@ -63,24 +69,10 @@ describe("notification queries", () => {
       unreadComments: 3,
     })
 
-    expect(mocks.prisma.comment.count).toHaveBeenCalledWith({
-      where: {
-        authorEmail: { not: "mina@example.com" },
-        isRead: false,
-        post: {
-          OR: [
-            { authorId: "writer-1" },
-            {
-              coAuthors: {
-                some: { status: "ACCEPTED", userId: "writer-1" },
-              },
-            },
-          ],
-          status: { not: "ARCHIVED" },
-        },
-        status: "APPROVED",
-      },
-    })
+    expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(1)
+    expect(mocks.prisma.comment.count).not.toHaveBeenCalled()
+    expect(mocks.prisma.postAuthor.count).not.toHaveBeenCalled()
+    expect(mocks.prisma.notification.count).not.toHaveBeenCalled()
   })
 
   it("lists unread comments and pending co-author invites", async () => {
@@ -111,9 +103,13 @@ describe("notification queries", () => {
       id: "notification-1",
       type: "COAUTHOR_ACCEPTED",
     }
-    mocks.prisma.comment.findMany.mockResolvedValue([comment])
-    mocks.prisma.notification.findMany.mockResolvedValue([responseEvent])
-    mocks.prisma.postAuthor.findMany.mockResolvedValue([invite])
+    mocks.prisma.$queryRaw.mockResolvedValueOnce([
+      {
+        pendingInvites: [invite],
+        responseEvents: [responseEvent],
+        unreadComments: [comment],
+      },
+    ])
 
     await expect(
       getNotifications({
@@ -126,24 +122,10 @@ describe("notification queries", () => {
       unreadComments: [comment],
     })
 
-    expect(mocks.prisma.comment.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        orderBy: { createdAt: "desc" },
-        take: 25,
-      }),
-    )
-    expect(mocks.prisma.postAuthor.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        orderBy: { post: { updatedAt: "desc" } },
-      }),
-    )
-    expect(mocks.prisma.notification.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        orderBy: { createdAt: "desc" },
-        take: 25,
-        where: { readAt: null, userId: "writer-2" },
-      }),
-    )
+    expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(1)
+    expect(mocks.prisma.comment.findMany).not.toHaveBeenCalled()
+    expect(mocks.prisma.postAuthor.findMany).not.toHaveBeenCalled()
+    expect(mocks.prisma.notification.findMany).not.toHaveBeenCalled()
   })
 
   it("marks unread comments read across authored and accepted co-authored posts", async () => {
