@@ -55,7 +55,7 @@ export async function generateMetadata({
   const base = buildMetadata({
     canonicalPath: `/${slug}`,
     description: post.excerpt ?? undefined,
-    ogImage: post.coverUrl ?? undefined,
+    ogImage: post.coverUrl || undefined,
     ogType: "article",
     title: post.title,
   })
