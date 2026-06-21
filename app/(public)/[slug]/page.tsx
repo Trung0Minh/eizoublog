@@ -142,23 +142,25 @@ export default async function PostPage({ params }: PostPageProps) {
             </ScrollReveal>
           </article>
 
-          <div className="max-w-[80ch] mx-auto">
-            <ScrollReveal delay={0.3}>
-              <div className="mt-12 md:mt-16 flex flex-col gap-4">
-                {[post.author, ...post.coAuthors.map(c => c.user)].map(author => (
-                  <AuthorBio key={author.username} author={author} />
-                ))}
-              </div>
-            </ScrollReveal>
-            
-            <ScrollReveal delay={0.4}>
-              <CommentSection
-                initialComments={post.comments}
-                postId={post.id}
-                postSlug={post.slug}
-                postAuthorUsernames={authors}
-              />
-            </ScrollReveal>
+          <div className="max-w-[80ch] mx-auto font-lora text-[16px] md:text-[17.5px]">
+            <div className="font-sans text-text-primary">
+              <ScrollReveal delay={0.3}>
+                <div className="mt-12 md:mt-16 flex flex-col gap-4">
+                  {[post.author, ...post.coAuthors.map(c => c.user)].map(author => (
+                    <AuthorBio key={author.username} author={author} />
+                  ))}
+                </div>
+              </ScrollReveal>
+              
+              <ScrollReveal delay={0.4}>
+                <CommentSection
+                  initialComments={post.comments}
+                  postId={post.id}
+                  postSlug={post.slug}
+                  postAuthorUsernames={authors}
+                />
+              </ScrollReveal>
+            </div>
           </div>
         </main>
 
