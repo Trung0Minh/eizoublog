@@ -1,6 +1,6 @@
 # Todo List: Nhập môn Sakuga Page
 
-- [ ] Task 1: API Configuration for `nhap-mon-sakuga`
+- [x] Task 1: API Configuration for `nhap-mon-sakuga`
 - [ ] Task 2: Create Server Page Component
 - [ ] Task 3: Create Client Page Component with Default Expanded Content
 - [ ] Task 4: Integrate Navigation Links (Navbar & Footer)
