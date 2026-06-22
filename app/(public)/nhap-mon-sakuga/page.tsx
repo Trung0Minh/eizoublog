@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { PageContainer } from "@/components/layout/PageContainer"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { buildMetadata, getAppName } from "@/lib/seo"
+import { buildMetadata } from "@/lib/seo"
 import { IntroToSakugaClient } from "./IntroToSakugaClient"
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -15,7 +15,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function IntroToSakugaPage() {
-  const appName = getAppName()
   const session = await auth()
   const isAdmin = session?.user?.role === "ADMIN"
 
@@ -25,7 +24,8 @@ export default async function IntroToSakugaPage() {
 
   return (
     <PageContainer>
-      <IntroToSakugaClient initialPage={page} isAdmin={isAdmin} appName={appName} />
+      <IntroToSakugaClient initialPage={page} isAdmin={isAdmin} />
     </PageContainer>
   )
 }
+

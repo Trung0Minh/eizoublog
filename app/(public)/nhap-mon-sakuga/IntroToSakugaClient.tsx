@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Pencil, Save, X, Sparkles, HelpCircle } from "lucide-react"
+import { Pencil, Save, X, HelpCircle } from "lucide-react"
 import type { Editor, JSONContent } from "@tiptap/react"
 import Link from "next/link"
 
@@ -22,7 +22,6 @@ interface IntroPageContent {
 interface IntroToSakugaClientProps {
   initialPage: { content: unknown; contentText: string | null } | null
   isAdmin: boolean
-  appName: string
 }
 
 const defaultBody: JSONContent = {
@@ -234,7 +233,7 @@ function getApiError(value: unknown) {
   return "Lỗi khi lưu. Vui lòng thử lại."
 }
 
-export function IntroToSakugaClient({ initialPage, isAdmin, appName }: IntroToSakugaClientProps) {
+export function IntroToSakugaClient({ initialPage, isAdmin }: IntroToSakugaClientProps) {
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
