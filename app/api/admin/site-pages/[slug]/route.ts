@@ -4,7 +4,7 @@ import { ZodError, z } from "zod"
 import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
 import { prisma } from "@/lib/prisma"
 
-const editablePageSlugs = new Set(["about", "resources"])
+const editablePageSlugs = new Set(["about", "resources", "nhap-mon-sakuga"])
 
 const updateSitePageSchema = z.object({
   content: z.unknown(),
@@ -20,6 +20,9 @@ function normalizeJson(value: unknown) {
 }
 
 function titleForSlug(slug: string) {
+  if (slug === "nhap-mon-sakuga") {
+    return "Nhập môn Sakuga"
+  }
   return slug === "about" ? "About" : "Resources"
 }
 
