@@ -171,7 +171,11 @@ export function ImageLightbox({
               className="flex h-full w-full items-center justify-center overflow-hidden touch-none"
               onClick={(event) => event.stopPropagation()}
             >
-              <TransformComponent wrapperClass="w-full h-full flex items-center justify-center">
+              <TransformComponent 
+                wrapperClass="w-full h-full flex items-center justify-center"
+                wrapperStyle={{ width: "100%", height: "100%" }}
+                contentStyle={{ width: "100%", height: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}
+              >
                 <motion.img
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
