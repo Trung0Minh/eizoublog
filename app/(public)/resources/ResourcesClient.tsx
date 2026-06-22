@@ -87,7 +87,7 @@ const backfilledBlogResources: ResourceCard[] = [
   {
     url: "https://ghiblicon.blogspot.com/",
     domain: "Ghibli Blog",
-    logo: "/logos/ghibli-blog.jpg",
+    logo: "/logos/ghibli-blog.ico",
     description: "Blog dành cho người yêu Studio Ghibli, hoạt hình và điện ảnh, tập trung vào tin tức, review, tiểu luận và các bài viết chuyên sâu về Hayao Miyazaki, Isao Takahata cùng những tác phẩm liên quan. Đây là nguồn tham khảo hữu ích khi cần góc nhìn lịch sử, phê bình và bối cảnh về Studio Ghibli.",
     category: "Blog",
   },
