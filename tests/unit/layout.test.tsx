@@ -108,6 +108,10 @@ describe("Navbar", () => {
       "href",
       "/about",
     )
+    expect(screen.getByRole("link", { name: "Nhập môn Sakuga" })).toHaveAttribute(
+      "href",
+      "/nhap-mon-sakuga",
+    )
     expect(
       screen.getByRole("button", { name: /Tìm kiếm/i }),
     ).toBeInTheDocument()
@@ -270,7 +274,7 @@ describe("Navbar", () => {
       "max-w-[1440px]",
     )
     expect(container.querySelector("header")).toHaveClass(
-      "border-border",
+      "border-border-default",
       "bg-background/80",
       "backdrop-blur-md",
     )
@@ -581,6 +585,10 @@ describe("Footer", () => {
     expect(screen.getByRole("link", { name: "Đóng góp" })).toHaveAttribute(
       "href",
       "/contributors",
+    )
+    expect(screen.getByRole("link", { name: "Nhập môn Sakuga" })).toHaveAttribute(
+      "href",
+      "/nhap-mon-sakuga",
     )
   })
 })
