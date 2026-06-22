@@ -46,12 +46,22 @@ const defaultBody: JSONContent = {
       content: [
         {
           type: "text",
-          marks: [{ type: "bold" }],
-          text: "The Joy of Sakuga (Anime News Network): ",
+          marks: [
+            { type: "bold" },
+            {
+              type: "link",
+              attrs: {
+                href: "https://www.animenewsnetwork.com/feature/2015-09-30/the-joy-of-sakuga/.93437",
+                target: "_blank",
+                rel: "noopener noreferrer",
+              },
+            },
+          ],
+          text: "The Joy of Sakuga (Anime News Network)",
         },
         {
           type: "text",
-          text: "Bài viết kinh điển giải thích Sakuga là gì, tinh thần tôn vinh họa sĩ, và tại sao việc hiểu chuyển động lại làm thay đổi hoàn toàn cách chúng ta thưởng thức anime. Bạn nên bắt đầu từ đây để lấy cảm hứng.",
+          text: ": Bài viết kinh điển giải thích Sakuga là gì, tinh thần tôn vinh họa sĩ, và tại sao việc hiểu chuyển động lại làm thay đổi hoàn toàn cách chúng ta thưởng thức anime. Bạn nên bắt đầu từ đây để lấy cảm hứng.",
         },
       ],
     },
@@ -60,12 +70,22 @@ const defaultBody: JSONContent = {
       content: [
         {
           type: "text",
-          marks: [{ type: "bold" }],
-          text: "Sakuga Glossary (Sakugabooru Blog): ",
+          marks: [
+            { type: "bold" },
+            {
+              type: "link",
+              attrs: {
+                href: "https://blog.sakugabooru.com/glossary/",
+                target: "_blank",
+                rel: "noopener noreferrer",
+              },
+            },
+          ],
+          text: "Sakuga Glossary (Sakugabooru Blog)",
         },
         {
           type: "text",
-          text: "Từ điển tra cứu nhanh tất cả thuật ngữ kỹ thuật hoạt họa từ Genga, Douga đến các kỹ thuật phức tạp hơn. Đây là cẩm nang hữu ích khi bạn tham gia thảo luận chuyên sâu.",
+          text: ": Từ điển tra cứu nhanh tất cả thuật ngữ kỹ thuật hoạt họa từ Genga, Douga đến các kỹ thuật phức tạp hơn. Đây là cẩm nang hữu ích khi bạn tham gia thảo luận chuyên sâu.",
         },
       ],
     },
@@ -79,26 +99,22 @@ const defaultBody: JSONContent = {
       content: [
         {
           type: "text",
-          marks: [{ type: "bold" }],
-          text: "The Pre-Production of Anime Series (Sakuga Blog): ",
+          marks: [
+            { type: "bold" },
+            {
+              type: "link",
+              attrs: {
+                href: "https://blog.sakugabooru.com/2017/05/02/the-pre-production-of-anime-series-production-notes-1/",
+                target: "_blank",
+                rel: "noopener noreferrer",
+              },
+            },
+          ],
+          text: "The Pre-Production of Anime Series (Sakuga Blog)",
         },
         {
           type: "text",
-          text: "Chuỗi bài viết gồm 4 phần giải thích tường tận cách một ý tưởng kịch bản (Scripting), thiết kế nhân vật (Design Work), và lập kế hoạch (Planning) được triển khai trước khi animator đặt bút vẽ.",
-        },
-      ],
-    },
-    {
-      type: "paragraph",
-      content: [
-        {
-          type: "text",
-          marks: [{ type: "bold" }],
-          text: "Guide to Ending Credits (Sakuga Blog): ",
-        },
-        {
-          type: "text",
-          text: "Hướng dẫn chi tiết cách đọc bảng chữ chạy cuối phim (credits) để hiểu chính xác họa sĩ diễn hoạt (Key Animator) hay đạo diễn tập phim (Episode Director) đóng vai trò gì.",
+          text: ": Chuỗi bài viết gồm 4 phần giải thích tường tận cách một ý tưởng kịch bản (Scripting), thiết kế nhân vật (Design Work), và lập kế hoạch (Planning) được triển khai trước khi animator đặt bút vẽ.",
         },
       ],
     },
@@ -107,12 +123,46 @@ const defaultBody: JSONContent = {
       content: [
         {
           type: "text",
-          marks: [{ type: "bold" }],
-          text: "Anime Production detailed guide (Washi's Blog): ",
+          marks: [
+            { type: "bold" },
+            {
+              type: "link",
+              attrs: {
+                href: "https://blog.sakugabooru.com/2016/09/20/guide-to-ending-credits-production-notes/",
+                target: "_blank",
+                rel: "noopener noreferrer",
+              },
+            },
+          ],
+          text: "Guide to Ending Credits (Sakuga Blog)",
         },
         {
           type: "text",
-          text: "Bài viết trực quan kèm sơ đồ quy trình công việc chi tiết từ phân cảnh phân giải (E-konte) đến khâu ghép hiệu ứng ánh sáng kỹ thuật số.",
+          text: ": Hướng dẫn chi tiết cách đọc bảng chữ chạy cuối phim (credits) để hiểu chính xác họa sĩ diễn hoạt (Key Animator) hay đạo diễn tập phim (Episode Director) đóng vai trò gì.",
+        },
+      ],
+    },
+    {
+      type: "paragraph",
+      content: [
+        {
+          type: "text",
+          marks: [
+            { type: "bold" },
+            {
+              type: "link",
+              attrs: {
+                href: "https://washida.org/posts/anime-production-detailed-guide",
+                target: "_blank",
+                rel: "noopener noreferrer",
+              },
+            },
+          ],
+          text: "Anime Production detailed guide (Washi's Blog)",
+        },
+        {
+          type: "text",
+          text: ": Bài viết trực quan kèm sơ đồ quy trình công việc chi tiết từ phân cảnh phân giải (E-konte) đến khâu ghép hiệu ứng ánh sáng kỹ thuật số.",
         },
       ],
     },
@@ -126,12 +176,22 @@ const defaultBody: JSONContent = {
       content: [
         {
           type: "text",
-          marks: [{ type: "bold" }],
-          text: "Exploring Sakuga - A Sakuga Starter Pack (Animetudes): ",
+          marks: [
+            { type: "bold" },
+            {
+              type: "link",
+              attrs: {
+                href: "https://animetudes.com/2021/04/09/exploring-sakuga-a-sakuga-starter-pack/",
+                target: "_blank",
+                rel: "noopener noreferrer",
+              },
+            },
+          ],
+          text: "Exploring Sakuga - A Sakuga Starter Pack (Animetudes)",
         },
         {
           type: "text",
-          text: "Bản đồ định hướng hoàn chỉnh cho người mới: đề xuất những bộ anime nổi bật, các video tổng hợp (MAD), và danh sách animator tiêu biểu để bạn theo dõi.",
+          text: ": Bản đồ định hướng hoàn chỉnh cho người mới: đề xuất những bộ anime nổi bật, các video tổng hợp (MAD), và danh sách animator tiêu biểu để bạn theo dõi.",
         },
       ],
     },
@@ -198,12 +258,22 @@ const defaultBody: JSONContent = {
       content: [
         {
           type: "text",
-          marks: [{ type: "bold" }],
-          text: "Sakugabooru Database: ",
+          marks: [
+            { type: "bold" },
+            {
+              type: "link",
+              attrs: {
+                href: "https://www.sakugabooru.com",
+                target: "_blank",
+                rel: "noopener noreferrer",
+              },
+            },
+          ],
+          text: "Sakugabooru Database",
         },
         {
           type: "text",
-          text: "Trang web lớn nhất lưu trữ các trích đoạn phim nổi bật. Bạn có thể sử dụng hệ thống tag để tìm kiếm trực tiếp tác phẩm của những animator yêu thích (như Yutaka Nakamura, Yoh Yoshinari) và nghiên cứu phong cách của họ.",
+          text: ": Trang web lớn nhất lưu trữ các trích đoạn phim nổi bật. Bạn có thể sử dụng hệ thống tag để tìm kiếm trực tiếp tác phẩm của những animator yêu thích (như Yutaka Nakamura, Yoh Yoshinari) và nghiên cứu phong cách của họ.",
         },
       ],
     },
