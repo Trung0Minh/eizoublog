@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Sparkles, Search } from "lucide-react"
+import { Sparkles } from "lucide-react"
 
 import { ThemeToggle } from "@/components/layout/ThemeToggle"
 import { WriterNavControls } from "@/components/layout/WriterNavControls"
@@ -51,17 +51,9 @@ export function Navbar({ user }: { user?: WriterMenuUser | null }) {
         </nav>
 
         <div className="ml-auto flex items-center gap-3">
-          <div className="hidden lg:block w-[280px]">
+          <div className="hidden md:block lg:w-[280px] w-auto">
             <CommandMenuTrigger />
           </div>
-          <button
-            onClick={() => document.dispatchEvent(new CustomEvent("open-command-menu"))}
-            className="hidden md:flex lg:hidden h-9 w-9 items-center justify-center rounded-full border border-border-default bg-subtle-bg text-text-secondary transition-colors hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            aria-label="Tìm kiếm bài viết"
-            title="Tìm kiếm"
-          >
-            <Search className="h-4 w-4" />
-          </button>
           <div className="flex items-center gap-1">
             <MagneticEffect>
               <a
