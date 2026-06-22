@@ -51,7 +51,7 @@ export function Navbar({ user }: { user?: WriterMenuUser | null }) {
         </nav>
 
         <div className="ml-auto flex items-center gap-3">
-          <div className="hidden md:block lg:w-[280px] w-auto">
+          <div className="hidden md:block 2xl:w-[280px] w-auto">
             <CommandMenuTrigger />
           </div>
           <div className="flex items-center gap-1">
