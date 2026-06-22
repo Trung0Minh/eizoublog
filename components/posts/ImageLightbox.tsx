@@ -139,7 +139,7 @@ export function ImageLightbox({
         maxScale={4}
         centerOnInit
         doubleClick={{ mode: "zoomIn" }}
-        wheel={{ step: 0.05 }}
+        wheel={{ step: 0.005 }}
       >
         {({ zoomIn, zoomOut }) => (
           <>
