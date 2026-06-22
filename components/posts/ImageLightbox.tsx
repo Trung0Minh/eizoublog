@@ -9,6 +9,7 @@ import {
 } from "lucide-react"
 import { motion } from "motion/react"
 import { useCallback, useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
 
 export interface LightboxImage {
