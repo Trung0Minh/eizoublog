@@ -9,7 +9,7 @@ import {
 } from "lucide-react"
 import { motion } from "motion/react"
 import { useCallback, useEffect, useState } from "react"
-import { createPortal } from "react-dom"
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
 
 export interface LightboxImage {
   alt: string
@@ -117,37 +117,10 @@ export function ImageLightbox({
         </div>
       ) : null}
 
-      <div className="absolute right-16 top-4 z-10 flex gap-1">
-        <button
-          aria-label="Zoom in"
-          className="rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20 disabled:opacity-40"
-          disabled={scale >= 3}
-          onClick={(event) => {
-            event.stopPropagation()
-            setScale((currentScale) => Math.min(currentScale + 0.5, 3))
-          }}
-          type="button"
-        >
-          <ZoomIn aria-hidden="true" className="h-4 w-4" />
-        </button>
-        <button
-          aria-label="Zoom out"
-          className="rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20 disabled:opacity-40"
-          disabled={scale <= 0.5}
-          onClick={(event) => {
-            event.stopPropagation()
-            setScale((currentScale) => Math.max(currentScale - 0.5, 0.5))
-          }}
-          type="button"
-        >
-          <ZoomOut aria-hidden="true" className="h-4 w-4" />
-        </button>
-      </div>
-
       {hasPrevious ? (
         <button
           aria-label="Previous image"
-          className="absolute left-4 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
+          className="absolute left-4 z-10 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
           onClick={(event) => {
             event.stopPropagation()
             previous()
@@ -158,74 +131,61 @@ export function ImageLightbox({
         </button>
       ) : null}
 
-      <div
-        className="flex h-full w-full items-center justify-center overflow-hidden touch-none"
-        onClick={(event) => event.stopPropagation()}
-        onWheel={(e) => {
-          e.stopPropagation()
-          if (e.deltaY < 0) {
-            setScale((s) => Math.min(s + 0.25, 4))
-          } else {
-            const target = e.currentTarget;
-            setScale((s) => {
-              const newScale = Math.max(s - 0.25, 0.5); // Allow zooming out to 0.5x
-              if (newScale <= 1) {
-                target.dataset.posX = "0"
-                target.dataset.posY = "0"
-                const img = target.querySelector('img')
-                if (img) img.style.transform = `translate(0px, 0px) scale(${newScale})`
-              }
-              return newScale
-            })
-          }
-        }}
-        onPointerDown={(e) => {
-          e.currentTarget.setPointerCapture(e.pointerId);
-          e.currentTarget.dataset.isDragging = "true";
-          e.currentTarget.dataset.startX = e.clientX.toString();
-          e.currentTarget.dataset.startY = e.clientY.toString();
-          e.currentTarget.dataset.scrollLeft = e.currentTarget.scrollLeft.toString();
-          e.currentTarget.dataset.scrollTop = e.currentTarget.scrollTop.toString();
-        }}
-        onPointerMove={(e) => {
-          if (e.currentTarget.dataset.isDragging !== "true") return;
-          const startX = parseFloat(e.currentTarget.dataset.startX || "0");
-          const startY = parseFloat(e.currentTarget.dataset.startY || "0");
-          const startPosX = parseFloat(e.currentTarget.dataset.startPosX || "0");
-          const startPosY = parseFloat(e.currentTarget.dataset.startPosY || "0");
-          const newX = startPosX + (e.clientX - startX);
-          const newY = startPosY + (e.clientY - startY);
-          e.currentTarget.dataset.posX = newX.toString();
-          e.currentTarget.dataset.posY = newY.toString();
-          
-          const img = e.currentTarget.querySelector('img');
-          if (img) {
-            img.style.transform = `translate(${newX}px, ${newY}px) scale(${scale})`;
-          }
-        }}
-        onPointerUp={(e) => {
-          e.currentTarget.dataset.isDragging = "false";
-          e.currentTarget.releasePointerCapture(e.pointerId);
-        }}
-        onPointerCancel={(e) => {
-          e.currentTarget.dataset.isDragging = "false";
-          e.currentTarget.releasePointerCapture(e.pointerId);
-        }}
+      <TransformWrapper
+        key={index}
+        initialScale={1}
+        minScale={0.5}
+        maxScale={4}
+        centerOnInit
+        doubleClick={{ mode: "zoomIn" }}
       >
-        <motion.img
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          alt={current.alt || "Expanded post image"}
-          className="max-h-[80vh] max-w-[90vw] select-none rounded object-contain transition-transform duration-100 ease-linear"
-          draggable={false}
-          src={current.src}
-          style={{
-            transform: `translate(0px, 0px) scale(${scale})`,
-          }}
-        />
-      </div>
+        {({ zoomIn, zoomOut }) => (
+          <>
+            <div className="absolute right-16 top-4 z-10 flex gap-1">
+              <button
+                aria-label="Zoom in"
+                className="rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  zoomIn()
+                }}
+                type="button"
+              >
+                <ZoomIn aria-hidden="true" className="h-4 w-4" />
+              </button>
+              <button
+                aria-label="Zoom out"
+                className="rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  zoomOut()
+                }}
+                type="button"
+              >
+                <ZoomOut aria-hidden="true" className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div
+              className="flex h-full w-full items-center justify-center overflow-hidden touch-none"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <TransformComponent wrapperClass="w-full h-full flex items-center justify-center">
+                <motion.img
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.2 }}
+                  alt={current.alt || "Expanded post image"}
+                  className="max-h-[80vh] max-w-[90vw] select-none rounded object-contain"
+                  draggable={false}
+                  src={current.src}
+                />
+              </TransformComponent>
+            </div>
+          </>
+        )}
+      </TransformWrapper>
 
       {current.caption ? (
         <p className="mt-4 max-w-2xl px-4 text-center font-sans text-sm text-white/75">
@@ -236,7 +196,7 @@ export function ImageLightbox({
       {hasNext ? (
         <button
           aria-label="Next image"
-          className="absolute right-4 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
+          className="absolute right-4 z-10 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
           onClick={(event) => {
             event.stopPropagation()
             next()
