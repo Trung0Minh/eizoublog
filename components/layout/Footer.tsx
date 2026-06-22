@@ -27,6 +27,14 @@ export function Footer() {
           <MagneticEffect>
             <Link
               className="hover:text-text-primary transition-colors"
+              href="/nhap-mon-sakuga"
+            >
+              Nhập môn Sakuga
+            </Link>
+          </MagneticEffect>
+          <MagneticEffect>
+            <Link
+              className="hover:text-text-primary transition-colors"
               href="/contributors"
             >
               Đóng góp

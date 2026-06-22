@@ -1,6 +1,6 @@
 # Performance Analysis Report
 
-Last updated: 2026-06-17
+Last updated: 2026-06-21
 
 This document records the performance work already implemented and the remaining optimization backlog for future passes. It is intentionally broad: not every item should be implemented immediately, but these are the practical areas worth considering if the site needs to get faster.
 
@@ -34,6 +34,9 @@ This document records the performance work already implemented and the remaining
   - Result: writer typing does not flush public reader caches.
 - Writer edit page fetches post data and editor reference data in parallel.
   - Result: faster initial editor load.
+- Published post mutations now invalidate the affected public paths and admin/writer management paths.
+  - Result: after publish, archive, restore, or delete, stale public post pages and management lists refresh without repeated manual reloads.
+  - Draft-only autosaves still avoid public post cache invalidation.
 
 ### Admin Experience
 
@@ -50,12 +53,20 @@ This document records the performance work already implemented and the remaining
 - Admin event room reorder is optimistic and skips full page refresh on success.
   - Result: faster perceived response when moving event rooms.
   - Failure path rolls the order back.
+- Admin post create/update/delete/archive/restore/bulk actions now use targeted post path revalidation.
+  - Result: admin and writer changes show up consistently after mutations while preserving cached reader pages.
+- Admin posts latest/oldest list queries now paginate before counting comments.
+  - Result: `/admin/posts` avoids counting comments across the full filtered post set when comment count is not needed for sorting.
+  - Comment sorting still counts before pagination because it needs comment counts for ordering.
+- Admin posts table updates rows locally after successful delete/archive/restore/bulk actions instead of forcing `router.refresh()`.
+  - Result: actions feel immediate, while server-side cache invalidation still keeps other routes fresh.
 
 ## Known Tradeoffs And Behavior Changes
 
 - `/about` and `/resources` no longer support inline admin editing directly on the public page.
 - Admin analytics is intentionally cached for 60 seconds.
 - Admin event room reorder no longer refreshes the whole page after a successful move.
+- Admin post row actions update the visible table locally; cross-page totals/count chips update on the next navigation or cache refresh.
 - Admin routes remain dynamic because they must check admin auth.
 - Reader routes are prioritized over admin routes for UX speed.
 
@@ -99,7 +110,6 @@ This document records the performance work already implemented and the remaining
 - Optimize `/dashboard`.
   - Add pagination or limits if it loads every post for a writer.
   - Split heavy counts/notification data from first paint.
-  - Cache stable dashboard lists for short TTLs and invalidate on post mutations.
 - Optimize `/dashboard/notifications`.
   - Fetch unread counts separately from full notification lists.
   - Add pagination.
@@ -123,10 +133,6 @@ This document records the performance work already implemented and the remaining
 
 ### Highest-Value Admin Work
 
-- Optimize admin posts actions.
-  - Use optimistic UI for archive/delete/restore where safe.
-  - Avoid full `router.refresh()` when the current row can be updated locally.
-  - Keep full refresh for cross-page count correctness if needed.
 - Optimize admin comments.
   - Add optimistic local removal when marking spam.
   - Add pagination for spam/approved lists if not already enough.
@@ -183,7 +189,6 @@ This document records the performance work already implemented and the remaining
   - Reader article/page data: 5 minutes is acceptable with tag invalidation on publish.
   - Writer/admin data: 30-60 seconds is usually acceptable.
   - Analytics: 60 seconds to 5 minutes is acceptable depending on UX.
-- Avoid calling `revalidateTag("posts")` from draft-only autosaves, private profile edits, or unrelated admin actions.
 - Prefer path/tag invalidation only when public user-visible data changes.
 
 ### Navigation And Prefetch Work
@@ -208,7 +213,7 @@ This document records the performance work already implemented and the remaining
   - Analytics already uses `after()`.
   - Email notification/broadcast flows may need queues/background jobs if they become slow.
 - Return quickly from mutation endpoints when a background job can handle long work.
-- For admin/writer mutations, return enough data to update local UI without a full refresh.
+- Extend local UI updates to remaining admin/writer mutations that still depend on full refreshes.
 - Keep API responses in the required `{ data: T }` / `{ error: string }` shape.
 
 ### Observability Work
@@ -246,9 +251,10 @@ This document records the performance work already implemented and the remaining
 ## Current Verification Notes
 
 - Focused performance tests passed for reader/writer/admin changes.
-- `npm run typecheck` passed after the latest admin pass.
-- `npm run build` passed when network access to Supabase was allowed.
-- `npm run lint` still fails because of pre-existing lint errors in `check-columns.js`.
+- `npx tsc --noEmit` passed after the latest admin pass.
+- `npm run build` passed after the latest admin pass.
+- Changed-file ESLint passed for the latest admin pass.
+- Full-project `npm run lint` still has unrelated baseline lint errors in test/support files and legacy scripts.
 - Full `npm test` still fails because of unrelated baseline failures listed above.
 
 ## Recommended Future Order
