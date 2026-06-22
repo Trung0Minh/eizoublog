@@ -90,7 +90,7 @@ const backfilledDatabaseResources: ResourceCard[] = [
   {
     url: "https://setteidreams.net/",
     domain: "Settei Dreams",
-    logo: "/logos/settei-dreams.svg",
+    logo: "/logos/settei-dreams.png",
     description: "Kho lưu trữ lớn về tư liệu sản xuất hoạt hình, bao gồm settei, color design, artbook, storyboard và production sketch. Trang rất hữu ích để tham khảo thiết kế nhân vật, đạo cụ, bối cảnh và các sheet hậu trường phục vụ nghiên cứu, fan art, dựng hình 3D hoặc cosplay.",
     category: "Cơ sở dữ liệu",
   },
@@ -100,7 +100,7 @@ const backfilledYoutubeResources: ResourceCard[] = [
   {
     url: "https://www.youtube.com/@ArchipelDocumentaries",
     domain: "Archipel",
-    logo: "/logos/archipel.svg",
+    logo: "/logos/archipel.png",
     description: "Kênh tài liệu chuyên phỏng vấn và ghi lại chân dung các nghệ sĩ, nhà sáng tạo và nhân sự trong ngành văn hóa đại chúng Nhật Bản. Archipel đặc biệt hữu ích khi cần tư liệu dạng documentary về quá trình sáng tạo, tư duy nghề nghiệp và bối cảnh làm việc của các cá nhân trong ngành anime, manga, game và nghệ thuật thị giác.",
     category: "Kênh YouTube",
   },

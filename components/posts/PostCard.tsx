@@ -75,7 +75,7 @@ export function PostCard({ post }: PostCardProps) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="group flex flex-col bg-subtle-bg/30 p-4 border-[2px] border-transparent hover:border-border-default hover:shadow-xl hover:-translate-y-1 rounded-[16px] transition-all duration-300 max-w-[680px] mx-auto w-full"
+      className="group flex flex-col bg-subtle-bg/30 p-4 border-[2px] border-transparent hover:border-border-default hover:shadow-xl hover:-translate-y-1 rounded-[16px] transition-all duration-300 w-full"
     >
       {post.coverUrl && (
         <Link className="mb-4 block overflow-hidden rounded-[8px]" href={`/${post.slug}`}>

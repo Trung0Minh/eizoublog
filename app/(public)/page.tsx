@@ -91,7 +91,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   })
 
   return (
-    <PageContainer size="wide">
+    <PageContainer size="default">
       <div className="w-full flex justify-center">
         <HeroCarousel posts={carouselPosts} />
       </div>
