@@ -406,16 +406,36 @@ export function IntroToSakugaClient({ initialPage, isAdmin }: IntroToSakugaClien
         </Button>
       )}
 
-      <main className="flex-1 w-full max-w-[1000px] mx-auto pt-8 md:pt-16 pb-20">
+      <main className="flex-1 w-full max-w-[800px] mx-auto pt-8 md:pt-16 pb-20 px-4 md:px-0">
         <div className="bg-subtle-bg/80 backdrop-blur-sm border-[3px] border-border/60 rounded-[24px] p-6 md:p-12 shadow-xl relative isolate overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-bl-[100px] -z-10" />
           <div className="absolute bottom-0 left-0 w-40 h-40 bg-accent/10 rounded-tr-[100px] -z-10" />
 
-          <div className="flex flex-col md:flex-row gap-10 items-center md:items-start">
-            <ScrollReveal delay={0.2} className="w-full md:w-[40%]">
-              <div className="relative aspect-[3/4] rounded-[16px] overflow-hidden border-4 border-white dark:border-border shadow-lg rotate-[-2deg] hover:rotate-0 transition-transform duration-300">
+          <div className="flex flex-col">
+            {/* Title & Header Block */}
+            <div className="text-center mb-8">
+              <ScrollReveal>
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <HelpCircle className="w-6 h-6 text-accent animate-pulse" />
+                  <h1 className="text-[32px] md:text-[40px] font-display font-bold text-text-primary leading-tight">
+                    <TextReveal className="text-accent" text={data.title} />
+                  </h1>
+                </div>
+              </ScrollReveal>
+              {data.shortIntro && (
+                <ScrollReveal delay={0.1}>
+                  <p className="text-[15px] italic text-text-secondary border-t border-b border-border/50 py-3 mt-4 max-w-[600px] mx-auto text-center">
+                    {data.shortIntro}
+                  </p>
+                </ScrollReveal>
+              )}
+            </div>
+
+            {/* Mascot Hero Card */}
+            <ScrollReveal delay={0.2} className="w-full max-w-[480px] mx-auto mb-8">
+              <div className="relative aspect-[16/10] rounded-[16px] overflow-hidden border-4 border-white dark:border-border shadow-lg">
                 <img
-                  src="https://picsum.photos/seed/sakugamascot/800/1000"
+                  src="https://picsum.photos/seed/sakugamascot/800/500"
                   alt="Mascot"
                   className="object-cover w-full h-full"
                   referrerPolicy="no-referrer"
@@ -426,46 +446,28 @@ export function IntroToSakugaClient({ initialPage, isAdmin }: IntroToSakugaClien
               </div>
             </ScrollReveal>
 
-            <div className="w-full md:w-[60%] flex flex-col">
-              <ScrollReveal>
-                <div className="flex items-center gap-2 mb-4">
-                  <HelpCircle className="w-6 h-6 text-accent animate-pulse" />
-                  <h1 className="text-[32px] md:text-[42px] font-display font-bold text-text-primary leading-tight">
-                    <TextReveal className="text-accent" text={data.title} />
-                  </h1>
-                </div>
+            {/* Main Content Column */}
+            <div className="space-y-4 text-[16px] text-text-secondary font-sans [&_.post-content]:!mx-0 [&_.post-content]:!max-w-none [&_.ProseMirror_p]:!mx-0 [&_.ProseMirror_ul]:!mx-0 [&_.ProseMirror_ol]:!mx-0 [&_.ProseMirror_p]:!max-w-none">
+              <ScrollReveal delay={0.3}>
+                <PostBody content={data.body} />
               </ScrollReveal>
 
-              <div className="space-y-4 text-[16px] text-text-secondary font-sans [&_.post-content]:!mx-0 [&_.post-content]:!max-w-none [&_.ProseMirror_p]:!mx-0 [&_.ProseMirror_ul]:!mx-0 [&_.ProseMirror_ol]:!mx-0 [&_.ProseMirror_p]:!max-w-none">
-                {data.shortIntro && (
-                  <ScrollReveal delay={0.1}>
-                    <p className="text-[15px] italic text-text-secondary border-l-4 border-accent pl-4 py-1 bg-subtle-bg/40 rounded-r-md">
-                      {data.shortIntro}
-                    </p>
-                  </ScrollReveal>
-                )}
-
-                <ScrollReveal delay={0.2}>
-                  <PostBody content={data.body} />
-                </ScrollReveal>
-
-                <ScrollReveal delay={0.3}>
-                  <div className="mt-6 flex flex-col gap-3 sm:flex-row pt-4 border-t border-border/50">
-                    <Link
-                      className="inline-flex h-10 items-center justify-center rounded-[5px] bg-accent px-4 text-[13px] font-bold text-white transition-colors hover:bg-accent/90"
-                      href="/"
-                    >
-                      Bài viết mới nhất
-                    </Link>
-                    <Link
-                      className="inline-flex h-10 items-center justify-center rounded-[5px] border border-border px-4 text-[13px] font-bold text-text-primary transition-colors hover:bg-subtle-bg"
-                      href="/resources"
-                    >
-                      Nguồn tham khảo
-                    </Link>
-                  </div>
-                </ScrollReveal>
-              </div>
+              <ScrollReveal delay={0.4}>
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row justify-center pt-6 border-t border-border/50">
+                  <Link
+                    className="inline-flex h-10 items-center justify-center rounded-[5px] bg-accent px-4 text-[13px] font-bold text-white transition-colors hover:bg-accent/90"
+                    href="/"
+                  >
+                    Bài viết mới nhất
+                  </Link>
+                  <Link
+                    className="inline-flex h-10 items-center justify-center rounded-[5px] border border-border px-4 text-[13px] font-bold text-text-primary transition-colors hover:bg-subtle-bg"
+                    href="/resources"
+                  >
+                    Nguồn tham khảo
+                  </Link>
+                </div>
+              </ScrollReveal>
             </div>
           </div>
         </div>
