@@ -8,11 +8,9 @@ import {
   ZoomOut,
 } from "lucide-react"
 import { motion } from "motion/react"
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
-
-const subscribeToClientMount = () => () => undefined
 
 export interface LightboxImage {
   alt: string
@@ -32,14 +30,16 @@ export function ImageLightbox({
   onClose,
 }: ImageLightboxProps) {
   const [index, setIndex] = useState(initialIndex)
-  const mounted = useSyncExternalStore(
-    subscribeToClientMount,
-    () => true,
-    () => false,
-  )
+  const [scale, setScale] = useState(1)
+  const [mounted, setMounted] = useState(false)
   const current = images[index]
   const hasNext = index < images.length - 1
   const hasPrevious = index > 0
+
+  useEffect(() => {
+    setMounted(true)
+    return () => setMounted(false)
+  }, [])
 
   const previous = useCallback(() => {
     if (!hasPrevious) {
@@ -47,6 +47,7 @@ export function ImageLightbox({
     }
 
     setIndex((currentIndex) => currentIndex - 1)
+    setScale(1)
   }, [hasPrevious])
 
   const next = useCallback(() => {
@@ -55,6 +56,7 @@ export function ImageLightbox({
     }
 
     setIndex((currentIndex) => currentIndex + 1)
+    setScale(1)
   }, [hasNext])
 
   useEffect(() => {
@@ -137,11 +139,9 @@ export function ImageLightbox({
         maxScale={4}
         centerOnInit
         doubleClick={{ mode: "zoomIn" }}
-        panning={{ velocityDisabled: true }}
-        smooth={false}
-        wheel={{ step: 0.1 }}
+        wheel={{ step: 0.005 }}
       >
-        {({ resetTransform, zoomIn, zoomOut }) => (
+        {({ zoomIn, zoomOut }) => (
           <>
             <div className="absolute right-16 top-4 z-10 flex gap-1">
               <button
@@ -172,17 +172,10 @@ export function ImageLightbox({
               className="flex h-full w-full items-center justify-center overflow-hidden touch-none"
               onClick={(event) => event.stopPropagation()}
             >
-              <TransformComponent
+              <TransformComponent 
                 wrapperClass="w-full h-full flex items-center justify-center"
                 wrapperStyle={{ width: "100%", height: "100%" }}
-                contentStyle={{
-                  alignItems: "center",
-                  display: "flex",
-                  justifyContent: "center",
-                }}
-                wrapperProps={{
-                  onTouchCancel: () => resetTransform(0),
-                }}
+                contentStyle={{ width: "100%", height: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}
               >
                 <motion.img
                   initial={{ opacity: 0, scale: 0.9 }}
