@@ -138,6 +138,10 @@ describe("ResourcesClient", () => {
       "href",
       "https://sakuga.fandom.com/wiki/Sakuga_Wiki",
     )
+    expect(screen.getByRole("link", { name: /Ghibli Blog/i })).toHaveAttribute(
+      "href",
+      "https://ghiblicon.blogspot.com/",
+    )
     expect(screen.getByRole("link", { name: /Settei Dreams/i })).toHaveAttribute(
       "href",
       "https://setteidreams.net/",

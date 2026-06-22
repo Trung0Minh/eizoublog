@@ -84,6 +84,13 @@ const backfilledBlogResources: ResourceCard[] = [
     description: "Bách khoa toàn thư cộng đồng về quy trình và kỹ thuật sản xuất anime, giải thích các thuật ngữ như e-konte, genga, douga, shiage, settei và nhiều khái niệm trong pipeline. Đây là nguồn tra cứu nhanh hữu ích khi cần chuẩn hóa thuật ngữ hoặc giải thích các bước sản xuất trong bài viết.",
     category: "Blog",
   },
+  {
+    url: "https://ghiblicon.blogspot.com/",
+    domain: "Ghibli Blog",
+    logo: "/logos/ghibli-blog.jpg",
+    description: "Blog dành cho người yêu Studio Ghibli, hoạt hình và điện ảnh, tập trung vào tin tức, review, tiểu luận và các bài viết chuyên sâu về Hayao Miyazaki, Isao Takahata cùng những tác phẩm liên quan. Đây là nguồn tham khảo hữu ích khi cần góc nhìn lịch sử, phê bình và bối cảnh về Studio Ghibli.",
+    category: "Blog",
+  },
 ]
 
 const backfilledDatabaseResources: ResourceCard[] = [
