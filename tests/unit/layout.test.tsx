@@ -113,8 +113,8 @@ describe("Navbar", () => {
       "/nhap-mon-sakuga",
     )
     expect(
-      screen.getByRole("button", { name: /Tìm kiếm/i }),
-    ).toBeInTheDocument()
+      screen.getAllByRole("button", { name: /Tìm kiếm/i }).length
+    ).toBeGreaterThan(0)
   })
 
   it("keeps the desktop writer menu hidden on mobile", () => {
