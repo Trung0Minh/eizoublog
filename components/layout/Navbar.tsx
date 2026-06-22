@@ -54,7 +54,7 @@ export function Navbar({ user }: { user?: WriterMenuUser | null }) {
           <div className="hidden md:block">
             <CommandMenuTrigger />
           </div>
-          <div className="flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-1">
             <MagneticEffect>
               <a
                 href="https://discord.gg/wgCr86Cdb"
@@ -70,8 +70,8 @@ export function Navbar({ user }: { user?: WriterMenuUser | null }) {
             </MagneticEffect>
             <SeasonToggle />
             <ParticleToggle />
-            <ThemeToggle />
           </div>
+          <ThemeToggle />
           <WriterNavControls links={NAV_LINKS} user={user} />
         </div>
       </div>

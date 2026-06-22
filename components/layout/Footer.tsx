@@ -23,7 +23,7 @@ export function Footer() {
         <p className="text-[13px] text-text-secondary">
           &copy; {year} {appName}. Developed by nun.
         </p>
-        <nav aria-label="Footer navigation" className="flex items-center gap-6 text-[13px] text-text-secondary">
+        <nav aria-label="Footer navigation" className="flex flex-wrap justify-center items-center gap-4 md:gap-6 text-[13px] text-text-secondary">
           <MagneticEffect>
             <Link
               className="hover:text-text-primary transition-colors"

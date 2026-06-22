@@ -84,7 +84,7 @@ export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
                       </h3>
                       <div className="grid grid-rows-[1fr] md:grid-rows-[0fr] md:group-hover:grid-rows-[1fr] transition-all duration-700 ease-out opacity-100">
                         <div className="overflow-hidden md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-700 md:delay-200">
-                          <p className="text-white/80 text-[14px] md:text-[18px] max-w-2xl line-clamp-2 md:line-clamp-3 mb-4 drop-shadow-sm mt-3">
+                          <p className="hidden md:block text-white/80 text-[14px] md:text-[18px] max-w-2xl line-clamp-2 md:line-clamp-3 mb-4 drop-shadow-sm mt-3">
                             {post.excerpt}
                           </p>
                           <span className="text-white/60 text-[12px] md:text-[14px] font-medium">

@@ -95,7 +95,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       <div className="w-full flex justify-center">
         <HeroCarousel posts={carouselPosts} />
       </div>
-      <div className="flex flex-col gap-12 lg:flex-row xl:gap-[48px]">
+      <div className="flex flex-col gap-8 lg:gap-12 lg:flex-row xl:gap-[48px]">
         <section className="flex-1 lg:w-[calc(100%-288px)] xl:w-[calc(100%-288px)] flex flex-col">
           <HomePostList
             archiveMonth={archive}
