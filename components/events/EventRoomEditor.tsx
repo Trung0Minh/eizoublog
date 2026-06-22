@@ -97,7 +97,7 @@ export function EventRoomEditor({
       setStatus(nextStatus)
       router.refresh()
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Failed to save room")
+      setError(caughtError instanceof Error ? caughtError.message : "Lưu thất bại")
     } finally {
       setIsPending(false)
     }
@@ -117,8 +117,7 @@ export function EventRoomEditor({
               {status}
             </span>
             <p className="mt-2 text-sm text-muted-foreground">
-              Choose one of your existing posts. Submitted entries appear when
-              admin updates the final event article.
+              Chọn một trong những bài viết hiện tại của bạn. Các bài dự thi sẽ xuất hiện khi quản trị viên cập nhật bài viết sự kiện.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -130,7 +129,7 @@ export function EventRoomEditor({
               variant="outline"
             >
               <Save aria-hidden="true" className="mr-2 h-4 w-4" />
-              Save
+              Lưu
             </Button>
             <Button
               disabled={isPending || controlsDisabled || !postId}
@@ -139,13 +138,13 @@ export function EventRoomEditor({
               type="button"
             >
               <Send aria-hidden="true" className="mr-2 h-4 w-4" />
-              Submit
+              Nộp bài
             </Button>
             {event.finalPost && (
               <Button asChild size="sm" variant="ghost">
                 <Link href={`/${event.finalPost.slug}`}>
                   <ExternalLink aria-hidden="true" className="mr-2 h-4 w-4" />
-                  Public post
+                  Bài viết công khai
                 </Link>
               </Button>
             )}
@@ -154,14 +153,14 @@ export function EventRoomEditor({
 
         {controlsDisabled && (
           <div className="mb-4 rounded-[6px] border border-border-default bg-muted/40 p-3 text-sm text-muted-foreground">
-            This event is closed, so submissions are read-only.
+            Sự kiện này đã đóng, bài dự thi hiện chỉ ở chế độ xem.
           </div>
         )}
 
         <div className="mb-5 grid gap-4 md:grid-cols-[minmax(0,1fr)_13rem]">
           <label className="block md:col-span-2" htmlFor="submission-post">
             <span className="mb-1 block text-xs font-semibold text-muted-foreground">
-              Submission post
+              Bài dự thi
             </span>
             <select
               className="h-10 w-full rounded-[5px] border bg-background px-3 text-sm"
@@ -170,7 +169,7 @@ export function EventRoomEditor({
               onChange={(changeEvent) => setPostId(changeEvent.target.value)}
               value={postId}
             >
-              <option value="">Choose a draft or published post</option>
+              <option value="">Chọn một bài viết nháp hoặc đã xuất bản</option>
               {eligiblePosts.map((post) => (
                 <option key={post.id} value={post.id}>
                   {post.title} ({post.status})
@@ -180,20 +179,20 @@ export function EventRoomEditor({
           </label>
           <label className="block">
             <span className="mb-1 block text-xs font-semibold text-muted-foreground">
-              Writer introduction
+              Giới thiệu người viết
             </span>
             <Textarea
               className="min-h-24 bg-background border border-border-default focus:border-accent"
               disabled={controlsDisabled || isPending}
               maxLength={1000}
               onChange={(changeEvent) => setWriterIntro(changeEvent.target.value)}
-              placeholder="A short intro that appears before your event section."
+              placeholder="Một đoạn giới thiệu ngắn hiển thị trước phần của bạn trong sự kiện."
               value={writerIntro}
             />
           </label>
           <label className="block">
             <span className="mb-1 block text-xs font-semibold text-muted-foreground">
-              Submission visibility
+              Quyền riêng tư bài dự thi
             </span>
             <select
               className="h-10 w-full rounded-[5px] border bg-background px-3 text-sm"
@@ -203,8 +202,8 @@ export function EventRoomEditor({
               }
               value={visibility}
             >
-              <option value="PRIVATE">Private</option>
-              <option value="PARTICIPANTS">Share with participants</option>
+              <option value="PRIVATE">Riêng tư</option>
+              <option value="PARTICIPANTS">Chia sẻ với những người tham gia</option>
             </select>
           </label>
         </div>
@@ -216,13 +215,13 @@ export function EventRoomEditor({
               {selectedPost.title}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              {selectedPost.status} · Edit the source post from My posts, then ask
-              admin to update the final event article.
+              {selectedPost.status} · Chỉnh sửa bài viết gốc trong Bài viết của tôi, sau đó nhờ
+              quản trị viên cập nhật bài viết sự kiện.
             </p>
           </div>
         ) : (
           <div className="rounded-[8px] border border-dashed border-border-default p-5 text-sm text-muted-foreground">
-            Create or save a draft in My posts, then select it here for the event.
+            Tạo hoặc lưu một bản nháp trong Bài viết của tôi, sau đó chọn ở đây cho sự kiện.
           </div>
         )}
       </section>

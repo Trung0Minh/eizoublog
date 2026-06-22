@@ -239,7 +239,7 @@ export function AdminContentManager({
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="min-w-0">
-        <div className="mb-4 inline-flex w-fit gap-1 rounded-[7px] border border-border-default bg-subtle-bg/50 p-[3px]">
+        <div className="mb-6 inline-flex w-fit gap-1 rounded-[24px] border-[2px] border-border-default bg-subtle-bg/50 p-1 shadow-sm">
           {[
             { icon: FolderTree, id: "categories" as const, label: "Categories" },
             { icon: Tags, id: "tags" as const, label: "Tags" },
@@ -250,9 +250,9 @@ export function AdminContentManager({
               <button
                 aria-pressed={active}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-[5px] px-3 py-1.5 text-[12px] font-medium text-text-secondary transition-colors hover:text-text-primary",
+                  "inline-flex items-center gap-2 rounded-[20px] px-4 py-2 text-[13px] font-medium text-text-secondary transition-all hover:text-text-primary",
                   active &&
-                    "bg-background font-semibold text-text-primary shadow-[0_1px_2px_rgba(0,0,0,0.08)] dark:shadow-[0_1px_2px_rgba(0,0,0,0.3)]",
+                    "bg-accent text-white shadow-md",
                 )}
                 key={id}
                 onClick={() => {
@@ -269,7 +269,7 @@ export function AdminContentManager({
         </div>
 
         {activeTab === "categories" ? (
-          <div className="w-full overflow-x-auto rounded-[8px] border border-border-default bg-background">
+          <div className="w-full overflow-x-auto rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 backdrop-blur-md shadow-sm transition-all hover:border-accent/40">
             <div className="min-w-[680px]">
               <div className="flex h-[40px] items-center border-b border-border-default bg-subtle-bg px-4 text-[11px] font-semibold uppercase tracking-[0.05em] text-text-secondary">
                 <div className="min-w-0 flex-1 pr-4">Category</div>
@@ -279,7 +279,7 @@ export function AdminContentManager({
               </div>
               {categoryRows.map(({ category, depth }) => (
                 <div
-                  className="flex min-h-[56px] items-center border-b border-border-default px-4 last:border-0 hover:bg-subtle-bg"
+                  className="group flex min-h-[64px] items-center border-b border-border-default px-6 last:border-0 hover:bg-accent/5 transition-colors"
                   key={category.id}
                 >
                   <div className="min-w-0 flex-1 pr-4">
@@ -339,7 +339,7 @@ export function AdminContentManager({
             </div>
           </div>
         ) : (
-          <div className="w-full overflow-x-auto rounded-[8px] border border-border-default bg-background">
+          <div className="w-full overflow-x-auto rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 backdrop-blur-md shadow-sm transition-all hover:border-accent/40">
             <div className="min-w-[520px]">
               <div className="flex h-[40px] items-center border-b border-border-default bg-subtle-bg px-4 text-[11px] font-semibold uppercase tracking-[0.05em] text-text-secondary">
                 <div className="min-w-0 flex-1 pr-4">Tag</div>
@@ -348,7 +348,7 @@ export function AdminContentManager({
               </div>
               {tags.map((tag) => (
                 <div
-                  className="flex min-h-[56px] items-center border-b border-border-default px-4 last:border-0 hover:bg-subtle-bg"
+                  className="group flex min-h-[64px] items-center border-b border-border-default px-6 last:border-0 hover:bg-accent/5 transition-colors"
                   key={tag.id}
                 >
                   <div className="min-w-0 flex-1 pr-4">
@@ -397,7 +397,7 @@ export function AdminContentManager({
         )}
       </div>
 
-      <aside className="rounded-[8px] border border-border-default bg-background p-5">
+      <aside className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 backdrop-blur-md p-6 shadow-sm">
         {error && (
           <div
             className="mb-4 rounded-[6px] border border-destructive/30 bg-destructive/5 px-3 py-2 text-[13px] text-destructive"

@@ -66,17 +66,17 @@ export function AdminCommentsTable({
 
   if (comments.length === 0) {
     return (
-      <div className="rounded-[8px] border border-border-default bg-background p-8 text-center text-[13px] text-text-tertiary">
+      <div className="rounded-[24px] border-[2px] border-dashed border-border-default bg-subtle-bg/30 backdrop-blur-md p-8 text-center text-[13px] text-text-tertiary shadow-sm">
         {emptyLabel}
       </div>
     )
   }
 
   return (
-    <div className="overflow-hidden rounded-[8px] border border-border-default bg-background">
+    <div className="overflow-hidden rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 backdrop-blur-md shadow-sm transition-all hover:border-accent/40">
       {comments.map((comment) => (
         <article
-          className="group flex flex-col gap-4 border-b border-border-default p-4 transition-colors last:border-0 hover:bg-subtle-bg md:flex-row md:p-5"
+          className="group flex flex-col gap-4 border-b border-border-default p-6 transition-colors last:border-0 hover:bg-accent/5 md:flex-row"
           key={comment.id}
         >
           <div className="hidden shrink-0 pt-1 md:block">

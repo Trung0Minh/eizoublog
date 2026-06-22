@@ -70,16 +70,16 @@ export function WritersTable({ writers }: { writers: Writer[] }) {
 
   if (writers.length === 0) {
     return (
-      <div className="rounded-[8px] border border-dashed p-8 text-center text-sm text-muted-foreground">
+      <div className="rounded-[24px] border-[2px] border-dashed border-border-default bg-subtle-bg/30 backdrop-blur-md p-8 text-center text-[13px] text-text-tertiary shadow-sm">
         No active writers found.
       </div>
     )
   }
 
   return (
-    <div className="w-full overflow-x-auto rounded-[8px] border border-border-default bg-background">
+    <div className="w-full overflow-x-auto rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 backdrop-blur-md shadow-sm transition-all hover:border-accent/40">
       <div className="min-w-[700px]">
-        <div className="flex h-[40px] items-center border-b border-border-default bg-subtle-bg px-4 text-[11px] font-semibold uppercase tracking-[0.05em] text-text-secondary">
+        <div className="flex h-[48px] items-center border-b border-border-default bg-subtle-bg px-6 text-[11px] font-semibold uppercase tracking-[0.05em] text-text-secondary">
           <div className="min-w-0 flex-1 pr-4">Name</div>
           <div className="w-[120px] shrink-0">Role</div>
           <div className="w-[100px] shrink-0 text-right">Posts</div>
@@ -106,7 +106,7 @@ export function WritersTable({ writers }: { writers: Writer[] }) {
 
             return (
               <div
-                className="group flex h-[56px] items-center border-b border-border-default px-4 transition-colors last:border-0 hover:bg-subtle-bg"
+                className="group flex h-[64px] items-center border-b border-border-default px-6 transition-colors last:border-0 hover:bg-accent/5"
                 key={writer.id}
               >
                 <div className="flex min-w-0 flex-1 items-center gap-3 pr-4">

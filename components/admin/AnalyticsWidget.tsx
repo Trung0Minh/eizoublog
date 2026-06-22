@@ -78,7 +78,7 @@ export async function AnalyticsWidget({
     ;({ stats, topPages } = await getCachedAdminAnalyticsData(startAt, endAt))
   } catch {
     return (
-      <section className="rounded-[8px] border border-dashed p-5 text-sm text-muted-foreground">
+      <section className="rounded-[24px] border-[2px] border-dashed border-border-default bg-subtle-bg/30 backdrop-blur-md p-5 text-[13px] text-text-tertiary shadow-sm">
         Analytics data unavailable.
       </section>
     )
@@ -184,7 +184,7 @@ export async function AnalyticsWidget({
 
     return (
       <section>
-        <div className="mb-8 rounded-[8px] border border-border-default bg-background p-5 md:p-6">
+        <div className="mb-8 rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 backdrop-blur-md p-5 shadow-sm md:p-8">
           <div className="mb-6 flex items-end gap-3">
             <div className="text-[32px] font-bold leading-none text-text-primary">
               {totalViews.toLocaleString()}
@@ -256,7 +256,7 @@ export async function AnalyticsWidget({
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
-          <div className="overflow-hidden rounded-[8px] border border-border-default bg-background">
+          <div className="overflow-hidden rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 backdrop-blur-md shadow-sm">
             <div className="border-b border-border-default bg-subtle-bg/50 p-4">
               <h3 className="text-[13px] font-semibold text-text-primary">
                 Top Referrers
@@ -294,7 +294,7 @@ export async function AnalyticsWidget({
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-[8px] border border-border-default bg-background">
+          <div className="overflow-hidden rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 backdrop-blur-md shadow-sm">
             <div className="border-b border-border-default bg-subtle-bg/50 p-4">
               <h3 className="text-[13px] font-semibold text-text-primary">
                 Device Breakdown
@@ -357,7 +357,7 @@ export async function AnalyticsWidget({
         })}
       </div>
 
-      <div className={compact ? "mt-5 hidden md:block" : "mt-6 rounded-[8px] border border-border-default bg-background p-4"}>
+      <div className={compact ? "mt-5 hidden md:block" : "mt-6 rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 backdrop-blur-md p-6 shadow-sm"}>
         <div className="flex items-center justify-between gap-3">
           <h3 className="text-[14px] font-semibold text-text-primary">
             Top pages {compact ? "— last 30 days" : ""}

@@ -18,10 +18,10 @@ export function Footer() {
   if (isEditorRoute) return null
 
   return (
-    <footer className="border-t border-border-default mt-20">
-      <div className="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 py-12 flex flex-col md:flex-row items-center justify-between gap-6">
+    <footer className="border-t border-border-default mt-12">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 py-6 flex flex-col md:flex-row items-center justify-between gap-6">
         <p className="text-[13px] text-text-secondary">
-          &copy; {year} {appName}.
+          &copy; {year} {appName}. Developed by nun.
         </p>
         <nav aria-label="Footer navigation" className="flex items-center gap-6 text-[13px] text-text-secondary">
           <MagneticEffect>

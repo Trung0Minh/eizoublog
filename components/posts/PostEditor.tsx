@@ -78,7 +78,7 @@ function getApiError(value: unknown) {
     return value.error
   }
 
-  return "Something went wrong"
+  return "Có lỗi xảy ra"
 }
 
 function getPostResponse(value: unknown): PostMutationResponse | null {
@@ -270,7 +270,7 @@ export function PostEditor({
       const post = getPostResponse(result)
 
       if (!post) {
-        throw new Error("Post response did not include a slug")
+        throw new Error("Phản hồi bài viết không bao gồm slug")
       }
 
       if (status === "PUBLISHED") {
@@ -290,7 +290,7 @@ export function PostEditor({
       }
     } catch (saveError) {
       setError(
-        saveError instanceof Error ? saveError.message : "Something went wrong",
+        saveError instanceof Error ? saveError.message : "Có lỗi xảy ra",
       )
     } finally {
       if (!isNavigatingAway) {
@@ -424,7 +424,7 @@ export function PostEditor({
                           className="text-[12px] font-semibold text-text-secondary"
                           htmlFor="cover-alt"
                         >
-                          Cover alt text
+                          Văn bản thay thế ảnh bìa
                         </label>
                         <input
                           className="h-10 w-full rounded-[5px] border border-border-default bg-background px-3 py-2 text-[13px] text-text-primary outline-none transition-colors placeholder:text-text-tertiary focus:border-accent"

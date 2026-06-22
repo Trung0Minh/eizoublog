@@ -192,7 +192,7 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
 
   if (visiblePosts.length === 0) {
     return (
-      <div className="rounded-[8px] border border-dashed p-8 text-center text-sm text-muted-foreground">
+      <div className="rounded-[24px] border-[2px] border-dashed border-border-default bg-subtle-bg/30 backdrop-blur-md p-8 text-center text-sm text-text-tertiary">
         No posts found for this filter.
       </div>
     )
@@ -203,7 +203,7 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
   return (
     <>
       {hasSelection && (
-        <div className="mb-4 flex items-center justify-between rounded-[8px] border border-border-default bg-subtle-bg px-4 py-2">
+        <div className="mb-6 flex items-center justify-between rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 backdrop-blur-md px-6 py-3 shadow-sm">
           <span className="text-[13px] font-medium text-text-secondary">
             {selectedIds.size} post{selectedIds.size > 1 ? "s" : ""} selected
           </span>
@@ -236,9 +236,9 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
         </div>
       )}
 
-      <div className="w-full overflow-x-auto rounded-[8px] border border-border-default bg-background">
+      <div className="w-full overflow-x-auto rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 backdrop-blur-md shadow-sm transition-all hover:border-accent/40">
         <div className="min-w-[700px]">
-          <div className="flex h-10 items-center border-b border-border-default bg-subtle-bg px-4 text-[11px] font-semibold uppercase tracking-[0.05em] text-text-secondary">
+          <div className="flex h-12 items-center border-b border-border-default bg-subtle-bg px-6 text-[11px] font-semibold uppercase tracking-[0.05em] text-text-secondary">
             <div className="mr-4 flex shrink-0 items-center">
               <input
                 type="checkbox"
@@ -278,7 +278,7 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
 
               return (
                 <div
-                  className={`group flex h-[52px] items-center border-b border-border-default px-4 transition-colors last:border-0 hover:bg-subtle-bg ${selectedIds.has(post.id) ? "bg-subtle-bg" : ""}`}
+                  className={`group flex h-[64px] items-center border-b border-border-default px-6 transition-colors last:border-0 hover:bg-accent/5 ${selectedIds.has(post.id) ? "bg-accent/10" : ""}`}
                   key={post.id}
                 >
                   <div className="mr-4 flex shrink-0 items-center">

@@ -27,7 +27,7 @@ test.describe("Search flow", () => {
         response.url().includes("/api/search") &&
         response.request().method() === "GET",
     )
-    await page.getByRole("searchbox", { name: "Search posts" }).fill(term)
+    await page.getByRole("searchbox", { name: "Tìm kiếm bài viết" }).fill(term)
     await responsePromise
 
     await expect(
@@ -52,7 +52,7 @@ test.describe("Search flow", () => {
     await page.context().clearCookies()
 
     await page.goto("/")
-    const searchbox = page.getByRole("searchbox", { name: "Search posts" })
+    const searchbox = page.getByRole("searchbox", { name: "Tìm kiếm bài viết" })
     const responsePromise = page.waitForResponse(
       (response) =>
         response.url().includes("/api/search") &&
@@ -62,12 +62,12 @@ test.describe("Search flow", () => {
     await responsePromise
     await page
       .getByRole("banner")
-      .getByRole("link", { name: `See all results for "${term}"` })
+      .getByRole("link", { name: `Xem tất cả kết quả cho "${term}"` })
       .click()
 
     await expect(page).toHaveURL(new RegExp(`/search\\?q=${term}$`))
     await expect(
-      page.getByRole("heading", { level: 1, name: `Results for "${term}"` }),
+      page.getByRole("heading", { level: 1, name: `Kết quả cho "${term}"` }),
     ).toBeVisible()
   })
 
@@ -76,6 +76,6 @@ test.describe("Search flow", () => {
   }) => {
     await page.goto("/search?q=xyzunknownterm9999")
 
-    await expect(page.getByText("No posts matched your search.")).toBeVisible()
+    await expect(page.getByText("Không có bài viết nào khớp với tìm kiếm của bạn. Thử ít từ khóa hơn hoặc dùng từ khóa khác.")).toBeVisible()
   })
 })

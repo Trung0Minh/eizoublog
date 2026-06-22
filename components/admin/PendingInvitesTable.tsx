@@ -57,7 +57,7 @@ export function PendingInvitesTable({ invites }: { invites: PendingInvite[] }) {
 
   if (invites.length === 0) {
     return (
-      <div className="rounded-[8px] border border-dashed p-5 text-sm text-muted-foreground">
+      <div className="rounded-[24px] border-[2px] border-dashed border-border-default bg-subtle-bg/30 backdrop-blur-md p-5 text-sm text-text-tertiary shadow-sm">
         No pending invites.
       </div>
     )
@@ -66,7 +66,7 @@ export function PendingInvitesTable({ invites }: { invites: PendingInvite[] }) {
   return (
     <div>
       {invites.map((invite) => (
-        <article className="border-t border-border-default py-4 first:border-t-0" key={invite.id}>
+        <article className="group border-b border-border-default px-6 py-4 transition-colors last:border-0 hover:bg-accent/5" key={invite.id}>
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="truncate text-[13px] font-medium text-text-primary">{invite.email}</p>

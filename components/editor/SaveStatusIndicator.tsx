@@ -12,19 +12,19 @@ export function SaveStatusIndicator({ status }: { status: SaveStatus }) {
       {status === "saving" && (
         <>
           <Loader2 aria-hidden="true" className="h-3 w-3 animate-spin" />
-          <span>Saving...</span>
+          <span>Đang lưu...</span>
         </>
       )}
       {status === "saved" && (
         <>
           <Check aria-hidden="true" className="h-3 w-3 text-emerald-600" />
-          <span className="text-emerald-700 dark:text-emerald-400">Saved</span>
+          <span className="text-emerald-700 dark:text-emerald-400">Đã lưu</span>
         </>
       )}
       {status === "error" && (
         <>
           <AlertCircle aria-hidden="true" className="h-3 w-3 text-destructive" />
-          <span className="text-destructive">Save failed, retrying...</span>
+          <span className="text-destructive">Lưu thất bại, đang thử lại...</span>
         </>
       )}
     </div>

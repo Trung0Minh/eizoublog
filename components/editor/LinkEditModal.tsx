@@ -63,7 +63,7 @@ export function LinkEditModal({
       <div className="w-full max-w-md rounded-[8px] border bg-background p-6 shadow-[0_12px_32px_rgba(0,0,0,0.18)] dark:shadow-[0_12px_32px_rgba(0,0,0,0.45)]">
         <div className="mb-5 flex items-center justify-between gap-4">
           <h2 className="text-lg font-semibold" id="link-dialog-title">
-            Insert link
+            Chèn liên kết
           </h2>
           <Button
             aria-label="Close link dialog"
@@ -85,7 +85,7 @@ export function LinkEditModal({
               autoFocus
               id="link-url"
               onChange={(event) => setUrl(event.target.value)}
-              placeholder="Paste a link"
+              placeholder="Dán liên kết"
               required
               type="url"
               value={url}
@@ -94,14 +94,14 @@ export function LinkEditModal({
 
           <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-between">
             <Button onClick={onRemove} type="button" variant="ghost">
-              Remove link
+              Xóa liên kết
             </Button>
             <div className="flex justify-end gap-2">
               <Button onClick={onClose} type="button" variant="outline">
-                Cancel
+                Hủy
               </Button>
               <Button onClick={handleSubmit} type="button">
-                Apply
+                Áp dụng
               </Button>
             </div>
           </div>

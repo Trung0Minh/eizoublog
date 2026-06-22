@@ -123,7 +123,7 @@ export function AdminEventsManager({
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-      <section className="overflow-hidden rounded-[8px] border border-border-default bg-background">
+      <section className="overflow-hidden rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 backdrop-blur-md shadow-sm">
         {events.length === 0 ? (
           <div className="p-8 text-center text-[13px] text-text-tertiary">
             No writing events yet.
@@ -131,7 +131,7 @@ export function AdminEventsManager({
         ) : (
           events.map((event) => (
             <article
-              className="flex flex-col gap-4 border-b border-border-default p-4 last:border-0 sm:flex-row sm:items-center sm:justify-between"
+              className="group flex flex-col gap-4 border-b border-border-default p-6 last:border-0 sm:flex-row sm:items-center sm:justify-between hover:bg-accent/5 transition-colors"
               key={event.id}
             >
               <div className="min-w-0">
@@ -163,7 +163,7 @@ export function AdminEventsManager({
         )}
       </section>
 
-      <aside className="rounded-[8px] border border-border-default bg-background p-5">
+      <aside className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 backdrop-blur-md p-6 shadow-sm">
         <div className="mb-4 flex items-center gap-2">
           <CalendarPlus aria-hidden="true" className="h-4 w-4 text-accent" />
           <h2 className="text-[15px] font-semibold text-text-primary">

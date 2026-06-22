@@ -45,7 +45,7 @@ export function VideoEmbedModal({ onClose, onInsert }: VideoEmbedModalProps) {
     >
       <div className="w-full max-w-md rounded-[8px] border bg-background p-6 shadow-[0_12px_32px_rgba(0,0,0,0.18)] dark:shadow-[0_12px_32px_rgba(0,0,0,0.45)]">
         <div className="mb-5 flex items-center justify-between gap-4">
-          <h2 className="text-lg font-semibold">Embed video</h2>
+          <h2 className="text-lg font-semibold">Chèn video</h2>
           <Button
             aria-label="Close video embed dialog"
             onClick={onClose}
@@ -60,10 +60,10 @@ export function VideoEmbedModal({ onClose, onInsert }: VideoEmbedModalProps) {
         <div className="space-y-4" onKeyDown={handleKeyDown}>
           <div className="space-y-2">
             <label className="text-sm font-medium" htmlFor="video-url">
-              Video URL
+              Đường dẫn video
             </label>
             <p className="text-xs text-muted-foreground">
-              Supports YouTube, Discord, and direct .mp4/.webm links
+              Hỗ trợ YouTube, Discord, và liên kết .mp4/.webm trực tiếp
             </p>
             <Input
               autoFocus
@@ -78,9 +78,9 @@ export function VideoEmbedModal({ onClose, onInsert }: VideoEmbedModalProps) {
 
           <div className="flex justify-end gap-2 pt-1">
             <Button onClick={onClose} type="button" variant="outline">
-              Cancel
+              Hủy
             </Button>
-            <Button onClick={handleSubmit} type="button">Insert</Button>
+            <Button onClick={handleSubmit} type="button">Chèn</Button>
           </div>
         </div>
       </div>
