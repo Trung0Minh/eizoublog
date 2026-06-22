@@ -589,7 +589,7 @@ export function PostEditor({
                   />
                 </div>
 
-                <div className="pb-4">
+                <div className="pb-1.5">
                   <label className="sr-only" htmlFor="post-excerpt">
                     Đoạn trích
                   </label>
@@ -607,7 +607,7 @@ export function PostEditor({
                   />
                 </div>
 
-                <div className="mt-4 mb-2 border-t-2 border-transparent bg-gradient-to-r from-accent/0 via-accent/30 to-accent/0 h-[2px] w-full" />
+                <div className="mt-2 mb-2 border-t-2 border-transparent bg-gradient-to-r from-accent/0 via-accent/30 to-accent/0 h-[2px] w-full" />
 
                 <TiptapEditor
                   content={content}

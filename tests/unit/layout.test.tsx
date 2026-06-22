@@ -404,7 +404,7 @@ describe("Sidebar", () => {
     )
 
     const sidebar = container.querySelector("aside")
-    expect(sidebar).toHaveClass("lg:w-[240px]", "gap-12")
+    expect(sidebar).toHaveClass("lg:w-[240px]", "gap-6")
     expect(sidebar).not.toHaveClass("lg:sticky")
     expect(screen.getByRole("heading", { name: "Danh mục" })).toHaveClass(
       "text-[13px]",
