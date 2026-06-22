@@ -9,6 +9,7 @@ import {
 } from "lucide-react"
 import { motion } from "motion/react"
 import { useCallback, useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 
 export interface LightboxImage {
   alt: string
@@ -29,9 +30,15 @@ export function ImageLightbox({
 }: ImageLightboxProps) {
   const [index, setIndex] = useState(initialIndex)
   const [scale, setScale] = useState(1)
+  const [mounted, setMounted] = useState(false)
   const current = images[index]
   const hasNext = index < images.length - 1
   const hasPrevious = index > 0
+
+  useEffect(() => {
+    setMounted(true)
+    return () => setMounted(false)
+  }, [])
 
   const previous = useCallback(() => {
     if (!hasPrevious) {
@@ -79,11 +86,11 @@ export function ImageLightbox({
     }
   }, [])
 
-  if (!current) {
+  if (!current || !mounted) {
     return null
   }
 
-  return (
+  return createPortal(
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -239,6 +246,7 @@ export function ImageLightbox({
           <ChevronRight aria-hidden="true" className="h-6 w-6" />
         </button>
       ) : null}
-    </motion.div>
+    </motion.div>,
+    document.body
   )
 }

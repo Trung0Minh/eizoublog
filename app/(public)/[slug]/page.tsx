@@ -110,16 +110,16 @@ export default async function PostPage({ params }: PostPageProps) {
 
       <PostHero post={post} authorUsernames={authors} />
 
-      <div className="flex-1 w-full max-w-[1440px] mx-auto xl:px-12 flex justify-center pt-8 pb-20 relative">
-        <main className="w-full max-w-[840px] px-5 xl:px-0">
+      <div className="flex-1 w-full max-w-[1440px] mx-auto xl:px-12 flex justify-center pt-4 md:pt-8 pb-20 relative">
+        <main className="w-full max-w-[840px] px-4 md:px-5 xl:px-0">
           <header className="flex flex-col">
             <ScrollReveal delay={0.1}>
               {post.coverAlt && (
-                <div className="text-right text-[11px] text-text-tertiary italic mb-4">
+                <div className="text-right text-[11px] text-text-tertiary italic mb-2">
                   {post.coverAlt}
                 </div>
               )}
-              <div className="flex flex-wrap gap-[6px]">
+              <div className="flex overflow-x-auto whitespace-nowrap hide-scrollbar items-center gap-[6px] pb-1">
                 {tags.map((tag) => (
                   <Link
                     href={`/tag/${tag.slug}`}
@@ -133,9 +133,9 @@ export default async function PostPage({ params }: PostPageProps) {
             </ScrollReveal>
           </header>
 
-          <article className="mt-12 max-w-[80ch] mx-auto text-text-primary font-lora text-[16px] md:text-[17.5px] leading-[1.75] md:leading-[1.8] post-content">
+          <article className="mt-6 md:mt-12 max-w-[80ch] mx-auto text-text-primary font-lora text-[16px] md:text-[17.5px] leading-[1.75] md:leading-[1.8] post-content">
             <ScrollReveal delay={0.2}>
-              <div className="bg-subtle-bg backdrop-blur-md rounded-[8px] border border-border-default p-6 sm:p-8 md:p-12 mb-12 relative z-30 overflow-hidden">
+              <div className="bg-transparent sm:bg-subtle-bg sm:backdrop-blur-md rounded-[8px] sm:border border-transparent sm:border-border-default px-0 py-4 sm:p-8 md:p-12 mb-8 md:mb-12 relative z-30 overflow-hidden">
                 <PostBody content={content} />
               </div>
             </ScrollReveal>
