@@ -116,11 +116,11 @@ function CommentThread({
 
   return (
     <article
-      className="scroll-mt-24 border-t border-border-default pt-6 first:border-t-0 first:pt-0"
+      className="scroll-mt-24 border-t border-border-default pt-4 first:border-t-0 first:pt-0"
       id={`comment-${comment.id}`}
     >
       <CommentBubble comment={comment} postAuthorUsernames={postAuthorUsernames} />
-      <div className="mt-3 pl-11">
+      <div className="mt-1 pl-11">
         <Button
           aria-label={`Trả lời bình luận của ${comment.authorName}`}
           className="h-auto min-h-0 px-0 py-1 text-[12px] text-text-tertiary hover:bg-transparent hover:text-text-primary"
@@ -128,7 +128,7 @@ function CommentThread({
           type="button"
           variant="ghost"
         >
-          <Reply aria-hidden="true" />
+          <Reply aria-hidden="true" className="w-3 h-3 mr-1" />
           {isReplying ? "Hủy trả lời" : "Trả lời"}
         </Button>
       </div>
@@ -140,7 +140,7 @@ function CommentThread({
             animate={{ opacity: 1, height: 'auto', overflow: 'visible' }}
             exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="mt-4 border-l border-border-default pl-4 sm:ml-11"
+            className="mt-3 border-l border-border-default pl-4 sm:ml-11"
           >
             <CommentForm
               ariaLabel={`Trả lời ${comment.authorName}`}
@@ -156,7 +156,7 @@ function CommentThread({
       </AnimatePresence>
 
       {comment.replies.length > 0 && (
-        <div className="mt-5 space-y-4 border-l border-border-default pl-4 sm:ml-11">
+        <div className="mt-3 space-y-4 border-l border-border-default pl-4 sm:ml-11">
           {comment.replies.map((reply) => (
             <article
               className="scroll-mt-24"

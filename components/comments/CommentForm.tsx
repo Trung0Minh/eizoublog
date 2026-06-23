@@ -157,7 +157,7 @@ export function CommentForm({
             minLength={1}
             onChange={(event) => setContent(event.target.value)}
             required
-            rows={5}
+            rows={3}
             value={content}
           />
         </div>

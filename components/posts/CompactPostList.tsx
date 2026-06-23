@@ -58,7 +58,8 @@ export function CompactPostList({
                 hidden: { opacity: 0, y: 15 },
                 show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
               }}
-              className="grid grid-cols-[34px_80px_minmax(0,1fr)] gap-2 px-2 py-2 transition-colors hover:bg-subtle-bg/60 sm:grid-cols-[42px_120px_minmax(0,1fr)] sm:gap-3"
+              whileHover={{ y: -4 }}
+              className="glass-card grid grid-cols-[34px_80px_minmax(0,1fr)] gap-2 px-2 py-2 transition-colors hover:bg-subtle-bg/60 sm:grid-cols-[42px_120px_minmax(0,1fr)] sm:gap-3"
               key={post.slug}
             >
               <div className="pt-1 text-center text-xs font-semibold text-text-tertiary">

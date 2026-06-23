@@ -81,8 +81,8 @@ export function CommentSection({
   }
 
   return (
-    <section className="mt-12 font-sans" id="comments">
-      <div className="mb-6">
+    <section className="mt-8 sm:mt-12 font-sans bg-transparent sm:bg-subtle-bg sm:backdrop-blur-md rounded-[8px] sm:border border-transparent sm:border-border-default px-0 py-4 sm:p-8 md:p-10 relative z-30 overflow-hidden" id="comments">
+      <div className="mb-4">
         <h2 className="text-[20px] font-bold tracking-tight text-text-primary">
           Bình luận
         </h2>

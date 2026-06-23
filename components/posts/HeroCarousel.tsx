@@ -54,10 +54,10 @@ export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
     <div className="relative w-full max-w-[1440px] auto mb-8 md:mb-12 mt-4 px-4 md:px-5">
       <div className="flex items-center gap-2 mb-4">
         <Sparkles className="w-5 h-5 text-accent animate-pulse" />
-        <h2 className="text-[18px] font-bold text-text-primary tracking-tight">Featured Stories</h2>
+        <h2 className="text-[18px] font-bold tracking-tight">Featured Stories</h2>
       </div>
 
-      <div className="overflow-hidden rounded-xl md:rounded-[20px] shadow-lg border-[3px] border-border/50 relative bg-subtle-bg" ref={emblaRef}>
+      <div className="glass-card overflow-hidden" ref={emblaRef}>
         <div className="flex touch-pan-y">
           {posts.map((post) => (
             <div className="flex-[0_0_100%] min-w-0 relative aspect-[16/10] md:aspect-[21/9]" key={post.slug || post.id}>
@@ -68,7 +68,7 @@ export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
                   className="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
                   fetchPriority="high"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-6 md:p-12">
+                <div className="absolute inset-x-0 bottom-0 top-1/3 bg-gradient-to-t from-black/90 via-black/40 to-transparent backdrop-blur-[2px] flex flex-col justify-end p-6 md:p-12">
                   <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}

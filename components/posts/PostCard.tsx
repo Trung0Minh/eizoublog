@@ -74,8 +74,9 @@ export function PostCard({ post }: PostCardProps) {
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
+      whileHover={{ y: -4 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="group flex flex-col bg-subtle-bg/30 p-4 border-[2px] border-transparent hover:border-border-default hover:shadow-xl hover:-translate-y-1 rounded-[16px] transition-all duration-300 w-full"
+      className="glass-card w-full group flex flex-col p-4"
     >
       {post.coverUrl && (
         <Link className="mb-4 block overflow-hidden rounded-[8px]" href={`/${post.slug}`}>
@@ -155,7 +156,7 @@ export function PostCard({ post }: PostCardProps) {
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {tags.map((tag) => (
             <Link
-              className="px-3 py-1 bg-subtle-bg text-text-primary text-[11px] rounded-full hover:bg-border-default transition-colors"
+              className="glass-badge"
               href={`/tag/${tag.slug}`}
               key={tag.slug}
             >

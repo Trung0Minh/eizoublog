@@ -643,7 +643,7 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
                         </>
                       )
 
-                      const commonClasses = "group/resource block p-6 rounded-[24px] bg-subtle-bg/30 backdrop-blur-md border-[2px] border-border-default hover:border-accent/40 hover:shadow-lg transition-all duration-300 relative overflow-hidden"
+                      const commonClasses = "glass-card group/resource block p-6 overflow-hidden"
 
                       if (isLink) {
                         return (

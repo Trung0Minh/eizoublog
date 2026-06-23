@@ -20,8 +20,8 @@ export function Navbar({ user }: { user?: WriterMenuUser | null }) {
   const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "Anime Blog"
 
   return (
-    <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border-default h-14 w-full shadow-sm">
-      <div className="mx-auto flex h-full max-w-[1440px] items-center justify-between gap-4 px-4 md:px-6 lg:px-8">
+    <header className="sticky top-0 z-40 w-full pt-4 pb-4 bg-transparent transition-all duration-300">
+      <div className="glass-navbar mx-auto flex h-14 max-w-[1440px] items-center justify-between gap-4 px-4 md:px-6 lg:px-8">
         <Link
           className="font-bold text-[18px] text-accent flex items-center gap-2 tracking-tight group shrink-0"
           href="/"
@@ -29,7 +29,7 @@ export function Navbar({ user }: { user?: WriterMenuUser | null }) {
           <MagneticEffect strength={0.4}>
             <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform text-accent block" />
           </MagneticEffect>
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-accent to-purple-500 drop-shadow-sm">
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-accent via-purple-500 to-accent animate-gradient-x drop-shadow-sm">
             {appName}
           </span>
         </Link>

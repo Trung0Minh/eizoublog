@@ -23,7 +23,7 @@ export function PostHero({ post, authorUsernames }: PostHeroProps) {
   const y = useTransform(scrollY, [0, 1000], [0, 400])
 
   return (
-    <div className="w-full min-h-[450px] h-[50vh] md:min-h-[500px] md:h-[60vh] lg:min-h-[600px] lg:h-[70vh] relative -mt-[1px] overflow-hidden">
+    <div className="w-full min-h-[450px] h-[50dvh] md:min-h-[500px] md:h-[60vh] lg:min-h-[600px] lg:h-[70vh] relative -mt-[1px] overflow-hidden">
       {post.coverUrl && (
         <motion.div style={{ y }} className="absolute inset-0 right-0 left-0 bottom-0 top-0 h-full md:top-[-20vh] md:h-[120%]">
           <img

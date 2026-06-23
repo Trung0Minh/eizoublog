@@ -1,4 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
 import userEvent from "@testing-library/user-event"
 import type { AnchorHTMLAttributes, ReactNode } from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
@@ -163,6 +165,16 @@ describe("PostCard", () => {
       "md:block",
       "line-clamp-3",
     )
+  })
+
+  it("reveals post cards once with an explicit transition", () => {
+    const source = readFileSync(
+      join(process.cwd(), "components/posts/PostCard.tsx"),
+      "utf8",
+    )
+
+    expect(source).toContain('viewport={{ once: true, margin: "-50px" }}')
+    expect(source).toContain('transition={{ duration: 0.5, ease: "easeOut" }}')
   })
 })
 

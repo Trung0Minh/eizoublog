@@ -154,9 +154,9 @@ function SidebarSection({
   title: string
 }) {
   return (
-    <div className="flex flex-col bg-subtle-bg/30 backdrop-blur-md border border-border-default rounded-[16px] p-5 shadow-sm transition-all duration-300 hover:shadow-md hover:border-accent/20">
-      <h3 className="text-[13px] font-display font-bold text-accent uppercase tracking-wider mb-4 flex items-center gap-1.5">
-        <Sparkles className="w-4 h-4" /> {title}
+    <div className="glass-card flex flex-col p-5">
+      <h3 className="text-[13px] font-display font-bold text-accent uppercase tracking-wider mb-4 border-b border-border-default pb-2">
+        {title}
       </h3>
       {children}
     </div>

@@ -50,7 +50,7 @@ export default async function DashboardPage() {
 
           return (
             <ScrollReveal key={post.id} index={index}>
-              <article className="flex flex-col gap-3 rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-5 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between">
+              <article className="glass-card flex flex-col gap-3 p-5 transition-colors sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <h2 className="truncate font-medium">{post.title}</h2>
                   <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">

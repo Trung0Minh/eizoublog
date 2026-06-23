@@ -36,7 +36,7 @@ function stripMediaNodes(node: JSONContent): JSONContent {
 
 export function AuthorBio({ author }: AuthorBioProps) {
   return (
-    <section className="flex flex-col items-center gap-5 rounded-[8px] border border-border-default bg-subtle-bg backdrop-blur-md p-5 text-center md:flex-row md:items-start md:p-6 md:text-left">
+    <section className="glass-card flex flex-col items-center gap-5 p-5 text-center md:flex-row md:items-start md:p-6 md:text-left">
       {author.avatarUrl ? (
         <img
           alt={author.name}

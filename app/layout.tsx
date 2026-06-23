@@ -11,8 +11,11 @@ import { DEFAULT_DESCRIPTION, getAppName, getAppUrl } from "@/lib/seo"
 
 import { BackToTop } from "@/components/ui/BackToTop"
 import { GlobalEffects } from "@/components/ui/GlobalEffects"
+import { DynamicBackground } from "@/components/ui/DynamicBackground"
+import { getCustomBackgrounds } from "@/lib/backgrounds"
 import { Toaster } from "@/components/ui/Toaster"
 import { CommandMenu } from "@/components/ui/CommandMenu"
+import { CursorSpotlight } from "@/components/ui/CursorSpotlight"
 
 import "./globals.css"
 
@@ -59,11 +62,12 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const customBackgrounds = await getCustomBackgrounds()
   return (
     <html
       lang="vi"
@@ -85,6 +89,7 @@ export default function RootLayout({
                   else season = 'winter';
                 }
                 document.documentElement.setAttribute('data-season', season);
+
                 let particles = document.cookie
                   .split('; ')
                   .find((entry) => entry.indexOf('particleEffects=') === 0)
@@ -101,14 +106,16 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen font-sans bg-background text-text-primary antialiased selection:bg-accent/30 selection:text-accent">
+      <body className="min-h-screen font-sans bg-transparent text-text-primary antialiased selection:bg-accent/30 selection:text-accent">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           disableTransitionOnChange
           enableSystem
         >
+          <DynamicBackground customBackgrounds={customBackgrounds} />
           <GlobalEffects />
+          <CursorSpotlight />
           <div className="flex min-h-screen flex-col relative z-10">
             <NavbarWrapper>
               <Navbar />

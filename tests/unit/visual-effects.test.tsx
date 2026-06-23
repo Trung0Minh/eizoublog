@@ -1,4 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react"
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 vi.mock("motion/react", async () => {
@@ -100,5 +102,22 @@ describe("responsive visual effects", () => {
     render(<NoiseOverlay />)
 
     expect(screen.getByTestId("noise-overlay")).toHaveClass("hidden", "md:block")
+  })
+
+  it("keeps the shared subtle background utility cheap to paint", () => {
+    const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8")
+    const subtleBgRule = css.match(/\.bg-subtle-bg\s*\{(?<body>[\s\S]*?)\n\s*\}/)
+
+    expect(subtleBgRule?.groups?.body ?? "").not.toMatch(/backdrop-filter/)
+  })
+
+  it("keeps homepage background scroll effects off filter animation", () => {
+    const source = readFileSync(
+      join(process.cwd(), "components/ui/DynamicBackground.tsx"),
+      "utf8",
+    )
+
+    expect(source).not.toContain("homeBlurFilter")
+    expect(source).not.toContain("filter: isHome")
   })
 })

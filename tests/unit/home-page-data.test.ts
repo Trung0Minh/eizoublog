@@ -15,7 +15,7 @@ vi.mock("@/lib/seo", () => ({
   getAppUrl: vi.fn(() => "https://example.com"),
 }))
 
-import { getHomePageData } from "@/app/(public)/page"
+import { getHomePageData } from "@/lib/queries"
 
 describe("getHomePageData", () => {
   beforeEach(() => {

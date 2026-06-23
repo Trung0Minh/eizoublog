@@ -10,6 +10,7 @@ import {
   MessageSquare,
   Trophy,
   Users,
+  Settings,
   X,
 } from "lucide-react"
 import Link from "next/link"
@@ -33,6 +34,7 @@ const ADMIN_LINKS = [
   { href: "/admin/comments", icon: MessageSquare, label: "Comments" },
   { href: "/admin/newsletter", icon: Mail, label: "Newsletter" },
   { href: "/admin/analytics", icon: BarChart3, label: "Analytics" },
+  { href: "/admin/settings/backgrounds", icon: Settings, label: "Settings" },
 ]
 
 function isActivePath(pathname: string, href: string) {

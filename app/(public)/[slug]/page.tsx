@@ -124,7 +124,7 @@ export default async function PostPage({ params }: PostPageProps) {
                   <Link
                     href={`/tag/${tag.slug}`}
                     key={tag.slug}
-                    className="px-[12px] py-[6px] bg-accent/10 border border-accent/20 text-accent text-[11px] font-semibold rounded-full hover:bg-accent hover:text-white transition-colors cursor-pointer"
+                    className="hover-glitch px-[12px] py-[6px] bg-accent/10 border border-accent/20 text-accent text-[11px] font-semibold rounded-full cursor-pointer"
                   >
                     {tag.name}
                   </Link>

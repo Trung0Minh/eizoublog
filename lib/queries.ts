@@ -1431,3 +1431,27 @@ export const getCachedSearchResults = unstable_cache(
   ["search-results"],
   { revalidate: 60, tags: ["posts"] },
 )
+export async function getHomePageData({
+  archive,
+  page,
+  sort,
+}: {
+  archive?: string
+  page: number
+  sort: PostListSort
+}) {
+  const listDataPromise = getCachedPublishedPosts(page, 10, sort, archive)
+  const sidebarDataPromise = getCachedSidebarData()
+  const carouselPostsPromise =
+    page === 1 && sort === "latest" && !archive
+      ? listDataPromise.then(({ posts }) => posts.slice(0, 5))
+      : getCachedPublishedPosts(1, 5, "latest").then(({ posts }) => posts)
+
+  const [listData, sidebarData, carouselPosts] = await Promise.all([
+    listDataPromise,
+    sidebarDataPromise,
+    carouselPostsPromise,
+  ])
+
+  return { carouselPosts, listData, sidebarData }
+}

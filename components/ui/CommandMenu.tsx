@@ -117,7 +117,7 @@ export function CommandMenu() {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] sm:pt-[20vh] bg-background/80 backdrop-blur-sm transition-all duration-200">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] sm:pt-[20vh] bg-black/40 dark:bg-black/60 backdrop-blur-md transition-all duration-300">
       <div 
         className="fixed inset-0" 
         onClick={() => {
@@ -127,7 +127,7 @@ export function CommandMenu() {
       />
       <Command
         shouldFilter={false}
-        className="relative z-50 w-full max-w-[640px] overflow-hidden rounded-xl border border-border-default bg-background shadow-2xl mx-4"
+        className="relative z-50 w-full max-w-[640px] overflow-hidden rounded-[20px] border-[1.5px] border-white/20 dark:border-white/10 bg-subtle-bg backdrop-blur-2xl shadow-[0_0_40px_rgba(0,0,0,0.15)] mx-4"
         label="Global Command Menu"
         onKeyDown={(e) => {
           if (e.key === "Escape") {
