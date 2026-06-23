@@ -10,6 +10,8 @@ import { HomeIntro } from "@/components/home/HomeIntro"
 import { parsePostListSort } from "@/lib/postListSort"
 import type { PostListSort } from "@/lib/postListSort"
 import { buildMetadata, getAppUrl, getAppName } from "@/lib/seo"
+import { auth } from "@/lib/auth"
+import { AdminBackgroundFlyout } from "@/components/admin/AdminBackgroundFlyout"
 
 interface HomePageProps {
   searchParams: Promise<{ archive?: string; page?: string; sort?: string }>
@@ -58,6 +60,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     page: pageParam,
     sort: sortParam,
   } = await searchParams
+  const session = await auth()
+  const isAdmin = session?.user?.role === "ADMIN"
   const page = parsePage(pageParam)
   const sort = parsePostListSort(sortParam)
   const archive = parseArchiveMonth(archiveParam)
@@ -87,6 +91,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           <HomeSidebar data={sidebarData} />
         </div>
       </PageContainer>
+      {isAdmin && <AdminBackgroundFlyout />}
     </>
   )
 }

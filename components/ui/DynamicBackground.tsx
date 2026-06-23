@@ -51,6 +51,23 @@ export function DynamicBackground({
     }
   }, [])
 
+  // Preload all background images to ensure smooth transitions
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    
+    const seasons = ["spring", "summer", "autumn", "winter"]
+    const themes = ["light", "dark"]
+    
+    seasons.forEach((s) => {
+      themes.forEach((t) => {
+        const key = `${s}_${t}`
+        const url = customBackgrounds?.[key] || `/bg/${key}.jpg`
+        const img = new window.Image()
+        img.src = url
+      })
+    })
+  }, [customBackgrounds])
+
   if (!mounted) return null
 
   const currentTheme = theme === "system" ? systemTheme : theme
