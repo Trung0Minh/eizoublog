@@ -8,7 +8,7 @@ export function RouteLoading({ label }: RouteLoadingProps) {
   return (
     <main
       aria-live="polite"
-      className="flex min-h-[calc(100vh-56px)] items-center justify-center bg-background"
+      className="flex min-h-[calc(100vh-56px)] items-center justify-center bg-transparent"
       role="status"
     >
       <span className="sr-only">{label}</span>
