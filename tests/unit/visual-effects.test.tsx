@@ -120,4 +120,15 @@ describe("responsive visual effects", () => {
     expect(source).not.toContain("homeBlurFilter")
     expect(source).not.toContain("filter: isHome")
   })
+
+  it("shows the seasonal background immediately above the page fallback", () => {
+    const source = readFileSync(
+      join(process.cwd(), "components/ui/DynamicBackground.tsx"),
+      "utf8",
+    )
+
+    expect(source).not.toContain("-z-50")
+    expect(source).not.toContain("initial={{ opacity: 0 }}")
+    expect(source).toContain("initial={false}")
+  })
 })

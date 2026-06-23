@@ -1,4 +1,6 @@
 import { act, render, screen } from "@testing-library/react"
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
 import userEvent from "@testing-library/user-event"
 import type { AnchorHTMLAttributes } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -128,6 +130,22 @@ describe("Navbar", () => {
       "hidden",
       "md:block",
     )
+  })
+
+  it("keeps the homepage navbar visible while a nav menu is open", () => {
+    const wrapperSource = readFileSync(
+      join(process.cwd(), "components/layout/NavbarWrapper.tsx"),
+      "utf8",
+    )
+    const menuSource = readFileSync(
+      join(process.cwd(), "components/layout/WriterMenu.tsx"),
+      "utf8",
+    )
+
+    expect(wrapperSource).toContain("isMenuOpen")
+    expect(wrapperSource).toContain("navbar-menu:open-change")
+    expect(wrapperSource).toContain("|| isMenuOpen")
+    expect(menuSource).toContain("onOpenChange={handleOpenChange}")
   })
 
   it("allows protected account menu destinations to prefetch", async () => {
@@ -272,11 +290,12 @@ describe("Navbar", () => {
     expect(container.querySelector("header > div")).toHaveClass(
       "mx-auto",
       "max-w-[1440px]",
+      "glass-navbar",
     )
     expect(container.querySelector("header")).toHaveClass(
-      "border-border-default",
-      "bg-background/80",
-      "backdrop-blur-md",
+      "bg-transparent",
+      "pt-4",
+      "pb-4",
     )
   })
 })

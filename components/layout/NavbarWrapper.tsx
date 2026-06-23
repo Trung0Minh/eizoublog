@@ -10,9 +10,11 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isHoveringTop, setIsHoveringTop] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const isScrolledRef = useRef(false)
   const isHoveringTopRef = useRef(false)
   const isMobileRef = useRef(false)
+  const isMenuOpenRef = useRef(false)
 
   useEffect(() => {
     if (!isHome) return
@@ -43,9 +45,19 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
       }
     }
 
+    const handleMenuOpenChange = (event: Event) => {
+      const nextIsMenuOpen =
+        event instanceof CustomEvent && event.detail === true
+      if (isMenuOpenRef.current !== nextIsMenuOpen) {
+        isMenuOpenRef.current = nextIsMenuOpen
+        setIsMenuOpen(nextIsMenuOpen)
+      }
+    }
+
     window.addEventListener("scroll", handleScroll)
     window.addEventListener("mousemove", handleMouseMove)
     window.addEventListener("resize", handleResize)
+    window.addEventListener("navbar-menu:open-change", handleMenuOpenChange)
     const timer = setTimeout(handleResize, 0)
     handleScroll() // initial check
 
@@ -54,6 +66,7 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
       window.removeEventListener("scroll", handleScroll)
       window.removeEventListener("mousemove", handleMouseMove)
       window.removeEventListener("resize", handleResize)
+      window.removeEventListener("navbar-menu:open-change", handleMenuOpenChange)
     }
   }, [isHome])
 
@@ -67,7 +80,7 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
   }
   
   // Show navbar if we are NOT on the homepage, or if scrolled, or if hovering top, or if on mobile
-  const showNavbar = !isHome || isScrolled || isHoveringTop || isMobile
+  const showNavbar = !isHome || isScrolled || isHoveringTop || isMobile || isMenuOpen
 
   return (
     <div 

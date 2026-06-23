@@ -200,6 +200,12 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
   const notificationTotal = pendingInvites + responseEvents + unreadComments
   const totalNotifications = notificationTotal + openEvents
 
+  function handleOpenChange(open: boolean) {
+    window.dispatchEvent(
+      new CustomEvent("navbar-menu:open-change", { detail: open }),
+    )
+  }
+
   function markEventNotificationsSeen() {
     if (openEvents === 0) return
 
@@ -208,7 +214,7 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
   }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger
         aria-label="Mở menu tác giả"
         className="relative inline-flex h-8 items-center gap-1.5 rounded-full px-1.5 text-sm font-medium text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

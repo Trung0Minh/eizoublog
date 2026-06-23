@@ -61,7 +61,7 @@ export function DynamicBackground({
   const backgroundFilter = isHome ? "none" : "blur(6px)"
 
   return (
-    <div className="fixed inset-0 w-full h-full -z-50 overflow-hidden pointer-events-none bg-background">
+    <div className="fixed inset-0 z-0 h-full w-full overflow-hidden pointer-events-none bg-transparent">
       <motion.div
         className="absolute inset-0 w-full h-full"
         style={{
@@ -70,10 +70,10 @@ export function DynamicBackground({
           scale: isHome ? homeScale : 1.05,
         }}
       >
-        <AnimatePresence>
+        <AnimatePresence initial={false}>
           <motion.div
             key={bgUrl}
-            initial={{ opacity: 0 }}
+            initial={false}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1.5, ease: "easeInOut" }}
