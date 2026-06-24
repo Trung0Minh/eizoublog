@@ -1,7 +1,7 @@
 "use client"
 
 import { X } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { createPortal } from "react-dom"
 
 import { Button } from "@/components/ui/button"

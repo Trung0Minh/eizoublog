@@ -1,14 +1,27 @@
 "use client"
 
-import { motion, AnimatePresence } from "motion/react"
+import { motion, AnimatePresence, type Variants } from "motion/react"
 import { ChevronDown } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useSyncExternalStore } from "react"
 
 interface HomeIntroProps {
   appName: string
 }
 
-const seasonConfigs = {
+type Season = "spring" | "summer" | "autumn" | "winter"
+
+interface SeasonConfig {
+  container: Variants
+  item: Variants
+  subFont: string
+  subtitle: string
+  textColor: string
+  titleFont: string
+}
+
+const emptySubscribe = () => () => undefined
+
+const seasonConfigs: Record<Season, SeasonConfig> = {
   spring: {
     titleFont: "font-serif italic tracking-tight font-medium",
     subFont: "font-sans font-medium",
@@ -68,14 +81,22 @@ const seasonConfigs = {
 }
 
 export function HomeIntro({ appName }: HomeIntroProps) {
-  const [season, setSeason] = useState("spring")
-  const [mounted, setMounted] = useState(false)
+  const [season, setSeason] = useState<Season>("spring")
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  )
 
   useEffect(() => {
-    setMounted(true)
     const updateSeason = () => {
       const storedSeason = localStorage.getItem("season")
-      if (storedSeason) {
+      if (
+        storedSeason === "spring" ||
+        storedSeason === "summer" ||
+        storedSeason === "autumn" ||
+        storedSeason === "winter"
+      ) {
         setSeason(storedSeason)
       } else {
         const month = new Date().getMonth()
@@ -100,7 +121,7 @@ export function HomeIntro({ appName }: HomeIntroProps) {
 
   if (!mounted) return <div className="w-full h-[calc(100dvh-70px)]" />
 
-  const config = seasonConfigs[season as keyof typeof seasonConfigs] || seasonConfigs.spring
+  const config = seasonConfigs[season]
 
   return (
     <div className="w-full h-[calc(100dvh-70px)] flex flex-col items-center justify-center relative overflow-hidden">
@@ -115,14 +136,14 @@ export function HomeIntro({ appName }: HomeIntroProps) {
         >
           <h1 className={`text-5xl sm:text-6xl md:text-8xl drop-shadow-[0_4px_20px_rgba(0,0,0,0.6)] mb-6 ${config.titleFont} ${config.textColor}`}>
             {appName.split("").map((char, i) => (
-              <motion.span key={`title-${i}`} variants={config.item as any} className="inline-block whitespace-pre">
+              <motion.span key={`title-${i}`} variants={config.item} className="inline-block whitespace-pre">
                 {char}
               </motion.span>
             ))}
           </h1>
           <p className={`text-lg md:text-2xl drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] ${config.subFont} ${config.textColor} opacity-90`}>
             {config.subtitle.split("").map((char, i) => (
-              <motion.span key={`sub-${i}`} variants={config.item as any} className="inline-block whitespace-pre">
+              <motion.span key={`sub-${i}`} variants={config.item} className="inline-block whitespace-pre">
                 {char}
               </motion.span>
             ))}

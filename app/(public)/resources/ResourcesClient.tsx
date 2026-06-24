@@ -27,8 +27,7 @@ interface ResourcesData {
 }
 
 interface ResourcesClientProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  initialPage: { content: any } | null
+  initialPage: { content: unknown } | null
   isAdmin: boolean
   appName: string
 }
@@ -268,19 +267,65 @@ const defaultResources: ResourceCard[] = [
   ...backfilledNewsResources,
 ]
 
+const legacyLogoReplacements: Record<string, string> = {
+  "/logos/archipel.svg": "/logos/archipel.png",
+  "/logos/sakuga-blog.svg": "/logos/sakuga-blog.png",
+  "/logos/settei-dreams.svg": "/logos/settei-dreams.png",
+}
+
+function isResourceCard(value: unknown): value is ResourceCard {
+  if (typeof value !== "object" || value === null) {
+    return false
+  }
+
+  const resource = value as Record<string, unknown>
+
+  return (
+    typeof resource.url === "string" &&
+    typeof resource.domain === "string" &&
+    typeof resource.logo === "string" &&
+    typeof resource.description === "string" &&
+    (resource.category === undefined || typeof resource.category === "string") &&
+    (resource.isLink === undefined || typeof resource.isLink === "boolean")
+  )
+}
+
+function isResourcesData(value: unknown): value is ResourcesData {
+  if (typeof value !== "object" || value === null) {
+    return false
+  }
+
+  const data = value as Record<string, unknown>
+
+  return (
+    typeof data.title === "string" &&
+    typeof data.description === "string" &&
+    Array.isArray(data.resources) &&
+    data.resources.every(isResourceCard)
+  )
+}
+
+function normalizeResourceLogos(resources: ResourceCard[]) {
+  return resources.map((resource) => ({
+    ...resource,
+    logo: legacyLogoReplacements[resource.logo] ?? resource.logo,
+  }))
+}
+
 function withMissingDefaultResources(resources: ResourceCard[]) {
+  const normalizedResources = normalizeResourceLogos(resources)
   const defaultUrls = new Set(defaultResources.map((resource) => resource.url))
-  const existingUrls = new Set(resources.map((resource) => resource.url))
-  const usesDefaultResourceSet = resources.some((resource) =>
+  const existingUrls = new Set(normalizedResources.map((resource) => resource.url))
+  const usesDefaultResourceSet = normalizedResources.some((resource) =>
     defaultUrls.has(resource.url),
   )
 
   if (!usesDefaultResourceSet) {
-    return resources
+    return normalizedResources
   }
 
   return [
-    ...resources,
+    ...normalizedResources,
     ...[
       ...backfilledBlogResources,
       ...backfilledDatabaseResources,
@@ -296,7 +341,7 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
   const [isSaving, setIsSaving] = useState(false)
   const [draggedResourceIndex, setDraggedResourceIndex] = useState<number | null>(null)
 
-  const initialData: ResourcesData = initialPage?.content
+  const initialData: ResourcesData = isResourcesData(initialPage?.content)
     ? {
         ...initialPage.content,
         resources: withMissingDefaultResources(initialPage.content.resources ?? []),

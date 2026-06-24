@@ -1,5 +1,7 @@
 "use server"
 
+import type { Prisma } from "@prisma/client"
+
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
@@ -10,8 +12,10 @@ export async function getAboutPage() {
   return page
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function updateAboutPage(content: any, contentText: string) {
+export async function updateAboutPage(
+  content: Prisma.InputJsonValue,
+  contentText: string,
+) {
   const session = await auth()
   if (session?.user?.role !== "ADMIN") {
     throw new Error("Unauthorized")

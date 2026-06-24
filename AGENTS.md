@@ -4,32 +4,21 @@
 
 This is an **invite-only anime analysis and review blog** built with Next.js 16 (App Router), React 19, Prisma, PostgreSQL (Supabase), Cloudflare R2, NextAuth.js v5, Tiptap, Resend, and Tailwind CSS + shadcn/ui.
 
-Before writing any code, read the relevant plan file for the feature you are implementing. All plan files are in the `plan/` directory.
+Before writing code, inspect the current implementation and tests for the area
+being changed. Historical planning documents are not authoritative.
 
 ---
 
-## Documentation Map
+## Sources of Truth
 
-| File | What it covers |
+| Location | What it covers |
 |---|---|
-| `plan/00_overview.md` | Stack, architecture, directory structure, conventions — **read this first** |
-| `plan/01_database_schema.md` | Full Prisma schema, migrations, seed data |
-| `plan/02_auth.md` | Invite flow, NextAuth config, proxy |
-| `plan/03_editor.md` | Tiptap block editor, media upload, R2 |
-| `plan/04_posts.md` | Post CRUD, slug generation, writer dashboard |
-| `plan/05_comments.md` | Guest comments, threading, email notifications |
-| `plan/06_search.md` | Full-text search, SearchBar, Pagination component |
-| `plan/07_newsletter.md` | Subscribe, unsubscribe, broadcast |
-| `plan/08_ui_components.md` | Layout, Navbar, Sidebar, dark mode, typography |
-| `plan/09_seo.md` | Meta tags, Open Graph, sitemap, JSON-LD |
-| `plan/10_admin.md` | Admin panel, writer management, comment moderation |
-| `plan/11_testing.md` | Vitest unit/integration tests, Playwright E2E, CI |
-| `plan/12_analytics.md` | Internal analytics setup, AnalyticsWidget, custom events |
-| `plan/13_autosave_draft_visibility.md` | Autosave hook, draft visibility control |
-| `plan/14_writer_profile.md` | Writer edit profile, avatar upload, WriterMenu |
-| `plan/15_responsive.md` | Responsive design — mobile vs desktop behavior for every component |
-| `plan/DESIGN.md` | Color tokens, typography, spacing, component specs — follow for all UI work |
-| `plan/tasks.md` | Ordered task list — check off as you complete each task |
+| `app/`, `components/`, `hooks/`, `lib/` | Current application behavior and architecture |
+| `prisma/schema.prisma`, `prisma/migrations/` | Current database schema and migration history |
+| `tests/` | Expected behavior and regression coverage |
+| `app/globals.css`, `tailwind.config.ts` | Current design tokens and global styling |
+| `performance_analysis_report.md` | Remaining performance work and completed optimization context |
+| `.env.example` | Supported environment variables |
 
 ---
 
@@ -79,7 +68,7 @@ npm run lint
 
 ### Never violate these
 
-1. **Read the plan file before implementing any feature.** The plan files contain the exact code structure, API shapes, and business logic. Do not improvise.
+1. **Inspect the current implementation and tests before changing behavior.** Preserve established API shapes, ownership boundaries, and user-facing behavior unless the task explicitly changes them.
 
 2. **Never modify `prisma/schema.prisma` without running a migration immediately after.** Schema changes that are not migrated will break the app silently.
 
@@ -199,7 +188,7 @@ Key variables and where they are used:
 - **Do not use `localStorage` or `sessionStorage`.** They are not available during SSR and will cause hydration errors.
 - **Do not add `'use client'` to a component unless it genuinely needs browser APIs or React state/effects.** Prefer Server Components by default.
 - **Do not import server-only modules (prisma, auth, resend) inside Client Components.** Keep data fetching in Server Components or API routes.
-- **Do not write desktop-only styles and try to undo them on mobile.** Always write mobile-first base styles and override upward with `md:`, `lg:`, `xl:` prefixes. See `plan/15_responsive.md` for per-component responsive behavior.
+- **Do not write desktop-only styles and try to undo them on mobile.** Always write mobile-first base styles and override upward with `md:`, `lg:`, `xl:` prefixes.
 - **Do not forget to wrap Tiptap editor components in `'use client'`** — Tiptap uses browser APIs and cannot run on the server.
 - **Do not start autosave before the post has been created** (i.e. before the first manual save that returns a `postId`).
 
@@ -214,7 +203,7 @@ These must be completed manually before the app will work end-to-end. They canno
 3. **Resend** — Create an account, verify a sending domain, copy API key
 4. **Vercel** — Connect GitHub repo, add all env variables from `.env.example`
 
-Detailed instructions for each service are in the relevant plan files.
+Use each provider's current documentation for service-specific setup.
 
 ## Web UI/UX Agent Workflow
 

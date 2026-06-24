@@ -42,6 +42,7 @@ afterEach(() => {
 
 import { Footer } from "@/components/layout/Footer"
 import { MobileNav } from "@/components/layout/MobileNav"
+import { MobileSettings } from "@/components/layout/MobileSettings"
 import { Navbar } from "@/components/layout/Navbar"
 import { PageContainer } from "@/components/layout/PageContainer"
 import { Sidebar } from "@/components/layout/Sidebar"
@@ -146,6 +147,41 @@ describe("Navbar", () => {
     expect(wrapperSource).toContain("navbar-menu:open-change")
     expect(wrapperSource).toContain("|| isMenuOpen")
     expect(menuSource).toContain("onOpenChange={handleOpenChange}")
+  })
+
+  it("does not let desktop hover state block mobile idle hiding", () => {
+    const wrapperSource = readFileSync(
+      join(process.cwd(), "components/layout/NavbarWrapper.tsx"),
+      "utf8",
+    )
+
+    expect(wrapperSource).toContain(
+      "? ((!isScrollingDown && !isIdle) || isMenuOpen)",
+    )
+    expect(wrapperSource).toContain(
+      ": (!isHome || isScrolled || isHoveringTop || isMenuOpen)",
+    )
+  })
+
+  it("keeps the homepage navbar visible while mobile settings are open", async () => {
+    const events: boolean[] = []
+    const handleOpenChange = (event: Event) => {
+      events.push(event instanceof CustomEvent && event.detail === true)
+    }
+    window.addEventListener("navbar-menu:open-change", handleOpenChange)
+
+    try {
+      const user = userEvent.setup()
+      render(<MobileSettings />)
+
+      await user.click(
+        screen.getByRole("button", { name: "Cài đặt giao diện" }),
+      )
+
+      expect(events).toContain(true)
+    } finally {
+      window.removeEventListener("navbar-menu:open-change", handleOpenChange)
+    }
   })
 
   it("allows protected account menu destinations to prefetch", async () => {

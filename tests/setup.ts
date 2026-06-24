@@ -15,7 +15,7 @@ vi.mock("motion/react", () => {
   const React = require("react")
   const componentCache: Record<string, any> = {}
   const motionProxy = new Proxy({}, {
-    get: (target, prop) => {
+    get: (_target, prop) => {
       if (typeof prop !== "string") return undefined
       if (!componentCache[prop]) {
         componentCache[prop] = React.forwardRef(({ children, ...props }: any, ref: any) => {
@@ -103,4 +103,3 @@ Object.defineProperty(globalThis, "matchMedia", {
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }))
 afterEach(() => server.resetHandlers())
 afterAll(() => server.close())
-

@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Pencil, Save, X, Plus, Trash2, Sparkles, Heart } from "lucide-react"
+import { Pencil, Save, X, Sparkles, Heart } from "lucide-react"
 import type { Editor, JSONContent } from "@tiptap/react"
 import Link from "next/link"
 
@@ -28,7 +28,6 @@ interface AboutPageContent {
 interface AboutClientProps {
   initialPage: { content: unknown; contentText: string | null } | null
   isAdmin: boolean
-  appName: string
 }
 
 const defaultBody: JSONContent = {
@@ -94,7 +93,7 @@ function getApiError(value: unknown) {
   return "Lỗi khi lưu. Vui lòng thử lại."
 }
 
-export function AboutClient({ initialPage, isAdmin, appName }: AboutClientProps) {
+export function AboutClient({ initialPage, isAdmin }: AboutClientProps) {
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)

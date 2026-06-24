@@ -43,9 +43,6 @@ vi.mock("@tiptap/react", () => ({
 vi.mock("@/components/editor/EditorToolbar", () => ({
   EditorToolbar: () => <div data-testid="editor-toolbar" />,
 }))
-vi.mock("@/components/editor/BubbleMenu", () => ({
-  BubbleMenuComponent: () => <div data-testid="bubble-menu" />,
-}))
 
 import { TiptapEditor } from "@/components/editor/TiptapEditor"
 

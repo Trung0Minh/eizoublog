@@ -54,13 +54,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       )
     }
 
+    const motionButtonProps =
+      props as React.ComponentPropsWithoutRef<typeof motion.button>
+
     return (
       <motion.button
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         whileTap={{ scale: 0.95 }}
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        {...(props as any)}
+        {...motionButtonProps}
       />
     )
   }

@@ -8,7 +8,7 @@ import {
   ZoomOut,
 } from "lucide-react"
 import { motion } from "motion/react"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react"
 import { createPortal } from "react-dom"
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
 
@@ -24,22 +24,22 @@ interface ImageLightboxProps {
   onClose: () => void
 }
 
+const emptySubscribe = () => () => undefined
+
 export function ImageLightbox({
   images,
   initialIndex,
   onClose,
 }: ImageLightboxProps) {
   const [index, setIndex] = useState(initialIndex)
-  const [scale, setScale] = useState(1)
-  const [mounted, setMounted] = useState(false)
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  )
   const current = images[index]
   const hasNext = index < images.length - 1
   const hasPrevious = index > 0
-
-  useEffect(() => {
-    setMounted(true)
-    return () => setMounted(false)
-  }, [])
 
   const previous = useCallback(() => {
     if (!hasPrevious) {
@@ -47,7 +47,6 @@ export function ImageLightbox({
     }
 
     setIndex((currentIndex) => currentIndex - 1)
-    setScale(1)
   }, [hasPrevious])
 
   const next = useCallback(() => {
@@ -56,7 +55,6 @@ export function ImageLightbox({
     }
 
     setIndex((currentIndex) => currentIndex + 1)
-    setScale(1)
   }, [hasNext])
 
   useEffect(() => {

@@ -17,7 +17,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AboutPage() {
-  const appName = getAppName()
   const session = await auth()
   const isAdmin = session?.user?.role === "ADMIN"
 
@@ -27,7 +26,7 @@ export default async function AboutPage() {
 
   return (
     <PageContainer>
-      <AboutClient initialPage={page} isAdmin={isAdmin} appName={appName} />
+      <AboutClient initialPage={page} isAdmin={isAdmin} />
     </PageContainer>
   )
 }

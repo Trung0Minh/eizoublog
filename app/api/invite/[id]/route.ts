@@ -4,7 +4,7 @@ import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
 import { prisma } from "@/lib/prisma"
 
 export async function DELETE(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const activeSession = await getActiveSession(["ADMIN"])

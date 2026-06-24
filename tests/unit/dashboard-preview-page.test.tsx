@@ -22,8 +22,8 @@ vi.mock("next/navigation", () => ({
 }))
 vi.mock("@/lib/session", () => ({ getCurrentSession: mocks.session }))
 vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }))
-vi.mock("@/components/posts/PostHeader", () => ({
-  PostHeader: ({ post }: { post: { title: string } }) => (
+vi.mock("@/components/posts/PostHero", () => ({
+  PostHero: ({ post }: { post: { title: string } }) => (
     <h1>{post.title}</h1>
   ),
 }))

@@ -26,9 +26,11 @@
 recovery-codes.txt
 
 # debug
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+output.css
 
 # local env files
 .env*.local
@@ -37,6 +39,7 @@ yarn-error.log*
 
 # generated planning output
 /docs/
+/plan/
 .codegraph/
 .codex/
 

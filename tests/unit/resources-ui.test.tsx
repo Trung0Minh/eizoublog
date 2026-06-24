@@ -13,7 +13,7 @@ vi.mock("next/navigation", () => ({
 import { ResourcesClient } from "@/app/(public)/resources/ResourcesClient"
 
 describe("ResourcesClient", () => {
-  let mockFetch: any
+  let mockFetch: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -156,5 +156,80 @@ describe("ResourcesClient", () => {
       "href",
       "https://www3.nhk.or.jp/nhkworld/en/shows/anime_manga/",
     )
+  })
+
+  it("uses PNG replacements for legacy duplicated logos and keeps Bluesky SVG", () => {
+    render(
+      <ResourcesClient
+        appName="Anime Blog"
+        initialPage={{
+          content: {
+            description: "Useful links",
+            resources: [
+              {
+                description: "Blog",
+                domain: "Sakugabooru Blog",
+                logo: "/logos/sakuga-blog.svg",
+                url: "https://blog.sakugabooru.com/",
+              },
+              {
+                description: "Database",
+                domain: "Settei Dreams",
+                logo: "/logos/settei-dreams.svg",
+                url: "https://setteidreams.net/",
+              },
+              {
+                description: "Documentaries",
+                domain: "Archipel",
+                logo: "/logos/archipel.svg",
+                url: "https://www.youtube.com/@ArchipelDocumentaries",
+              },
+              {
+                description: "Social",
+                domain: "Bluesky",
+                logo: "/logos/bluesky.svg",
+                url: "https://bsky.app/",
+              },
+            ],
+            title: "Nguồn tham khảo",
+          },
+        }}
+        isAdmin={false}
+      />,
+    )
+
+    expect(screen.getByAltText("Sakugabooru Blog logo")).toHaveAttribute(
+      "src",
+      "/logos/sakuga-blog.png",
+    )
+    expect(screen.getByAltText("Settei Dreams logo")).toHaveAttribute(
+      "src",
+      "/logos/settei-dreams.png",
+    )
+    expect(screen.getByAltText("Archipel logo")).toHaveAttribute(
+      "src",
+      "/logos/archipel.png",
+    )
+    expect(screen.getByAltText("Bluesky logo")).toHaveAttribute(
+      "src",
+      "/logos/bluesky.svg",
+    )
+  })
+
+  it("falls back to default content when persisted page data is malformed", () => {
+    render(
+      <ResourcesClient
+        appName="Anime Blog"
+        initialPage={{ content: { resources: "invalid" } }}
+        isAdmin={false}
+      />,
+    )
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: /Nguồn\s*tham\s*khảo/ }),
+    ).toBeVisible()
+    expect(
+      screen.getByRole("link", { name: /Sakugabooru Blog/i }),
+    ).toHaveAttribute("href", "https://blog.sakugabooru.com/")
   })
 })

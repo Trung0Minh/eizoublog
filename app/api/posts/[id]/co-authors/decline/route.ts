@@ -5,7 +5,7 @@ import { createCoAuthorResponseNotification } from "@/lib/notifications"
 import { prisma } from "@/lib/prisma"
 
 export async function POST(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const activeSession = await getActiveSession(["ADMIN", "WRITER"])

@@ -106,9 +106,9 @@ describe("responsive visual effects", () => {
 
   it("keeps the shared subtle background utility cheap to paint", () => {
     const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8")
-    const subtleBgRule = css.match(/\.bg-subtle-bg\s*\{(?<body>[\s\S]*?)\n\s*\}/)
+    const subtleBgRule = css.match(/\.bg-subtle-bg\s*\{([\s\S]*?)\n\s*\}/)
 
-    expect(subtleBgRule?.groups?.body ?? "").not.toMatch(/backdrop-filter/)
+    expect(subtleBgRule?.[1] ?? "").not.toMatch(/backdrop-filter/)
   })
 
   it("keeps homepage background scroll effects off filter animation", () => {

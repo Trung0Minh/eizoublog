@@ -143,10 +143,10 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
     return null
   }
   
-  // On mobile: show if at top, scrolling up, hovering top, or menu is open. Hide if idle.
+  // On mobile: show while active or when a menu is open. Desktop keeps hover-to-show.
   // On desktop: show if NOT home, scrolled past 300px, hovering top, or menu is open
   const showNavbar = isMobile
-    ? (!isScrollingDown && !isIdle) || isMenuOpen || isHoveringTop
+    ? ((!isScrollingDown && !isIdle) || isMenuOpen)
     : (!isHome || isScrolled || isHoveringTop || isMenuOpen)
 
   return (

@@ -1,7 +1,6 @@
 import type { JSONContent } from "@tiptap/react"
 import { notFound, redirect } from "next/navigation"
 
-import { PageContainer } from "@/components/layout/PageContainer"
 import { PostHero } from "@/components/posts/PostHero"
 import { PostBody } from "@/components/posts/PostBody"
 import { TableOfContents } from "@/components/posts/TableOfContents"

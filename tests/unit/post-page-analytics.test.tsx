@@ -21,8 +21,8 @@ vi.mock("@/lib/queries", () => ({
 vi.mock("@/components/posts/PostJsonLd", () => ({
   PostJsonLd: () => <script data-testid="post-json-ld" />,
 }))
-vi.mock("@/components/posts/PostHeader", () => ({
-  PostHeader: ({ post }: { post: { title: string } }) => <h1>{post.title}</h1>,
+vi.mock("@/components/posts/PostHero", () => ({
+  PostHero: ({ post }: { post: { title: string } }) => <h1>{post.title}</h1>,
 }))
 vi.mock("@/components/posts/PostBody", () => ({
   PostBody: () => <div>Post body</div>,

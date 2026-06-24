@@ -7,11 +7,11 @@ import { RelativeTime } from "@/components/ui/RelativeTime"
 import { TextReveal } from "@/components/ui/TextReveal"
 import { ScrollReveal } from "@/components/ui/ScrollReveal"
 import { getCoverStyle } from "@/lib/cover-style"
-import { PostHeaderPost } from "./PostHeader"
 import { PostEditLink } from "./PostEditLink"
+import type { PostHeroPost } from "@/types/posts"
 
 interface PostHeroProps {
-  post: PostHeaderPost
+  post: PostHeroPost
   authorUsernames?: string[]
 }
 

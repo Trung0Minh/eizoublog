@@ -1,5 +1,4 @@
 import Link from "next/link"
-import { Sparkles } from "lucide-react"
 
 import { RelativeTime } from "@/components/ui/RelativeTime"
 import { cn } from "@/lib/utils"
@@ -125,10 +124,6 @@ export function Sidebar({
       )}
     </aside>
   )
-}
-
-function SidebarDivider() {
-  return <div className="h-[1px] w-full bg-border-default" />
 }
 
 function formatArchiveMonth(month: string) {

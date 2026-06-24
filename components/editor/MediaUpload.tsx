@@ -1,6 +1,6 @@
 "use client"
 
-import { ImageIcon, Loader2 } from "lucide-react"
+import { ImageIcon } from "lucide-react"
 import { ChangeEvent, useRef, useState } from "react"
 
 import type { GalleryImage } from "@/components/editor/gallery"
@@ -24,55 +24,6 @@ function getUploadError(value: unknown) {
   }
 
   return "Upload failed"
-}
-
-function getUploadUrl(value: unknown) {
-  if (
-    typeof value === "object" &&
-    value !== null &&
-    "data" in value &&
-    typeof value.data === "object" &&
-    value.data !== null &&
-    "url" in value.data &&
-    typeof value.data.url === "string"
-  ) {
-    return value.data.url
-  }
-
-  return null
-}
-
-function getUploadUrls(value: unknown) {
-  if (
-    typeof value === "object" &&
-    value !== null &&
-    "data" in value &&
-    typeof value.data === "object" &&
-    value.data !== null
-  ) {
-    if (
-      "files" in value.data &&
-      Array.isArray(value.data.files)
-    ) {
-      return value.data.files.flatMap((file) => {
-        if (
-          typeof file === "object" &&
-          file !== null &&
-          "url" in file &&
-          typeof file.url === "string"
-        ) {
-          return [file.url]
-        }
-
-        return []
-      })
-    }
-
-    const url = getUploadUrl(value)
-    return url ? [url] : []
-  }
-
-  return []
 }
 
 function uploadFiles(

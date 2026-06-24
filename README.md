@@ -32,4 +32,6 @@ npm run build
 npm run test:e2e
 ```
 
-Implementation requirements and ordered tasks live in [`plan/`](plan/).
+The current implementation, Prisma schema and migrations, automated tests, and
+[`performance_analysis_report.md`](performance_analysis_report.md) are the
+sources of truth for ongoing work.

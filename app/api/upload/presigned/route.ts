@@ -44,7 +44,7 @@ function getFolder(value: unknown) {
   return folder
 }
 
-function validateFile(name: string, type: string, size: number) {
+function validateFile(type: string, size: number) {
   if (!ALLOWED_MIME_TYPES.has(type)) {
     return Response.json(
       { error: "Only JPEG, PNG, GIF, WebP images and MP4, WebM videos are allowed" },
@@ -94,7 +94,7 @@ export async function POST(request: Request) {
         return Response.json({ error: "Invalid file metadata" }, { status: 400 })
       }
       
-      const error = validateFile(file.name, file.type, file.size)
+      const error = validateFile(file.type, file.size)
       if (error) {
         return error
       }

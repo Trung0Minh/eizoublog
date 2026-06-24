@@ -11,7 +11,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 vi.mock("motion/react", () => {
   const React = require("react")
   const motionProxy = new Proxy({}, {
-    get: (target, prop) => {
+    get: (_target, prop) => {
       return React.forwardRef(({ children, ...props }: any, ref: any) => {
         const {
           initial,

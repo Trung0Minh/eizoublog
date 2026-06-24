@@ -5,9 +5,6 @@ import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ThemeToggle } from "@/components/layout/ThemeToggle"
@@ -15,8 +12,14 @@ import { SeasonToggle } from "@/components/ui/SeasonToggle"
 import { ParticleToggle } from "@/components/ui/ParticleToggle"
 
 export function MobileSettings() {
+  const handleOpenChange = (open: boolean) => {
+    window.dispatchEvent(
+      new CustomEvent("navbar-menu:open-change", { detail: open }),
+    )
+  }
+
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"

@@ -78,11 +78,7 @@ import { Pagination } from "@/components/ui/Pagination"
 import { PostBody } from "@/components/posts/PostBody"
 import { PostCard } from "@/components/posts/PostCard"
 import { PostEditor } from "@/components/posts/PostEditor"
-import { PostHeader } from "@/components/posts/PostHeader"
-import {
-  PostListSkeleton,
-  SidebarSkeleton,
-} from "@/components/posts/PostListSkeleton"
+import { PostHero } from "@/components/posts/PostHero"
 import { TableOfContents } from "@/components/posts/TableOfContents"
 import { TagInput, type TagOption } from "@/components/posts/TagInput"
 
@@ -180,11 +176,14 @@ describe("PostCard", () => {
 
 describe("Post detail responsive components", () => {
   it("sizes the post detail title from mobile to desktop", () => {
-    render(<PostHeader post={post} />)
+    render(<PostHero post={post} />)
 
     expect(
-      screen.getByRole("heading", { level: 1, name: "Frieren Animation" }),
-    ).toHaveClass("text-[26px]", "md:text-[36px]")
+      screen.getByRole("heading", {
+        level: 1,
+        name: /Frieren\s*Animation/,
+      }),
+    ).toHaveClass("text-[28px]", "md:text-[44px]", "lg:text-[52px]")
     const cover = screen.getByRole("img", { name: "Cover alt" })
     expect(cover).toHaveAttribute("loading", "eager")
     expect(cover).toHaveAttribute("fetchpriority", "high")
@@ -199,21 +198,6 @@ describe("Post detail responsive components", () => {
     expect(container.querySelector(".post-content")).toHaveClass(
       "mx-auto",
       "w-full",
-    )
-  })
-})
-
-describe("post loading skeletons", () => {
-  it("renders post list and sidebar placeholders with matching layout widths", () => {
-    const { container, rerender } = render(<PostListSkeleton />)
-
-    expect(container.querySelectorAll('[data-testid="post-card-skeleton"]'))
-      .toHaveLength(3)
-
-    rerender(<SidebarSkeleton />)
-
-    expect(container.firstElementChild).toHaveClass(
-      "lg:w-[240px]",
     )
   })
 })

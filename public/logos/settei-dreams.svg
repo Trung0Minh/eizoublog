@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title desc">
-  <title id="title">Settei Dreams logo</title>
-  <desc id="desc">A simple SD wordmark for Settei Dreams.</desc>
-  <rect width="96" height="96" rx="24" fill="#eef7f0"/>
-  <circle cx="48" cy="48" r="34" fill="#ffffff" stroke="#244233" stroke-width="3"/>
-  <path d="M27 65c3 3 8 5 14 5 9 0 15-5 15-12 0-6-4-9-12-12l-5-2c-4-1-6-3-6-5 0-3 3-5 7-5 4 0 7 1 10 4l5-6c-4-4-9-6-15-6-8 0-14 5-14 12 0 6 4 10 11 12l5 2c4 2 6 3 6 6 0 3-3 5-8 5-4 0-8-2-11-5l-2 7Z" fill="#244233"/>
-  <path d="M58 28h10c13 0 21 8 21 20s-8 20-21 20H58V28Zm10 32c8 0 13-5 13-12s-5-12-13-12h-2v24h2Z" fill="#4d8f68"/>
-</svg>

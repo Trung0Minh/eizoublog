@@ -1,8 +1,18 @@
 import { Extension } from "@tiptap/core"
+import type { Node as ProseMirrorNode, NodeType } from "@tiptap/pm/model"
 import { Plugin, PluginKey } from "@tiptap/pm/state"
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function nodeEqualsType({ types, node }: { types: any, node: any }) {
+function nodeEqualsType({
+  types,
+  node,
+}: {
+  types: NodeType | NodeType[]
+  node: ProseMirrorNode | null
+}) {
+  if (!node) {
+    return false
+  }
+
   return (
     (Array.isArray(types) && types.includes(node.type)) ||
     node.type === types
