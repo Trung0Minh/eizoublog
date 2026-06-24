@@ -12,11 +12,29 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
   const [isMobile, setIsMobile] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrollingDown, setIsScrollingDown] = useState(false)
+  const [isIdle, setIsIdle] = useState(false)
   const isScrolledRef = useRef(false)
   const lastScrollYRef = useRef(0)
   const isHoveringTopRef = useRef(false)
   const isMobileRef = useRef(false)
   const isMenuOpenRef = useRef(false)
+  const isIdleRef = useRef(false)
+  const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  const resetIdle = () => {
+    if (isIdleRef.current) {
+      isIdleRef.current = false
+      setIsIdle(false)
+    }
+    if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current)
+    idleTimeoutRef.current = setTimeout(() => {
+      // only auto-hide if on mobile, not at top, and menu is closed
+      if (isMobileRef.current && !isMenuOpenRef.current && window.scrollY > 50) {
+        isIdleRef.current = true
+        setIsIdle(true)
+      }
+    }, 3000)
+  }
 
   useEffect(() => {
 
@@ -38,6 +56,7 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
       }
       
       lastScrollYRef.current = currentScrollY
+      resetIdle()
     }
     
     const handleMouseMove = (e: MouseEvent) => {
@@ -63,6 +82,36 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
       if (isMenuOpenRef.current !== nextIsMenuOpen) {
         isMenuOpenRef.current = nextIsMenuOpen
         setIsMenuOpen(nextIsMenuOpen)
+        if (nextIsMenuOpen) {
+          if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current)
+          isIdleRef.current = false
+          setIsIdle(false)
+        } else {
+          resetIdle()
+        }
+      }
+    }
+
+    const handleTap = (e: MouseEvent | TouchEvent) => {
+      if (!isMobileRef.current) return
+      
+      const target = e.target as HTMLElement
+      // ignore if clicking interactive elements or inside the navbar itself
+      if (target.closest('a') || target.closest('button') || target.closest('input') || target.closest('.sticky')) return
+
+      const selection = window.getSelection()
+      if (selection && selection.toString().length > 0) return
+
+      if (isIdleRef.current) {
+        // if hidden, show it and reset timer
+        resetIdle()
+      } else {
+        // if visible, hide it immediately
+        if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current)
+        if (!isMenuOpenRef.current && window.scrollY > 50) {
+          isIdleRef.current = true
+          setIsIdle(true)
+        }
       }
     }
 
@@ -70,15 +119,20 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
     window.addEventListener("mousemove", handleMouseMove)
     window.addEventListener("resize", handleResize)
     window.addEventListener("navbar-menu:open-change", handleMenuOpenChange)
+    window.addEventListener("click", handleTap)
+    window.addEventListener("touchstart", handleTap, { passive: true })
     const timer = setTimeout(handleResize, 0)
     handleScroll() // initial check
 
     return () => {
       clearTimeout(timer)
+      if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current)
       window.removeEventListener("scroll", handleScroll)
       window.removeEventListener("mousemove", handleMouseMove)
       window.removeEventListener("resize", handleResize)
       window.removeEventListener("navbar-menu:open-change", handleMenuOpenChange)
+      window.removeEventListener("click", handleTap)
+      window.removeEventListener("touchstart", handleTap)
     }
   }, [])
 
@@ -91,10 +145,10 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
     return null
   }
   
-  // On mobile: show if at top, scrolling up, hovering top, or menu is open
+  // On mobile: show if at top, scrolling up, hovering top, or menu is open. Hide if idle.
   // On desktop: show if NOT home, scrolled past 300px, hovering top, or menu is open
   const showNavbar = isMobile
-    ? !isScrollingDown || isMenuOpen || isHoveringTop
+    ? (!isScrollingDown && !isIdle) || isMenuOpen || isHoveringTop
     : (!isHome || isScrolled || isHoveringTop || isMenuOpen)
 
   return (
