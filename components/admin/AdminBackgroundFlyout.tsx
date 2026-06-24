@@ -26,9 +26,7 @@ export function AdminBackgroundFlyout() {
           side="right" 
           className="w-[90vw] sm:w-[800px] sm:max-w-none overflow-y-auto border-l-border-default bg-background/95 backdrop-blur-xl"
           onInteractOutside={(e) => {
-            const originalEvent = (e as any).detail?.originalEvent;
-            const target = originalEvent?.target as HTMLElement;
-            if (target && typeof target.closest === 'function' && target.closest('#cover-cropper-modal')) {
+            if (document.body.classList.contains('cropper-open')) {
               e.preventDefault();
             }
           }}

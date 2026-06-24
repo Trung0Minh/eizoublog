@@ -232,8 +232,10 @@ function CoverCropperModal({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true)
     document.body.style.overflow = "hidden"
+    document.body.classList.add("cropper-open")
     return () => {
       document.body.style.overflow = ""
+      document.body.classList.remove("cropper-open")
     }
   }, [])
 
