@@ -44,6 +44,7 @@ import { Footer } from "@/components/layout/Footer"
 import { MobileNav } from "@/components/layout/MobileNav"
 import { MobileSettings } from "@/components/layout/MobileSettings"
 import { Navbar } from "@/components/layout/Navbar"
+import { NavbarWrapper } from "@/components/layout/NavbarWrapper"
 import { PageContainer } from "@/components/layout/PageContainer"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { ThemeToggle } from "@/components/layout/ThemeToggle"
@@ -163,6 +164,17 @@ describe("Navbar", () => {
     )
   })
 
+  it("keeps mobile navbar scroll work throttled and passive", () => {
+    const wrapperSource = readFileSync(
+      join(process.cwd(), "components/layout/NavbarWrapper.tsx"),
+      "utf8",
+    )
+
+    expect(wrapperSource).toContain("requestAnimationFrame")
+    expect(wrapperSource).toContain("cancelAnimationFrame")
+    expect(wrapperSource).toContain('{ passive: true }')
+  })
+
   it("keeps the homepage navbar visible while mobile settings are open", async () => {
     const events: boolean[] = []
     const handleOpenChange = (event: Event) => {
@@ -182,6 +194,73 @@ describe("Navbar", () => {
     } finally {
       window.removeEventListener("navbar-menu:open-change", handleOpenChange)
     }
+  })
+
+  it("keeps mobile settings controlled and open during internal interactions", () => {
+    const settingsSource = readFileSync(
+      join(process.cwd(), "components/layout/MobileSettings.tsx"),
+      "utf8",
+    )
+
+    expect(settingsSource).toContain("open={open}")
+    expect(settingsSource).toContain("preserveOpenRef")
+  })
+
+  it("keeps mobile settings open after toggling theme", async () => {
+    const user = userEvent.setup()
+    render(<MobileSettings />)
+
+    const settings = screen.getByRole("button", {
+      name: "Cài đặt giao diện",
+    })
+    await user.click(settings)
+    await user.click(
+      await screen.findByRole("button", { name: /Switch to .* mode/ }),
+    )
+
+    expect(settings).toHaveAttribute("aria-expanded", "true")
+  })
+
+  it("keeps the mobile navbar visible briefly after settings close", () => {
+    vi.useFakeTimers()
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: 390,
+    })
+    Object.defineProperty(window, "scrollY", {
+      configurable: true,
+      value: 100,
+    })
+
+    const { container } = render(
+      <NavbarWrapper>
+        <div>Navigation</div>
+      </NavbarWrapper>,
+    )
+
+    act(() => {
+      vi.runOnlyPendingTimers()
+      window.dispatchEvent(
+        new CustomEvent("navbar-menu:open-change", { detail: true }),
+      )
+      window.dispatchEvent(
+        new CustomEvent("navbar-menu:open-change", { detail: false }),
+      )
+      Object.defineProperty(window, "scrollY", {
+        configurable: true,
+        value: 200,
+      })
+      window.dispatchEvent(new Event("scroll"))
+      vi.advanceTimersByTime(16)
+    })
+
+    expect(container.firstElementChild).toHaveClass("translate-y-0")
+
+    act(() => {
+      vi.advanceTimersByTime(3000)
+    })
+
+    expect(container.firstElementChild).toHaveClass("-translate-y-full")
   })
 
   it("allows protected account menu destinations to prefetch", async () => {

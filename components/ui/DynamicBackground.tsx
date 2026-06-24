@@ -85,6 +85,8 @@ export function DynamicBackground({
           filter: backgroundFilter,
           opacity: isHome ? homeOpacity : 0.4,
           scale: isHome ? homeScale : 1.05,
+          transform: "translateZ(0)",
+          willChange: "opacity, transform",
         }}
       >
         <AnimatePresence initial={false}>
@@ -95,14 +97,22 @@ export function DynamicBackground({
             exit={{ opacity: 0 }}
             transition={{ duration: 1.5, ease: "easeInOut" }}
             className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: `url(${bgUrl})` }}
+            style={{
+              backgroundImage: `url(${bgUrl})`,
+              transform: "translateZ(0)",
+              willChange: "opacity",
+            }}
           />
         </AnimatePresence>
       </motion.div>
       {/* A subtle overlay to ensure text remains readable */}
       <motion.div 
         className="absolute inset-0 bg-background/40 dark:bg-background/60" 
-        style={{ opacity: isHome ? homeOverlayOpacity : 1 }}
+        style={{
+          opacity: isHome ? homeOverlayOpacity : 1,
+          transform: "translateZ(0)",
+          willChange: "opacity",
+        }}
       />
     </div>
   )

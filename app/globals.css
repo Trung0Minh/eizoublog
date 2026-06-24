@@ -183,7 +183,10 @@
     border-radius: 15px 0px 15px 15px;
     opacity: 0.3;
     animation: falling linear infinite;
+    backface-visibility: hidden;
     box-shadow: 0 0 10px var(--accent);
+    contain: layout paint style;
+    will-change: transform, opacity;
   }
 
   /* Fireflies (Summer) */
@@ -200,7 +203,10 @@
     border-radius: 50%;
     opacity: 0;
     animation: firefly-float linear infinite;
+    backface-visibility: hidden;
     box-shadow: 0 0 12px 4px var(--accent);
+    contain: layout paint style;
+    will-change: transform, opacity;
   }
 
   /* Autumn Leaves (Autumn) */
@@ -216,7 +222,10 @@
     border-radius: 0 14px 0 14px;
     opacity: 0.4;
     animation: leaf-falling linear infinite;
+    backface-visibility: hidden;
     box-shadow: 0 0 8px var(--accent);
+    contain: layout paint style;
+    will-change: transform, opacity;
   }
 
   /* Winter Snow (Winter) */
@@ -232,7 +241,10 @@
     border-radius: 50%;
     opacity: 0.6;
     animation: snow-falling linear infinite;
+    backface-visibility: hidden;
     box-shadow: 0 0 6px var(--accent);
+    contain: layout paint style;
+    will-change: transform, opacity;
   }
 
   ::selection {

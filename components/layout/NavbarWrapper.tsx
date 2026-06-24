@@ -20,6 +20,8 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
   const isMenuOpenRef = useRef(false)
   const isIdleRef = useRef(false)
   const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const scrollFrameRef = useRef<number | null>(null)
+  const keepVisibleUntilRef = useRef(0)
 
   const resetIdle = () => {
     if (isIdleRef.current) {
@@ -38,7 +40,7 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
 
-    const handleScroll = () => {
+    const updateScrollState = () => {
       const currentScrollY = window.scrollY
       
       // For desktop homepage
@@ -49,7 +51,9 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
       }
 
       // For smart scroll (hide on scroll down)
-      if (currentScrollY > lastScrollYRef.current + 10 && currentScrollY > 50) {
+      if (Date.now() < keepVisibleUntilRef.current) {
+        setIsScrollingDown(false)
+      } else if (currentScrollY > lastScrollYRef.current + 10 && currentScrollY > 50) {
         setIsScrollingDown(true)
       } else if (currentScrollY < lastScrollYRef.current - 10 || currentScrollY < 50) {
         setIsScrollingDown(false)
@@ -57,6 +61,15 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
       
       lastScrollYRef.current = currentScrollY
       resetIdle()
+    }
+
+    const handleScroll = () => {
+      if (scrollFrameRef.current !== null) return
+
+      scrollFrameRef.current = requestAnimationFrame(() => {
+        scrollFrameRef.current = null
+        updateScrollState()
+      })
     }
     
     const handleMouseMove = (e: MouseEvent) => {
@@ -83,10 +96,13 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
         isMenuOpenRef.current = nextIsMenuOpen
         setIsMenuOpen(nextIsMenuOpen)
         if (nextIsMenuOpen) {
+          keepVisibleUntilRef.current = 0
           if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current)
           isIdleRef.current = false
           setIsIdle(false)
         } else {
+          keepVisibleUntilRef.current = Date.now() + 3000
+          setIsScrollingDown(false)
           resetIdle()
         }
       }
@@ -109,23 +125,27 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
         // if visible, hide it immediately
         if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current)
         if (!isMenuOpenRef.current) {
+          keepVisibleUntilRef.current = 0
           isIdleRef.current = true
           setIsIdle(true)
         }
       }
     }
 
-    window.addEventListener("scroll", handleScroll)
+    window.addEventListener("scroll", handleScroll, { passive: true })
     window.addEventListener("mousemove", handleMouseMove)
     window.addEventListener("resize", handleResize)
     window.addEventListener("navbar-menu:open-change", handleMenuOpenChange)
     window.addEventListener("click", handleTap)
     const timer = setTimeout(handleResize, 0)
-    handleScroll() // initial check
+    updateScrollState() // initial check
 
     return () => {
       clearTimeout(timer)
       if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current)
+      if (scrollFrameRef.current !== null) {
+        cancelAnimationFrame(scrollFrameRef.current)
+      }
       window.removeEventListener("scroll", handleScroll)
       window.removeEventListener("mousemove", handleMouseMove)
       window.removeEventListener("resize", handleResize)

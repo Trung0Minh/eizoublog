@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 
 import { useParticleEffects } from '@/hooks/useParticleEffects';
 
+const containPaint = { contain: 'layout paint style' } as React.CSSProperties;
+
 export function SeasonalEffects() {
   const [season, setSeason] = useState('spring');
   const [particles, setParticles] = useState<Array<{ id: number, left: string, animationDuration: string, animationDelay: string, scale: number }>>([]);
@@ -55,7 +57,11 @@ export function SeasonalEffects() {
   if (visibleParticles.length === 0) return null;
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-[100] overflow-hidden" aria-hidden="true">
+    <div
+      className="fixed inset-0 pointer-events-none z-[100] overflow-hidden"
+      aria-hidden="true"
+      style={containPaint}
+    >
       {visibleParticles.map((particle) => {
         let className = "absolute top-0";
         if (season === 'spring') className = "sakura-petal absolute top-0";

@@ -121,6 +121,28 @@ describe("responsive visual effects", () => {
     expect(source).not.toContain("filter: isHome")
   })
 
+  it("keeps full-screen seasonal background layers on compositor-friendly properties", () => {
+    const source = readFileSync(
+      join(process.cwd(), "components/ui/DynamicBackground.tsx"),
+      "utf8",
+    )
+
+    expect(source).toContain('willChange: "opacity, transform"')
+    expect(source).toContain('transform: "translateZ(0)"')
+  })
+
+  it("isolates particle paint work from page scrolling", () => {
+    const source = readFileSync(
+      join(process.cwd(), "components/ui/SakuraFalling.tsx"),
+      "utf8",
+    )
+    const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8")
+
+    expect(source).toContain("containPaint")
+    expect(css).toContain("will-change: transform, opacity")
+    expect(css).toContain("backface-visibility: hidden")
+  })
+
   it("shows the seasonal background immediately above the page fallback", () => {
     const source = readFileSync(
       join(process.cwd(), "components/ui/DynamicBackground.tsx"),
