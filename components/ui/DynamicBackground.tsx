@@ -31,7 +31,10 @@ export function DynamicBackground({
   const isHome = pathname === "/"
 
   useEffect(() => {
-    if (!isHome) return
+    // Skip scroll animation on mobile — JS-driven scroll effects on mobile
+    // require hopping back to the main thread, causing jank. Static state is
+    // fine on mobile since the parallax effect isn't meaningful on a small screen.
+    if (!isHome || shouldReduce) return
 
     let frame: number | null = null
     const updateHomeContentState = () => {
@@ -54,7 +57,7 @@ export function DynamicBackground({
       if (frame !== null) cancelAnimationFrame(frame)
       window.removeEventListener("scroll", handleScroll)
     }
-  }, [isHome])
+  }, [isHome, shouldReduce])
 
   useEffect(() => {
     const updateSeason = () => {
@@ -79,14 +82,15 @@ export function DynamicBackground({
     }
   }, [])
 
-  // Preload all background images to ensure smooth transitions
+  // Preload background images. On mobile only preload current season to save
+  // bandwidth and memory; on desktop preload all for instant season switching.
   useEffect(() => {
     if (typeof window === "undefined") return
-    
-    const seasons = ["spring", "summer", "autumn", "winter"]
+
     const themes = ["light", "dark"]
-    
-    seasons.forEach((s) => {
+    const seasonsToPreload = shouldReduce ? [season] : ["spring", "summer", "autumn", "winter"]
+
+    seasonsToPreload.forEach((s) => {
       themes.forEach((t) => {
         const key = `${s}_${t}`
         const url = customBackgrounds?.[key] || `/bg/${key}.jpg`
@@ -94,7 +98,7 @@ export function DynamicBackground({
         img.src = url
       })
     })
-  }, [customBackgrounds])
+  }, [customBackgrounds, season, shouldReduce])
 
   if (!mounted) return null
 
