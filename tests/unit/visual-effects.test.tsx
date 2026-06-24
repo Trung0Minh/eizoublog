@@ -111,24 +111,30 @@ describe("responsive visual effects", () => {
     expect(subtleBgRule?.[1] ?? "").not.toMatch(/backdrop-filter/)
   })
 
-  it("keeps homepage background scroll effects off filter animation", () => {
+  it("updates the homepage background only when crossing a throttled section boundary", () => {
     const source = readFileSync(
       join(process.cwd(), "components/ui/DynamicBackground.tsx"),
       "utf8",
     )
 
-    expect(source).not.toContain("homeBlurFilter")
-    expect(source).not.toContain("filter: isHome")
+    expect(source).toContain("requestAnimationFrame")
+    expect(source).toContain('addEventListener("scroll"')
+    expect(source).toContain("homeContentActiveRef.current !== nextActive")
+    expect(source).not.toContain("useScroll")
+    expect(source).not.toContain("useTransform")
   })
 
-  it("keeps full-screen seasonal background layers on compositor-friendly properties", () => {
+  it("avoids full-screen image filters on coarse pointer devices", () => {
     const source = readFileSync(
       join(process.cwd(), "components/ui/DynamicBackground.tsx"),
       "utf8",
     )
 
-    expect(source).toContain('willChange: "opacity, transform"')
-    expect(source).toContain('transform: "translateZ(0)"')
+    expect(source).toContain("useReducedVisualEffects")
+    expect(source).toMatch(
+      /shouldReduce\s*\?\s*"none"\s*:\s*"blur\(6px\)"/,
+    )
+    expect(source).not.toContain('willChange: "opacity, transform"')
   })
 
   it("isolates particle paint work from page scrolling", () => {

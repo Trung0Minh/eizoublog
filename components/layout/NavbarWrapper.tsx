@@ -18,27 +18,52 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
   const isHoveringTopRef = useRef(false)
   const isMobileRef = useRef(false)
   const isMenuOpenRef = useRef(false)
+  const isScrollingDownRef = useRef(false)
   const isIdleRef = useRef(false)
   const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const idleDeadlineRef = useRef(0)
   const scrollFrameRef = useRef<number | null>(null)
   const keepVisibleUntilRef = useRef(0)
 
-  const resetIdle = () => {
-    if (isIdleRef.current) {
-      isIdleRef.current = false
-      setIsIdle(false)
-    }
-    if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current)
-    idleTimeoutRef.current = setTimeout(() => {
-      // only auto-hide if on mobile and menu is closed
-      if (isMobileRef.current && !isMenuOpenRef.current) {
-        isIdleRef.current = true
-        setIsIdle(true)
-      }
-    }, 3000)
-  }
-
   useEffect(() => {
+    const setIdleState = (nextIdle: boolean) => {
+      if (isIdleRef.current !== nextIdle) {
+        isIdleRef.current = nextIdle
+        setIsIdle(nextIdle)
+      }
+    }
+
+    const setScrollingDownState = (nextScrollingDown: boolean) => {
+      if (isScrollingDownRef.current !== nextScrollingDown) {
+        isScrollingDownRef.current = nextScrollingDown
+        setIsScrollingDown(nextScrollingDown)
+      }
+    }
+
+    const scheduleIdleCheck = (delay = 3000) => {
+      idleDeadlineRef.current = Date.now() + delay
+      if (idleTimeoutRef.current) return
+
+      const checkIdle = () => {
+        const remaining = idleDeadlineRef.current - Date.now()
+        if (remaining > 0) {
+          idleTimeoutRef.current = setTimeout(checkIdle, remaining)
+          return
+        }
+
+        idleTimeoutRef.current = null
+        if (isMobileRef.current && !isMenuOpenRef.current) {
+          setIdleState(true)
+        }
+      }
+
+      idleTimeoutRef.current = setTimeout(checkIdle, delay)
+    }
+
+    const markActive = (delay = 3000) => {
+      setIdleState(false)
+      scheduleIdleCheck(delay)
+    }
 
     const updateScrollState = () => {
       const currentScrollY = window.scrollY
@@ -52,15 +77,15 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
 
       // For smart scroll (hide on scroll down)
       if (Date.now() < keepVisibleUntilRef.current) {
-        setIsScrollingDown(false)
+        setScrollingDownState(false)
       } else if (currentScrollY > lastScrollYRef.current + 10 && currentScrollY > 50) {
-        setIsScrollingDown(true)
+        setScrollingDownState(true)
       } else if (currentScrollY < lastScrollYRef.current - 10 || currentScrollY < 50) {
-        setIsScrollingDown(false)
+        setScrollingDownState(false)
       }
       
       lastScrollYRef.current = currentScrollY
-      resetIdle()
+      if (isMobileRef.current) markActive()
     }
 
     const handleScroll = () => {
@@ -97,13 +122,15 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
         setIsMenuOpen(nextIsMenuOpen)
         if (nextIsMenuOpen) {
           keepVisibleUntilRef.current = 0
-          if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current)
-          isIdleRef.current = false
-          setIsIdle(false)
+          if (idleTimeoutRef.current) {
+            clearTimeout(idleTimeoutRef.current)
+            idleTimeoutRef.current = null
+          }
+          setIdleState(false)
         } else {
           keepVisibleUntilRef.current = Date.now() + 3000
-          setIsScrollingDown(false)
-          resetIdle()
+          setScrollingDownState(false)
+          markActive()
         }
       }
     }
@@ -120,14 +147,13 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
 
       if (isIdleRef.current) {
         // if hidden, show it and reset timer
-        resetIdle()
+        markActive()
       } else {
         // if visible, hide it immediately
         if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current)
         if (!isMenuOpenRef.current) {
           keepVisibleUntilRef.current = 0
-          isIdleRef.current = true
-          setIsIdle(true)
+          setIdleState(true)
         }
       }
     }
@@ -137,11 +163,10 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
     window.addEventListener("resize", handleResize)
     window.addEventListener("navbar-menu:open-change", handleMenuOpenChange)
     window.addEventListener("click", handleTap)
-    const timer = setTimeout(handleResize, 0)
+    handleResize()
     updateScrollState() // initial check
 
     return () => {
-      clearTimeout(timer)
       if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current)
       if (scrollFrameRef.current !== null) {
         cancelAnimationFrame(scrollFrameRef.current)

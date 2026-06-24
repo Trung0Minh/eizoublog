@@ -37,6 +37,7 @@ vi.mock("next/navigation", () => ({
 
 afterEach(() => {
   vi.useRealTimers()
+  vi.unstubAllGlobals()
   clearSessionUserCache()
 })
 
@@ -72,6 +73,7 @@ describe("ThemeToggle", () => {
     const startTransitionSpy = vi.fn((cb) => {
       cb()
       return {
+        finished: Promise.resolve(),
         ready: Promise.resolve(),
       }
     })
@@ -98,6 +100,31 @@ describe("ThemeToggle", () => {
     delete (document as any).startViewTransition
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (document as any).documentElement.animate
+  })
+
+  it("switches immediately on coarse pointers so mobile taps are never covered", async () => {
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn((query: string) => ({
+        addEventListener: vi.fn(),
+        matches: query === "(pointer: coarse)",
+        media: query,
+        removeEventListener: vi.fn(),
+      })),
+    )
+    const startTransitionSpy = vi.fn()
+    document.startViewTransition =
+      startTransitionSpy as unknown as typeof document.startViewTransition
+
+    const user = userEvent.setup()
+    render(<ThemeToggle />)
+
+    await user.click(
+      await screen.findByRole("button", { name: "Switch to dark mode" }),
+    )
+
+    expect(themeMocks.setTheme).toHaveBeenCalledWith("dark")
+    expect(startTransitionSpy).not.toHaveBeenCalled()
   })
 })
 
@@ -203,22 +230,54 @@ describe("Navbar", () => {
     )
 
     expect(settingsSource).toContain("open={open}")
-    expect(settingsSource).toContain("preserveOpenRef")
+    expect(settingsSource).not.toContain("preserveOpenRef")
   })
 
-  it("keeps mobile settings open after toggling theme", async () => {
+  it("keeps mobile settings open across repeated theme toggles", async () => {
+    let activeTheme = "light"
+    themeMocks.setTheme.mockImplementation((nextTheme: string) => {
+      activeTheme = nextTheme
+      themeMocks.theme = activeTheme
+    })
+    const startTransitionSpy = vi.fn((cb: () => void) => {
+      cb()
+      return {
+        finished: Promise.resolve(),
+        ready: Promise.resolve(),
+      }
+    })
+    document.startViewTransition =
+      startTransitionSpy as unknown as typeof document.startViewTransition
+    document.documentElement.animate = vi.fn()
+
     const user = userEvent.setup()
-    render(<MobileSettings />)
+    const { rerender } = render(<MobileSettings />)
 
     const settings = screen.getByRole("button", {
       name: "Cài đặt giao diện",
     })
     await user.click(settings)
-    await user.click(
-      await screen.findByRole("button", { name: /Switch to .* mode/ }),
+
+    for (let index = 0; index < 4; index += 1) {
+      await user.click(
+        await screen.findByRole("button", { name: /Switch to .* mode/ }),
+      )
+      rerender(<MobileSettings />)
+      expect(settings).toHaveAttribute("aria-expanded", "true")
+    }
+
+    expect(startTransitionSpy).toHaveBeenCalledTimes(4)
+  })
+
+  it("does not recreate the mobile idle timer on every scroll frame", () => {
+    const wrapperSource = readFileSync(
+      join(process.cwd(), "components/layout/NavbarWrapper.tsx"),
+      "utf8",
     )
 
-    expect(settings).toHaveAttribute("aria-expanded", "true")
+    expect(wrapperSource).toContain("idleDeadlineRef")
+    expect(wrapperSource).toContain("scheduleIdleCheck")
+    expect(wrapperSource).not.toContain("resetIdle()")
   })
 
   it("keeps the mobile navbar visible briefly after settings close", () => {

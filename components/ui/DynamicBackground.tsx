@@ -1,9 +1,11 @@
 "use client"
 
-import { useEffect, useState, useSyncExternalStore } from "react"
+import { useEffect, useRef, useState, useSyncExternalStore } from "react"
 import { useTheme } from "next-themes"
-import { motion, useScroll, useTransform, AnimatePresence } from "motion/react"
+import { AnimatePresence, motion } from "motion/react"
 import { usePathname } from "next/navigation"
+
+import { useReducedVisualEffects } from "@/hooks/useReducedVisualEffects"
 
 const emptySubscribe = () => () => undefined
 
@@ -14,19 +16,42 @@ export function DynamicBackground({
 }) {
   const { theme, systemTheme } = useTheme()
   const [season, setSeason] = useState("spring")
+  const [homeContentActive, setHomeContentActive] = useState(false)
+  const homeContentActiveRef = useRef(false)
+  const shouldReduce = useReducedVisualEffects()
   const mounted = useSyncExternalStore(
     emptySubscribe,
     () => true,
     () => false,
   )
-  const { scrollY } = useScroll()
   const pathname = usePathname()
   const isHome = pathname === "/"
 
-  // Keep scroll effects to compositor-friendly opacity/transform work.
-  const homeOpacity = useTransform(scrollY, [0, 600], [1, 0.4])
-  const homeScale = useTransform(scrollY, [0, 1000], [1, 1.05])
-  const homeOverlayOpacity = useTransform(scrollY, [0, 600], [0, 1])
+  useEffect(() => {
+    if (!isHome) return
+
+    let frame: number | null = null
+    const updateHomeContentState = () => {
+      frame = null
+      const nextActive = window.scrollY >= window.innerHeight * 0.75
+      if (homeContentActiveRef.current !== nextActive) {
+        homeContentActiveRef.current = nextActive
+        setHomeContentActive(nextActive)
+      }
+    }
+    const handleScroll = () => {
+      if (frame !== null) return
+      frame = requestAnimationFrame(updateHomeContentState)
+    }
+
+    updateHomeContentState()
+    window.addEventListener("scroll", handleScroll, { passive: true })
+
+    return () => {
+      if (frame !== null) cancelAnimationFrame(frame)
+      window.removeEventListener("scroll", handleScroll)
+    }
+  }, [isHome])
 
   useEffect(() => {
     const updateSeason = () => {
@@ -75,24 +100,34 @@ export function DynamicBackground({
 
   const bgKey = `${season}_${isDark ? "dark" : "light"}`
   const bgUrl = customBackgrounds?.[bgKey] || `/bg/${bgKey}.jpg`
-  const backgroundFilter = isHome ? "none" : "blur(6px)"
+  const backgroundFilter = isHome
+    ? "none"
+    : shouldReduce
+      ? "none"
+      : "blur(6px)"
+  const isHomeContentVisible = isHome && homeContentActive
+  const backgroundOpacity = isHome ? (isHomeContentVisible ? 0.4 : 1) : 0.4
+  const backgroundScale = isHome ? (isHomeContentVisible ? 1.05 : 1) : 1.05
+  const overlayOpacity = isHome ? (isHomeContentVisible ? 1 : 0) : 1
 
   return (
     <div className="fixed inset-0 z-0 h-full w-full overflow-hidden pointer-events-none bg-transparent">
       <motion.div
         className="absolute inset-0 w-full h-full"
+        animate={{
+          opacity: backgroundOpacity,
+          scale: backgroundScale,
+        }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
         style={{
           filter: backgroundFilter,
-          opacity: isHome ? homeOpacity : 0.4,
-          scale: isHome ? homeScale : 1.05,
           transform: "translateZ(0)",
-          willChange: "opacity, transform",
         }}
       >
         <AnimatePresence initial={false}>
           <motion.div
             key={bgUrl}
-            initial={{ opacity: 0 }}
+            initial={false}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1.5, ease: "easeInOut" }}
@@ -100,7 +135,6 @@ export function DynamicBackground({
             style={{
               backgroundImage: `url(${bgUrl})`,
               transform: "translateZ(0)",
-              willChange: "opacity",
             }}
           />
         </AnimatePresence>
@@ -108,10 +142,10 @@ export function DynamicBackground({
       {/* A subtle overlay to ensure text remains readable */}
       <motion.div 
         className="absolute inset-0 bg-background/40 dark:bg-background/60" 
+        animate={{ opacity: overlayOpacity }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
         style={{
-          opacity: isHome ? homeOverlayOpacity : 1,
           transform: "translateZ(0)",
-          willChange: "opacity",
         }}
       />
     </div>

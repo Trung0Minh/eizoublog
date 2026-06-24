@@ -124,7 +124,10 @@ export function HomeIntro({ appName }: HomeIntroProps) {
   const config = seasonConfigs[season]
 
   return (
-    <div className="w-full h-[calc(100dvh-70px)] flex flex-col items-center justify-center relative overflow-hidden">
+    <div
+      className="w-full h-[calc(100dvh-70px)] flex flex-col items-center justify-center relative overflow-hidden"
+      data-home-intro
+    >
       <AnimatePresence mode="wait">
         <motion.div
           key={season}

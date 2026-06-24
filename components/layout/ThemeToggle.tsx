@@ -12,6 +12,8 @@ const emptySubscribe = () => () => undefined
 export function ThemeToggle() {
   const { resolvedTheme, setTheme, theme } = useTheme()
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const pendingThemeRef = useRef<"dark" | "light" | null>(null)
+  const transitionInFlightRef = useRef(false)
   const mounted = useSyncExternalStore(
     emptySubscribe,
     () => true,
@@ -25,16 +27,24 @@ export function ThemeToggle() {
   const activeTheme = resolvedTheme ?? theme
   const isDark = activeTheme === "dark"
 
-  const handleToggle = async () => {
-    const nextTheme = isDark ? "light" : "dark"
+  const handleToggle = () => {
+    const currentTheme = pendingThemeRef.current ?? (isDark ? "dark" : "light")
+    const nextTheme = currentTheme === "dark" ? "light" : "dark"
+    pendingThemeRef.current = nextTheme
 
     if (
       !buttonRef.current ||
       !document.startViewTransition ||
       (typeof window !== "undefined" &&
         window.matchMedia &&
-        window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+        (window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+          window.matchMedia("(pointer: coarse)").matches))
     ) {
+      setTheme(nextTheme)
+      return
+    }
+
+    if (transitionInFlightRef.current) {
       setTheme(nextTheme)
       return
     }
@@ -47,26 +57,37 @@ export function ThemeToggle() {
       Math.max(y, window.innerHeight - y),
     )
 
+    transitionInFlightRef.current = true
+    document.documentElement.dataset.themeTransitioning = "true"
+
     const transition = document.startViewTransition(() => {
       flushSync(() => {
         setTheme(nextTheme)
       })
     })
 
-    transition.ready.then(() => {
-      document.documentElement.animate(
-        {
-          clipPath: [
-            `circle(0px at ${x}px ${y}px)`,
-            `circle(${maxRadius}px at ${x}px ${y}px)`,
-          ],
-        },
-        {
-          duration: 750,
-          easing: "ease-in-out",
-          pseudoElement: "::view-transition-new(root)",
-        },
-      )
+    void transition.ready
+      .then(() => {
+        document.documentElement.animate(
+          {
+            clipPath: [
+              `circle(0px at ${x}px ${y}px)`,
+              `circle(${maxRadius}px at ${x}px ${y}px)`,
+            ],
+          },
+          {
+            duration: 750,
+            easing: "ease-in-out",
+            pseudoElement: "::view-transition-new(root)",
+          },
+        )
+      })
+      .catch(() => undefined)
+
+    void transition.finished.finally(() => {
+      transitionInFlightRef.current = false
+      pendingThemeRef.current = null
+      delete document.documentElement.dataset.themeTransitioning
     })
   }
 
@@ -84,4 +105,3 @@ export function ThemeToggle() {
     </Button>
   )
 }
-

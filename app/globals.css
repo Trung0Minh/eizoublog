@@ -841,4 +841,9 @@
 ::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
+  pointer-events: none;
+}
+
+::view-transition {
+  pointer-events: none;
 }
