@@ -14,7 +14,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import type { WriterMenuUser } from "@/components/layout/WriterMenu"
-import { SearchBar } from "@/components/search/SearchBar"
 
 interface MobileNavProps {
   links: { href: string; label: string }[]
@@ -67,10 +66,6 @@ export function MobileNav({ links, user }: MobileNavProps) {
           ))}
         </nav>
 
-        <div className="mt-6 border-t border-border-default pt-6">
-          <SearchBar />
-        </div>
-
         <div className="mt-6 border-t border-border-default pt-6 flex flex-col gap-4">
           <a
             href="https://discord.gg/wgCr86Cdb"
@@ -93,9 +88,9 @@ export function MobileNav({ links, user }: MobileNavProps) {
                 @{menuUser.username}
               </p>
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1">
               <Link
-                className="flex min-h-9 items-center gap-2 text-sm text-text-secondary transition-colors hover:text-text-primary"
+                className="flex min-h-9 items-center gap-2 rounded-md px-2 text-sm text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary"
                 href="/dashboard"
                 onClick={() => setOpen(false)}
                 prefetch={false}
@@ -103,39 +98,37 @@ export function MobileNav({ links, user }: MobileNavProps) {
                 <FileText aria-hidden="true" className="h-4 w-4" />
                 Bài viết của tôi
               </Link>
+              <Link
+                className="flex min-h-9 items-center gap-2 rounded-md px-2 text-sm text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary"
+                href="/dashboard/events"
+                onClick={() => setOpen(false)}
+                prefetch={false}
+              >
+                <FileText aria-hidden="true" className="h-4 w-4" />
+                Sự kiện viết
+              </Link>
+              <Link
+                className="flex min-h-9 items-center gap-2 rounded-md px-2 text-sm text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary"
+                href="/dashboard/notifications"
+                onClick={() => setOpen(false)}
+                prefetch={false}
+              >
+                <FileText aria-hidden="true" className="h-4 w-4" />
+                Thông báo
+              </Link>
               {menuUser.role === "ADMIN" && (
-                <>
-                  <Link
-                    className="flex min-h-9 items-center gap-2 text-sm text-text-secondary transition-colors hover:text-text-primary"
-                    href="/admin/analytics"
-                    onClick={() => setOpen(false)}
-                    prefetch={false}
-                  >
-                    <Shield aria-hidden="true" className="h-4 w-4" />
-                    Thống kê & Nội dung
-                  </Link>
-                  <Link
-                    className="flex min-h-9 items-center gap-2 text-sm text-text-secondary transition-colors hover:text-text-primary"
-                    href="/admin/events"
-                    onClick={() => setOpen(false)}
-                    prefetch={false}
-                  >
-                    <Shield aria-hidden="true" className="h-4 w-4" />
-                    Quản lý Sự kiện
-                  </Link>
-                  <Link
-                    className="flex min-h-9 items-center gap-2 text-sm text-text-secondary transition-colors hover:text-text-primary"
-                    href="/admin"
-                    onClick={() => setOpen(false)}
-                    prefetch={false}
-                  >
-                    <Shield aria-hidden="true" className="h-4 w-4" />
-                    Quản trị Hệ thống
-                  </Link>
-                </>
+                <Link
+                  className="flex min-h-9 items-center gap-2 rounded-md px-2 text-sm text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary"
+                  href="/admin"
+                  onClick={() => setOpen(false)}
+                  prefetch={false}
+                >
+                  <Shield aria-hidden="true" className="h-4 w-4" />
+                  Quản trị
+                </Link>
               )}
               <Link
-                className="flex min-h-9 items-center gap-2 text-sm text-text-secondary transition-colors hover:text-text-primary"
+                className="flex min-h-9 items-center gap-2 rounded-md px-2 text-sm text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary"
                 href="/dashboard/profile"
                 onClick={() => setOpen(false)}
                 prefetch={false}
@@ -144,7 +137,7 @@ export function MobileNav({ links, user }: MobileNavProps) {
                 Sửa hồ sơ
               </Link>
               <Link
-                className="flex min-h-9 items-center gap-2 text-sm text-text-secondary transition-colors hover:text-text-primary"
+                className="flex min-h-9 items-center gap-2 rounded-md px-2 text-sm text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary"
                 href={`/authors/${menuUser.username}`}
                 onClick={() => setOpen(false)}
               >
@@ -152,7 +145,7 @@ export function MobileNav({ links, user }: MobileNavProps) {
                 Hồ sơ công khai
               </Link>
               <Button
-                className="min-h-9 justify-start gap-2 px-0 text-accent hover:bg-transparent hover:text-accent/80"
+                className="min-h-9 justify-start gap-2 rounded-md px-2 text-accent hover:bg-subtle-bg hover:text-accent"
                 onClick={handleSignOut}
                 type="button"
                 variant="ghost"
