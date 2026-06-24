@@ -1,6 +1,7 @@
 "use client"
 
 import { Settings } from "lucide-react"
+import { useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -12,16 +13,25 @@ import { SeasonToggle } from "@/components/ui/SeasonToggle"
 import { ParticleToggle } from "@/components/ui/ParticleToggle"
 
 export function MobileSettings() {
-  const handleOpenChange = (open: boolean) => {
+  const [open, setOpen] = useState(false)
+  const preserveOpenRef = useRef(false)
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen && preserveOpenRef.current) return
+
+    setOpen(nextOpen)
     window.dispatchEvent(
-      new CustomEvent("navbar-menu:open-change", { detail: open }),
+      new CustomEvent("navbar-menu:open-change", { detail: nextOpen }),
     )
   }
 
   return (
-    <DropdownMenu onOpenChange={handleOpenChange}>
+    <DropdownMenu open={open} onOpenChange={handleOpenChange} modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
+          onPointerDownCapture={() => {
+            preserveOpenRef.current = false
+          }}
           variant="ghost"
           size="icon"
           className="h-9 w-9 rounded-full text-text-secondary hover:bg-subtle-bg hover:text-accent md:hidden"
@@ -30,7 +40,19 @@ export function MobileSettings() {
           <Settings className="h-5 w-5" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-auto min-w-0 p-1.5 flex flex-col items-center gap-1 bg-background/95 backdrop-blur-xl border-border-default rounded-[12px]">
+      <DropdownMenuContent
+        align="end"
+        className="w-auto min-w-0 p-1.5 flex flex-col items-center gap-1 bg-background/95 backdrop-blur-xl border-border-default rounded-[12px] duration-200 data-[state=closed]:zoom-out-90 data-[state=open]:zoom-in-90 [&_svg]:pointer-events-none"
+        onEscapeKeyDown={() => {
+          preserveOpenRef.current = false
+        }}
+        onInteractOutside={() => {
+          preserveOpenRef.current = false
+        }}
+        onPointerDownCapture={() => {
+          preserveOpenRef.current = true
+        }}
+      >
         <ThemeToggle />
         <SeasonToggle />
         <ParticleToggle />
