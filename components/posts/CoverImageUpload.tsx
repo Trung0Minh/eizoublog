@@ -253,7 +253,7 @@ function CoverCropperModal({
   if (!mounted) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-black/90 p-4">
+    <div id="cover-cropper-modal" className="fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-black/90 p-4">
       <button
         aria-label="Đóng"
         className="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"

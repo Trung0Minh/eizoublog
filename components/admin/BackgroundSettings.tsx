@@ -1,11 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { CoverImageUpload } from "@/components/posts/CoverImageUpload"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
 
 export function BackgroundSettings() {
+  const router = useRouter()
   const [backgrounds, setBackgrounds] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -32,6 +34,7 @@ export function BackgroundSettings() {
       })
       if (res.ok) {
         toast("Đã lưu cài đặt")
+        router.refresh()
       } else {
         throw new Error("Failed to save")
       }
