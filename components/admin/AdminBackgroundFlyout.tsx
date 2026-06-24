@@ -13,7 +13,7 @@ import { BackgroundSettings } from "@/components/admin/BackgroundSettings"
 export function AdminBackgroundFlyout() {
   return (
     <div className="fixed top-1/2 right-0 -translate-y-1/2 z-50 group">
-      <Sheet>
+      <Sheet modal={false}>
         <SheetTrigger asChild>
           <button 
             className="flex items-center justify-center w-12 h-14 bg-background/60 backdrop-blur-md border border-r-0 border-border-default rounded-l-xl text-text-secondary hover:text-accent hover:w-14 transition-all duration-300 shadow-lg group-hover:translate-x-0 translate-x-8"
