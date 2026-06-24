@@ -16,6 +16,9 @@ export function DynamicBackground({
 }) {
   const { theme, systemTheme } = useTheme()
   const [season, setSeason] = useState("spring")
+  // Use a CSS class toggle instead of Framer Motion animate prop for scroll transitions.
+  // This lets the browser interpolate via CSS transition natively, which is smooth
+  // during momentum scrolling rather than only firing after finger lift.
   const [homeContentActive, setHomeContentActive] = useState(false)
   const homeContentActiveRef = useRef(false)
   const shouldReduce = useReducedVisualEffects()
@@ -105,25 +108,28 @@ export function DynamicBackground({
     : shouldReduce
       ? "none"
       : "blur(6px)"
+
   const isHomeContentVisible = isHome && homeContentActive
-  const backgroundOpacity = isHome ? (isHomeContentVisible ? 0.4 : 1) : 0.4
-  const backgroundScale = isHome ? (isHomeContentVisible ? 1.05 : 1) : 1.05
-  const overlayOpacity = isHome ? (isHomeContentVisible ? 1 : 0) : 1
+
+  // CSS-driven transitions for the scroll fade — far smoother than Framer Motion
+  // animate prop because the browser interpolates these natively every paint frame.
+  const wrapperStyle: React.CSSProperties = {
+    filter: backgroundFilter,
+    transform: "translateZ(0)",
+    opacity: isHome ? (isHomeContentVisible ? 0.4 : 1) : 0.4,
+    scale: isHome ? (isHomeContentVisible ? "1.05" : "1") : "1.05",
+    transition: "opacity 0.8s ease-out, scale 0.8s ease-out",
+  }
+
+  const overlayStyle: React.CSSProperties = {
+    transform: "translateZ(0)",
+    opacity: isHome ? (isHomeContentVisible ? 1 : 0) : 1,
+    transition: "opacity 0.8s ease-out",
+  }
 
   return (
     <div className="fixed inset-0 z-0 h-full w-full overflow-hidden pointer-events-none bg-transparent">
-      <motion.div
-        className="absolute inset-0 w-full h-full"
-        animate={{
-          opacity: backgroundOpacity,
-          scale: backgroundScale,
-        }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        style={{
-          filter: backgroundFilter,
-          transform: "translateZ(0)",
-        }}
-      >
+      <div className="absolute inset-0 w-full h-full" style={wrapperStyle}>
         <AnimatePresence initial={false}>
           <motion.div
             key={bgUrl}
@@ -138,15 +144,11 @@ export function DynamicBackground({
             }}
           />
         </AnimatePresence>
-      </motion.div>
+      </div>
       {/* A subtle overlay to ensure text remains readable */}
-      <motion.div 
-        className="absolute inset-0 bg-background/40 dark:bg-background/60" 
-        animate={{ opacity: overlayOpacity }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        style={{
-          transform: "translateZ(0)",
-        }}
+      <div
+        className="absolute inset-0 bg-background/40 dark:bg-background/60"
+        style={overlayStyle}
       />
     </div>
   )

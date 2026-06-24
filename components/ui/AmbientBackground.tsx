@@ -1,61 +1,49 @@
 'use client';
-import { motion } from 'motion/react';
-import { useEffect, useState } from 'react';
+import { useMotionValue, useSpring, motion } from 'motion/react';
+import { useEffect } from 'react';
 
 import { useReducedVisualEffects } from '@/hooks/useReducedVisualEffects';
 
 export function AmbientBackground() {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const shouldReduce = useReducedVisualEffects();
+
+  // Use motion values directly — zero React re-renders on mousemove
+  const rawX = useMotionValue(0);
+  const rawY = useMotionValue(0);
+  const mouseX = useSpring(rawX, { damping: 30, stiffness: 60, mass: 1 });
+  const mouseY = useSpring(rawY, { damping: 30, stiffness: 60, mass: 1 });
 
   useEffect(() => {
     if (shouldReduce) return;
-
     const updateMousePosition = (e: MouseEvent) => {
-      setMousePosition({
-        x: e.clientX,
-        y: e.clientY,
-      });
+      rawX.set(e.clientX);
+      rawY.set(e.clientY);
     };
     window.addEventListener('mousemove', updateMousePosition);
     return () => window.removeEventListener('mousemove', updateMousePosition);
-  }, [shouldReduce]);
+  }, [shouldReduce, rawX, rawY]);
 
   return (
     <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
-      {/* Decorative Orbs */}
       {!shouldReduce && <div
-        className="absolute inset-0 opacity-40 dark:opacity-20 mix-blend-screen dark:mix-blend-color-dodge blur-[120px]"
+        className="absolute inset-0 opacity-40 dark:opacity-20 mix-blend-screen dark:mix-blend-color-dodge"
+        style={{ filter: 'blur(80px)' }}
         data-testid="ambient-motion-layer"
       >
-        {/* Top Left Orb */}
-        <motion.div
-           className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-purple-500/20"
-           animate={{
-             x: [0, 50, -20, 0],
-             y: [0, -30, 40, 0],
-             scale: [1, 1.1, 0.9, 1],
-           }}
-           transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+        {/* Top Left Orb — CSS animation, no JS per frame */}
+        <div
+          className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-purple-500/20"
+          style={{ animation: 'ambient-orb-1 15s ease-in-out infinite' }}
         />
         {/* Bottom Right Orb */}
-        <motion.div
-           className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-accent opacity-20"
-           animate={{
-             x: [0, -60, 30, 0],
-             y: [0, 40, -50, 0],
-             scale: [1, 0.8, 1.2, 1],
-           }}
-           transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+        <div
+          className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-accent opacity-20"
+          style={{ animation: 'ambient-orb-2 18s ease-in-out infinite 2s' }}
         />
-        {/* Mouse Follower */}
+        {/* Mouse Follower — only on desktop, uses motion values (no re-renders) */}
         <motion.div
-           className="absolute w-[30vw] h-[30vw] rounded-full bg-blue-500/10 mix-blend-screen"
-           animate={{
-             x: mousePosition.x,
-             y: mousePosition.y,
-           }}
-           transition={{ type: "spring", stiffness: 40, damping: 20 }}
+          className="absolute w-[30vw] h-[30vw] rounded-full bg-blue-500/10 mix-blend-screen hidden md:block"
+          style={{ x: mouseX, y: mouseY, translateX: '-50%', translateY: '-50%' }}
         />
       </div>}
 
