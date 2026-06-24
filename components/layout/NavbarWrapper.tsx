@@ -28,8 +28,8 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
     }
     if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current)
     idleTimeoutRef.current = setTimeout(() => {
-      // only auto-hide if on mobile, not at top, and menu is closed
-      if (isMobileRef.current && !isMenuOpenRef.current && window.scrollY > 50) {
+      // only auto-hide if on mobile and menu is closed
+      if (isMobileRef.current && !isMenuOpenRef.current) {
         isIdleRef.current = true
         setIsIdle(true)
       }
@@ -108,7 +108,7 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
       } else {
         // if visible, hide it immediately
         if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current)
-        if (!isMenuOpenRef.current && window.scrollY > 50) {
+        if (!isMenuOpenRef.current) {
           isIdleRef.current = true
           setIsIdle(true)
         }
@@ -120,7 +120,6 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
     window.addEventListener("resize", handleResize)
     window.addEventListener("navbar-menu:open-change", handleMenuOpenChange)
     window.addEventListener("click", handleTap)
-    window.addEventListener("touchstart", handleTap, { passive: true })
     const timer = setTimeout(handleResize, 0)
     handleScroll() // initial check
 
@@ -132,7 +131,6 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
       window.removeEventListener("resize", handleResize)
       window.removeEventListener("navbar-menu:open-change", handleMenuOpenChange)
       window.removeEventListener("click", handleTap)
-      window.removeEventListener("touchstart", handleTap)
     }
   }, [])
 
