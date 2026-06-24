@@ -80,6 +80,45 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               try {
+                // Mock system dark mode to use Vietnam time (UTC+7)
+                const originalMatchMedia = window.matchMedia;
+                let darkThemeListeners = [];
+                let lastIsDark = null;
+
+                function getVietnamIsDark() {
+                  const utc = new Date().getTime() + (new Date().getTimezoneOffset() * 60000);
+                  const nd = new Date(utc + (3600000 * 7));
+                  const hour = nd.getHours();
+                  return hour < 6 || hour >= 18;
+                }
+
+                window.matchMedia = function(query) {
+                  if (query === '(prefers-color-scheme: dark)') {
+                    lastIsDark = getVietnamIsDark();
+                    const mql = {
+                      get matches() { return getVietnamIsDark(); },
+                      media: query,
+                      onchange: null,
+                      addListener: function(fn) { darkThemeListeners.push(fn); },
+                      removeListener: function(fn) { darkThemeListeners = darkThemeListeners.filter(l => l !== fn); },
+                      addEventListener: function(_, fn) { darkThemeListeners.push(fn); },
+                      removeEventListener: function(_, fn) { darkThemeListeners = darkThemeListeners.filter(l => l !== fn); },
+                      dispatchEvent: function() { return true; }
+                    };
+                    return mql;
+                  }
+                  return originalMatchMedia(query);
+                };
+
+                setInterval(() => {
+                  if (lastIsDark === null) return;
+                  const currentIsDark = getVietnamIsDark();
+                  if (currentIsDark !== lastIsDark) {
+                    lastIsDark = currentIsDark;
+                    darkThemeListeners.forEach(fn => fn({ matches: currentIsDark }));
+                  }
+                }, 60000);
+
                 let season = localStorage.getItem('season');
                 if (!season) {
                   let month = new Date().getMonth();

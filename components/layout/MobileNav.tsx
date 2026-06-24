@@ -15,9 +15,6 @@ import {
 } from "@/components/ui/sheet"
 import type { WriterMenuUser } from "@/components/layout/WriterMenu"
 import { SearchBar } from "@/components/search/SearchBar"
-import { ThemeToggle } from "@/components/layout/ThemeToggle"
-import { SeasonToggle } from "@/components/ui/SeasonToggle"
-import { ParticleToggle } from "@/components/ui/ParticleToggle"
 
 interface MobileNavProps {
   links: { href: string; label: string }[]
@@ -46,7 +43,7 @@ export function MobileNav({ links, user }: MobileNavProps) {
           <Menu aria-hidden="true" className="h-5 w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent className="flex w-[280px] flex-col border-border-default bg-background px-6 py-6" side="right">
+      <SheetContent className="flex w-[280px] flex-col border-border-default bg-background px-6 py-6 overflow-y-auto" side="right">
         <SheetTitle className="sr-only">Menu điều hướng</SheetTitle>
         <SheetDescription className="sr-only">
           Duyệt các trang ấn phẩm và tìm kiếm bài viết.
@@ -75,23 +72,11 @@ export function MobileNav({ links, user }: MobileNavProps) {
         </div>
 
         <div className="mt-6 border-t border-border-default pt-6 flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-text-secondary">Chế độ tối</span>
-            <ThemeToggle />
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-text-secondary">Hiệu ứng mùa</span>
-            <SeasonToggle />
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-text-secondary">Hiệu ứng hạt</span>
-            <ParticleToggle />
-          </div>
           <a
             href="https://discord.gg/wgCr86Cdb"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 text-sm font-medium text-text-secondary hover:text-accent transition-colors mt-2"
+            className="flex items-center gap-3 text-sm font-medium text-text-secondary hover:text-accent transition-colors"
           >
             <svg viewBox="0 0 127.14 96.36" fill="currentColor" className="w-5 h-5">
               <path d="M107.7,8.07A105.15,105.15,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,52.8,6.83,77.19,77.19,0,0,0,49.5,0,105.15,105.15,0,0,0,19.06,8.07C3.12,31.78-1.2,54.85,.3,77.53A105.73,105.73,0,0,0,32,96.36a77.7,77.7,0,0,0,6.63-10.85,68.43,68.43,0,0,1-10.5-5c1-.73,2-1.5,2.92-2.3A75.7,75.7,0,0,0,96,78.23c.93,.8,1.93,1.57,2.92,2.3a68.43,68.43,0,0,1-10.5,5,77.7,77.7,0,0,0,6.63,10.85,105.73,105.73,0,0,0,31.71-18.83C128.7,54.85,124.3,31.78,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z" />
@@ -119,15 +104,35 @@ export function MobileNav({ links, user }: MobileNavProps) {
                 Bài viết của tôi
               </Link>
               {menuUser.role === "ADMIN" && (
-                <Link
-                  className="flex min-h-9 items-center gap-2 text-sm text-text-secondary transition-colors hover:text-text-primary"
-                  href="/admin"
-                  onClick={() => setOpen(false)}
-                  prefetch={false}
-                >
-                  <Shield aria-hidden="true" className="h-4 w-4" />
-                  Quản trị
-                </Link>
+                <>
+                  <Link
+                    className="flex min-h-9 items-center gap-2 text-sm text-text-secondary transition-colors hover:text-text-primary"
+                    href="/admin/analytics"
+                    onClick={() => setOpen(false)}
+                    prefetch={false}
+                  >
+                    <Shield aria-hidden="true" className="h-4 w-4" />
+                    Thống kê & Nội dung
+                  </Link>
+                  <Link
+                    className="flex min-h-9 items-center gap-2 text-sm text-text-secondary transition-colors hover:text-text-primary"
+                    href="/admin/events"
+                    onClick={() => setOpen(false)}
+                    prefetch={false}
+                  >
+                    <Shield aria-hidden="true" className="h-4 w-4" />
+                    Quản lý Sự kiện
+                  </Link>
+                  <Link
+                    className="flex min-h-9 items-center gap-2 text-sm text-text-secondary transition-colors hover:text-text-primary"
+                    href="/admin"
+                    onClick={() => setOpen(false)}
+                    prefetch={false}
+                  >
+                    <Shield aria-hidden="true" className="h-4 w-4" />
+                    Quản trị Hệ thống
+                  </Link>
+                </>
               )}
               <Link
                 className="flex min-h-9 items-center gap-2 text-sm text-text-secondary transition-colors hover:text-text-primary"

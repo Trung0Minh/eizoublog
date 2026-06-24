@@ -11,21 +11,33 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
   const [isHoveringTop, setIsHoveringTop] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isScrollingDown, setIsScrollingDown] = useState(false)
   const isScrolledRef = useRef(false)
+  const lastScrollYRef = useRef(0)
   const isHoveringTopRef = useRef(false)
   const isMobileRef = useRef(false)
   const isMenuOpenRef = useRef(false)
 
   useEffect(() => {
-    if (!isHome) return
 
     const handleScroll = () => {
-      // Show navbar after scrolling down 300px
-      const nextIsScrolled = window.scrollY > 300
+      const currentScrollY = window.scrollY
+      
+      // For desktop homepage
+      const nextIsScrolled = currentScrollY > 300
       if (isScrolledRef.current !== nextIsScrolled) {
         isScrolledRef.current = nextIsScrolled
         setIsScrolled(nextIsScrolled)
       }
+
+      // For smart scroll (hide on scroll down)
+      if (currentScrollY > lastScrollYRef.current + 10 && currentScrollY > 50) {
+        setIsScrollingDown(true)
+      } else if (currentScrollY < lastScrollYRef.current - 10 || currentScrollY < 50) {
+        setIsScrollingDown(false)
+      }
+      
+      lastScrollYRef.current = currentScrollY
     }
     
     const handleMouseMove = (e: MouseEvent) => {
@@ -68,7 +80,7 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
       window.removeEventListener("resize", handleResize)
       window.removeEventListener("navbar-menu:open-change", handleMenuOpenChange)
     }
-  }, [isHome])
+  }, [])
 
   const isEditorRoute =
     pathname.startsWith("/admin") ||
@@ -79,8 +91,11 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
     return null
   }
   
-  // Show navbar if we are NOT on the homepage, or if scrolled, or if hovering top, or if on mobile
-  const showNavbar = !isHome || isScrolled || isHoveringTop || isMobile || isMenuOpen
+  // On mobile: show if at top, scrolling up, hovering top, or menu is open
+  // On desktop: show if NOT home, scrolled past 300px, hovering top, or menu is open
+  const showNavbar = isMobile
+    ? !isScrollingDown || isMenuOpen || isHoveringTop
+    : (!isHome || isScrolled || isHoveringTop || isMenuOpen)
 
   return (
     <div 

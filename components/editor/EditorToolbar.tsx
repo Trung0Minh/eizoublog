@@ -66,7 +66,7 @@ function ToolbarButton({
   return (
     <button
       className={[
-        "flex h-[36px] w-[36px] items-center justify-center rounded-[8px] transition-all duration-200",
+        "flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-[8px] transition-all duration-200",
         active
           ? "bg-accent/10 text-accent shadow-sm"
           : "text-text-secondary hover:bg-subtle-bg hover:text-text-primary hover:shadow-sm hover:scale-105",
@@ -184,7 +184,7 @@ export function EditorToolbar({
   if (mode === "profile") {
     return (
       <>
-        <div className="no-scrollbar sticky top-0 z-[60] mb-4 flex w-full flex-wrap justify-start gap-1 rounded-[16px] bg-background/80 backdrop-blur-xl px-3 py-2 border-[2px] border-border-default/50 shadow-sm transition-all duration-300">
+        <div className="no-scrollbar sticky top-0 z-40 mb-4 flex w-full flex-nowrap justify-start gap-1 overflow-x-auto rounded-[16px] bg-background/80 backdrop-blur-xl px-3 py-2 border-[2px] border-border-default/50 shadow-sm transition-all duration-300">
           <ToolbarButton
             active={editor.isActive("bold")}
             onClick={() => editor.chain().focus().toggleBold().run()}
@@ -246,7 +246,7 @@ export function EditorToolbar({
 
   return (
     <>
-      <div className="no-scrollbar sticky top-0 z-[60] mb-4 flex w-full flex-nowrap justify-start md:justify-center gap-1 overflow-x-auto rounded-[16px] bg-background/80 backdrop-blur-xl px-3 py-2 border-[2px] border-border-default/50 shadow-sm transition-all duration-300">
+      <div className="no-scrollbar sticky top-0 z-40 mb-4 flex w-full flex-nowrap justify-start md:justify-center gap-1 overflow-x-auto rounded-[16px] bg-background/80 backdrop-blur-xl px-3 py-2 border-[2px] border-border-default/50 shadow-sm transition-all duration-300">
         <ToolbarButton
           active={editor.isActive("bold")}
           onClick={() => editor.chain().focus().toggleBold().run()}

@@ -76,6 +76,7 @@ export function PostSortTabs({
                 }
               }}
               role="tab"
+              scroll={false}
             >
               {isPending && <Loader aria-hidden="true" size="sm" />}
               {option.label}

@@ -8,6 +8,7 @@ import { ParticleToggle } from "@/components/ui/ParticleToggle"
 import { SeasonToggle } from "@/components/ui/SeasonToggle"
 import { MagneticEffect } from "@/components/ui/MagneticEffect"
 import { CommandMenuTrigger } from "@/components/ui/CommandMenuTrigger"
+import { MobileSettings } from "@/components/layout/MobileSettings"
 
 const NAV_LINKS = [
   { href: "/nhap-mon-sakuga", label: "Nhập môn Sakuga" },
@@ -50,8 +51,8 @@ export function Navbar({ user }: { user?: WriterMenuUser | null }) {
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-3">
-          <div className="hidden md:block">
+        <div className="ml-auto flex items-center gap-1 sm:gap-2">
+          <div className="block">
             <CommandMenuTrigger />
           </div>
           <div className="hidden md:flex items-center gap-1">
@@ -71,7 +72,10 @@ export function Navbar({ user }: { user?: WriterMenuUser | null }) {
             <SeasonToggle />
             <ParticleToggle />
           </div>
-          <ThemeToggle />
+          <div className="hidden md:block">
+            <ThemeToggle />
+          </div>
+          <MobileSettings />
           <WriterNavControls links={NAV_LINKS} user={user} />
         </div>
       </div>
