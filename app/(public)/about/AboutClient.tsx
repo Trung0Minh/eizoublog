@@ -188,9 +188,9 @@ export function AboutClient({ initialPage, isAdmin }: AboutClientProps) {
       )}
 
       {isEditing && (
-        <div className="fixed top-[56px] left-0 right-0 z-[100] flex items-center justify-between bg-background/90 backdrop-blur py-2 px-4 border-b border-border-default shadow-sm">
-          <h2 className="text-sm font-semibold uppercase tracking-widest text-editorial">
-            Chỉnh sửa trang Giới thiệu
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] flex items-center justify-between bg-background/95 backdrop-blur-md py-3 px-6 rounded-full border-[2px] border-border-default shadow-2xl gap-8 animate-in slide-in-from-bottom-8">
+          <h2 className="text-sm font-bold uppercase tracking-widest text-editorial whitespace-nowrap">
+            Đang chỉnh sửa...
           </h2>
           <div className="flex gap-2">
             <Button
@@ -217,7 +217,7 @@ export function AboutClient({ initialPage, isAdmin }: AboutClientProps) {
         </div>
       )}
 
-      <main className={cn("flex-1 w-full max-w-[1000px] mx-auto pt-8 md:pt-16 pb-20 px-4 md:px-0", isEditing && "mt-[60px]")}>
+      <main className="flex-1 w-full max-w-[1000px] mx-auto pt-8 md:pt-16 pb-32 px-4 md:px-0">
         <div className={cn("bg-subtle-bg/80 backdrop-blur-sm border-[3px] border-border/60 rounded-[24px] p-6 md:p-12 shadow-xl relative isolate overflow-hidden", isEditing && "border-editorial/40 shadow-editorial/10")}>
           {/* Decorative Corner Flairs */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-bl-[100px] -z-10" />
@@ -230,7 +230,7 @@ export function AboutClient({ initialPage, isAdmin }: AboutClientProps) {
                  {isEditing ? (
                    <CoverImageUpload
                      value={data.coverUrl || ""}
-                     onChange={(url) => updateData(d => ({ ...d, coverUrl: url }))}
+                     onChange={(url) => updateData((currentData) => ({ ...currentData, coverUrl: url }))}
                    />
                  ) : (
                    <img
@@ -256,7 +256,7 @@ export function AboutClient({ initialPage, isAdmin }: AboutClientProps) {
                     <input
                       className="w-full border-none bg-transparent text-[32px] md:text-[42px] font-display font-bold text-text-primary leading-tight outline-none focus:ring-2 focus:ring-accent rounded-[8px] placeholder:text-text-tertiary"
                       value={data.title}
-                      onChange={(e) => updateData(d => ({ ...d, title: e.target.value }))}
+                      onChange={(e) => updateData((currentData) => ({ ...currentData, title: e.target.value }))}
                       placeholder="Tiêu đề trang..."
                     />
                   ) : (
@@ -279,7 +279,7 @@ export function AboutClient({ initialPage, isAdmin }: AboutClientProps) {
                       editable={true}
                       onEditorReady={handleEditorReady}
                       onChange={(json, text) => {
-                        updateData(d => ({ ...d, body: json }))
+                        updateData((currentData) => ({ ...currentData, body: json }))
                         updateContentText(text)
                       }}
                     />
@@ -298,7 +298,7 @@ export function AboutClient({ initialPage, isAdmin }: AboutClientProps) {
                         <Textarea
                           className="w-full text-[14px] resize-none bg-transparent shadow-none focus-visible:ring-1 focus-visible:ring-accent"
                           value={data.whyWeDoThis}
-                          onChange={(e) => updateData(d => ({ ...d, whyWeDoThis: e.target.value }))}
+                          onChange={(e) => updateData((currentData) => ({ ...currentData, whyWeDoThis: e.target.value }))}
                           placeholder="Nhập lý do..."
                           rows={4}
                         />

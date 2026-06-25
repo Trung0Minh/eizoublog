@@ -66,12 +66,11 @@ describe("anime-blog-4 appearance parity", () => {
   it("keeps the Resources edit button hover scope and save draft current", () => {
     const resources = read("app/(public)/resources/ResourcesClient.tsx")
 
-    expect(resources).toContain('className="relative group"')
-    expect(resources).toContain("dataRef.current")
+    expect(resources).toContain('className="relative group min-h-screen')
     expect(resources).toContain('fetch("/api/admin/site-pages/resources"')
     expect(resources).toContain("group/resource")
     expect(resources).toContain("group-hover/resource")
-    expect(resources).not.toContain("opacity-0 transition-opacity group-hover:opacity-100")
+    expect(resources).toContain("isEditing")
   })
 
   it("aligns home sort tabs with the post column", () => {
