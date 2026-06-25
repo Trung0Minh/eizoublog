@@ -31,10 +31,7 @@ export function DynamicBackground({
   const isHome = pathname === "/"
 
   useEffect(() => {
-    // Skip scroll animation on mobile — JS-driven scroll effects on mobile
-    // require hopping back to the main thread, causing jank. Static state is
-    // fine on mobile since the parallax effect isn't meaningful on a small screen.
-    if (!isHome || shouldReduce) return
+    if (!isHome) return
 
     let frame: number | null = null
     const updateHomeContentState = () => {
@@ -57,7 +54,7 @@ export function DynamicBackground({
       if (frame !== null) cancelAnimationFrame(frame)
       window.removeEventListener("scroll", handleScroll)
     }
-  }, [isHome, shouldReduce])
+  }, [isHome])
 
   useEffect(() => {
     const updateSeason = () => {
@@ -82,23 +79,34 @@ export function DynamicBackground({
     }
   }, [])
 
-  // Preload background images. On mobile only preload current season to save
-  // bandwidth and memory; on desktop preload all for instant season switching.
+  // Preload all 8 background images on every device so season switches are
+  // always smooth. On mobile we defer by 2 s to avoid competing with the
+  // initial paint; on desktop we start immediately.
   useEffect(() => {
     if (typeof window === "undefined") return
 
     const themes = ["light", "dark"]
-    const seasonsToPreload = shouldReduce ? [season] : ["spring", "summer", "autumn", "winter"]
+    const seasons = ["spring", "summer", "autumn", "winter"]
 
-    seasonsToPreload.forEach((s) => {
-      themes.forEach((t) => {
-        const key = `${s}_${t}`
-        const url = customBackgrounds?.[key] || `/bg/${key}.jpg`
-        const img = new window.Image()
-        img.src = url
+    const preload = () => {
+      seasons.forEach((s) => {
+        themes.forEach((t) => {
+          const key = `${s}_${t}`
+          const url = customBackgrounds?.[key] || `/bg/${key}.jpg`
+          const img = new window.Image()
+          img.src = url
+        })
       })
-    })
-  }, [customBackgrounds, season, shouldReduce])
+    }
+
+    if (shouldReduce) {
+      // Mobile: defer preloading so it doesn't compete with first paint
+      const timer = setTimeout(preload, 2000)
+      return () => clearTimeout(timer)
+    } else {
+      preload()
+    }
+  }, [customBackgrounds, shouldReduce])
 
   if (!mounted) return null
 
@@ -134,10 +142,10 @@ export function DynamicBackground({
   return (
     <div className="fixed inset-0 z-0 h-full w-full overflow-hidden pointer-events-none bg-transparent">
       <div className="absolute inset-0 w-full h-full" style={wrapperStyle}>
-        <AnimatePresence initial={false}>
+        <AnimatePresence>
           <motion.div
             key={bgUrl}
-            initial={false}
+            initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1.5, ease: "easeInOut" }}

@@ -1,6 +1,6 @@
 "use client"
 
-import { motion, AnimatePresence, type Variants } from "motion/react"
+import { motion, AnimatePresence } from "motion/react"
 import { ChevronDown } from "lucide-react"
 import { useEffect, useState, useSyncExternalStore } from "react"
 
@@ -11,8 +11,6 @@ interface HomeIntroProps {
 type Season = "spring" | "summer" | "autumn" | "winter"
 
 interface SeasonConfig {
-  container: Variants
-  item: Variants
   subFont: string
   subtitle: string
   textColor: string
@@ -26,58 +24,26 @@ const seasonConfigs: Record<Season, SeasonConfig> = {
     titleFont: "font-serif italic tracking-tight font-medium",
     subFont: "font-sans font-medium",
     subtitle: "A Season of New Beginnings",
-    container: {
-      hidden: { opacity: 0 },
-      visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.2 } },
-    },
-    item: {
-      hidden: { opacity: 0, y: 30, rotate: -15 },
-      visible: { opacity: 1, y: 0, rotate: 0, transition: { type: "spring", damping: 12, stiffness: 200 } },
-    },
-    textColor: "text-pink-50"
+    textColor: "text-pink-50",
   },
   summer: {
     titleFont: "font-display uppercase tracking-[0.2em] font-black",
     subFont: "font-mono text-sm tracking-widest uppercase",
     subtitle: "Vibrant Summer Adventures",
-    container: {
-      hidden: { opacity: 0 },
-      visible: { opacity: 1, transition: { staggerChildren: 0.05, delayChildren: 0.2 } },
-    },
-    item: {
-      hidden: { opacity: 0, scale: 0 },
-      visible: { opacity: 1, scale: 1, transition: { type: "spring", damping: 12, stiffness: 250 } },
-    },
-    textColor: "text-yellow-50"
+    textColor: "text-yellow-50",
   },
   autumn: {
     titleFont: "font-serif font-bold tracking-normal",
     subFont: "font-serif italic",
     subtitle: "Falling into Beautiful Stories",
-    container: {
-      hidden: { opacity: 0 },
-      visible: { opacity: 1, transition: { staggerChildren: 0.06, delayChildren: 0.2 } },
-    },
-    item: {
-      hidden: { opacity: 0, x: -30 },
-      visible: { opacity: 1, x: 0, transition: { type: "spring", damping: 15, stiffness: 150 } },
-    },
-    textColor: "text-orange-50"
+    textColor: "text-orange-50",
   },
   winter: {
     titleFont: "font-sans font-light tracking-[0.1em]",
     subFont: "font-sans font-light tracking-widest",
     subtitle: "A Quiet Winter Escape",
-    container: {
-      hidden: { opacity: 0 },
-      visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.2 } },
-    },
-    item: {
-      hidden: { opacity: 0, filter: "blur(10px)" },
-      visible: { opacity: 1, filter: "blur(0px)", transition: { duration: 0.8, ease: "easeOut" } },
-    },
-    textColor: "text-blue-50"
-  }
+    textColor: "text-blue-50",
+  },
 }
 
 export function HomeIntro({ appName }: HomeIntroProps) {
@@ -128,27 +94,50 @@ export function HomeIntro({ appName }: HomeIntroProps) {
       className="w-full h-[calc(100dvh-70px)] flex flex-col items-center justify-center relative overflow-hidden"
       data-home-intro
     >
+      {/*
+        One motion.div handles the season-switch fade (single node, negligible cost).
+        Per-character animation is pure CSS via char-anim / char-anim-{season} classes
+        and --char-i custom property — runs on compositor thread, zero JS per frame.
+        When season changes, AnimatePresence unmounts the old div and mounts the new one,
+        which restarts all CSS animations automatically on the new characters.
+      */}
       <AnimatePresence mode="wait">
         <motion.div
           key={season}
-          variants={config.container}
-          initial="hidden"
-          animate="visible"
-          exit="hidden"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
           className="text-center"
         >
-          <h1 className={`text-5xl sm:text-6xl md:text-8xl drop-shadow-[0_4px_20px_rgba(0,0,0,0.6)] mb-6 ${config.titleFont} ${config.textColor}`}>
+          <h1
+            className={`text-5xl sm:text-6xl md:text-8xl drop-shadow-[0_4px_20px_rgba(0,0,0,0.6)] mb-6 ${config.titleFont} ${config.textColor}`}
+          >
             {appName.split("").map((char, i) => (
-              <motion.span key={`title-${i}`} variants={config.item} className="inline-block whitespace-pre">
+              <span
+                key={`title-${i}`}
+                className={`char-anim char-anim-${season}`}
+                style={{ "--char-i": i } as React.CSSProperties}
+              >
                 {char}
-              </motion.span>
+              </span>
             ))}
           </h1>
-          <p className={`text-lg md:text-2xl drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] ${config.subFont} ${config.textColor} opacity-90`}>
+          <p
+            className={`text-lg md:text-2xl drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] ${config.subFont} ${config.textColor} opacity-90`}
+          >
             {config.subtitle.split("").map((char, i) => (
-              <motion.span key={`sub-${i}`} variants={config.item} className="inline-block whitespace-pre">
+              <span
+                key={`sub-${i}`}
+                className={`char-anim char-anim-${season}`}
+                style={
+                  {
+                    "--char-i": appName.length + i,
+                  } as React.CSSProperties
+                }
+              >
                 {char}
-              </motion.span>
+              </span>
             ))}
           </p>
         </motion.div>

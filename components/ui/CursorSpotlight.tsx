@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react"
 import { useRef } from "react"
 import { motion, useSpring, useMotionTemplate } from "motion/react"
+import { useReducedVisualEffects } from "@/hooks/useReducedVisualEffects"
 
 export function CursorSpotlight() {
+  const shouldReduce = useReducedVisualEffects()
   const [isVisible, setIsVisible] = useState(false)
   const isVisibleRef = useRef(false)
 
@@ -13,6 +15,7 @@ export function CursorSpotlight() {
   const cursorY = useSpring(0, springConfig)
 
   useEffect(() => {
+    if (shouldReduce) return
     const updateMousePosition = (e: MouseEvent) => {
       cursorX.set(e.clientX)
       cursorY.set(e.clientY)
@@ -43,6 +46,8 @@ export function CursorSpotlight() {
   }, [cursorX, cursorY])
 
   const background = useMotionTemplate`radial-gradient(600px circle at ${cursorX}px ${cursorY}px, rgba(255,255,255,0.06), transparent 40%)`
+
+  if (shouldReduce) return null
 
   return (
     <motion.div
