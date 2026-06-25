@@ -9,10 +9,7 @@ import { SeasonalEffects } from "@/components/ui/SakuraFalling"
 
 export function GlobalEffects() {
   const pathname = usePathname()
-  const isToolRoute =
-    pathname.startsWith("/admin") ||
-    pathname.startsWith("/dashboard/edit") ||
-    pathname.startsWith("/dashboard/new")
+  const isToolRoute = pathname.startsWith("/admin")
 
   if (isToolRoute) {
     return null

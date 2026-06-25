@@ -5,8 +5,6 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
 import { EditorTopBar } from "@/components/editor/EditorTopBar"
-import { EditorParticles } from "@/components/editor/EditorParticles"
-import { SeasonalEffects } from "@/components/ui/SakuraFalling"
 import {
   TiptapEditor,
   type JSONContent,
@@ -348,11 +346,9 @@ export function PostEditor({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex h-dvh min-h-dvh flex-col bg-background text-text-primary"
+      className="fixed inset-0 z-50 flex h-dvh min-h-dvh flex-col bg-transparent text-text-primary"
       data-testid="post-editor-shell"
     >
-      <EditorParticles />
-      <SeasonalEffects />
       <EditorTopBar
         autosaveHint={autosaveHint}
         canSave={canSave}
@@ -368,7 +364,7 @@ export function PostEditor({
         titlePreview={title}
       />
 
-      <main className="relative mt-14 flex w-full min-h-0 flex-1 overflow-hidden bg-subtle-bg/10 dark:bg-black/40">
+      <main className="relative mt-14 flex w-full min-h-0 flex-1 overflow-hidden bg-transparent">
         <button
           aria-label={isSettingsOpen ? "Đóng cài đặt" : "Mở cài đặt"}
           className={cn(
@@ -383,8 +379,8 @@ export function PostEditor({
         </button>
         <aside
           className={cn(
-            "w-full shrink-0 overflow-y-auto border-r border-border-default bg-subtle-bg/40 px-5 py-6 shadow-[8px_0_24px_rgba(0,0,0,0.02)] transition-all lg:w-[320px] xl:w-[360px]",
-            isSettingsOpen ? "flex fixed inset-y-0 left-0 z-50 pt-16 bg-background flex-col lg:static lg:bg-subtle-bg/40 lg:pt-6" : "hidden"
+            "w-full shrink-0 overflow-y-auto border-r border-border-default/40 bg-card/30 backdrop-blur-xl px-5 py-6 shadow-glass transition-all lg:w-[320px] xl:w-[360px]",
+            isSettingsOpen ? "flex fixed inset-y-0 left-0 z-50 pt-16 flex-col lg:static lg:pt-6" : "hidden"
           )}
           id="post-settings-panel"
         >
@@ -568,10 +564,10 @@ export function PostEditor({
             )}
 
             <section
-              className="relative w-full bg-background md:rounded-[24px] md:border-[2px] md:border-border-default md:shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:md:shadow-[0_8px_30px_rgb(0,0,0,0.2)]"
+              className="relative w-full bg-transparent sm:bg-subtle-bg sm:backdrop-blur-md rounded-[8px] sm:border border-transparent sm:border-border-default mb-8 md:mb-12 z-30 overflow-hidden"
               data-testid="editor-writing-surface"
             >
-              <div className="md:px-12 md:pb-16 md:pt-10">
+              <div className="px-0 py-4 sm:p-8 md:p-12">
                 <div className="mt-4 pb-2 md:mt-0">
                   <label className="sr-only" htmlFor="post-title">
                     Tiêu đề
