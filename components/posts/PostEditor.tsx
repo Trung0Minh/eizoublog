@@ -379,7 +379,7 @@ export function PostEditor({
         <button
           aria-label={isSettingsOpen ? "Đóng cài đặt" : "Mở cài đặt"}
           className={cn(
-            "hidden lg:flex fixed top-1/2 -translate-y-1/2 z-[60] h-12 w-12 items-center justify-center rounded-full border border-border-default bg-card/60 backdrop-blur-md shadow-glass text-text-secondary transition-all duration-300 hover:bg-card hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            "hidden lg:flex fixed top-[104px] z-[60] h-10 w-10 items-center justify-center rounded-full border border-border-default bg-card/60 backdrop-blur-md shadow-glass text-text-secondary transition-all duration-300 hover:bg-card hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
             isSettingsOpen ? "left-[320px] xl:left-[360px] -translate-x-1/2" : "left-4 translate-x-0"
           )}
           onClick={() => setIsSettingsOpen(!isSettingsOpen)}
