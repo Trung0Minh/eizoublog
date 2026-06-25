@@ -472,11 +472,11 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
       )}
 
       <main className={cn("flex-1 w-full max-w-[1200px] mx-auto px-5 pt-8 md:pt-16 pb-20", isEditing && "mt-[60px]")}>
-        <div className="text-center mb-8">
+        <div className="mb-8">
           <ScrollReveal>
             {isEditing ? (
               <input
-                className="w-full text-center border-none bg-transparent text-[40px] md:text-[56px] font-bold font-display tracking-tight text-text-primary leading-[1.1] outline-none focus:ring-2 focus:ring-accent rounded-[8px] placeholder:text-text-tertiary"
+                className="w-full border-none bg-transparent text-[40px] md:text-[56px] font-bold font-display tracking-tight text-text-primary leading-[1.1] outline-none focus:ring-2 focus:ring-accent rounded-[8px] placeholder:text-text-tertiary"
                 value={data.title}
                 onChange={(e) => setData({ ...data, title: e.target.value })}
                 placeholder="Tiêu đề trang..."
@@ -492,14 +492,14 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
           <ScrollReveal delay={0.2}>
             {isEditing ? (
               <Textarea
-                className="text-[18px] text-text-secondary leading-relaxed max-w-[600px] mx-auto text-center border-t border-b border-border/50 py-4 mt-4 resize-none bg-transparent shadow-none focus-visible:ring-1 focus-visible:ring-accent rounded-none"
+                className="text-[18px] text-text-secondary leading-relaxed max-w-[600px] border-t border-b border-border/50 py-4 mt-4 resize-none bg-transparent shadow-none focus-visible:ring-1 focus-visible:ring-accent rounded-none"
                 value={data.description}
                 onChange={(e) => setData({ ...data, description: e.target.value })}
                 placeholder="Mô tả..."
                 rows={4}
               />
             ) : (
-              <p className="text-[18px] text-text-secondary leading-relaxed mb-16 max-w-[600px] mx-auto whitespace-pre-wrap">
+              <p className="text-[18px] text-text-secondary leading-relaxed mb-16 max-w-[600px] whitespace-pre-wrap">
                 {data.description}
               </p>
             )}
