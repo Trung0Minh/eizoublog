@@ -10,6 +10,15 @@ import {
   type JSONContent,
 } from "@/components/editor/TiptapEditor"
 import { AnimatePresence, motion } from "framer-motion"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { CoverImageUpload } from "@/components/posts/CoverImageUpload"
 import { TagInput, type TagOption } from "@/components/posts/TagInput"
@@ -366,13 +375,12 @@ export function PostEditor({
       />
 
       <main className="relative pt-[88px] flex w-full min-h-0 flex-1 overflow-hidden bg-transparent">
+        {/* Float Toggle Button */}
         <button
           aria-label={isSettingsOpen ? "Đóng cài đặt" : "Mở cài đặt"}
           className={cn(
-            "hidden lg:flex absolute top-1/2 -translate-y-1/2 z-50 h-16 w-8 items-center justify-center border border-border-default shadow-md bg-background text-text-secondary transition-all hover:bg-subtle-bg hover:text-text-primary",
-            isSettingsOpen
-              ? "left-[320px] xl:left-[360px] rounded-r-md border-l-0"
-              : "left-0 rounded-r-md border-l-0"
+            "hidden lg:flex fixed top-1/2 -translate-y-1/2 z-[60] h-12 w-12 items-center justify-center rounded-full border border-border-default bg-card/60 backdrop-blur-md shadow-glass text-text-secondary transition-all duration-300 hover:bg-card hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            isSettingsOpen ? "left-[320px] xl:left-[360px] -translate-x-1/2" : "left-4 translate-x-0"
           )}
           onClick={() => setIsSettingsOpen(!isSettingsOpen)}
         >
@@ -405,14 +413,6 @@ export function PostEditor({
                     Ảnh bìa, phân loại, thẻ, và cộng tác viên.
                   </p>
                 </div>
-                <button
-                  aria-label="Ẩn cài đặt bài viết"
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-text-tertiary transition-colors hover:bg-subtle-bg hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  onClick={() => setIsSettingsOpen(false)}
-                  type="button"
-                >
-                  <X aria-hidden="true" className="h-4 w-4" />
-                </button>
               </div>
 
               <div className="flex flex-col gap-6">
@@ -454,27 +454,31 @@ export function PostEditor({
                       >
                         Danh mục
                       </label>
-                      <select
-                        className="h-9 w-full rounded-[5px] border border-border-default bg-background px-2.5 py-2 text-[13px] text-text-primary outline-none transition-colors focus:border-accent"
-                        id="post-category"
-                        onChange={(event) => {
-                          setCategoryId(event.target.value)
+                      <Select
+                        value={categoryId || "none"}
+                        onValueChange={(value) => {
+                          setCategoryId(value === "none" ? "" : value)
                           markDirtyAndAutosave()
                         }}
-                        value={categoryId}
                       >
-                        <option value="">Không có danh mục</option>
-                        {categories.map((category) => (
-                          <optgroup key={category.id} label={category.name}>
-                            <option value={category.id}>{category.name}</option>
-                            {category.children.map((child) => (
-                              <option key={child.id} value={child.id}>
-                                {child.name}
-                              </option>
-                            ))}
-                          </optgroup>
-                        ))}
-                      </select>
+                        <SelectTrigger className="w-full bg-background border-border-default text-[13px] transition-colors focus:border-accent">
+                          <SelectValue placeholder="Không có danh mục" />
+                        </SelectTrigger>
+                        <SelectContent className="z-[110]">
+                          <SelectItem value="none">Không có danh mục</SelectItem>
+                          {categories.map((category) => (
+                            <SelectGroup key={category.id}>
+                              <SelectLabel className="font-bold text-text-primary pl-2">{category.name}</SelectLabel>
+                              <SelectItem value={category.id} className="pl-4">{category.name}</SelectItem>
+                              {category.children.map((child) => (
+                                <SelectItem key={child.id} value={child.id} className="pl-6 text-text-secondary">
+                                  {child.name}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          ))}
+                        </SelectContent>
+                      </Select>
 
                     <TagInput
                       onChange={(tags) => {
@@ -532,26 +536,28 @@ export function PostEditor({
                             {postId ? "Gửi / cập nhật lời mời" : "Lưu nháp và gửi lời mời"}
                           </button>
                         )}
-                        <select
-                          aria-label="Thêm đồng tác giả"
-                          className="h-9 w-full rounded-[5px] border border-border-default bg-background px-2.5 py-2 text-[13px] text-text-secondary outline-none transition-colors focus:border-accent"
-                          onChange={(event) => {
-                            if (event.target.value) {
-                              toggleCoAuthor(event.target.value)
-                              event.target.value = ""
+                        <Select
+                          value="none"
+                          onValueChange={(value) => {
+                            if (value && value !== "none") {
+                              toggleCoAuthor(value)
                             }
                           }}
-                          value=""
                         >
-                          <option value="">Thêm đồng tác giả...</option>
-                          {availableWriters
-                            .filter((writer) => !coAuthorIds.includes(writer.id) && writer.id !== (initialData?.authorId ?? currentUserId))
-                            .map((writer) => (
-                              <option key={writer.id} value={writer.id}>
-                                {writer.name}
-                              </option>
-                            ))}
-                        </select>
+                          <SelectTrigger className="w-full bg-background border-border-default text-[13px] transition-colors focus:border-accent text-text-secondary">
+                            <SelectValue placeholder="Thêm đồng tác giả..." />
+                          </SelectTrigger>
+                          <SelectContent className="z-[110]">
+                            <SelectItem value="none">Thêm đồng tác giả...</SelectItem>
+                            {availableWriters
+                              .filter((writer) => !coAuthorIds.includes(writer.id) && writer.id !== (initialData?.authorId ?? currentUserId))
+                              .map((writer) => (
+                                <SelectItem key={writer.id} value={writer.id}>
+                                  {writer.name}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     )}
 
