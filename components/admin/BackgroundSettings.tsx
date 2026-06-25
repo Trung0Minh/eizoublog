@@ -56,7 +56,7 @@ export function BackgroundSettings() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Cài đặt Ảnh Nền (Background)</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Cài đặt ảnh nền</h2>
           <p className="text-text-secondary mt-2">
             Thay đổi ảnh nền cho từng mùa và chế độ sáng/tối.
           </p>

@@ -2,7 +2,7 @@ import { Metadata } from "next"
 import { BackgroundSettings } from "@/components/admin/BackgroundSettings"
 
 export const metadata: Metadata = {
-  title: "Cài đặt Ảnh Nền",
+  title: "Cài đặt ảnh nền",
 }
 
 export default function BackgroundsSettingsPage() {

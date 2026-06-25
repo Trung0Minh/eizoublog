@@ -5,7 +5,6 @@ import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
 import Link from 'next/link';
 import { Sparkles } from 'lucide-react';
-import { motion } from 'motion/react';
 
 interface HeroCarouselPost {
   category: { name: string } | null
@@ -58,7 +57,7 @@ export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
       </div>
 
       <div className="glass-card overflow-hidden" ref={emblaRef}>
-        <div className="flex touch-pan-y">
+        <div className="flex">
           {posts.map((post) => (
             <div className="flex-[0_0_100%] min-w-0 relative aspect-[16/10] md:aspect-[21/9]" key={post.slug || post.id}>
               <Link href={`/${post.slug}`} className="block w-full h-full relative cursor-pointer group">
@@ -68,13 +67,8 @@ export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
                   className="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
                   fetchPriority="high"
                 />
-                <div className="absolute inset-x-0 bottom-0 top-1/3 bg-gradient-to-t from-black/90 via-black/40 to-transparent backdrop-blur-[2px] flex flex-col justify-end p-6 md:p-12">
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: 0.1 }}
-                  >
+                <div className="absolute inset-x-0 bottom-0 top-1/3 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-6 md:p-12">
+                  <div>
                     <div className="transform transition-transform duration-700 ease-out md:translate-y-6 md:group-hover:translate-y-0">
                       <span className="bg-accent text-white text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full w-max mb-3 flex items-center gap-1 shadow-lg md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-700 md:delay-100">
                         <Sparkles className="w-3 h-3" /> {post.category?.name || 'Featured'}
@@ -93,7 +87,7 @@ export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
                         </div>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 </div>
               </Link>
             </div>

@@ -127,14 +127,14 @@ export function DynamicBackground({
   // animate prop because the browser interpolates these natively every paint frame.
   const wrapperStyle: React.CSSProperties = {
     filter: backgroundFilter,
-    transform: "translateZ(0)",
     opacity: isHome ? (isHomeContentVisible ? 0.4 : 1) : 0.4,
-    scale: isHome ? (isHomeContentVisible ? "1.05" : "1") : "1.05",
-    transition: "opacity 0.8s ease-out, scale 0.8s ease-out",
+    transform: isHome
+      ? isHomeContentVisible ? "scale(1.05)" : "scale(1)"
+      : "scale(1.05)",
+    transition: "opacity 0.8s ease-out, transform 0.8s ease-out",
   }
 
   const overlayStyle: React.CSSProperties = {
-    transform: "translateZ(0)",
     opacity: isHome ? (isHomeContentVisible ? 1 : 0) : 1,
     transition: "opacity 0.8s ease-out",
   }
@@ -142,7 +142,7 @@ export function DynamicBackground({
   return (
     <div className="fixed inset-0 z-0 h-full w-full overflow-hidden pointer-events-none bg-transparent">
       <div className="absolute inset-0 w-full h-full" style={wrapperStyle}>
-        <AnimatePresence>
+        <AnimatePresence initial={false}>
           <motion.div
             key={bgUrl}
             initial={{ opacity: 0 }}
@@ -150,10 +150,7 @@ export function DynamicBackground({
             exit={{ opacity: 0 }}
             transition={{ duration: 1.5, ease: "easeInOut" }}
             className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat"
-            style={{
-              backgroundImage: `url(${bgUrl})`,
-              transform: "translateZ(0)",
-            }}
+            style={{ backgroundImage: `url(${bgUrl})` }}
           />
         </AnimatePresence>
       </div>

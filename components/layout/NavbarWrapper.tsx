@@ -197,7 +197,7 @@ export function NavbarWrapper({ children }: { children: React.ReactNode }) {
   return (
     <div 
       className={cn(
-        "sticky top-0 z-50 w-full transition-all duration-500",
+        "sticky top-0 z-50 w-full transition-[transform,opacity] duration-500",
         showNavbar ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
       )}
     >
