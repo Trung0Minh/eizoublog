@@ -4,6 +4,7 @@ import { motion, AnimatePresence, type Variants } from "motion/react"
 import { ChevronDown } from "lucide-react"
 import { useEffect, useState, useSyncExternalStore } from "react"
 import { useReducedVisualEffects } from "@/hooks/useReducedVisualEffects"
+import { getDocumentSeason } from "@/lib/appearanceSession"
 
 interface HomeIntroProps {
   appName: string
@@ -92,21 +93,7 @@ export function HomeIntro({ appName }: HomeIntroProps) {
 
   useEffect(() => {
     const updateSeason = () => {
-      const storedSeason = localStorage.getItem("season")
-      if (
-        storedSeason === "spring" ||
-        storedSeason === "summer" ||
-        storedSeason === "autumn" ||
-        storedSeason === "winter"
-      ) {
-        setSeason(storedSeason)
-      } else {
-        const month = new Date().getMonth()
-        if (month >= 2 && month <= 4) setSeason("spring")
-        else if (month >= 5 && month <= 7) setSeason("summer")
-        else if (month >= 8 && month <= 10) setSeason("autumn")
-        else setSeason("winter")
-      }
+      setSeason(getDocumentSeason())
     }
 
     updateSeason()

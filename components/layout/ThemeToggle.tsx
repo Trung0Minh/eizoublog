@@ -6,6 +6,7 @@ import { useSyncExternalStore, useRef } from "react"
 import { flushSync } from "react-dom"
 
 import { Button } from "@/components/ui/button"
+import { setSessionTheme } from "@/lib/appearanceSession"
 
 const emptySubscribe = () => () => undefined
 
@@ -31,6 +32,7 @@ export function ThemeToggle() {
     const currentTheme = pendingThemeRef.current ?? (isDark ? "dark" : "light")
     const nextTheme = currentTheme === "dark" ? "light" : "dark"
     pendingThemeRef.current = nextTheme
+    setSessionTheme(nextTheme)
 
     if (
       !buttonRef.current ||

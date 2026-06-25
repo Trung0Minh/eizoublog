@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "motion/react"
 import { usePathname } from "next/navigation"
 
 import { useReducedVisualEffects } from "@/hooks/useReducedVisualEffects"
+import { getDocumentSeason } from "@/lib/appearanceSession"
 
 const emptySubscribe = () => () => undefined
 
@@ -58,16 +59,7 @@ export function DynamicBackground({
 
   useEffect(() => {
     const updateSeason = () => {
-      const storedSeason = localStorage.getItem("season")
-      if (storedSeason) {
-        setSeason(storedSeason)
-      } else {
-        const month = new Date().getMonth()
-        if (month >= 2 && month <= 4) setSeason("spring")
-        else if (month >= 5 && month <= 7) setSeason("summer")
-        else if (month >= 8 && month <= 10) setSeason("autumn")
-        else setSeason("winter")
-      }
+      setSeason(getDocumentSeason())
     }
 
     const timer = setTimeout(updateSeason, 0)

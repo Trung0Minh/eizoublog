@@ -49,6 +49,7 @@ import { NavbarWrapper } from "@/components/layout/NavbarWrapper"
 import { PageContainer } from "@/components/layout/PageContainer"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { ThemeToggle } from "@/components/layout/ThemeToggle"
+import { SeasonToggle } from "@/components/ui/SeasonToggle"
 import { WriterMenu } from "@/components/layout/WriterMenu"
 import { clearSessionUserCache } from "@/lib/clientSession"
 
@@ -56,6 +57,7 @@ describe("ThemeToggle", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     themeMocks.theme = "light"
+    document.cookie = "appearanceTheme=; Max-Age=0; Path=/"
   })
 
   it("switches from light to dark mode", async () => {
@@ -67,6 +69,7 @@ describe("ThemeToggle", () => {
     )
 
     expect(themeMocks.setTheme).toHaveBeenCalledWith("dark")
+    expect(document.cookie).toContain("appearanceTheme=dark")
   })
 
   it("uses view transitions when supported by browser", async () => {
@@ -125,6 +128,25 @@ describe("ThemeToggle", () => {
 
     expect(themeMocks.setTheme).toHaveBeenCalledWith("dark")
     expect(startTransitionSpy).not.toHaveBeenCalled()
+  })
+})
+
+describe("SeasonToggle", () => {
+  beforeEach(() => {
+    document.cookie = "appearanceSeason=; Max-Age=0; Path=/"
+    document.documentElement.setAttribute("data-season", "spring")
+  })
+
+  it("keeps a manual season for the active browser session", async () => {
+    const user = userEvent.setup()
+    render(<SeasonToggle />)
+
+    await user.click(
+      await screen.findByRole("button", { name: "Toggle season" }),
+    )
+
+    expect(document.documentElement).toHaveAttribute("data-season", "summer")
+    expect(document.cookie).toContain("appearanceSeason=summer")
   })
 })
 

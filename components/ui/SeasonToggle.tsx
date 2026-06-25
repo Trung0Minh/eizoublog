@@ -2,16 +2,22 @@
 import { Flower2, Umbrella, Leaf, Snowflake } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import {
+  getDocumentSeason,
+  setSessionSeason,
+  type AppearanceSeason,
+} from '@/lib/appearanceSession';
+
 const SEASONS = ['spring', 'summer', 'autumn', 'winter'];
 
 export function SeasonToggle() {
-  const [season, setSeason] = useState('spring');
+  const [season, setSeason] = useState<AppearanceSeason>('spring');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     const handler = setTimeout(() => {
       setMounted(true);
-      setSeason(document.documentElement.getAttribute('data-season') || 'spring');
+      setSeason(getDocumentSeason());
     }, 0);
     return () => clearTimeout(handler);
   }, []);
@@ -19,8 +25,7 @@ export function SeasonToggle() {
   useEffect(() => {
     if (!mounted) return;
     const observer = new MutationObserver(() => {
-      const current = document.documentElement.getAttribute('data-season') || 'spring';
-      setSeason(current);
+      setSeason(getDocumentSeason());
     });
     observer.observe(document.documentElement, { attributes: true });
     return () => observer.disconnect();
@@ -30,9 +35,9 @@ export function SeasonToggle() {
 
   const cycleSeason = () => {
     const idx = (SEASONS.indexOf(season) + 1) % SEASONS.length;
-    const next = SEASONS[idx];
+    const next = SEASONS[idx] as AppearanceSeason;
     setSeason(next);
-    localStorage.setItem('season', next);
+    setSessionSeason(next);
     document.documentElement.setAttribute('data-season', next);
     window.dispatchEvent(new Event('seasonchange'));
   };
