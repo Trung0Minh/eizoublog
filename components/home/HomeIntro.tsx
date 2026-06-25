@@ -104,7 +104,7 @@ export function HomeIntro({ appName }: HomeIntroProps) {
       <AnimatePresence mode="wait">
         <motion.div
           key={season}
-          initial={{ opacity: 0 }}
+          initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
@@ -116,7 +116,7 @@ export function HomeIntro({ appName }: HomeIntroProps) {
             {appName.split("").map((char, i) => (
               <span
                 key={`title-${i}`}
-                className={`char-anim char-anim-${season}`}
+                className={`char-anim-${season}`}
                 style={{ "--char-i": i } as React.CSSProperties}
               >
                 {char}
@@ -129,7 +129,7 @@ export function HomeIntro({ appName }: HomeIntroProps) {
             {config.subtitle.split("").map((char, i) => (
               <span
                 key={`sub-${i}`}
-                className={`char-anim char-anim-${season}`}
+                className={`char-anim-${season}`}
                 style={
                   {
                     "--char-i": appName.length + i,

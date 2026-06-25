@@ -174,7 +174,9 @@
   /* ─────────────────────────────────────────────────────────────────────────
      HomeIntro per-character CSS animations (replaces Framer Motion per-span).
      Runs entirely on the compositor thread — zero JS overhead on mobile.
-     --char-i  : integer index of the character (set via inline style)
+     --char-i : integer index of the character (set via inline style)
+     animation-fill-mode: both  →  held at `from` state during the delay,
+                                    so chars start invisible and stagger in.
      ───────────────────────────────────────────────────────────────────────── */
 
   /* Spring: bounce-in with overshoot (mirrors spring damping:12 stiffness:200) */
@@ -198,37 +200,31 @@
     to   { opacity: 1; filter: blur(0px);  }
   }
 
-  /* Shared base: start invisible, hold final state after animation */
-  .char-anim {
+  /* One consolidated class per season — using the animation shorthand keeps
+     all sub-properties atomic so animation-fill-mode:both is never ambiguous. */
+  .char-anim-spring {
     display: inline-block;
     white-space: pre;
-    animation-fill-mode: both;
-    /* Stagger delay driven by --char-i; +0.2s matches delayChildren:0.2 */
+    animation: char-spring 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
     animation-delay: calc(var(--char-i, 0) * 0.08s + 0.2s);
   }
-  .char-anim-spring {
-    animation-name: char-spring;
-    animation-duration: 0.55s;
-    /* cubic-bezier that approximates spring overshoot */
-    animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
   .char-anim-summer {
-    animation-name: char-summer;
-    animation-duration: 0.4s;
-    animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
-    /* summer is faster — tighter stagger */
+    display: inline-block;
+    white-space: pre;
+    animation: char-summer 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
     animation-delay: calc(var(--char-i, 0) * 0.05s + 0.2s);
   }
   .char-anim-autumn {
-    animation-name: char-autumn;
-    animation-duration: 0.5s;
-    animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    display: inline-block;
+    white-space: pre;
+    animation: char-autumn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
     animation-delay: calc(var(--char-i, 0) * 0.06s + 0.2s);
   }
   .char-anim-winter {
-    animation-name: char-winter;
-    animation-duration: 0.8s;
-    animation-timing-function: ease-out;
+    display: inline-block;
+    white-space: pre;
+    animation: char-winter 0.8s ease-out both;
+    animation-delay: calc(var(--char-i, 0) * 0.08s + 0.2s);
   }
 
   /* Ambient Background Orbs — CSS animations replace Framer Motion infinite loops */
