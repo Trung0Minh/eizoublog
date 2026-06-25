@@ -78,6 +78,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
   @@map("accounts")
 }
 
@@ -89,6 +90,7 @@ model Session {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("sessions")
 }
 
@@ -114,6 +116,7 @@ model Invite {
 
   @@index([token])
   @@index([email])
+  @@index([createdById])
   @@index([status, expiresAt, createdAt(sort: Desc)])
   @@map("invites")
 }
@@ -356,6 +359,7 @@ model Comment {
 
   @@index([postId, status])
   @@index([parentId])
+  @@index([authorId, createdAt(sort: Desc)])
   @@index([status, createdAt(sort: Desc)])
   @@map("comments")
 }
@@ -460,6 +464,7 @@ model NewsletterBroadcastRecipient {
   subscriber     NewsletterSubscriber      @relation(fields: [subscriberId], references: [id])
 
   @@unique([broadcastId, subscriberId])
+  @@index([subscriberId])
   @@index([status, nextAttemptAt, claimedAt])
   @@index([broadcastId, status])
   @@map("newsletter_broadcast_recipients")
