@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server"
+import { revalidateTag } from "next/cache"
+
 import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
 import { prisma } from "@/lib/prisma"
 
@@ -46,6 +48,8 @@ export async function POST(req: Request) {
         content: backgrounds,
       },
     })
+
+    revalidateTag("backgrounds", "max")
 
     return NextResponse.json({ data: page.content })
   } catch (error) {

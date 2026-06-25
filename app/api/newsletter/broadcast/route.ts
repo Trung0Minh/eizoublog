@@ -1,8 +1,12 @@
 import { ZodError, z } from "zod"
+import { after } from "next/server"
 
 import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
+import {
+  enqueueNewsletterBroadcast,
+  processNewsletterQueue,
+} from "@/lib/newsletterQueue"
 import { prisma } from "@/lib/prisma"
-import { sendNewsletterBroadcast } from "@/lib/resend"
 
 const broadcastSchema = z
   .object({
@@ -14,8 +18,6 @@ const broadcastSchema = z
   .refine((data) => Boolean(data.postId || data.customBody), {
     message: "Either postId or customBody must be provided",
   })
-
-const BATCH_SIZE = 50
 
 interface FeaturedPost {
   coverUrl: string | null
@@ -55,52 +57,30 @@ export async function POST(request: Request) {
       }
     }
 
-    const subscribers = await prisma.newsletterSubscriber.findMany({
-      select: { email: true, token: true },
-      where: { status: "ACTIVE" },
+    const queued = await enqueueNewsletterBroadcast({
+      appUrl,
+      customBody: data.customBody,
+      featuredPost: featuredPost
+        ? {
+            coverUrl: featuredPost.coverUrl,
+            excerpt: featuredPost.excerpt,
+            title: featuredPost.title,
+            url: `${appUrl}/${featuredPost.slug}`,
+          }
+        : null,
+      previewText: data.previewText,
+      subject: data.subject,
     })
 
-    let sent = 0
-
-    for (let index = 0; index < subscribers.length; index += BATCH_SIZE) {
-      const batch = subscribers.slice(index, index + BATCH_SIZE)
-      const results = await Promise.all(
-        batch.map(async (subscriber) => {
-          try {
-            await sendNewsletterBroadcast({
-              customBody: data.customBody,
-              featuredPost: featuredPost
-                ? {
-                    coverUrl: featuredPost.coverUrl,
-                    excerpt: featuredPost.excerpt,
-                    title: featuredPost.title,
-                    url: `${appUrl}/${featuredPost.slug}`,
-                  }
-                : null,
-              previewText: data.previewText,
-              subject: data.subject,
-              to: subscriber.email,
-              unsubscribeUrl: `${appUrl}/unsubscribe?token=${subscriber.token}`,
-            })
-            return true
-          } catch (error) {
-            console.error(
-              `[POST /api/newsletter/broadcast] Failed to send to ${subscriber.email}:`,
-              error,
-            )
-            return false
-          }
-        }),
-      )
-
-      sent += results.filter(Boolean).length
-
-      if (index + BATCH_SIZE < subscribers.length) {
-        await new Promise((resolve) => setTimeout(resolve, 200))
+    after(async () => {
+      try {
+        await processNewsletterQueue()
+      } catch (error) {
+        console.error("[NEWSLETTER_QUEUE_IMMEDIATE]", error)
       }
-    }
+    })
 
-    return Response.json({ data: { sent, total: subscribers.length } })
+    return Response.json({ data: queued }, { status: 202 })
   } catch (error) {
     if (error instanceof ZodError) {
       return Response.json({ error: "Invalid request" }, { status: 400 })

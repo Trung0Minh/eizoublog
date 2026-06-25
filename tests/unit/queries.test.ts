@@ -141,6 +141,17 @@ describe("cached Prisma query helpers", () => {
       total: 1,
     })
 
+    const latestSql = String(mocks.prisma.$queryRaw.mock.calls[0]?.[0])
+    const commentsSql = String(mocks.prisma.$queryRaw.mock.calls[1]?.[0])
+    expect(latestSql.indexOf("LIMIT")).toBeLessThan(
+      latestSql.indexOf("FROM comments"),
+    )
+    expect(commentsSql.indexOf("FROM comments")).toBeLessThan(
+      commentsSql.indexOf("LIMIT"),
+    )
+    expect(latestSql).not.toContain("p.status::text = 'PUBLISHED'")
+    expect(commentsSql).not.toContain("p.status::text = 'PUBLISHED'")
+
     expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(2)
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled()
     expect(mocks.prisma.post.findMany).not.toHaveBeenCalled()

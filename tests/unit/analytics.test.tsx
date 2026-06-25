@@ -34,6 +34,7 @@ const prismaMocks = vi.hoisted(() => {
 
 vi.mock("next-themes", () => ({
   ThemeProvider: ({ children }: { children: React.ReactNode }) => children,
+  useTheme: () => ({ systemTheme: "light", theme: "light" }),
 }))
 vi.mock("@/components/analytics/InternalAnalyticsTracker", () => ({
   InternalAnalyticsTracker: () => {
@@ -47,7 +48,19 @@ vi.mock("@/components/layout/Navbar", () => ({
 vi.mock("@/components/layout/Footer", () => ({
   Footer: () => <footer>Footer</footer>,
 }))
+vi.mock("@/components/ui/DynamicBackground", () => ({
+  DynamicBackground: () => null,
+}))
+vi.mock("@/components/ui/GlobalEffects", () => ({
+  GlobalEffects: () => null,
+}))
+vi.mock("@/components/ui/CursorSpotlight", () => ({
+  CursorSpotlight: () => null,
+}))
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMocks.prisma }))
+vi.mock("@/lib/backgrounds", () => ({
+  getCustomBackgrounds: vi.fn().mockResolvedValue(null),
+}))
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
   useRouter: () => ({ push: vi.fn() }),
@@ -67,14 +80,16 @@ describe("internal analytics layout", () => {
     vi.unstubAllEnvs()
   })
 
-  it("mounts the internal tracker", () => {
+  it("mounts the internal tracker", async () => {
     vi.stubEnv("NODE_ENV", "production")
 
-    render(
-      <RootLayout>
-        <p>Page content</p>
-      </RootLayout>,
-    )
+    await act(async () => {
+      render(
+        await RootLayout({
+          children: <p>Page content</p>,
+        }),
+      )
+    })
 
     expect(screen.getByTestId("internal-analytics-tracker")).toBeVisible()
   })
@@ -153,7 +168,7 @@ describe("internal analytics helpers", () => {
     })
   })
 
-  it("records events and updates daily aggregates", async () => {
+  it("updates page-view aggregates without storing a raw event", async () => {
     await expect(
       recordAnalyticsEvent({
         eventName: "page_view",
@@ -164,15 +179,7 @@ describe("internal analytics helpers", () => {
       }),
     ).resolves.toEqual({ tracked: true })
 
-    expect(prismaMocks.prisma.analyticsEvent.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          path: "/frieren-memory",
-          type: "PAGE_VIEW",
-          visitorHash: "visitor-1",
-        }),
-      }),
-    )
+    expect(prismaMocks.prisma.analyticsEvent.create).not.toHaveBeenCalled()
     expect(prismaMocks.prisma.analyticsDailySummary.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         update: expect.objectContaining({
@@ -186,6 +193,27 @@ describe("internal analytics helpers", () => {
       expect.objectContaining({
         update: expect.objectContaining({
           pageviews: { increment: 1 },
+        }),
+      }),
+    )
+  })
+
+  it("keeps raw rows for post-read analytics", async () => {
+    await recordAnalyticsEvent({
+      data: { durationSeconds: 30, slug: "frieren-memory" },
+      eventName: "post_read",
+      occurredAt: new Date("2026-06-13T12:00:00.000Z"),
+      path: "/frieren-memory",
+      sessionHash: "session-1",
+      visitorHash: "visitor-1",
+    })
+
+    expect(prismaMocks.prisma.analyticsEvent.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          durationSeconds: 30,
+          path: "/frieren-memory",
+          type: "POST_READ",
         }),
       }),
     )

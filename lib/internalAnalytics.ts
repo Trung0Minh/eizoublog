@@ -392,18 +392,20 @@ export async function recordAnalyticsEvent(input: RecordAnalyticsEventInput) {
   const day = startOfUtcDay(occurredAt)
 
   await prisma.$transaction(async (tx) => {
-    await tx.analyticsEvent.create({
-      data: {
-        createdAt: occurredAt,
-        durationSeconds,
-        path: eventPath,
-        postSlug,
-        searchQuery,
-        sessionHash: input.sessionHash ?? null,
-        type,
-        visitorHash: input.visitorHash ?? null,
-      },
-    })
+    if (type !== "PAGE_VIEW") {
+      await tx.analyticsEvent.create({
+        data: {
+          createdAt: occurredAt,
+          durationSeconds,
+          path: eventPath,
+          postSlug,
+          searchQuery,
+          sessionHash: input.sessionHash ?? null,
+          type,
+          visitorHash: input.visitorHash ?? null,
+        },
+      })
+    }
 
     const { sessionCount, visitorCount } = await createUniqueVisitorAndSession(
       tx,

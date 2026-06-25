@@ -13,7 +13,7 @@ interface BroadcastPost {
 }
 
 interface BroadcastResult {
-  sent: number
+  queued: number
   total: number
 }
 
@@ -37,12 +37,12 @@ function getBroadcastResult(value: unknown): BroadcastResult | null {
     "data" in value &&
     typeof value.data === "object" &&
     value.data !== null &&
-    "sent" in value.data &&
+    "queued" in value.data &&
     "total" in value.data &&
-    typeof value.data.sent === "number" &&
+    typeof value.data.queued === "number" &&
     typeof value.data.total === "number"
   ) {
-    return { sent: value.data.sent, total: value.data.total }
+    return { queued: value.data.queued, total: value.data.total }
   }
 
   return null
@@ -120,7 +120,7 @@ export function NewsletterBroadcastForm({
     <form className="space-y-5" onSubmit={handleSubmit}>
       {result && (
         <p className="text-sm text-green-700 dark:text-green-400" role="status">
-          Sent to {result.sent} of {result.total} subscribers
+          Queued for {result.queued} of {result.total} subscribers
         </p>
       )}
       {error && (

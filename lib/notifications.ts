@@ -124,8 +124,8 @@ export async function getNotificationCounts(user: NotificationUser) {
         JOIN posts p ON p.id = c."postId"
         WHERE c."authorEmail" <> ${user.email}
           AND c."isRead" = false
-          AND c.status::text = 'APPROVED'
-          AND p.status::text <> 'ARCHIVED'
+          AND c.status = 'APPROVED'
+          AND p.status <> 'ARCHIVED'
           AND (
             p."authorId" = ${user.id}
             OR EXISTS (
@@ -133,7 +133,7 @@ export async function getNotificationCounts(user: NotificationUser) {
               FROM post_authors pa
               WHERE pa."postId" = p.id
                 AND pa."userId" = ${user.id}
-                AND pa.status::text = 'ACCEPTED'
+                AND pa.status = 'ACCEPTED'
             )
           )
       ) AS "unreadComments",
@@ -142,8 +142,8 @@ export async function getNotificationCounts(user: NotificationUser) {
         FROM post_authors pa
         JOIN posts p ON p.id = pa."postId"
         WHERE pa."userId" = ${user.id}
-          AND pa.status::text = 'PENDING'
-          AND p.status::text <> 'ARCHIVED'
+          AND pa.status = 'PENDING'
+          AND p.status <> 'ARCHIVED'
       ) AS "pendingInvites",
       (
         SELECT COUNT(*)
@@ -186,8 +186,8 @@ export async function getNotifications(user: NotificationUser) {
             JOIN posts p ON p.id = c."postId"
             WHERE c."authorEmail" <> ${user.email}
               AND c."isRead" = false
-              AND c.status::text = 'APPROVED'
-              AND p.status::text <> 'ARCHIVED'
+              AND c.status = 'APPROVED'
+              AND p.status <> 'ARCHIVED'
               AND (
                 p."authorId" = ${user.id}
                 OR EXISTS (
@@ -195,7 +195,7 @@ export async function getNotifications(user: NotificationUser) {
                   FROM post_authors accepted_author
                   WHERE accepted_author."postId" = p.id
                     AND accepted_author."userId" = ${user.id}
-                    AND accepted_author.status::text = 'ACCEPTED'
+                    AND accepted_author.status = 'ACCEPTED'
                 )
               )
             ORDER BY c."createdAt" DESC
@@ -225,8 +225,8 @@ export async function getNotifications(user: NotificationUser) {
             JOIN posts p ON p.id = pa."postId"
             JOIN users author ON author.id = p."authorId"
             WHERE pa."userId" = ${user.id}
-              AND pa.status::text = 'PENDING'
-              AND p.status::text <> 'ARCHIVED'
+              AND pa.status = 'PENDING'
+              AND p.status <> 'ARCHIVED'
             ORDER BY p."updatedAt" DESC
           ) invites
         ),

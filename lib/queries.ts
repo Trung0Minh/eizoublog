@@ -484,96 +484,187 @@ async function getPublishedPostListBySql(
 ) {
   const offset = (page - 1) * pageSize
   const orderBy = getPublishedPostOrderSql(sort)
-  const rows = await prisma.$queryRaw<PublishedPostListRow[]>`
-    WITH filtered_posts AS (
-      SELECT
-        p.id,
-        p."authorId",
-        p."categoryId",
-        p."coverAlt",
-        p."coverUrl",
-        p.excerpt,
-        p."publishedAt",
-        p.slug,
-        p.title,
-        p."updatedAt",
-        COALESCE(comment_counts.count, 0) AS "commentCount"
-      FROM posts p
-      LEFT JOIN LATERAL (
-        SELECT COUNT(*)::int AS count
-        FROM comments c
-        WHERE c."postId" = p.id
-      ) comment_counts ON TRUE
-      WHERE ${where}
-    ),
-    counted AS (
-      SELECT COUNT(*) AS "totalCount" FROM filtered_posts
-    ),
-    paged AS (
-      SELECT *
-      FROM filtered_posts p
-      ${orderBy}
-      LIMIT ${pageSize} OFFSET ${offset}
-    )
-    SELECT
-      json_build_object(
-        'avatarUrl', author."avatarUrl",
-        'name', author.name,
-        'username', author.username
-      ) AS author,
-      CASE
-        WHEN category.id IS NULL THEN NULL
-        ELSE json_build_object(
-          'id', category.id,
-          'name', category.name,
-          'slug', category.slug
-        )
-      END AS category,
-      COALESCE(co_authors.items, '[]'::json) AS "coAuthors",
-      p."commentCount",
-      p."coverAlt",
-      p."coverUrl",
-      p.excerpt,
-      p."publishedAt",
-      p.slug,
-      COALESCE(tags.items, '[]'::json) AS tags,
-      p.title,
-      counted."totalCount"
-    FROM counted
-    LEFT JOIN paged p ON TRUE
-    LEFT JOIN users author ON author.id = p."authorId"
-    LEFT JOIN categories category ON category.id = p."categoryId"
-    LEFT JOIN LATERAL (
-      SELECT json_agg(
-        json_build_object(
-          'user', json_build_object(
-            'avatarUrl', co_author."avatarUrl",
-            'name', co_author.name,
-            'username', co_author.username
+  const rows =
+    sort === "comments"
+      ? await prisma.$queryRaw<PublishedPostListRow[]>`
+          WITH filtered_posts AS (
+            SELECT
+              p.id,
+              p."authorId",
+              p."categoryId",
+              p."coverAlt",
+              p."coverUrl",
+              p.excerpt,
+              p."publishedAt",
+              p.slug,
+              p.title,
+              p."updatedAt",
+              COALESCE(comment_counts.count, 0) AS "commentCount"
+            FROM posts p
+            LEFT JOIN LATERAL (
+              SELECT COUNT(*)::int AS count
+              FROM comments c
+              WHERE c."postId" = p.id
+            ) comment_counts ON TRUE
+            WHERE ${where}
+          ),
+          counted AS (
+            SELECT COUNT(*) AS "totalCount" FROM filtered_posts
+          ),
+          paged AS (
+            SELECT *
+            FROM filtered_posts p
+            ${orderBy}
+            LIMIT ${pageSize} OFFSET ${offset}
           )
-        )
-        ORDER BY pa.order ASC
-      ) AS items
-      FROM post_authors pa
-      JOIN users co_author ON co_author.id = pa."userId"
-      WHERE pa."postId" = p.id
-    ) co_authors ON TRUE
-    LEFT JOIN LATERAL (
-      SELECT json_agg(
-        json_build_object(
-          'tag', json_build_object(
-            'id', t.id,
-            'name', t.name,
-            'slug', t.slug
+          SELECT
+            json_build_object(
+              'avatarUrl', author."avatarUrl",
+              'name', author.name,
+              'username', author.username
+            ) AS author,
+            CASE
+              WHEN category.id IS NULL THEN NULL
+              ELSE json_build_object(
+                'id', category.id,
+                'name', category.name,
+                'slug', category.slug
+              )
+            END AS category,
+            COALESCE(co_authors.items, '[]'::json) AS "coAuthors",
+            p."commentCount",
+            p."coverAlt",
+            p."coverUrl",
+            p.excerpt,
+            p."publishedAt",
+            p.slug,
+            COALESCE(tags.items, '[]'::json) AS tags,
+            p.title,
+            counted."totalCount"
+          FROM counted
+          LEFT JOIN paged p ON TRUE
+          LEFT JOIN users author ON author.id = p."authorId"
+          LEFT JOIN categories category ON category.id = p."categoryId"
+          LEFT JOIN LATERAL (
+            SELECT json_agg(
+              json_build_object(
+                'user', json_build_object(
+                  'avatarUrl', co_author."avatarUrl",
+                  'name', co_author.name,
+                  'username', co_author.username
+                )
+              )
+              ORDER BY pa.order ASC
+            ) AS items
+            FROM post_authors pa
+            JOIN users co_author ON co_author.id = pa."userId"
+            WHERE pa."postId" = p.id
+          ) co_authors ON TRUE
+          LEFT JOIN LATERAL (
+            SELECT json_agg(
+              json_build_object(
+                'tag', json_build_object(
+                  'id', t.id,
+                  'name', t.name,
+                  'slug', t.slug
+                )
+              )
+              ORDER BY t.name ASC
+            ) AS items
+            FROM post_tags pt
+            JOIN tags t ON t.id = pt."tagId"
+            WHERE pt."postId" = p.id
+          ) tags ON TRUE
+        `
+      : await prisma.$queryRaw<PublishedPostListRow[]>`
+          WITH filtered_posts AS (
+            SELECT
+              p.id,
+              p."authorId",
+              p."categoryId",
+              p."coverAlt",
+              p."coverUrl",
+              p.excerpt,
+              p."publishedAt",
+              p.slug,
+              p.title,
+              p."updatedAt"
+            FROM posts p
+            WHERE ${where}
+          ),
+          counted AS (
+            SELECT COUNT(*) AS "totalCount" FROM filtered_posts
+          ),
+          paged AS (
+            SELECT *
+            FROM filtered_posts p
+            ${orderBy}
+            LIMIT ${pageSize} OFFSET ${offset}
           )
-        )
-        ORDER BY t.name ASC
-      ) AS items
-      FROM post_tags pt
-      JOIN tags t ON t.id = pt."tagId"
-      WHERE pt."postId" = p.id
-    ) tags ON TRUE
-  `
+          SELECT
+            json_build_object(
+              'avatarUrl', author."avatarUrl",
+              'name', author.name,
+              'username', author.username
+            ) AS author,
+            CASE
+              WHEN category.id IS NULL THEN NULL
+              ELSE json_build_object(
+                'id', category.id,
+                'name', category.name,
+                'slug', category.slug
+              )
+            END AS category,
+            COALESCE(co_authors.items, '[]'::json) AS "coAuthors",
+            COALESCE(comment_counts.count, 0) AS "commentCount",
+            p."coverAlt",
+            p."coverUrl",
+            p.excerpt,
+            p."publishedAt",
+            p.slug,
+            COALESCE(tags.items, '[]'::json) AS tags,
+            p.title,
+            counted."totalCount"
+          FROM counted
+          LEFT JOIN paged p ON TRUE
+          LEFT JOIN users author ON author.id = p."authorId"
+          LEFT JOIN categories category ON category.id = p."categoryId"
+          LEFT JOIN LATERAL (
+            SELECT COUNT(*)::int AS count
+            FROM comments c
+            WHERE c."postId" = p.id
+          ) comment_counts ON TRUE
+          LEFT JOIN LATERAL (
+            SELECT json_agg(
+              json_build_object(
+                'user', json_build_object(
+                  'avatarUrl', co_author."avatarUrl",
+                  'name', co_author.name,
+                  'username', co_author.username
+                )
+              )
+              ORDER BY pa.order ASC
+            ) AS items
+            FROM post_authors pa
+            JOIN users co_author ON co_author.id = pa."userId"
+            WHERE pa."postId" = p.id
+          ) co_authors ON TRUE
+          LEFT JOIN LATERAL (
+            SELECT json_agg(
+              json_build_object(
+                'tag', json_build_object(
+                  'id', t.id,
+                  'name', t.name,
+                  'slug', t.slug
+                )
+              )
+              ORDER BY t.name ASC
+            ) AS items
+            FROM post_tags pt
+            JOIN tags t ON t.id = pt."tagId"
+            WHERE pt."postId" = p.id
+          ) tags ON TRUE
+        `
   const posts: PublishedPostListItem[] = rows
     .filter(
       (row): row is PublishedPostListRow & {
@@ -628,7 +719,7 @@ export const getCachedPublishedPosts = unstable_cache(
     const archiveRange = getArchiveMonthRange(archiveMonth)
     return getPublishedPostListBySql(
       Prisma.sql`
-        p.status::text = 'PUBLISHED'
+        p.status = 'PUBLISHED'
         ${archiveRange
           ? Prisma.sql`AND p."publishedAt" >= ${archiveRange.start} AND p."publishedAt" < ${archiveRange.end}`
           : Prisma.empty}
@@ -661,7 +752,7 @@ export const getCachedSidebarData = unstable_cache(
           to_char(date_trunc('month', "publishedAt"), 'YYYY-MM') AS month,
           COUNT(*) AS count
         FROM posts
-        WHERE status::text = 'PUBLISHED'
+        WHERE status = 'PUBLISHED'
           AND "publishedAt" IS NOT NULL
         GROUP BY date_trunc('month', "publishedAt")
         ORDER BY date_trunc('month', "publishedAt") DESC
@@ -778,7 +869,7 @@ export const getCachedWriterDashboardPosts = unstable_cache(
         FROM post_authors pa
         WHERE pa."postId" = p.id
       ) co_authors ON TRUE
-      WHERE p.status::text <> 'ARCHIVED'
+      WHERE p.status <> 'ARCHIVED'
         AND (
           p."authorId" = ${userId}
           OR EXISTS (
@@ -786,7 +877,7 @@ export const getCachedWriterDashboardPosts = unstable_cache(
             FROM post_authors invited
             WHERE invited."postId" = p.id
               AND invited."userId" = ${userId}
-              AND invited.status::text IN ('ACCEPTED', 'PENDING')
+              AND invited.status IN ('ACCEPTED', 'PENDING')
           )
         )
       ORDER BY p."updatedAt" DESC
@@ -839,12 +930,12 @@ export const getCachedAdminDashboardStats = unstable_cache(
   async () => {
     const [stats] = await prisma.$queryRaw<AdminDashboardStatsRow[]>`
       SELECT
-        (SELECT COUNT(*) FROM posts WHERE status::text = 'PUBLISHED') AS "publishedPosts",
-        (SELECT COUNT(*) FROM posts WHERE status::text = 'DRAFT') AS "draftPosts",
-        (SELECT COUNT(*) FROM posts WHERE status::text = 'ARCHIVED') AS "archivedPosts",
+        (SELECT COUNT(*) FROM posts WHERE status = 'PUBLISHED') AS "publishedPosts",
+        (SELECT COUNT(*) FROM posts WHERE status = 'DRAFT') AS "draftPosts",
+        (SELECT COUNT(*) FROM posts WHERE status = 'ARCHIVED') AS "archivedPosts",
         (SELECT COUNT(*) FROM users WHERE role::text = 'WRITER') AS "writers",
-        (SELECT COUNT(*) FROM comments WHERE status::text = 'APPROVED') AS "approvedComments",
-        (SELECT COUNT(*) FROM newsletter_subscribers WHERE status::text = 'ACTIVE') AS "activeSubscribers"
+        (SELECT COUNT(*) FROM comments WHERE status = 'APPROVED') AS "approvedComments",
+        (SELECT COUNT(*) FROM newsletter_subscribers WHERE status = 'ACTIVE') AS "activeSubscribers"
     `
 
     return {
@@ -869,7 +960,7 @@ export const getCachedAdminPosts = unstable_cache(
   ) => {
     const offset = (page - 1) * pageSize
     const statusFilter = status
-      ? Prisma.sql`WHERE p.status::text = ${status}`
+      ? Prisma.sql`WHERE p.status = ${status}::"PostStatus"`
       : Prisma.empty
     const chronologicalOrderBy = sort === "oldest"
       ? Prisma.sql`ORDER BY "publishedAt" ASC NULLS LAST, "updatedAt" ASC`
@@ -992,7 +1083,7 @@ export const getCachedAdminComments = unstable_cache(
           p.title AS "postTitle"
         FROM comments c
         JOIN posts p ON p.id = c."postId"
-        WHERE c.status::text = ${status}
+        WHERE c.status = ${status}::"CommentStatus"
       ),
       counted AS (
         SELECT COUNT(*) AS "totalCount" FROM filtered
@@ -1043,8 +1134,8 @@ export const getCachedAdminCommentCounts = unstable_cache(
   async () => {
     const [counts] = await prisma.$queryRaw<AdminCommentCountsRow[]>`
       SELECT
-        (SELECT COUNT(*) FROM comments WHERE status::text = 'APPROVED') AS "approvedComments",
-        (SELECT COUNT(*) FROM comments WHERE status::text = 'SPAM') AS "spamComments"
+        (SELECT COUNT(*) FROM comments WHERE status = 'APPROVED') AS "approvedComments",
+        (SELECT COUNT(*) FROM comments WHERE status = 'SPAM') AS "spamComments"
     `
 
     return {
@@ -1206,7 +1297,7 @@ export const getCachedWriterEvents = unstable_cache(
         WHERE room."eventId" = e.id
           AND room."writerId" = ${userId}
       ) writer_rooms ON TRUE
-      WHERE e.status::text IN ('OPEN', 'PUBLISHED')
+      WHERE e.status IN ('OPEN', 'PUBLISHED')
       ORDER BY e."createdAt" DESC
     `
 
@@ -1263,7 +1354,7 @@ export const getCachedCategoryPosts = unstable_cache(
   ) =>
     getPublishedPostListBySql(
       Prisma.sql`
-        p.status::text = 'PUBLISHED'
+        p.status = 'PUBLISHED'
         AND EXISTS (
           SELECT 1
           FROM categories c
@@ -1299,7 +1390,7 @@ export const getCachedTagPosts = unstable_cache(
   ) =>
     getPublishedPostListBySql(
       Prisma.sql`
-        p.status::text = 'PUBLISHED'
+        p.status = 'PUBLISHED'
         AND EXISTS (
           SELECT 1
           FROM post_tags pt
@@ -1335,7 +1426,7 @@ export const getCachedAuthorPosts = unstable_cache(
   ) =>
     getPublishedPostListBySql(
       Prisma.sql`
-        p.status::text = 'PUBLISHED'
+        p.status = 'PUBLISHED'
         AND (
           EXISTS (
             SELECT 1

@@ -145,6 +145,7 @@ interface NewsletterFeaturedPost {
 interface SendNewsletterBroadcastOptions {
   customBody?: string
   featuredPost: NewsletterFeaturedPost | null
+  idempotencyKey?: string
   previewText?: string
   subject: string
   to: string
@@ -154,6 +155,7 @@ interface SendNewsletterBroadcastOptions {
 export async function sendNewsletterBroadcast({
   customBody,
   featuredPost,
+  idempotencyKey,
   previewText,
   subject,
   to,
@@ -166,7 +168,7 @@ export async function sendNewsletterBroadcast({
     throw new Error("Resend email environment variables are not configured")
   }
 
-  const { error } = await resend.emails.send({
+  const payload = {
     from,
     react: NewsletterEmail({
       appName,
@@ -178,7 +180,10 @@ export async function sendNewsletterBroadcast({
     }),
     subject,
     to,
-  })
+  }
+  const { error } = idempotencyKey
+    ? await resend.emails.send(payload, { idempotencyKey })
+    : await resend.emails.send(payload)
 
   if (error) {
     throw new Error(`Resend error: ${error.message}`)

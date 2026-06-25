@@ -123,6 +123,10 @@ describe("notification queries", () => {
     })
 
     expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(1)
+    const sql = String(mocks.prisma.$queryRaw.mock.calls[0]?.[0])
+    expect(sql).not.toMatch(
+      /(?:c|p|pa)\.status::text\s*(?:=|<>|IN)/,
+    )
     expect(mocks.prisma.comment.findMany).not.toHaveBeenCalled()
     expect(mocks.prisma.postAuthor.findMany).not.toHaveBeenCalled()
     expect(mocks.prisma.notification.findMany).not.toHaveBeenCalled()

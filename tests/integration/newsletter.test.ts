@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const mocks = vi.hoisted(() => ({
+  after: vi.fn(),
   auth: vi.fn(),
+  enqueueNewsletterBroadcast: vi.fn(),
+  processNewsletterQueue: vi.fn(),
   prisma: {
     newsletterSubscriber: {
       create: vi.fn(),
@@ -23,11 +26,20 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/lib/auth", () => ({ auth: mocks.auth }))
 vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }))
-vi.mock("next/cache", () => ({ revalidateTag: mocks.revalidateTag }))
+vi.mock("next/cache", () => ({
+  revalidateTag: mocks.revalidateTag,
+  unstable_cache: <Args extends unknown[], Result>(
+    callback: (...args: Args) => Promise<Result>,
+  ) => callback,
+}))
 vi.mock("@/lib/resend", () => ({
-  sendNewsletterBroadcast: mocks.sendNewsletterBroadcast,
   sendSubscribeConfirmationEmail: mocks.sendSubscribeConfirmationEmail,
 }))
+vi.mock("@/lib/newsletterQueue", () => ({
+  enqueueNewsletterBroadcast: mocks.enqueueNewsletterBroadcast,
+  processNewsletterQueue: mocks.processNewsletterQueue,
+}))
+vi.mock("next/server", () => ({ after: mocks.after }))
 
 import { POST as broadcast } from "@/app/api/newsletter/broadcast/route"
 import { POST as subscribe } from "@/app/api/newsletter/subscribe/route"
@@ -254,7 +266,16 @@ describe("POST /api/newsletter/broadcast", () => {
       { email: "one@example.com", token: "token-one" },
       { email: "two@example.com", token: "token-two" },
     ])
-    mocks.sendNewsletterBroadcast.mockResolvedValue(undefined)
+    mocks.enqueueNewsletterBroadcast.mockResolvedValue({
+      broadcastId: "broadcast-1",
+      queued: 2,
+      total: 2,
+    })
+    mocks.processNewsletterQueue.mockResolvedValue({
+      claimed: 2,
+      failed: 0,
+      sent: 2,
+    })
   })
 
   it("requires an admin session", async () => {
@@ -270,7 +291,7 @@ describe("POST /api/newsletter/broadcast", () => {
     expect(response.status).toBe(401)
   })
 
-  it("sends a post broadcast to active subscribers with unique unsubscribe URLs", async () => {
+  it("queues a post broadcast without sending email inside the request", async () => {
     const response = await broadcast(
       postRequest("/api/newsletter/broadcast", {
         postId: "post-1",
@@ -279,33 +300,24 @@ describe("POST /api/newsletter/broadcast", () => {
       }),
     )
 
-    expect(response.status).toBe(200)
+    expect(response.status).toBe(202)
     await expect(response.json()).resolves.toEqual({
-      data: { sent: 2, total: 2 },
+      data: { broadcastId: "broadcast-1", queued: 2, total: 2 },
     })
-    expect(mocks.prisma.newsletterSubscriber.findMany).toHaveBeenCalledWith({
-      select: { email: true, token: true },
-      where: { status: "ACTIVE" },
+    expect(mocks.enqueueNewsletterBroadcast).toHaveBeenCalledWith({
+      appUrl: "https://animeblog.example",
+      customBody: undefined,
+      featuredPost: {
+        coverUrl: null,
+        excerpt: "A study of silence.",
+        title: "Frieren and memory",
+        url: "https://animeblog.example/frieren-memory",
+      },
+      previewText: "A new essay is live.",
+      subject: "New essay",
     })
-    expect(mocks.sendNewsletterBroadcast).toHaveBeenCalledWith(
-      expect.objectContaining({
-        featuredPost: {
-          coverUrl: null,
-          excerpt: "A study of silence.",
-          title: "Frieren and memory",
-          url: "https://animeblog.example/frieren-memory",
-        },
-        subject: "New essay",
-        to: "one@example.com",
-        unsubscribeUrl: "https://animeblog.example/unsubscribe?token=token-one",
-      }),
-    )
-    expect(mocks.sendNewsletterBroadcast).toHaveBeenCalledWith(
-      expect.objectContaining({
-        to: "two@example.com",
-        unsubscribeUrl: "https://animeblog.example/unsubscribe?token=token-two",
-      }),
-    )
+    expect(mocks.after).toHaveBeenCalledTimes(1)
+    expect(mocks.sendNewsletterBroadcast).not.toHaveBeenCalled()
   })
 
   it("returns 404 for an unpublished featured post", async () => {

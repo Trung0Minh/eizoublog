@@ -388,7 +388,9 @@ describe("admin client components", () => {
   it("validates and sends newsletter broadcasts", async () => {
     const user = userEvent.setup()
     const fetchMock = vi.fn().mockResolvedValue(
-      okResponse({ data: { sent: 4, total: 5 } }),
+      okResponse({
+        data: { broadcastId: "broadcast-1", queued: 5, total: 5 },
+      }),
     )
     vi.stubGlobal("fetch", fetchMock)
 
@@ -421,7 +423,7 @@ describe("admin client components", () => {
       method: "POST",
     })
     expect(await screen.findByRole("status")).toHaveTextContent(
-      "Sent to 4 of 5 subscribers",
+      "Queued for 5 of 5 subscribers",
     )
   })
 })

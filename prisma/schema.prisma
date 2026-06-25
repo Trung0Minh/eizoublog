@@ -392,6 +392,7 @@ model NewsletterSubscriber {
   token          String           @unique @default(cuid())
   subscribedAt   DateTime         @default(now())
   unsubscribedAt DateTime?
+  broadcastRecipients NewsletterBroadcastRecipient[]
 
   @@index([email])
   @@index([token])
@@ -402,6 +403,66 @@ model NewsletterSubscriber {
 enum SubscriberStatus {
   ACTIVE
   UNSUBSCRIBED
+}
+
+enum NewsletterBroadcastStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  PARTIAL
+  FAILED
+}
+
+enum NewsletterRecipientStatus {
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
+}
+
+model NewsletterBroadcast {
+  id               String                    @id @default(cuid())
+  subject          String
+  previewText      String?
+  customBody       String?                   @db.Text
+  featuredCoverUrl String?
+  featuredExcerpt  String?                   @db.Text
+  featuredTitle    String?
+  featuredUrl      String?
+  status           NewsletterBroadcastStatus @default(QUEUED)
+  totalCount       Int                       @default(0)
+  sentCount        Int                       @default(0)
+  failedCount      Int                       @default(0)
+  createdAt        DateTime                  @default(now())
+  startedAt        DateTime?
+  completedAt      DateTime?
+  recipients       NewsletterBroadcastRecipient[]
+
+  @@index([status, createdAt(sort: Asc)])
+  @@map("newsletter_broadcasts")
+}
+
+model NewsletterBroadcastRecipient {
+  id             String                    @id @default(cuid())
+  broadcastId    String
+  subscriberId   String
+  email          String
+  unsubscribeUrl String
+  status         NewsletterRecipientStatus @default(PENDING)
+  attempts       Int                       @default(0)
+  nextAttemptAt  DateTime                  @default(now())
+  claimedAt      DateTime?
+  sentAt         DateTime?
+  lastError      String?                   @db.Text
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+  broadcast      NewsletterBroadcast       @relation(fields: [broadcastId], references: [id], onDelete: Cascade)
+  subscriber     NewsletterSubscriber      @relation(fields: [subscriberId], references: [id])
+
+  @@unique([broadcastId, subscriberId])
+  @@index([status, nextAttemptAt, claimedAt])
+  @@index([broadcastId, status])
+  @@map("newsletter_broadcast_recipients")
 }
 
 enum AnalyticsEventType {

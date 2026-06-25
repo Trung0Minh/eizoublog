@@ -217,6 +217,7 @@ describe("sendNewsletterBroadcast", () => {
     await sendNewsletterBroadcast({
       customBody: "Production notes from this week.",
       featuredPost: null,
+      idempotencyKey: "newsletter-recipient-1",
       previewText: "A new essay is live.",
       subject: "New essay",
       to: "reader@example.com",
@@ -230,6 +231,7 @@ describe("sendNewsletterBroadcast", () => {
         subject: "New essay",
         to: "reader@example.com",
       }),
+      { idempotencyKey: "newsletter-recipient-1" },
     )
     const message = mocks.send.mock.calls[0][0] as { react: React.ReactNode }
     expect(renderToStaticMarkup(message.react)).toContain(

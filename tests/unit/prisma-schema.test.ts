@@ -12,6 +12,10 @@ describe("Prisma Auth.js adapter schema", () => {
   const categoryModel = schema.match(/model Category \{[\s\S]*?\n\}/)?.[0] ?? ""
   const newsletterSubscriberModel =
     schema.match(/model NewsletterSubscriber \{[\s\S]*?\n\}/)?.[0] ?? ""
+  const newsletterBroadcastModel =
+    schema.match(/model NewsletterBroadcast \{[\s\S]*?\n\}/)?.[0] ?? ""
+  const newsletterBroadcastRecipientModel =
+    schema.match(/model NewsletterBroadcastRecipient \{[\s\S]*?\n\}/)?.[0] ?? ""
   const analyticsEventModel =
     schema.match(/model AnalyticsEvent \{[\s\S]*?\n\}/)?.[0] ?? ""
   const analyticsDailySummaryModel =
@@ -30,6 +34,29 @@ describe("Prisma Auth.js adapter schema", () => {
 
   it("indexes newsletter subscriber status for broadcast queries", () => {
     expect(newsletterSubscriberModel).toContain("@@index([status])")
+  })
+
+  it("defines a durable newsletter broadcast queue", () => {
+    expect(schema).toContain("enum NewsletterBroadcastStatus")
+    expect(schema).toContain("enum NewsletterRecipientStatus")
+    expect(newsletterSubscriberModel).toContain(
+      "broadcastRecipients NewsletterBroadcastRecipient[]",
+    )
+    expect(newsletterBroadcastModel).toContain(
+      "@@map(\"newsletter_broadcasts\")",
+    )
+    expect(newsletterBroadcastModel).toContain(
+      "@@index([status, createdAt(sort: Asc)])",
+    )
+    expect(newsletterBroadcastRecipientModel).toContain(
+      "@@unique([broadcastId, subscriberId])",
+    )
+    expect(newsletterBroadcastRecipientModel).toContain(
+      "@@index([status, nextAttemptAt, claimedAt])",
+    )
+    expect(newsletterBroadcastRecipientModel).toContain(
+      "@@map(\"newsletter_broadcast_recipients\")",
+    )
   })
 
   it("indexes protected route navigation query patterns", () => {
