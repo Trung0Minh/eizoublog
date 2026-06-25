@@ -28,7 +28,7 @@ describe("EditorTopBar", () => {
         isPublished={false}
         onPublish={onPublish}
         onSaveDraft={onSaveDraft}
-        saveStatus="saved"
+        
       />,
     )
 
@@ -54,7 +54,7 @@ describe("EditorTopBar", () => {
         isPublished
         onPublish={vi.fn()}
         onSaveDraft={vi.fn()}
-        saveStatus="idle"
+        
       />,
     )
 
@@ -75,7 +75,7 @@ describe("EditorTopBar", () => {
         onPublish={vi.fn()}
         onSaveDraft={vi.fn()}
         pendingAction="publish"
-        saveStatus="saving"
+        
       />,
     )
 

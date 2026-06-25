@@ -6,9 +6,7 @@ import Link from "next/link"
 import { ThemeToggle } from "@/components/layout/ThemeToggle"
 import { ParticleToggle } from "@/components/ui/ParticleToggle"
 import { SeasonToggle } from "@/components/ui/SeasonToggle"
-import { SaveStatusIndicator } from "@/components/editor/SaveStatusIndicator"
 import { Button } from "@/components/ui/button"
-import type { SaveStatus } from "@/hooks/useAutosave"
 
 type PendingAction = "draft" | "publish" | null
 
@@ -33,7 +31,6 @@ interface EditorTopBarProps {
   onToggleSettings?: () => void
   onPublish: () => void
   onSaveDraft: () => void
-  saveStatus: SaveStatus
   titlePreview?: string
 }
 
@@ -48,7 +45,6 @@ export function EditorTopBar({
   onToggleSettings,
   onPublish,
   onSaveDraft,
-  saveStatus,
   titlePreview,
 }: EditorTopBarProps) {
   const actionsDisabled = isPending || !canSave
@@ -56,12 +52,14 @@ export function EditorTopBar({
   const isPublishPending = pendingAction === "publish"
   const publishLabel = isPublished ? "Cập nhật" : "Xuất bản"
   const publishPendingLabel = isPublished ? "Đang cập nhật..." : "Đang xuất bản..."
-  const statusText = canSave
-    ? autosaveHint
-    : "Thêm tiêu đề để có thể lưu và xuất bản."
+
   return (
-    <header className="fixed left-0 right-0 top-0 z-[100] pt-4 pb-4 bg-transparent pointer-events-none">
-      <div className="glass-navbar mx-auto flex h-14 w-[calc(100%-2rem)] max-w-[1440px] items-center justify-between gap-3 px-4 md:px-6 lg:px-8 rounded-full border border-border-default/60 bg-background/80 backdrop-blur-md shadow-glass pointer-events-auto">
+    <header className="fixed left-0 right-0 top-0 z-[100] group">
+      {/* Invisible hover area */}
+      <div className="absolute top-0 left-0 right-0 h-8 bg-transparent z-[101]" />
+      
+      <div className="pt-4 pb-4 pointer-events-none">
+        <div className="glass-navbar mx-auto flex h-14 w-[calc(100%-2rem)] max-w-[1440px] items-center justify-between gap-3 px-4 md:px-6 lg:px-8 rounded-full border border-border-default/60 bg-background/80 backdrop-blur-md shadow-glass pointer-events-auto -translate-y-[150%] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 focus-within:translate-y-0 focus-within:opacity-100 transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]">
         <Link
           className="group flex items-center gap-1.5 text-text-secondary transition-colors hover:text-accent"
           href={exitHref}
@@ -74,19 +72,7 @@ export function EditorTopBar({
         </Link>
 
         <div className="absolute left-1/2 hidden h-full -translate-x-1/2 items-center md:flex">
-          <div className="flex min-w-[70px] justify-end">
-            {isPending ? (
-              <span className="text-xs text-text-tertiary">Đang lưu...</span>
-            ) : saveStatus === "idle" ? (
-              <span className="block text-xs text-text-tertiary">
-                {statusText}
-              </span>
-            ) : (
-              <SaveStatusIndicator status={saveStatus} />
-            )}
-          </div>
-          <div className="mx-3 hidden h-4 w-px bg-border-default md:block" />
-          <div className="hidden max-w-[280px] truncate text-[13px] text-text-tertiary md:block">
+          <div className="hidden max-w-[280px] truncate text-[13px] font-medium text-text-tertiary md:block">
             {titlePreview?.trim() || "Bài viết không có tiêu đề"}
           </div>
         </div>
@@ -136,6 +122,7 @@ export function EditorTopBar({
             {isPublishPending && <ButtonSpinner />}
             {isPublishPending ? publishPendingLabel : publishLabel}
           </Button>
+        </div>
         </div>
       </div>
     </header>

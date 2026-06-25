@@ -22,6 +22,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { CoverImageUpload } from "@/components/posts/CoverImageUpload"
 import { TagInput, type TagOption } from "@/components/posts/TagInput"
+import { SaveStatusIndicator } from "@/components/editor/SaveStatusIndicator"
 import { useAutosave } from "@/hooks/useAutosave"
 import { useWarnUnsaved } from "@/hooks/useWarnUnsaved"
 import { cn } from "@/lib/utils"
@@ -370,16 +371,28 @@ export function PostEditor({
         onSaveDraft={() => startTransition(() => void savePost("DRAFT"))}
         pendingAction={savingAction}
         onToggleSettings={() => setIsSettingsOpen((current) => !current)}
-        saveStatus={saveStatus}
         titlePreview={title}
       />
 
-      <main className="relative pt-[88px] flex w-full min-h-0 flex-1 overflow-hidden bg-transparent">
+      {/* Floating Save Status Pill */}
+      <div className="fixed bottom-6 right-6 z-[90] flex items-center gap-2 rounded-full border border-border-default bg-card/60 px-4 py-2 text-[13px] backdrop-blur-md shadow-glass">
+        {isPending || savingAction !== null ? (
+          <span className="text-text-tertiary">Đang lưu...</span>
+        ) : saveStatus === "idle" ? (
+          <span className="text-text-tertiary">
+            {canSave ? autosaveHint : "Thêm tiêu đề để lưu"}
+          </span>
+        ) : (
+          <SaveStatusIndicator status={saveStatus} />
+        )}
+      </div>
+
+      <main className="relative flex w-full min-h-0 flex-1 overflow-hidden bg-transparent">
         {/* Float Toggle Button */}
         <button
           aria-label={isSettingsOpen ? "Đóng cài đặt" : "Mở cài đặt"}
           className={cn(
-            "hidden lg:flex fixed top-[104px] z-[60] h-10 w-10 items-center justify-center rounded-full border border-border-default bg-card/60 backdrop-blur-md shadow-glass text-text-secondary transition-all duration-300 hover:bg-card hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            "hidden lg:flex fixed top-1/2 -translate-y-1/2 z-[60] h-10 w-10 items-center justify-center rounded-full border border-border-default bg-card/60 backdrop-blur-md shadow-glass text-text-secondary transition-all duration-300 hover:bg-card hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
             isSettingsOpen ? "left-[320px] xl:left-[360px] -translate-x-1/2" : "left-4 translate-x-0"
           )}
           onClick={() => setIsSettingsOpen(!isSettingsOpen)}
@@ -399,7 +412,7 @@ export function PostEditor({
               animate={{ width: "auto", opacity: 1, x: 0 }}
               exit={{ width: 0, opacity: 0, x: -50 }}
               transition={{ duration: 0.3, ease: "anticipate" }}
-              className="z-50 shrink-0 overflow-y-auto border-r border-border-default/40 bg-card/30 backdrop-blur-xl shadow-glass flex fixed inset-y-0 left-0 pt-[88px] flex-col lg:static lg:pt-6 w-full lg:w-[320px] xl:w-[360px]"
+              className="z-50 shrink-0 overflow-y-auto border-r border-border-default/40 bg-card/30 backdrop-blur-xl shadow-glass flex fixed inset-y-0 left-0 pt-6 flex-col lg:static w-full lg:w-[320px] xl:w-[360px]"
               id="post-settings-panel"
             >
               <div className="px-5 py-6 min-w-[320px] xl:min-w-[360px]">
