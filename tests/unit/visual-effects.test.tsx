@@ -194,4 +194,21 @@ describe("responsive visual effects", () => {
     expect(carousel).toContain("autoplay.stop()")
     expect(carousel).toContain("autoplay.play()")
   })
+
+  it("removes backdrop filters from large special-page surfaces on touch devices", () => {
+    const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8")
+    const targetSources = [
+      "app/(public)/about/AboutClient.tsx",
+      "app/(public)/nhap-mon-sakuga/IntroToSakugaClient.tsx",
+      "app/(public)/resources/ResourcesClient.tsx",
+      "app/(public)/search/page.tsx",
+    ].map((path) => readFileSync(join(process.cwd(), path), "utf8"))
+
+    expect(css).toMatch(
+      /@media \(pointer: coarse\)[\s\S]*?\.mobile-no-backdrop\s*\{[\s\S]*?backdrop-filter:\s*none\s*!important/,
+    )
+    targetSources.forEach((source) => {
+      expect(source).toContain("mobile-no-backdrop")
+    })
+  })
 })
