@@ -1,14 +1,20 @@
-export function getCoverStyle(url: string | null | undefined): React.CSSProperties {
+type CoverViewport = "desktop" | "mobile"
+
+export function getCoverStyle(
+  url: string | null | undefined,
+  viewport: CoverViewport = "desktop",
+): React.CSSProperties {
   if (!url) return { objectFit: "cover" };
 
   const [, query] = url.split("?");
   const params = new URLSearchParams(query || "");
+  const prefix = viewport === "mobile" && params.has("mcw") ? "m" : ""
 
-  if (params.has("cw")) {
-    const cx = parseFloat(params.get("cx") || "0");
-    const cy = parseFloat(params.get("cy") || "0");
-    const cw = parseFloat(params.get("cw") || "100");
-    const ch = parseFloat(params.get("ch") || "100");
+  if (params.has(`${prefix}cw`)) {
+    const cx = parseFloat(params.get(`${prefix}cx`) || "0");
+    const cy = parseFloat(params.get(`${prefix}cy`) || "0");
+    const cw = parseFloat(params.get(`${prefix}cw`) || "100");
+    const ch = parseFloat(params.get(`${prefix}ch`) || "100");
 
     return {
       position: "absolute",

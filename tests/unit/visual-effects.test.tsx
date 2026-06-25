@@ -159,4 +159,17 @@ describe("responsive visual effects", () => {
     expect(source).toContain('className="fixed inset-0 z-0')
     expect(source).toContain("initial={false}")
   })
+
+  it("renders separate desktop and mobile background crops with a mobile vignette", () => {
+    const source = readFileSync(
+      join(process.cwd(), "components/ui/DynamicBackground.tsx"),
+      "utf8",
+    )
+
+    expect(source).toContain('getCoverStyle(bgUrl, "desktop")')
+    expect(source).toContain('getCoverStyle(bgUrl, "mobile")')
+    expect(source).toMatch(/hidden[^"]*md:block/)
+    expect(source).toContain("md:hidden")
+    expect(source).toContain('data-testid="mobile-background-vignette"')
+  })
 })

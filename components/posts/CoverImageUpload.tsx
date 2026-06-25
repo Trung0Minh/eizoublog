@@ -5,6 +5,7 @@ import { Camera, Crop, ImagePlus, Loader2, X } from "lucide-react"
 
 interface CoverImageUploadProps {
   onChange: (url: string) => void
+  responsiveCrop?: boolean
   value: string
 }
 
@@ -37,7 +38,11 @@ function getUploadUrl(value: unknown) {
   return null
 }
 
-export function CoverImageUpload({ onChange, value }: CoverImageUploadProps) {
+export function CoverImageUpload({
+  onChange,
+  responsiveCrop = false,
+  value,
+}: CoverImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [error, setError] = useState("")
   const [uploading, setUploading] = useState(false)
@@ -188,6 +193,7 @@ export function CoverImageUpload({ onChange, value }: CoverImageUploadProps) {
       {isCropping && (
         <CoverCropperModal
           value={value}
+          responsiveCrop={responsiveCrop}
           onClose={() => setIsCropping(false)}
           onConfirm={(url) => {
             onChange(url)
@@ -207,24 +213,42 @@ function CoverCropperModal({
   value,
   onClose,
   onConfirm,
+  responsiveCrop,
 }: {
   value: string
   onClose: () => void
   onConfirm: (url: string) => void
+  responsiveCrop: boolean
 }) {
-  const [crop, setCrop] = useState({ x: 0, y: 0 })
-  const [zoom, setZoom] = useState(parseFloat(new URLSearchParams((value || "").split("?")[1] || "").get("zoom") || "1"))
-  const [croppedAreaPercentages, setCroppedAreaPercentages] = useState<{ x: number, y: number, width: number, height: number } | null>(() => {
-    const params = new URLSearchParams((value || "").split("?")[1] || "");
-    if (params.has("cw")) {
-      return {
-        x: parseFloat(params.get("cx") || "0"),
-        y: parseFloat(params.get("cy") || "0"),
-        width: parseFloat(params.get("cw") || "100"),
-        height: parseFloat(params.get("ch") || "100"),
-      };
+  type CropTarget = "desktop" | "mobile"
+  type CropArea = { x: number; y: number; width: number; height: number }
+
+  const params = new URLSearchParams((value || "").split("?")[1] || "")
+  const readCropArea = (prefix: "" | "m"): CropArea | null => {
+    if (!params.has(`${prefix}cw`)) return null
+
+    return {
+      x: parseFloat(params.get(`${prefix}cx`) || "0"),
+      y: parseFloat(params.get(`${prefix}cy`) || "0"),
+      width: parseFloat(params.get(`${prefix}cw`) || "100"),
+      height: parseFloat(params.get(`${prefix}ch`) || "100"),
     }
-    return null;
+  }
+
+  const [target, setTarget] = useState<CropTarget>("desktop")
+  const [cropByTarget, setCropByTarget] = useState({
+    desktop: { x: 0, y: 0 },
+    mobile: { x: 0, y: 0 },
+  })
+  const [zoomByTarget, setZoomByTarget] = useState({
+    desktop: parseFloat(params.get("zoom") || "1"),
+    mobile: parseFloat(params.get("mzoom") || "1"),
+  })
+  const [cropAreaByTarget, setCropAreaByTarget] = useState<
+    Record<CropTarget, CropArea | null>
+  >({
+    desktop: readCropArea(""),
+    mobile: readCropArea("m"),
   })
   const [mounted, setMounted] = useState(false)
 
@@ -239,20 +263,11 @@ function CoverCropperModal({
     }
   }, [])
 
-  const [initialCroppedAreaPercentages] = useState(() => {
-    const params = new URLSearchParams((value || "").split("?")[1] || "");
-    if (params.has("cw")) {
-      return {
-        x: parseFloat(params.get("cx") || "0"),
-        y: parseFloat(params.get("cy") || "0"),
-        width: parseFloat(params.get("cw") || "100"),
-        height: parseFloat(params.get("ch") || "100"),
-      };
-    }
-    return undefined;
-  });
-
   if (!mounted) return null;
+
+  const isMobileTarget = target === "mobile"
+  const crop = cropByTarget[target]
+  const zoom = zoomByTarget[target]
 
   return createPortal(
     <div id="cover-cropper-modal" className="fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-black/90 p-4">
@@ -266,22 +281,73 @@ function CoverCropperModal({
       </button>
 
       <div className="mb-6 text-center text-white/80">
-        <h3 className="text-lg font-medium text-white mb-1">Căn chỉnh ảnh bìa</h3>
+        <h3 className="text-lg font-medium text-white mb-1">
+          {responsiveCrop ? "Căn chỉnh ảnh nền" : "Căn chỉnh ảnh bìa"}
+        </h3>
         <p className="text-sm">Kéo để di chuyển, cuộn chuột để thu phóng</p>
       </div>
 
-      <div className="relative w-full max-w-3xl aspect-video overflow-hidden rounded-lg bg-black/50 shadow-2xl ring-1 ring-white/20">
+      {responsiveCrop && (
+        <div
+          aria-label="Kích thước cắt ảnh"
+          className="mb-5 inline-flex rounded-full border border-white/15 bg-white/5 p-1"
+          role="group"
+        >
+          {([
+            ["desktop", "Desktop 16:9"],
+            ["mobile", "Mobile 9:16"],
+          ] as const).map(([option, label]) => (
+            <button
+              aria-pressed={target === option}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                target === option
+                  ? "bg-white text-black"
+                  : "text-white/65 hover:text-white"
+              }`}
+              key={option}
+              onClick={() => setTarget(option)}
+              type="button"
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div
+        className={
+          isMobileTarget
+            ? "relative h-[58vh] max-h-[680px] aspect-[9/16] overflow-hidden rounded-lg bg-black/50 shadow-2xl ring-1 ring-white/20"
+            : "relative w-full max-w-3xl aspect-video overflow-hidden rounded-lg bg-black/50 shadow-2xl ring-1 ring-white/20"
+        }
+      >
         <Cropper
+          key={target}
           image={value.split("?")[0]}
           crop={crop}
           zoom={zoom}
-          aspect={16 / 9}
-          initialCroppedAreaPercentages={initialCroppedAreaPercentages}
-          onCropChange={setCrop}
+          aspect={isMobileTarget ? 9 / 16 : 16 / 9}
+          initialCroppedAreaPercentages={
+            cropAreaByTarget[target] ?? undefined
+          }
+          onCropChange={(nextCrop) =>
+            setCropByTarget((current) => ({
+              ...current,
+              [target]: nextCrop,
+            }))
+          }
           onCropComplete={(croppedAreaPercentages) => {
-            setCroppedAreaPercentages(croppedAreaPercentages)
+            setCropAreaByTarget((current) => ({
+              ...current,
+              [target]: croppedAreaPercentages,
+            }))
           }}
-          onZoomChange={setZoom}
+          onZoomChange={(nextZoom) =>
+            setZoomByTarget((current) => ({
+              ...current,
+              [target]: nextZoom,
+            }))
+          }
           showGrid={false}
           style={{
             containerStyle: { background: "transparent" },
@@ -301,7 +367,8 @@ function CoverCropperModal({
         <button
           className="rounded-md bg-accent px-6 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-accent/90"
           onClick={() => {
-            if (!croppedAreaPercentages) {
+            const desktopCrop = cropAreaByTarget.desktop
+            if (!desktopCrop) {
               onClose();
               return;
             }
@@ -309,11 +376,20 @@ function CoverCropperModal({
             const [base, query] = (value || "").split("?");
             const params = new URLSearchParams(query || "");
             
-            params.set("cx", croppedAreaPercentages.x.toFixed(2));
-            params.set("cy", croppedAreaPercentages.y.toFixed(2));
-            params.set("cw", croppedAreaPercentages.width.toFixed(2));
-            params.set("ch", croppedAreaPercentages.height.toFixed(2));
-            params.set("zoom", zoom.toFixed(2));
+            params.set("cx", desktopCrop.x.toFixed(2));
+            params.set("cy", desktopCrop.y.toFixed(2));
+            params.set("cw", desktopCrop.width.toFixed(2));
+            params.set("ch", desktopCrop.height.toFixed(2));
+            params.set("zoom", zoomByTarget.desktop.toFixed(2));
+
+            const mobileCrop = cropAreaByTarget.mobile
+            if (responsiveCrop && mobileCrop) {
+              params.set("mcx", mobileCrop.x.toFixed(2));
+              params.set("mcy", mobileCrop.y.toFixed(2));
+              params.set("mcw", mobileCrop.width.toFixed(2));
+              params.set("mch", mobileCrop.height.toFixed(2));
+              params.set("mzoom", zoomByTarget.mobile.toFixed(2));
+            }
             
             // Remove legacy params
             params.delete("tx");

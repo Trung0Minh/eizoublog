@@ -38,7 +38,7 @@ export function BackgroundSettings() {
       } else {
         throw new Error("Failed to save")
       }
-    } catch (e) {
+    } catch {
       toast("Lỗi khi lưu cài đặt")
     } finally {
       setSaving(false)
@@ -78,6 +78,7 @@ export function BackgroundSettings() {
               <div key={key} className="space-y-2 border border-border-default p-4 rounded-xl">
                 <h3 className="font-semibold text-lg capitalize">{season} - {mode}</h3>
                 <CoverImageUpload
+                  responsiveCrop
                   value={backgrounds[key] || `/bg/${key}.jpg`}
                   onChange={(url) => setBackgrounds((prev) => ({ ...prev, [key]: url }))}
                 />

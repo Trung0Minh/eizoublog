@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation"
 
 import { useReducedVisualEffects } from "@/hooks/useReducedVisualEffects"
 import { getDocumentSeason } from "@/lib/appearanceSession"
+import { getCoverStyle } from "@/lib/cover-style"
 
 const emptySubscribe = () => () => undefined
 
@@ -107,6 +108,7 @@ export function DynamicBackground({
 
   const bgKey = `${season}_${isDark ? "dark" : "light"}`
   const bgUrl = customBackgrounds?.[bgKey] || `/bg/${bgKey}.jpg`
+  const bgSrc = bgUrl.split("?")[0]
   const backgroundFilter = isHome
     ? "none"
     : shouldReduce
@@ -141,11 +143,36 @@ export function DynamicBackground({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1.5, ease: "easeInOut" }}
-            className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: `url(${bgUrl})` }}
-          />
+            className="absolute inset-0 h-full w-full overflow-hidden"
+          >
+            {/* Uploaded R2 backgrounds use a standard image so URL crop metadata can control framing. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 hidden h-full w-full max-w-none md:block"
+              src={bgSrc}
+              style={getCoverStyle(bgUrl, "desktop")}
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full max-w-none md:hidden"
+              src={bgSrc}
+              style={getCoverStyle(bgUrl, "mobile")}
+            />
+          </motion.div>
         </AnimatePresence>
       </div>
+      <div
+        className="pointer-events-none absolute inset-0 md:hidden"
+        data-testid="mobile-background-vignette"
+        style={{
+          background:
+            "radial-gradient(circle at center, transparent 45%, rgba(0, 0, 0, 0.2) 100%)",
+        }}
+      />
       {/* A subtle overlay to ensure text remains readable */}
       <div
         className="absolute inset-0 bg-background/40 dark:bg-background/60"
