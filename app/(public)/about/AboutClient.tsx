@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { TextReveal } from "@/components/ui/TextReveal"
 import { ScrollReveal } from "@/components/ui/ScrollReveal"
+import { cn } from "@/lib/utils"
+import { CoverImageUpload } from "@/components/posts/CoverImageUpload"
 
 interface PublishingNote {
   text: string
@@ -23,6 +25,7 @@ interface AboutPageContent {
   publishingNotes: PublishingNote[]
   title: string
   whyWeDoThis: string
+  coverUrl?: string
 }
 
 interface AboutClientProps {
@@ -102,7 +105,8 @@ export function AboutClient({ initialPage, isAdmin }: AboutClientProps) {
     title: `Chào mừng bạn đến với Eizou Blog!`, // Updated title
     whyWeDoThis: "Để lan tỏa tình yêu với hoạt hình và ghi nhận công sức của những nhà sáng tạo tuyệt vời đã thổi hồn vào những thế giới yêu thích của chúng ta. Chúng mình muốn tạo ra một nơi mà fan có thể đọc những bài tiểu luận sâu sắc cùng một tách trà trong một không gian ấm cúng, dễ thương! 💖",
     body: (initialPage?.content as JSONContent) || defaultBody,
-    publishingNotes: defaultPublishingNotes
+    publishingNotes: defaultPublishingNotes,
+    coverUrl: "https://picsum.photos/seed/animekawaiigirl/800/1000",
   }
 
   const [data, setData] = useState(initialData)
@@ -169,10 +173,22 @@ export function AboutClient({ initialPage, isAdmin }: AboutClientProps) {
     }
   }
 
-  if (isEditing) {
-    return (
-      <div className="space-y-8 animate-in fade-in pb-20">
-        <div className="flex items-center justify-between sticky top-[56px] z-10 bg-background/90 backdrop-blur py-4 border-b border-border-default">
+  return (
+    <div className="min-h-screen flex flex-col pt-0 group relative">
+      {isAdmin && !isEditing && (
+        <Button
+          onClick={() => setIsEditing(true)}
+          className="absolute right-0 top-0 opacity-0 transition-opacity group-hover:opacity-100 z-10"
+          size="sm"
+          variant="outline"
+        >
+          <Pencil className="h-4 w-4 mr-2" />
+          Chỉnh sửa trang
+        </Button>
+      )}
+
+      {isEditing && (
+        <div className="fixed top-[56px] left-0 right-0 z-[100] flex items-center justify-between bg-background/90 backdrop-blur py-2 px-4 border-b border-border-default shadow-sm">
           <h2 className="text-sm font-semibold uppercase tracking-widest text-editorial">
             Chỉnh sửa trang Giới thiệu
           </h2>
@@ -199,79 +215,10 @@ export function AboutClient({ initialPage, isAdmin }: AboutClientProps) {
             </Button>
           </div>
         </div>
-
-        <div className="space-y-6 max-w-4xl mt-6">
-          <div>
-            <label className="block text-sm font-semibold text-text-primary mb-2">Tiêu đề chính</label>
-            <Textarea
-              value={data.title}
-              onChange={(e) =>
-                updateData((currentData) => ({
-                  ...currentData,
-                  title: e.target.value,
-                }))
-              }
-              className="text-2xl font-bold resize-none rounded-[16px] bg-background border-[2px]"
-              rows={2}
-            />
-          </div>
-
-
-          <div>
-            <label className="block text-sm font-semibold text-text-primary mb-2">Lý do chúng mình tạo blog này (Why we do this)</label>
-            <Textarea
-              value={data.whyWeDoThis}
-              onChange={(e) =>
-                updateData((currentData) => ({
-                  ...currentData,
-                  whyWeDoThis: e.target.value,
-                }))
-              }
-              className="text-base resize-none rounded-[16px] bg-background border-[2px]"
-              rows={4}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-text-primary mb-2">Nội dung giới thiệu</label>
-            <div className="rounded-[16px] border-[2px] border-border-default p-4 md:pt-[44px] bg-background [&_.ProseMirror_p]:!mx-0 [&_.ProseMirror_ul]:!mx-0 [&_.ProseMirror_ol]:!mx-0 [&_.ProseMirror_p]:!max-w-none">
-              <TiptapEditor
-                content={data.body}
-                editable={true}
-                onEditorReady={handleEditorReady}
-                onChange={(json, text) => {
-                  updateData((currentData) => ({
-                    ...currentData,
-                    body: json,
-                  }))
-                  updateContentText(text)
-                }}
-              />
-            </div>
-          </div>
-
-
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="min-h-screen flex flex-col pt-0 group relative">
-      {isAdmin && (
-        <Button
-          onClick={() => setIsEditing(true)}
-          className="absolute right-0 top-0 opacity-0 transition-opacity group-hover:opacity-100 z-10"
-          size="sm"
-          variant="outline"
-        >
-          <Pencil className="h-4 w-4 mr-2" />
-          Chỉnh sửa trang
-        </Button>
       )}
 
-      <main className="flex-1 w-full max-w-[1000px] mx-auto pt-8 md:pt-16 pb-20">
-        <div className="bg-subtle-bg/80 backdrop-blur-sm border-[3px] border-border/60 rounded-[24px] p-6 md:p-12 shadow-xl relative isolate overflow-hidden">
+      <main className={cn("flex-1 w-full max-w-[1000px] mx-auto pt-8 md:pt-16 pb-20 px-4 md:px-0", isEditing && "mt-[60px]")}>
+        <div className={cn("bg-subtle-bg/80 backdrop-blur-sm border-[3px] border-border/60 rounded-[24px] p-6 md:p-12 shadow-xl relative isolate overflow-hidden", isEditing && "border-editorial/40 shadow-editorial/10")}>
           {/* Decorative Corner Flairs */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-bl-[100px] -z-10" />
           <div className="absolute bottom-0 left-0 w-40 h-40 bg-accent/10 rounded-tr-[100px] -z-10" />
@@ -279,70 +226,109 @@ export function AboutClient({ initialPage, isAdmin }: AboutClientProps) {
           <div className="flex flex-col md:flex-row gap-10 items-center md:items-start">
 
             <ScrollReveal delay={0.2} className="w-full md:w-[40%]">
-              <div className="relative aspect-[3/4] rounded-[16px] overflow-hidden border-4 border-white dark:border-border shadow-lg rotate-[-2deg] hover:rotate-0 transition-transform duration-300">
-                 <img
-                    src="https://picsum.photos/seed/animekawaiigirl/800/1000"
-                    alt="Mascot"
-                    className="object-cover w-full h-full"
-                    referrerPolicy="no-referrer"
-                 />
-                 {/* Cute sticker overlay */}
-                 <div className="absolute -bottom-4 -right-4 bg-accent text-white w-16 h-16 rounded-full flex items-center justify-center font-display font-bold shadow-md rotate-12">
-                   Hi!
-                 </div>
+              <div className="relative aspect-[3/4] rounded-[16px] overflow-hidden border-4 border-white dark:border-border shadow-lg rotate-[-2deg] hover:rotate-0 transition-transform duration-300 bg-background">
+                 {isEditing ? (
+                   <CoverImageUpload
+                     value={data.coverUrl || ""}
+                     onChange={(url) => updateData(d => ({ ...d, coverUrl: url }))}
+                   />
+                 ) : (
+                   <img
+                      src={data.coverUrl || "https://picsum.photos/seed/animekawaiigirl/800/1000"}
+                      alt="Mascot"
+                      className="object-cover w-full h-full"
+                      referrerPolicy="no-referrer"
+                   />
+                 )}
+                 {!isEditing && (
+                   <div className="absolute -bottom-4 -right-4 bg-accent text-white w-16 h-16 rounded-full flex items-center justify-center font-display font-bold shadow-md rotate-12">
+                     Hi!
+                   </div>
+                 )}
               </div>
             </ScrollReveal>
 
             <div className="w-full md:w-[60%] flex flex-col">
               <ScrollReveal>
                 <div className="flex items-center gap-2 mb-4">
-                  <Sparkles className="w-6 h-6 text-accent animate-pulse" />
-                  <h1 className="text-[32px] md:text-[42px] font-display font-bold text-text-primary leading-tight">
-                    {data.title.includes('Eizou Blog!') ? (
-                      <>Chào mừng bạn đến với <TextReveal className="text-accent" text="Eizou Blog!" /></>
-                    ) : (
-                      <TextReveal className="text-accent" text={data.title} />
-                    )}
-                  </h1>
+                  <Sparkles className="w-6 h-6 text-accent animate-pulse shrink-0" />
+                  {isEditing ? (
+                    <input
+                      className="w-full border-none bg-transparent text-[32px] md:text-[42px] font-display font-bold text-text-primary leading-tight outline-none focus:ring-2 focus:ring-accent rounded-[8px] placeholder:text-text-tertiary"
+                      value={data.title}
+                      onChange={(e) => updateData(d => ({ ...d, title: e.target.value }))}
+                      placeholder="Tiêu đề trang..."
+                    />
+                  ) : (
+                    <h1 className="text-[32px] md:text-[42px] font-display font-bold text-text-primary leading-tight">
+                      {data.title.includes('Eizou Blog!') ? (
+                        <>Chào mừng bạn đến với <TextReveal className="text-accent" text="Eizou Blog!" /></>
+                      ) : (
+                        <TextReveal className="text-accent" text={data.title} />
+                      )}
+                    </h1>
+                  )}
                 </div>
               </ScrollReveal>
 
-              <div className="space-y-4 text-[16px] text-text-secondary font-sans [&_.post-content]:!mx-0 [&_.post-content]:!max-w-none [&_.ProseMirror_p]:!mx-0 [&_.ProseMirror_ul]:!mx-0 [&_.ProseMirror_ol]:!mx-0 [&_.ProseMirror_p]:!max-w-none">
+              <div className={cn("space-y-4 text-[16px] text-text-secondary font-sans [&_.post-content]:!mx-0 [&_.post-content]:!max-w-none [&_.ProseMirror_p]:!mx-0 [&_.ProseMirror_ul]:!mx-0 [&_.ProseMirror_ol]:!mx-0 [&_.ProseMirror_p]:!max-w-none", isEditing && "bg-background rounded-[16px] p-4 border border-border-default mt-4")}>
                 <ScrollReveal>
-                  <PostBody content={data.body} />
+                  {isEditing ? (
+                    <TiptapEditor
+                      content={data.body}
+                      editable={true}
+                      onEditorReady={handleEditorReady}
+                      onChange={(json, text) => {
+                        updateData(d => ({ ...d, body: json }))
+                        updateContentText(text)
+                      }}
+                    />
+                  ) : (
+                    <PostBody content={data.body} />
+                  )}
                 </ScrollReveal>
 
-                {data.whyWeDoThis && (
+                {(isEditing || data.whyWeDoThis) && (
                   <ScrollReveal delay={0.2}>
                     <div className="bg-background/60 p-4 rounded-xl border border-border mt-6">
                       <h3 className="font-display font-bold text-text-primary flex items-center gap-2 text-[18px] mb-2">
                         <Heart className="w-5 h-5 text-accent" /> Tại sao chúng mình làm blog này
                       </h3>
-                      <p className="text-[14px]">
-                        {data.whyWeDoThis}
-                      </p>
+                      {isEditing ? (
+                        <Textarea
+                          className="w-full text-[14px] resize-none bg-transparent shadow-none focus-visible:ring-1 focus-visible:ring-accent"
+                          value={data.whyWeDoThis}
+                          onChange={(e) => updateData(d => ({ ...d, whyWeDoThis: e.target.value }))}
+                          placeholder="Nhập lý do..."
+                          rows={4}
+                        />
+                      ) : (
+                        <p className="text-[14px]">
+                          {data.whyWeDoThis}
+                        </p>
+                      )}
                     </div>
                   </ScrollReveal>
                 )}
 
-                <ScrollReveal delay={0.3}>
-                  <div className="mt-6 flex flex-col gap-3 sm:flex-row pt-4 border-t border-border/50">
-                    <Link
-                      className="inline-flex h-10 items-center justify-center rounded-[5px] bg-accent px-4 text-[13px] font-bold text-white transition-colors hover:bg-accent/90"
-                      href="/"
-                    >
-                      Bài viết mới nhất
-                    </Link>
-                    <Link
-                      className="inline-flex h-10 items-center justify-center rounded-[5px] border border-border px-4 text-[13px] font-bold text-text-primary transition-colors hover:bg-subtle-bg"
-                      href="/contributors"
-                    >
-                      Người đóng góp
-                    </Link>
-                  </div>
-                </ScrollReveal>
-
-
+                {!isEditing && (
+                  <ScrollReveal delay={0.3}>
+                    <div className="mt-6 flex flex-col gap-3 sm:flex-row pt-4 border-t border-border/50">
+                      <Link
+                        className="inline-flex h-10 items-center justify-center rounded-[5px] bg-accent px-4 text-[13px] font-bold text-white transition-colors hover:bg-accent/90"
+                        href="/"
+                      >
+                        Bài viết mới nhất
+                      </Link>
+                      <Link
+                        className="inline-flex h-10 items-center justify-center rounded-[5px] border border-border px-4 text-[13px] font-bold text-text-primary transition-colors hover:bg-subtle-bg"
+                        href="/contributors"
+                      >
+                        Người đóng góp
+                      </Link>
+                    </div>
+                  </ScrollReveal>
+                )}
               </div>
             </div>
           </div>

@@ -12,11 +12,14 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { TextReveal } from "@/components/ui/TextReveal"
 import { ScrollReveal } from "@/components/ui/ScrollReveal"
+import { cn } from "@/lib/utils"
+import { CoverImageUpload } from "@/components/posts/CoverImageUpload"
 
 interface IntroPageContent {
   body: JSONContent
   title: string
   shortIntro: string
+  coverUrl?: string
 }
 
 interface IntroToSakugaClientProps {
@@ -312,6 +315,7 @@ export function IntroToSakugaClient({ initialPage, isAdmin }: IntroToSakugaClien
     title: "Nhập môn Sakuga (作画)",
     shortIntro: "Hướng dẫn và tài liệu tham khảo hoàn chỉnh dành cho người mới bắt đầu.",
     body: (initialPage?.content as JSONContent) || defaultBody,
+    coverUrl: "https://picsum.photos/seed/sakugamascot/800/500",
   }
 
   const [data, setData] = useState(initialData)
@@ -378,10 +382,22 @@ export function IntroToSakugaClient({ initialPage, isAdmin }: IntroToSakugaClien
     }
   }
 
-  if (isEditing) {
-    return (
-      <div className="space-y-8 animate-in fade-in pb-20">
-        <div className="flex items-center justify-between sticky top-[56px] z-10 bg-background/90 backdrop-blur py-4 border-b border-border-default">
+  return (
+    <div className="min-h-screen flex flex-col pt-0 group relative">
+      {isAdmin && !isEditing && (
+        <Button
+          onClick={() => setIsEditing(true)}
+          className="absolute right-0 top-0 opacity-0 transition-opacity group-hover:opacity-100 z-10"
+          size="sm"
+          variant="outline"
+        >
+          <Pencil className="h-4 w-4 mr-2" />
+          Chỉnh sửa trang
+        </Button>
+      )}
+
+      {isEditing && (
+        <div className="fixed top-[56px] left-0 right-0 z-[100] flex items-center justify-between bg-background/90 backdrop-blur py-2 px-4 border-b border-border-default shadow-sm">
           <h2 className="text-sm font-semibold uppercase tracking-widest text-editorial">
             Chỉnh sửa trang Nhập môn Sakuga
           </h2>
@@ -408,76 +424,10 @@ export function IntroToSakugaClient({ initialPage, isAdmin }: IntroToSakugaClien
             </Button>
           </div>
         </div>
-
-        <div className="space-y-6 max-w-4xl mt-6">
-          <div>
-            <label className="block text-sm font-semibold text-text-primary mb-2">Tiêu đề chính</label>
-            <Textarea
-              value={data.title}
-              onChange={(e) =>
-                updateData((currentData) => ({
-                  ...currentData,
-                  title: e.target.value,
-                }))
-              }
-              className="text-2xl font-bold resize-none rounded-[16px] bg-background border-[2px]"
-              rows={2}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-text-primary mb-2">Mô tả ngắn</label>
-            <Textarea
-              value={data.shortIntro}
-              onChange={(e) =>
-                updateData((currentData) => ({
-                  ...currentData,
-                  shortIntro: e.target.value,
-                }))
-              }
-              className="text-base resize-none rounded-[16px] bg-background border-[2px]"
-              rows={3}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-text-primary mb-2">Nội dung hướng dẫn</label>
-            <div className="rounded-[16px] border-[2px] border-border-default p-4 md:pt-[44px] bg-background [&_.ProseMirror_p]:!mx-0 [&_.ProseMirror_ul]:!mx-0 [&_.ProseMirror_ol]:!mx-0 [&_.ProseMirror_p]:!max-w-none">
-              <TiptapEditor
-                content={data.body}
-                editable={true}
-                onEditorReady={handleEditorReady}
-                onChange={(json, text) => {
-                  updateData((currentData) => ({
-                    ...currentData,
-                    body: json,
-                  }))
-                  updateContentText(text)
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="min-h-screen flex flex-col pt-0 group relative">
-      {isAdmin && (
-        <Button
-          onClick={() => setIsEditing(true)}
-          className="absolute right-0 top-0 opacity-0 transition-opacity group-hover:opacity-100 z-10"
-          size="sm"
-          variant="outline"
-        >
-          <Pencil className="h-4 w-4 mr-2" />
-          Chỉnh sửa trang
-        </Button>
       )}
 
-      <main className="flex-1 w-full max-w-[800px] mx-auto pt-8 md:pt-16 pb-20 px-4 md:px-0">
-        <div className="bg-subtle-bg/80 backdrop-blur-sm border-[3px] border-border/60 rounded-[24px] p-6 md:p-12 shadow-xl relative isolate overflow-hidden">
+      <main className={cn("flex-1 w-full max-w-[800px] mx-auto pt-8 md:pt-16 pb-20 px-4 md:px-0", isEditing && "mt-[60px]")}>
+        <div className={cn("bg-subtle-bg/80 backdrop-blur-sm border-[3px] border-border/60 rounded-[24px] p-6 md:p-12 shadow-xl relative isolate overflow-hidden", isEditing && "border-editorial/40 shadow-editorial/10")}>
           <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-bl-[100px] -z-10" />
           <div className="absolute bottom-0 left-0 w-40 h-40 bg-accent/10 rounded-tr-[100px] -z-10" />
 
@@ -486,58 +436,99 @@ export function IntroToSakugaClient({ initialPage, isAdmin }: IntroToSakugaClien
             <div className="text-center mb-8">
               <ScrollReveal>
                 <div className="flex items-center justify-center gap-2 mb-4">
-                  <HelpCircle className="w-6 h-6 text-accent animate-pulse" />
-                  <h1 className="text-[32px] md:text-[40px] font-display font-bold text-text-primary leading-tight">
-                    <TextReveal className="text-accent" text={data.title} />
-                  </h1>
+                  <HelpCircle className="w-6 h-6 text-accent animate-pulse shrink-0" />
+                  {isEditing ? (
+                    <input
+                      className="w-full text-center border-none bg-transparent text-[32px] md:text-[40px] font-display font-bold text-text-primary leading-tight outline-none focus:ring-2 focus:ring-accent rounded-[8px] placeholder:text-text-tertiary"
+                      value={data.title}
+                      onChange={(e) => updateData(d => ({ ...d, title: e.target.value }))}
+                      placeholder="Tiêu đề trang..."
+                    />
+                  ) : (
+                    <h1 className="text-[32px] md:text-[40px] font-display font-bold text-text-primary leading-tight">
+                      <TextReveal className="text-accent" text={data.title} />
+                    </h1>
+                  )}
                 </div>
               </ScrollReveal>
-              {data.shortIntro && (
-                <ScrollReveal delay={0.1}>
+              
+              <ScrollReveal delay={0.1}>
+                {isEditing ? (
+                  <Textarea
+                    className="text-[15px] italic text-text-secondary border-t border-b border-border/50 py-3 mt-4 max-w-[600px] mx-auto text-center resize-none bg-transparent shadow-none focus-visible:ring-1 focus-visible:ring-accent rounded-none"
+                    value={data.shortIntro}
+                    onChange={(e) => updateData(d => ({ ...d, shortIntro: e.target.value }))}
+                    placeholder="Mô tả ngắn..."
+                    rows={2}
+                  />
+                ) : data.shortIntro ? (
                   <p className="text-[15px] italic text-text-secondary border-t border-b border-border/50 py-3 mt-4 max-w-[600px] mx-auto text-center">
                     {data.shortIntro}
                   </p>
-                </ScrollReveal>
-              )}
+                ) : null}
+              </ScrollReveal>
             </div>
 
             {/* Mascot Hero Card */}
             <ScrollReveal delay={0.2} className="w-full max-w-[480px] mx-auto mb-8">
-              <div className="relative aspect-[16/10] rounded-[16px] overflow-hidden border-4 border-white dark:border-border shadow-lg">
-                <img
-                  src="https://picsum.photos/seed/sakugamascot/800/500"
-                  alt="Mascot"
-                  className="object-cover w-full h-full"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute -bottom-4 -right-4 bg-accent text-white w-16 h-16 rounded-full flex items-center justify-center font-display font-bold shadow-md rotate-12">
-                  Start!
-                </div>
+              <div className="relative aspect-[16/10] rounded-[16px] overflow-hidden border-4 border-white dark:border-border shadow-lg bg-background">
+                {isEditing ? (
+                  <CoverImageUpload
+                    value={data.coverUrl || ""}
+                    onChange={(url) => updateData(d => ({ ...d, coverUrl: url }))}
+                  />
+                ) : (
+                  <img
+                    src={data.coverUrl || "https://picsum.photos/seed/sakugamascot/800/500"}
+                    alt="Mascot"
+                    className="object-cover w-full h-full"
+                    referrerPolicy="no-referrer"
+                  />
+                )}
+                {!isEditing && (
+                  <div className="absolute -bottom-4 -right-4 bg-accent text-white w-16 h-16 rounded-full flex items-center justify-center font-display font-bold shadow-md rotate-12">
+                    Start!
+                  </div>
+                )}
               </div>
             </ScrollReveal>
 
             {/* Main Content Column */}
-            <div className="space-y-4 text-[16px] text-text-secondary font-sans [&_.post-content]:!mx-0 [&_.post-content]:!max-w-none [&_.ProseMirror_p]:!mx-0 [&_.ProseMirror_ul]:!mx-0 [&_.ProseMirror_ol]:!mx-0 [&_.ProseMirror_p]:!max-w-none">
+            <div className={cn("space-y-4 text-[16px] text-text-secondary font-sans [&_.post-content]:!mx-0 [&_.post-content]:!max-w-none [&_.ProseMirror_p]:!mx-0 [&_.ProseMirror_ul]:!mx-0 [&_.ProseMirror_ol]:!mx-0 [&_.ProseMirror_p]:!max-w-none", isEditing && "bg-background rounded-[16px] p-4 border border-border-default")}>
               <ScrollReveal delay={0.3}>
-                <PostBody content={data.body} />
+                {isEditing ? (
+                  <TiptapEditor
+                    content={data.body}
+                    editable={true}
+                    onEditorReady={handleEditorReady}
+                    onChange={(json, text) => {
+                      updateData(d => ({ ...d, body: json }))
+                      updateContentText(text)
+                    }}
+                  />
+                ) : (
+                  <PostBody content={data.body} />
+                )}
               </ScrollReveal>
 
-              <ScrollReveal delay={0.4}>
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row justify-center pt-6 border-t border-border/50">
-                  <Link
-                    className="inline-flex h-10 items-center justify-center rounded-[5px] bg-accent px-4 text-[13px] font-bold text-white transition-colors hover:bg-accent/90"
-                    href="/"
-                  >
-                    Bài viết mới nhất
-                  </Link>
-                  <Link
-                    className="inline-flex h-10 items-center justify-center rounded-[5px] border border-border px-4 text-[13px] font-bold text-text-primary transition-colors hover:bg-subtle-bg"
-                    href="/resources"
-                  >
-                    Nguồn tham khảo
-                  </Link>
-                </div>
-              </ScrollReveal>
+              {!isEditing && (
+                <ScrollReveal delay={0.4}>
+                  <div className="mt-8 flex flex-col gap-3 sm:flex-row justify-center pt-6 border-t border-border/50">
+                    <Link
+                      className="inline-flex h-10 items-center justify-center rounded-[5px] bg-accent px-4 text-[13px] font-bold text-white transition-colors hover:bg-accent/90"
+                      href="/"
+                    >
+                      Bài viết mới nhất
+                    </Link>
+                    <Link
+                      className="inline-flex h-10 items-center justify-center rounded-[5px] border border-border px-4 text-[13px] font-bold text-text-primary transition-colors hover:bg-subtle-bg"
+                      href="/resources"
+                    >
+                      Nguồn tham khảo
+                    </Link>
+                  </div>
+                </ScrollReveal>
+              )}
             </div>
           </div>
         </div>

@@ -51,6 +51,7 @@ describe("ResourcesClient", () => {
             ],
             title: "Nguồn tham khảo",
           },
+          contentText: null,
         }}
         isAdmin
       />,
@@ -121,6 +122,7 @@ describe("ResourcesClient", () => {
             ],
             title: "Nguồn tham khảo",
           },
+          contentText: null,
         }}
         isAdmin={false}
       />,
@@ -163,6 +165,7 @@ describe("ResourcesClient", () => {
       <ResourcesClient
         appName="Anime Blog"
         initialPage={{
+          contentText: null,
           content: {
             description: "Useful links",
             resources: [
@@ -220,7 +223,7 @@ describe("ResourcesClient", () => {
     render(
       <ResourcesClient
         appName="Anime Blog"
-        initialPage={{ content: { resources: "invalid" } }}
+        initialPage={{ content: { resources: "invalid" }, contentText: null }}
         isAdmin={false}
       />,
     )
