@@ -172,4 +172,26 @@ describe("responsive visual effects", () => {
     expect(source).toContain("md:hidden")
     expect(source).toContain('data-testid="mobile-background-vignette"')
   })
+
+  it("keeps low-visual-impact mobile scroll work off the main scroll path", () => {
+    const backToTop = readFileSync(
+      join(process.cwd(), "components/ui/BackToTop.tsx"),
+      "utf8",
+    )
+    const scrollReveal = readFileSync(
+      join(process.cwd(), "components/ui/ScrollReveal.tsx"),
+      "utf8",
+    )
+    const carousel = readFileSync(
+      join(process.cwd(), "components/posts/HeroCarousel.tsx"),
+      "utf8",
+    )
+
+    expect(backToTop).toContain("requestAnimationFrame")
+    expect(backToTop).toContain("cancelAnimationFrame")
+    expect(scrollReveal).toContain("useReducedVisualEffects")
+    expect(carousel).toContain("IntersectionObserver")
+    expect(carousel).toContain("autoplay.stop()")
+    expect(carousel).toContain("autoplay.play()")
+  })
 })

@@ -2,6 +2,8 @@
 
 import { motion, type HTMLMotionProps } from 'motion/react';
 
+import { useReducedVisualEffects } from '@/hooks/useReducedVisualEffects';
+
 interface ScrollRevealProps extends HTMLMotionProps<'div'> {
   index?: number
   delay?: number
@@ -14,7 +16,17 @@ export function ScrollReveal({
   delay,
   ...props
 }: ScrollRevealProps) {
+  const shouldReduce = useReducedVisualEffects();
   const finalDelay = delay !== undefined ? delay : index * 0.1;
+
+  if (shouldReduce) {
+    return (
+      <motion.div className={className} initial={false} {...props}>
+        {children}
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       className={className}

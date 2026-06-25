@@ -30,7 +30,12 @@ function formatCarouselDate(post: HeroCarouselPost) {
 }
 
 export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
-  const plugins = React.useMemo(() => [Autoplay({ delay: 4000, stopOnInteraction: false })], []);
+  const rootRef = React.useRef<HTMLDivElement>(null);
+  const autoplay = React.useMemo(
+    () => Autoplay({ delay: 4000, stopOnInteraction: false }),
+    [],
+  );
+  const plugins = React.useMemo(() => [autoplay], [autoplay]);
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, plugins);
   const [selectedIndex, setSelectedIndex] = React.useState(0);
 
@@ -47,10 +52,32 @@ export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
     };
   }, [emblaApi]);
 
+  React.useEffect(() => {
+    const root = rootRef.current;
+    if (!root || !emblaApi) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          autoplay.play();
+        } else {
+          autoplay.stop();
+        }
+      },
+      { threshold: 0.05 },
+    );
+
+    observer.observe(root);
+    return () => observer.disconnect();
+  }, [autoplay, emblaApi]);
+
   if (!posts || posts.length === 0) return null;
 
   return (
-    <div className="relative w-full max-w-[1440px] auto mb-8 md:mb-12 mt-4 px-4 md:px-5">
+    <div
+      className="relative w-full max-w-[1440px] auto mb-8 md:mb-12 mt-4 px-4 md:px-5"
+      ref={rootRef}
+    >
       <div className="flex items-center gap-2 mb-4">
         <Sparkles className="w-5 h-5 text-accent animate-pulse" />
         <h2 className="text-[18px] font-bold tracking-tight">Featured Stories</h2>
