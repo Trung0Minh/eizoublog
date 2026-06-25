@@ -36,7 +36,7 @@ export function CompactPostList({
   return (
     <div className="space-y-4">
       <motion.div 
-        className="divide-y divide-border-default overflow-hidden rounded-[6px] border border-border-default bg-background"
+        className="flex flex-col gap-4"
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, margin: "-50px" }}
@@ -59,15 +59,15 @@ export function CompactPostList({
                 show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
               }}
               whileHover={{ y: -4 }}
-              className="glass-card grid grid-cols-[34px_80px_minmax(0,1fr)] gap-2 px-2 py-2 transition-colors hover:bg-subtle-bg/60 sm:grid-cols-[42px_120px_minmax(0,1fr)] sm:gap-3"
+              className="glass-card grid grid-cols-[24px_80px_minmax(0,1fr)] gap-3 p-4 transition-colors hover:bg-subtle-bg/60 sm:grid-cols-[32px_140px_minmax(0,1fr)] sm:gap-5 sm:p-5"
               key={post.slug}
             >
-              <div className="pt-1 text-center text-xs font-semibold text-text-tertiary">
+              <div className="pt-1.5 text-center text-sm font-semibold text-text-tertiary">
                 {index + 1}
               </div>
               <Link
                 aria-label={post.title}
-                className="block relative overflow-hidden rounded-[3px] border border-border-default bg-subtle-bg w-[80px] sm:w-[120px] aspect-[16/9]"
+                className="block relative overflow-hidden rounded-[8px] border border-border-default bg-subtle-bg w-[80px] sm:w-[140px] aspect-[16/9]"
                 href={`/${post.slug}`}
               >
                 {post.coverUrl ? (
@@ -95,7 +95,7 @@ export function CompactPostList({
                   </Link>
                   {post.category && (
                     <Link
-                      className="rounded-[3px] bg-subtle-bg px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.04em] text-accent"
+                      className="rounded-[4px] bg-subtle-bg px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.04em] text-accent border border-border-default/50"
                       href={`/category/${post.category.slug}`}
                     >
                       {post.category.name}

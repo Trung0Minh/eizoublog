@@ -71,7 +71,7 @@ export default async function NotificationsPage() {
       </div>
 
       <div className="space-y-8">
-        <ScrollReveal className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6" index={0}>
+        <ScrollReveal className="glass-card p-6" index={0}>
           <div className="mb-6 flex items-center justify-between gap-3">
             <h2 className="flex items-center gap-3 font-display text-lg font-semibold">
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/10 text-accent">
@@ -111,7 +111,7 @@ export default async function NotificationsPage() {
           </div>
         </ScrollReveal>
 
-        <ScrollReveal className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6" index={1}>
+        <ScrollReveal className="glass-card p-6" index={1}>
           <div className="mb-6 flex items-center justify-between gap-3">
             <h2 className="flex items-center gap-3 font-display text-lg font-semibold">
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/10 text-accent">
@@ -182,7 +182,7 @@ export default async function NotificationsPage() {
           </div>
         </ScrollReveal>
 
-        <ScrollReveal className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6" index={2}>
+        <ScrollReveal className="glass-card p-6" index={2}>
           <div className="mb-6 flex items-center justify-between gap-3">
             <h2 className="flex items-center gap-3 font-display text-lg font-semibold">
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/10 text-accent">
