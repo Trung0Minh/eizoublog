@@ -388,23 +388,6 @@ export function PostEditor({
       </div>
 
       <main className="relative flex w-full min-h-0 flex-1 overflow-hidden bg-transparent">
-        {/* Float Toggle Button */}
-        <button
-          aria-label={isSettingsOpen ? "Đóng cài đặt" : "Mở cài đặt"}
-          className={cn(
-            "hidden lg:flex fixed top-1/2 -translate-y-1/2 z-[60] h-10 w-10 items-center justify-center rounded-full border border-border-default bg-card/60 backdrop-blur-md shadow-glass text-text-secondary transition-all duration-300 hover:bg-card hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-            isSettingsOpen ? "left-[336px] xl:left-[376px]" : "left-4"
-          )}
-          onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-        >
-          <motion.div
-            animate={{ rotate: isSettingsOpen ? 0 : 180 }}
-            transition={{ duration: 0.3, ease: "anticipate" }}
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </motion.div>
-        </button>
-
         <AnimatePresence initial={false}>
           {isSettingsOpen && (
             <motion.aside
@@ -579,6 +562,22 @@ export function PostEditor({
             </motion.aside>
           )}
         </AnimatePresence>
+
+        {/* Robust zero-width tracker for the toggle button */}
+        <div className="hidden lg:flex w-0 relative h-full items-center z-[60]">
+          <button
+            aria-label={isSettingsOpen ? "Đóng cài đặt" : "Mở cài đặt"}
+            className="absolute left-4 h-10 w-10 flex items-center justify-center rounded-full border border-border-default bg-card/60 backdrop-blur-md shadow-glass text-text-secondary transition-all duration-300 hover:bg-card hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+          >
+            <motion.div
+              animate={{ rotate: isSettingsOpen ? 0 : 180 }}
+              transition={{ duration: 0.3, ease: "anticipate" }}
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </motion.div>
+          </button>
+        </div>
 
         <div className="min-w-0 flex-1 w-full h-full overflow-y-auto">
           <div 
