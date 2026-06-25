@@ -380,7 +380,7 @@ export function PostEditor({
           <span className="text-text-tertiary">Đang lưu...</span>
         ) : saveStatus === "idle" ? (
           <span className="text-text-tertiary">
-            {canSave ? autosaveHint : "Thêm tiêu đề để lưu"}
+            {canSave ? "Đã lưu" : "Thêm tiêu đề để lưu"}
           </span>
         ) : (
           <SaveStatusIndicator status={saveStatus} />
@@ -393,7 +393,7 @@ export function PostEditor({
           aria-label={isSettingsOpen ? "Đóng cài đặt" : "Mở cài đặt"}
           className={cn(
             "hidden lg:flex fixed top-1/2 -translate-y-1/2 z-[60] h-10 w-10 items-center justify-center rounded-full border border-border-default bg-card/60 backdrop-blur-md shadow-glass text-text-secondary transition-all duration-300 hover:bg-card hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-            isSettingsOpen ? "left-[320px] xl:left-[360px] -translate-x-1/2" : "left-4 translate-x-0"
+            isSettingsOpen ? "left-[336px] xl:left-[376px]" : "left-4"
           )}
           onClick={() => setIsSettingsOpen(!isSettingsOpen)}
         >
