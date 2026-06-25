@@ -36,7 +36,7 @@ describe("EditorTopBar", () => {
       "href",
       "/dashboard",
     )
-    expect(screen.getByText("Saved")).toBeVisible()
+    expect(screen.getByText("Đã lưu")).toBeVisible()
 
     await user.click(screen.getByRole("button", { name: /Lưu nháp/ }))
     await user.click(screen.getByRole("button", { name: "Xuất bản" }))

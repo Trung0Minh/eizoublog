@@ -6,9 +6,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { AvatarUpload } from "@/components/profile/AvatarUpload"
 import { ProfileForm } from "@/components/profile/ProfileForm"
 
+interface CropArea {
+  height: number
+  width: number
+  x: number
+  y: number
+}
+
 vi.mock("react-easy-crop", () => ({
   __esModule: true,
-  default: ({ onCropComplete }: { onCropComplete: (area: any, pixels: any) => void }) => {
+  default: function MockCropper({
+    onCropComplete,
+  }: {
+    onCropComplete: (area: CropArea, pixels: CropArea) => void
+  }) {
     useEffect(() => {
       onCropComplete(
         { x: 0, y: 0, width: 100, height: 100 },
@@ -17,7 +28,7 @@ vi.mock("react-easy-crop", () => ({
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
     return <div data-testid="mock-cropper" />
-  }
+  },
 }))
 
 vi.mock("@/components/editor/TiptapEditor", () => ({
@@ -157,7 +168,7 @@ describe("AvatarUpload", () => {
     )
 
     OriginalImage = global.Image
-    global.Image = class extends OriginalImage {
+    const MockImage = class extends OriginalImage {
       constructor() {
         super()
         setTimeout(() => {
@@ -166,20 +177,25 @@ describe("AvatarUpload", () => {
           }
         }, 10)
       }
-    } as any
+    }
+    global.Image = MockImage as typeof Image
 
     // Stub canvas.getContext to return mock 2d context
-    HTMLCanvasElement.prototype.getContext = function (type) {
-      if (type === "2d") {
+    const getContextMock: HTMLCanvasElement["getContext"] = function (
+      this: HTMLCanvasElement,
+      contextId: string,
+    ) {
+      if (contextId === "2d") {
         return {
           beginPath: () => {},
           arc: () => {},
           clip: () => {},
           drawImage: () => {},
-        } as any
+        } as unknown as CanvasRenderingContext2D
       }
       return null
-    }
+    } as HTMLCanvasElement["getContext"]
+    HTMLCanvasElement.prototype.getContext = getContextMock
 
     // Stub canvas.toBlob to invoke the callback with a mock Blob
     HTMLCanvasElement.prototype.toBlob = function (callback) {

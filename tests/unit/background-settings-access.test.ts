@@ -26,7 +26,13 @@ vi.mock("@/lib/prisma", () => ({
   },
 }))
 
-vi.mock("next/cache", () => ({ revalidateTag: mocks.revalidateTag }))
+vi.mock("next/cache", () => ({
+  revalidateTag: mocks.revalidateTag,
+  unstable_cache:
+    <Args extends unknown[], Result>(fn: (...args: Args) => Result) =>
+    (...args: Args) =>
+      fn(...args),
+}))
 
 import { GET, POST } from "@/app/api/admin/settings/backgrounds/route"
 

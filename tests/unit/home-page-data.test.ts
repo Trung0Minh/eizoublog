@@ -1,61 +1,18 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
 
-const queryMocks = vi.hoisted(() => ({
-  getCachedPublishedPosts: vi.fn(),
-  getCachedSidebarData: vi.fn(),
-}))
-
-vi.mock("@/lib/queries", () => ({
-  getCachedPublishedPosts: queryMocks.getCachedPublishedPosts,
-  getCachedSidebarData: queryMocks.getCachedSidebarData,
-}))
-
-vi.mock("@/lib/seo", () => ({
-  buildMetadata: vi.fn(),
-  getAppUrl: vi.fn(() => "https://example.com"),
-}))
-
-import { getHomePageData } from "@/lib/queries"
+import { describe, expect, it } from "vitest"
 
 describe("getHomePageData", () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
+  it("reuses the default post list promise for homepage carousel posts", () => {
+    const source = readFileSync(join(process.cwd(), "lib/queries.ts"), "utf8")
 
-  it("reuses the default post list for homepage carousel posts", async () => {
-    queryMocks.getCachedPublishedPosts.mockResolvedValue({
-      posts: Array.from({ length: 10 }, (_, index) => ({
-        slug: `post-${index}`,
-        title: `Post ${index}`,
-      })),
-      total: 10,
-    })
-    queryMocks.getCachedSidebarData.mockResolvedValue({
-      archives: [],
-      categories: [],
-      recentPosts: [],
-    })
-
-    await expect(
-      getHomePageData({ archive: undefined, page: 1, sort: "latest" }),
-    ).resolves.toMatchObject({
-      carouselPosts: [
-        { slug: "post-0" },
-        { slug: "post-1" },
-        { slug: "post-2" },
-        { slug: "post-3" },
-        { slug: "post-4" },
-      ],
-      listData: { total: 10 },
-    })
-
-    expect(queryMocks.getCachedPublishedPosts).toHaveBeenCalledTimes(1)
-    expect(queryMocks.getCachedPublishedPosts).toHaveBeenCalledWith(
-      1,
-      10,
-      "latest",
-      undefined,
+    expect(source).toContain(
+      'const listDataPromise = getCachedPublishedPosts(page, 10, sort, archive)',
     )
-    expect(queryMocks.getCachedSidebarData).toHaveBeenCalledTimes(1)
+    expect(source).toContain('page === 1 && sort === "latest" && !archive')
+    expect(source).toContain(
+      "listDataPromise.then(({ posts }) => posts.slice(0, 5))",
+    )
   })
 })

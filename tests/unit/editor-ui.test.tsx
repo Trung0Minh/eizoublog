@@ -8,41 +8,36 @@ import {
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-vi.mock("motion/react", () => {
-  const React = require("react")
-  const motionProxy = new Proxy({}, {
-    get: (_target, prop) => {
-      return React.forwardRef(({ children, ...props }: any, ref: any) => {
-        const {
-          initial,
-          animate,
-          exit,
-          transition,
-          variants,
-          whileHover,
-          whileTap,
-          viewport,
-          ...htmlProps
-        } = props
-        const tag = typeof prop === "string" ? prop : "div"
-        return React.createElement(tag, { ref, ...htmlProps }, children)
-      })
-    }
-  })
-  return {
-    motion: motionProxy,
-    AnimatePresence: ({ children }: any) => <>{children}</>,
-  }
-})
-
 interface MockPostImage {
   alt: string
   caption?: string
   src: string
 }
 
+interface PresignedUploadFile {
+  name: string
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null
+}
+
+function getPresignedUploadFiles(init?: RequestInit): PresignedUploadFile[] {
+  if (typeof init?.body !== "string") {
+    return []
+  }
+
+  const parsed: unknown = JSON.parse(init.body)
+
+  if (!isRecord(parsed) || !Array.isArray(parsed.files)) {
+    return []
+  }
+
+  return parsed.files.flatMap((file) =>
+    isRecord(file) && typeof file.name === "string"
+      ? [{ name: file.name }]
+      : [],
+  )
 }
 
 function readGalleryImages(value: unknown): MockPostImage[] {
@@ -195,16 +190,15 @@ describe("MediaUpload", () => {
     vi.clearAllMocks()
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockImplementation((url, init) => {
+      vi.fn().mockImplementation((url: string | URL, init?: RequestInit) => {
         if (url === "/api/upload/presigned") {
-          const body = JSON.parse(init?.body || "{}")
-          const files = body.files || []
+          const files = getPresignedUploadFiles(init)
           return Promise.resolve(new Response(
             JSON.stringify({
               data: {
-                files: files.map((f: any) => ({
-                  uploadUrl: `https://example.com/upload/${f.name}`,
-                  publicUrl: `https://cdn.example.com/content-images/${f.name}`,
+                files: files.map((file) => ({
+                  uploadUrl: `https://example.com/upload/${file.name}`,
+                  publicUrl: `https://cdn.example.com/content-images/${file.name}`,
                 })),
               },
             }),
@@ -224,7 +218,7 @@ describe("MediaUpload", () => {
       onload: (() => void) | null = null
       open = vi.fn()
       setRequestHeader = vi.fn()
-      send = vi.fn(function (this: any) {
+      send = vi.fn(function (this: MockXMLHttpRequest) {
         setTimeout(() => {
           this.status = 200
           this.onload?.()
@@ -312,16 +306,15 @@ describe("EditorToolbar", () => {
     vi.clearAllMocks()
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockImplementation((url, init) => {
+      vi.fn().mockImplementation((url: string | URL, init?: RequestInit) => {
         if (url === "/api/upload/presigned") {
-          const body = JSON.parse(init?.body || "{}")
-          const files = body.files || []
+          const files = getPresignedUploadFiles(init)
           return Promise.resolve(new Response(
             JSON.stringify({
               data: {
-                files: files.map((f: any) => ({
-                  uploadUrl: `https://example.com/upload/${f.name}`,
-                  publicUrl: `https://cdn.example.com/content-images/${f.name}`,
+                files: files.map((file) => ({
+                  uploadUrl: `https://example.com/upload/${file.name}`,
+                  publicUrl: `https://cdn.example.com/content-images/${file.name}`,
                 })),
               },
             }),
@@ -499,7 +492,7 @@ describe("EditorToolbar", () => {
     expect(promptSpy).not.toHaveBeenCalled()
 
     await user.type(input, "https://example.com/source")
-    await user.click(screen.getByRole("button", { name: "Apply" }))
+    await user.click(screen.getByRole("button", { name: "Áp dụng" }))
 
     expect(chain.setLink).toHaveBeenCalledWith({
       href: "https://example.com/source",
@@ -536,12 +529,12 @@ describe("VideoEmbedModal", () => {
     render(<VideoEmbedModal onClose={vi.fn()} onInsert={onInsert} />)
 
     await user.type(
-      screen.getByRole("textbox", { name: /Video URL/ }),
+      screen.getByRole("textbox", { name: /Đường dẫn video/ }),
       " https://youtu.be/dQw4w9WgXcQ ",
     )
 
     expect(screen.queryByRole("textbox", { name: /Caption/ })).not.toBeInTheDocument()
-    await user.click(screen.getByRole("button", { name: "Insert" }))
+    await user.click(screen.getByRole("button", { name: "Chèn" }))
 
     expect(onInsert).toHaveBeenCalledWith(
       "https://youtu.be/dQw4w9WgXcQ",
@@ -566,7 +559,7 @@ describe("LinkEditModal", () => {
     expect(input).toHaveValue("")
 
     await user.type(input, " https://example.com/source ")
-    await user.click(screen.getByRole("button", { name: "Apply" }))
+    await user.click(screen.getByRole("button", { name: "Áp dụng" }))
 
     expect(onSubmit).toHaveBeenCalledWith("https://example.com/source")
   })

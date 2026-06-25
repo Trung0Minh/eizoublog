@@ -34,7 +34,13 @@ vi.mock("@/lib/resend", () => ({
   sendInviteEmail: mocks.sendInviteEmail,
   sendPasswordResetEmail: mocks.sendPasswordResetEmail,
 }))
-vi.mock("next/cache", () => ({ revalidateTag: mocks.revalidateTag }))
+vi.mock("next/cache", () => ({
+  revalidateTag: mocks.revalidateTag,
+  unstable_cache:
+    <Args extends unknown[], Result>(fn: (...args: Args) => Result) =>
+    (...args: Args) =>
+      fn(...args),
+}))
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     invite: {

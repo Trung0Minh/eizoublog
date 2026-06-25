@@ -611,7 +611,7 @@ describe("Sidebar", () => {
 })
 
 describe("MobileNav", () => {
-  it("opens a drawer containing navigation links and inline search", async () => {
+  it("opens a drawer containing navigation links and community link", async () => {
     const user = userEvent.setup()
     render(
       <MobileNav
@@ -630,9 +630,13 @@ describe("MobileNav", () => {
     expect(
       screen.getByText("Duyệt các trang ấn phẩm và tìm kiếm bài viết."),
     ).toBeInTheDocument()
-    expect(screen.getByRole("searchbox", { name: "Tìm kiếm bài viết" })).toHaveAttribute(
-      "placeholder",
-      "Tìm kiếm bài viết...",
+    expect(screen.getByRole("link", { name: "Contributors" })).toHaveAttribute(
+      "href",
+      "/contributors",
+    )
+    expect(screen.getByRole("link", { name: "Tham gia Discord" })).toHaveAttribute(
+      "href",
+      "https://discord.gg/wgCr86Cdb",
     )
     expect(screen.getByRole("button", { name: "Close" })).toHaveClass(
       "h-8",

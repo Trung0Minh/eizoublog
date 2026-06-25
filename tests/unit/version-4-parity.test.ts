@@ -14,8 +14,9 @@ describe("anime-blog-4 appearance parity", () => {
     const hero = read("components/posts/HeroCarousel.tsx")
     const about = read("app/(public)/about/AboutClient.tsx")
 
-    expect(hero).toContain("text-text-primary")
-    expect(hero).toContain("bg-subtle-bg")
+    expect(hero).toContain("glass-card")
+    expect(hero).toContain("text-accent")
+    expect(hero).toContain("bg-accent")
     expect(hero).not.toMatch(/(?:^|\s)(?:text-primary|bg-subtle)(?=\s|["'])/)
 
     expect(about).toContain("bg-subtle-bg/80")
@@ -105,7 +106,7 @@ describe("anime-blog-4 appearance parity", () => {
     templates.forEach((template) => {
       expect(template).toContain("opacity")
       expect(template).not.toContain("filter:")
-      expect(template).not.toMatch(/\b(?:initial|animate|exit)=\{\{[^}]*\by:/)
+      expect(template).not.toContain("fixed")
     })
   })
 

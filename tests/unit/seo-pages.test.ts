@@ -22,6 +22,9 @@ const mocks = vi.hoisted(() => ({
 }))
 
 vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }))
+vi.mock("@/lib/authz", () => ({
+  getActiveSession: vi.fn(() => null),
+}))
 vi.mock("@/lib/queries", () => ({
   getCachedAuthorByUsername: mocks.getCachedAuthorByUsername,
   getCachedCategoryBySlug: mocks.getCachedCategoryBySlug,

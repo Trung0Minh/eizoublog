@@ -1,8 +1,21 @@
 import "@testing-library/jest-dom/vitest"
 
+import React from "react"
 import { afterAll, afterEach, beforeAll, vi } from "vitest"
 
 import { server } from "./mocks/server"
+
+type MotionElementProps = React.HTMLAttributes<HTMLElement> & {
+  animate?: unknown
+  exit?: unknown
+  initial?: unknown
+  transition?: unknown
+  variants?: unknown
+  viewport?: unknown
+  whileHover?: unknown
+  whileInView?: unknown
+  whileTap?: unknown
+}
 
 // Mock Google Fonts
 vi.mock("next/font/google", () => ({
@@ -11,28 +24,41 @@ vi.mock("next/font/google", () => ({
   Inter: () => ({ variable: "--font-inter" }),
   Lora: () => ({ variable: "--font-lora" }),
 }))
+vi.mock("next/cache", () => ({
+  revalidatePath: vi.fn(),
+  revalidateTag: vi.fn(),
+  unstable_cache:
+    <Args extends unknown[], Result>(fn: (...args: Args) => Result) =>
+    (...args: Args) =>
+      fn(...args),
+}))
 vi.mock("motion/react", () => {
-  const React = require("react")
-  const componentCache: Record<string, any> = {}
+  const componentCache: Record<
+    string,
+    React.ForwardRefExoticComponent<
+      MotionElementProps & React.RefAttributes<HTMLElement>
+    >
+  > = {}
   const motionProxy = new Proxy({}, {
     get: (_target, prop) => {
       if (typeof prop !== "string") return undefined
       if (!componentCache[prop]) {
-        componentCache[prop] = React.forwardRef(({ children, ...props }: any, ref: any) => {
-          const {
-            initial,
-            animate,
-            exit,
-            transition,
-            variants,
-            whileHover,
-            whileTap,
-            viewport,
-            whileInView,
-            ...htmlProps
-          } = props
+        const MotionComponent = React.forwardRef<HTMLElement, MotionElementProps>(
+          ({ children, ...props }, ref) => {
+          const htmlProps = { ...props }
+          delete htmlProps.animate
+          delete htmlProps.exit
+          delete htmlProps.initial
+          delete htmlProps.transition
+          delete htmlProps.variants
+          delete htmlProps.viewport
+          delete htmlProps.whileHover
+          delete htmlProps.whileInView
+          delete htmlProps.whileTap
           return React.createElement(prop, { ref, ...htmlProps }, children)
         })
+        MotionComponent.displayName = `Motion.${prop}`
+        componentCache[prop] = MotionComponent
       }
       return componentCache[prop]
     }
@@ -46,14 +72,15 @@ vi.mock("motion/react", () => {
   }
   return {
     motion: motionProxy,
-    AnimatePresence: ({ children }: any) => React.createElement(React.Fragment, null, children),
+    AnimatePresence: ({ children }: { children: React.ReactNode }) =>
+      React.createElement(React.Fragment, null, children),
     useScroll: () => ({
       scrollY: dummyMotionValue,
       scrollYProgress: dummyMotionValue,
     }),
     useTransform: () => dummyMotionValue,
     useSpring: () => dummyMotionValue,
-    useMotionValue: (initial: any) => ({
+    useMotionValue: (initial: unknown) => ({
       ...dummyMotionValue,
       get: () => initial,
     }),

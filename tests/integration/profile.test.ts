@@ -8,7 +8,13 @@ const mocks = vi.hoisted(() => ({
 }))
 
 vi.mock("@/lib/auth", () => ({ auth: mocks.auth }))
-vi.mock("next/cache", () => ({ revalidateTag: mocks.revalidateTag }))
+vi.mock("next/cache", () => ({
+  revalidateTag: mocks.revalidateTag,
+  unstable_cache:
+    <Args extends unknown[], Result>(fn: (...args: Args) => Result) =>
+    (...args: Args) =>
+      fn(...args),
+}))
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     user: {

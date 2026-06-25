@@ -156,7 +156,7 @@ describe("responsive visual effects", () => {
     )
 
     expect(source).not.toContain("-z-50")
-    expect(source).not.toContain("initial={{ opacity: 0 }}")
+    expect(source).toContain('className="fixed inset-0 z-0')
     expect(source).toContain("initial={false}")
   })
 })
