@@ -59,10 +59,9 @@ export function EditorTopBar({
   const statusText = canSave
     ? autosaveHint
     : "Thêm tiêu đề để có thể lưu và xuất bản."
-
   return (
-    <header className="fixed left-0 right-0 top-0 z-[100] h-14 border-b border-border-default/60 bg-background/80 backdrop-blur-md px-5">
-      <div className="flex h-full items-center justify-between gap-3">
+    <header className="fixed left-0 right-0 top-0 z-[100] pt-4 pb-4 bg-transparent pointer-events-none">
+      <div className="glass-navbar mx-auto flex h-14 w-[calc(100%-2rem)] max-w-[1440px] items-center justify-between gap-3 px-4 md:px-6 lg:px-8 rounded-full border border-border-default/60 bg-background/80 backdrop-blur-md shadow-glass pointer-events-auto">
         <Link
           className="group flex items-center gap-1.5 text-text-secondary transition-colors hover:text-accent"
           href={exitHref}

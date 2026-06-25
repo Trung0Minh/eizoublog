@@ -9,6 +9,7 @@ import {
   TiptapEditor,
   type JSONContent,
 } from "@/components/editor/TiptapEditor"
+import { AnimatePresence, motion } from "framer-motion"
 import { Textarea } from "@/components/ui/textarea"
 import { CoverImageUpload } from "@/components/posts/CoverImageUpload"
 import { TagInput, type TagOption } from "@/components/posts/TagInput"
@@ -364,7 +365,7 @@ export function PostEditor({
         titlePreview={title}
       />
 
-      <main className="relative mt-14 flex w-full min-h-0 flex-1 overflow-hidden bg-transparent">
+      <main className="relative pt-[88px] flex w-full min-h-0 flex-1 overflow-hidden bg-transparent">
         <button
           aria-label={isSettingsOpen ? "Đóng cài đặt" : "Mở cài đặt"}
           className={cn(
@@ -375,17 +376,26 @@ export function PostEditor({
           )}
           onClick={() => setIsSettingsOpen(!isSettingsOpen)}
         >
-          {isSettingsOpen ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+          <motion.div
+            animate={{ rotate: isSettingsOpen ? 0 : 180 }}
+            transition={{ duration: 0.3, ease: "anticipate" }}
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </motion.div>
         </button>
-        <aside
-          className={cn(
-            "w-full shrink-0 overflow-y-auto border-r border-border-default/40 bg-card/30 backdrop-blur-xl px-5 py-6 shadow-glass transition-all lg:w-[320px] xl:w-[360px]",
-            isSettingsOpen ? "flex fixed inset-y-0 left-0 z-50 pt-16 flex-col lg:static lg:pt-6" : "hidden"
-          )}
-          id="post-settings-panel"
-        >
+
+        <AnimatePresence initial={false}>
           {isSettingsOpen && (
-            <>
+            <motion.aside
+              initial={{ width: 0, opacity: 0, x: -50 }}
+              animate={{ width: "auto", opacity: 1, x: 0 }}
+              exit={{ width: 0, opacity: 0, x: -50 }}
+              transition={{ duration: 0.3, ease: "anticipate" }}
+              className="z-50 shrink-0 overflow-y-auto border-r border-border-default/40 bg-card/30 backdrop-blur-xl shadow-glass flex fixed inset-y-0 left-0 pt-[88px] flex-col lg:static lg:pt-6 w-full lg:w-[320px] xl:w-[360px]"
+              id="post-settings-panel"
+            >
+              <div className="px-5 py-6 min-w-[320px] xl:min-w-[360px]">
+
               <div className="mb-6 flex items-center justify-between gap-4 lg:mb-8">
                 <div>
                   <h2 className="text-[13px] font-bold uppercase tracking-widest text-text-primary">
@@ -546,9 +556,10 @@ export function PostEditor({
                     )}
 
                   </div>
-            </>
+              </div>
+            </motion.aside>
           )}
-        </aside>
+        </AnimatePresence>
 
         <div className="min-w-0 flex-1 w-full h-full overflow-y-auto">
           <div 
@@ -564,7 +575,7 @@ export function PostEditor({
             )}
 
             <section
-              className="relative w-full bg-transparent sm:bg-subtle-bg sm:backdrop-blur-md rounded-[8px] sm:border border-transparent sm:border-border-default mb-8 md:mb-12 z-30 overflow-hidden"
+              className="relative w-full bg-transparent sm:bg-subtle-bg sm:backdrop-blur-md rounded-[8px] sm:border border-transparent sm:border-border-default mb-8 md:mb-12 z-30"
               data-testid="editor-writing-surface"
             >
               <div className="px-0 py-4 sm:p-8 md:p-12">
