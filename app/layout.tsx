@@ -87,7 +87,7 @@ export default async function RootLayout({
                   .find((entry) => entry.indexOf('particleEffects=') === 0)
                   ?.split('=')[1];
                 if (particles !== 'on' && particles !== 'off') {
-                  particles = window.matchMedia('(pointer: coarse)').matches ? 'off' : 'on';
+                  particles = 'on';
                 }
                 if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
                   particles = 'off';

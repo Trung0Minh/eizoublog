@@ -29,7 +29,7 @@ function getDefaultParticleState() {
   const storedPreference = readParticleCookie()
   if (storedPreference !== null) return storedPreference
 
-  return !window.matchMedia("(pointer: coarse)").matches
+  return true
 }
 
 export function useParticleEffects() {

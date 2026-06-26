@@ -3,7 +3,6 @@
 import { motion, AnimatePresence, type Variants } from "motion/react"
 import { ChevronDown } from "lucide-react"
 import { useEffect, useState, useSyncExternalStore } from "react"
-import { useReducedVisualEffects } from "@/hooks/useReducedVisualEffects"
 import { getDocumentSeason } from "@/lib/appearanceSession"
 
 interface HomeIntroProps {
@@ -89,7 +88,6 @@ export function HomeIntro({ appName }: HomeIntroProps) {
     () => true,
     () => false,
   )
-  const shouldReduce = useReducedVisualEffects()
 
   useEffect(() => {
     const updateSeason = () => {
@@ -127,30 +125,18 @@ export function HomeIntro({ appName }: HomeIntroProps) {
           className="text-center"
         >
           <h1 className={`text-5xl sm:text-6xl md:text-8xl drop-shadow-[0_4px_20px_rgba(0,0,0,0.6)] mb-6 ${config.titleFont} ${config.textColor}`}>
-            {shouldReduce ? (
-              <motion.span variants={config.item} className="inline-block">
-                {appName}
+            {appName.split("").map((char, i) => (
+              <motion.span key={`title-${i}`} variants={config.item} className="inline-block whitespace-pre">
+                {char}
               </motion.span>
-            ) : (
-              appName.split("").map((char, i) => (
-                <motion.span key={`title-${i}`} variants={config.item} className="inline-block whitespace-pre">
-                  {char}
-                </motion.span>
-              ))
-            )}
+            ))}
           </h1>
           <p className={`text-lg md:text-2xl drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] ${config.subFont} ${config.textColor} opacity-90`}>
-            {shouldReduce ? (
-              <motion.span variants={config.item} className="inline-block">
-                {config.subtitle}
+            {config.subtitle.split("").map((char, i) => (
+              <motion.span key={`sub-${i}`} variants={config.item} className="inline-block whitespace-pre">
+                {char}
               </motion.span>
-            ) : (
-              config.subtitle.split("").map((char, i) => (
-                <motion.span key={`sub-${i}`} variants={config.item} className="inline-block whitespace-pre">
-                  {char}
-                </motion.span>
-              ))
-            )}
+            ))}
           </p>
         </motion.div>
       </AnimatePresence>

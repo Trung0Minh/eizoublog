@@ -72,9 +72,8 @@ export function DynamicBackground({
     }
   }, [])
 
-  // Preload all 8 background images on every device so season switches are
-  // always smooth. On mobile we defer by 2 s to avoid competing with the
-  // initial paint; on desktop we start immediately.
+  // Preload all 8 background images immediately on every device so season
+  // switches are always smooth.
   useEffect(() => {
     if (typeof window === "undefined") return
 
@@ -92,14 +91,8 @@ export function DynamicBackground({
       })
     }
 
-    if (shouldReduce) {
-      // Mobile: defer preloading so it doesn't compete with first paint
-      const timer = setTimeout(preload, 2000)
-      return () => clearTimeout(timer)
-    } else {
-      preload()
-    }
-  }, [customBackgrounds, shouldReduce])
+    preload()
+  }, [customBackgrounds])
 
   if (!mounted) return null
 
@@ -111,9 +104,7 @@ export function DynamicBackground({
   const bgSrc = bgUrl.split("?")[0]
   const backgroundFilter = isHome
     ? "none"
-    : shouldReduce
-      ? "none"
-      : "blur(6px)"
+    : "blur(6px)"
 
   const isHomeContentVisible = isHome && homeContentActive
 
