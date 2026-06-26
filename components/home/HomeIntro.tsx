@@ -26,7 +26,7 @@ const seasonConfigs: Record<Season, SeasonConfig> = {
   spring: {
     titleFont: "font-serif italic tracking-tight font-medium",
     subFont: "font-sans font-medium",
-    subtitle: "A Season of New Beginnings",
+    subtitle: "Mùa của những khởi đầu mới",
     container: {
       hidden: { opacity: 0 },
       visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.2 } },
@@ -40,7 +40,7 @@ const seasonConfigs: Record<Season, SeasonConfig> = {
   summer: {
     titleFont: "font-display uppercase tracking-[0.2em] font-black",
     subFont: "font-mono text-sm tracking-widest uppercase",
-    subtitle: "Vibrant Summer Adventures",
+    subtitle: "Những chuyến phiêu lưu mùa hạ",
     container: {
       hidden: { opacity: 0 },
       visible: { opacity: 1, transition: { staggerChildren: 0.05, delayChildren: 0.2 } },
@@ -54,7 +54,7 @@ const seasonConfigs: Record<Season, SeasonConfig> = {
   autumn: {
     titleFont: "font-serif font-bold tracking-normal",
     subFont: "font-serif italic",
-    subtitle: "Falling into Beautiful Stories",
+    subtitle: "Rơi vào những câu chuyện đẹp",
     container: {
       hidden: { opacity: 0 },
       visible: { opacity: 1, transition: { staggerChildren: 0.06, delayChildren: 0.2 } },
@@ -68,7 +68,7 @@ const seasonConfigs: Record<Season, SeasonConfig> = {
   winter: {
     titleFont: "font-sans font-light tracking-[0.1em]",
     subFont: "font-sans font-light tracking-widest",
-    subtitle: "A Quiet Winter Escape",
+    subtitle: "Một chốn trốn yên tĩnh mùa đông",
     container: {
       hidden: { opacity: 0 },
       visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.2 } },
@@ -109,6 +109,9 @@ export function HomeIntro({ appName }: HomeIntroProps) {
   if (!mounted) return <div className="w-full h-[calc(100dvh-70px)]" />
 
   const config = seasonConfigs[season]
+  const titleSizeClass = season === "summer"
+    ? "text-[2.35rem] sm:text-6xl md:text-8xl"
+    : "text-5xl sm:text-6xl md:text-8xl"
 
   return (
     <div
@@ -124,7 +127,7 @@ export function HomeIntro({ appName }: HomeIntroProps) {
           exit="hidden"
           className="text-center"
         >
-          <h1 className={`text-5xl sm:text-6xl md:text-8xl drop-shadow-[0_4px_20px_rgba(0,0,0,0.6)] mb-6 ${config.titleFont} ${config.textColor}`}>
+          <h1 className={`${titleSizeClass} whitespace-nowrap drop-shadow-[0_4px_20px_rgba(0,0,0,0.6)] mb-6 ${config.titleFont} ${config.textColor}`}>
             {appName.split("").map((char, i) => (
               <motion.span key={`title-${i}`} variants={config.item} className="inline-block whitespace-pre">
                 {char}
