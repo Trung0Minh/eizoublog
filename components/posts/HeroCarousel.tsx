@@ -5,6 +5,7 @@ import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
 import Link from 'next/link';
 import { Sparkles } from 'lucide-react';
+import { useReducedVisualEffects } from '@/hooks/useReducedVisualEffects';
 
 interface HeroCarouselPost {
   category: { name: string } | null
@@ -31,8 +32,9 @@ function formatCarouselDate(post: HeroCarouselPost) {
 
 export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
   const rootRef = React.useRef<HTMLDivElement>(null);
+  const shouldReduce = useReducedVisualEffects();
   const autoplay = React.useMemo(
-    () => Autoplay({ delay: 4000, stopOnInteraction: false }),
+    () => Autoplay({ delay: 4000, playOnInit: false, stopOnInteraction: false }),
     [],
   );
   const plugins = React.useMemo(() => [autoplay], [autoplay]);
@@ -55,6 +57,10 @@ export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
   React.useEffect(() => {
     const root = rootRef.current;
     if (!root || !emblaApi) return;
+    if (shouldReduce) {
+      autoplay.stop();
+      return;
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -69,13 +75,13 @@ export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
 
     observer.observe(root);
     return () => observer.disconnect();
-  }, [autoplay, emblaApi]);
+  }, [autoplay, emblaApi, shouldReduce]);
 
   if (!posts || posts.length === 0) return null;
 
   return (
     <div
-      className="relative w-full max-w-[1440px] auto mb-8 md:mb-12 mt-4 px-4 md:px-5"
+      className="relative hidden w-full max-w-[1440px] auto mb-8 mt-4 px-4 md:block md:mb-12 md:px-5"
       ref={rootRef}
     >
       <div className="flex items-center gap-2 mb-4">

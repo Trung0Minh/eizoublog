@@ -33,7 +33,7 @@ export function DynamicBackground({
   const isHome = pathname === "/"
 
   useEffect(() => {
-    if (!isHome) return
+    if (!isHome || shouldReduce) return
 
     let frame: number | null = null
     const updateHomeContentState = () => {
@@ -56,7 +56,7 @@ export function DynamicBackground({
       if (frame !== null) cancelAnimationFrame(frame)
       window.removeEventListener("scroll", handleScroll)
     }
-  }, [isHome])
+  }, [isHome, shouldReduce])
 
   useEffect(() => {
     const updateSeason = () => {
@@ -115,22 +115,32 @@ export function DynamicBackground({
       ? "none"
       : "blur(6px)"
 
-  const isHomeContentVisible = isHome && homeContentActive
+  const isHomeContentVisible = isHome && !shouldReduce && homeContentActive
 
   // CSS-driven transitions for the scroll fade — far smoother than Framer Motion
   // animate prop because the browser interpolates these natively every paint frame.
   const wrapperStyle: React.CSSProperties = {
     filter: backgroundFilter,
-    opacity: isHome ? (isHomeContentVisible ? 0.4 : 1) : 0.4,
-    transform: isHome
-      ? isHomeContentVisible ? "scale(1.05)" : "scale(1)"
-      : "scale(1.05)",
-    transition: "opacity 0.8s ease-out, transform 0.8s ease-out",
+    opacity: shouldReduce ? 0.4 : isHome ? (isHomeContentVisible ? 0.4 : 1) : 0.4,
+    transform: shouldReduce
+      ? "scale(1)"
+      : isHome
+        ? isHomeContentVisible ? "scale(1.05)" : "scale(1)"
+        : "scale(1.05)",
+    transition: shouldReduce
+      ? "none"
+      : "opacity 0.8s ease-out, transform 0.8s ease-out",
   }
 
   const overlayStyle: React.CSSProperties = {
-    opacity: isHome ? (isHomeContentVisible ? 1 : 0) : 1,
-    transition: "opacity 0.8s ease-out",
+    opacity: shouldReduce
+      ? 1
+      : isHome
+        ? isHomeContentVisible ? 1 : 0
+        : 1,
+    transition: shouldReduce
+      ? "none"
+      : "opacity 0.8s ease-out",
   }
 
   return (

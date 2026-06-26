@@ -8,6 +8,7 @@ import { getCoverStyle } from "@/lib/cover-style"
 import { Pagination } from "@/components/ui/Pagination"
 import { RelativeTime } from "@/components/ui/RelativeTime"
 import type { PostCardPost } from "@/components/posts/PostCard"
+import { useReducedVisualEffects } from "@/hooks/useReducedVisualEffects"
 
 interface CompactPostListProps {
   emptyMessage?: string
@@ -25,6 +26,8 @@ export function CompactPostList({
   pagination,
   posts,
 }: CompactPostListProps) {
+  const shouldReduce = useReducedVisualEffects()
+
   if (posts.length === 0) {
     return (
       <div className="rounded-[8px] border border-dashed border-border-default p-8 text-center text-sm text-text-secondary">
@@ -37,10 +40,10 @@ export function CompactPostList({
     <div className="space-y-4">
       <motion.div 
         className="flex flex-col gap-4"
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true, margin: "-50px" }}
-        variants={{
+        initial={shouldReduce ? false : "hidden"}
+        whileInView={shouldReduce ? undefined : "show"}
+        viewport={shouldReduce ? undefined : { once: true, margin: "-50px" }}
+        variants={shouldReduce ? undefined : {
           hidden: {},
           show: {
             transition: {
@@ -54,11 +57,11 @@ export function CompactPostList({
 
           return (
             <motion.article
-              variants={{
+              variants={shouldReduce ? undefined : {
                 hidden: { opacity: 0, y: 15 },
                 show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
               }}
-              whileHover={{ y: -4 }}
+              whileHover={shouldReduce ? undefined : { y: -4 }}
               className="glass-card grid grid-cols-[24px_80px_minmax(0,1fr)] gap-3 p-4 transition-colors hover:bg-subtle-bg/60 sm:grid-cols-[32px_140px_minmax(0,1fr)] sm:gap-5 sm:p-5"
               key={post.slug}
             >

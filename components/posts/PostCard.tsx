@@ -4,6 +4,7 @@ import Link from "next/link"
 import { motion } from "motion/react"
 
 import { RelativeTime } from "@/components/ui/RelativeTime"
+import { useReducedVisualEffects } from "@/hooks/useReducedVisualEffects"
 import { getCoverStyle } from "@/lib/cover-style"
 
 export interface PostCardPost {
@@ -61,6 +62,7 @@ function AuthorAvatar({
 }
 
 export function PostCard({ post }: PostCardProps) {
+  const shouldReduce = useReducedVisualEffects()
   const authors = [post.author, ...post.coAuthors.map(({ user }) => user)]
   const fallbackTags = [
     { name: "Animation Analysis", slug: "animation-analysis" },
@@ -71,11 +73,11 @@ export function PostCard({ post }: PostCardProps) {
 
   return (
     <motion.article 
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+      initial={shouldReduce ? false : { opacity: 0, y: 30 }}
+      whileInView={shouldReduce ? undefined : { opacity: 1, y: 0 }}
+      viewport={shouldReduce ? undefined : { once: true, margin: "-50px" }}
+      whileHover={shouldReduce ? undefined : { y: -4 }}
+      transition={shouldReduce ? undefined : { duration: 0.5, ease: "easeOut" }}
       className="glass-card w-full group flex flex-col p-4"
     >
       {post.coverUrl && (

@@ -1,5 +1,6 @@
 'use client';
 
+import type { HTMLAttributes, ReactNode } from 'react';
 import { motion, type HTMLMotionProps } from 'motion/react';
 
 import { useReducedVisualEffects } from '@/hooks/useReducedVisualEffects';
@@ -20,10 +21,13 @@ export function ScrollReveal({
   const finalDelay = delay !== undefined ? delay : index * 0.1;
 
   if (shouldReduce) {
+    const reducedProps = props as HTMLAttributes<HTMLDivElement>
+    const reducedChildren = children as ReactNode
+
     return (
-      <motion.div className={className} initial={false} {...props}>
-        {children}
-      </motion.div>
+      <div className={className} {...reducedProps}>
+        {reducedChildren}
+      </div>
     );
   }
 
