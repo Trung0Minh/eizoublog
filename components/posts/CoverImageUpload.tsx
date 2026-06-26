@@ -314,13 +314,7 @@ function CoverCropperModal({
         </div>
       )}
 
-      <div
-        className={
-          isMobileTarget
-            ? "relative h-[58vh] max-h-[680px] aspect-[9/16] overflow-hidden rounded-lg bg-black/50 shadow-2xl ring-1 ring-white/20"
-            : "relative w-full max-w-3xl aspect-video overflow-hidden rounded-lg bg-black/50 shadow-2xl ring-1 ring-white/20"
-        }
-      >
+      <div className="relative w-full max-w-3xl aspect-video overflow-hidden rounded-lg bg-black/50 shadow-2xl ring-1 ring-white/20">
         <Cropper
           key={target}
           image={value.split("?")[0]}
