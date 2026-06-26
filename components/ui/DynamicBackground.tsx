@@ -104,7 +104,9 @@ export function DynamicBackground({
   const bgSrc = bgUrl.split("?")[0]
   const backgroundFilter = isHome
     ? "none"
-    : "blur(6px)"
+    : shouldReduce
+      ? "none"
+      : "blur(6px)"
 
   const isHomeContentVisible = isHome && homeContentActive
 
