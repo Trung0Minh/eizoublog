@@ -391,10 +391,10 @@ export function PostEditor({
         <AnimatePresence initial={false}>
           {isSettingsOpen && (
             <motion.aside
-              initial={{ width: 0, opacity: 0, x: -50 }}
-              animate={{ width: "auto", opacity: 1, x: 0 }}
-              exit={{ width: 0, opacity: 0, x: -50 }}
-              transition={{ duration: 0.3, ease: "anticipate" }}
+              initial={{ opacity: 0, x: "-100%" }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: "-100%" }}
+              transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
               className="z-50 shrink-0 overflow-y-auto border-r border-border-default/40 bg-card/30 backdrop-blur-xl shadow-glass flex fixed inset-y-0 left-0 pt-6 flex-col lg:static w-full lg:w-[320px] xl:w-[360px]"
               id="post-settings-panel"
             >
