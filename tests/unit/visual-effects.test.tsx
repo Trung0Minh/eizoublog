@@ -172,43 +172,4 @@ describe("responsive visual effects", () => {
     expect(source).toContain("md:hidden")
     expect(source).toContain('data-testid="mobile-background-vignette"')
   })
-
-  it("keeps low-visual-impact mobile scroll work off the main scroll path", () => {
-    const backToTop = readFileSync(
-      join(process.cwd(), "components/ui/BackToTop.tsx"),
-      "utf8",
-    )
-    const scrollReveal = readFileSync(
-      join(process.cwd(), "components/ui/ScrollReveal.tsx"),
-      "utf8",
-    )
-    const carousel = readFileSync(
-      join(process.cwd(), "components/posts/HeroCarousel.tsx"),
-      "utf8",
-    )
-
-    expect(backToTop).toContain("requestAnimationFrame")
-    expect(backToTop).toContain("cancelAnimationFrame")
-    expect(scrollReveal).toContain("useReducedVisualEffects")
-    expect(carousel).toContain("IntersectionObserver")
-    expect(carousel).toContain("autoplay.stop()")
-    expect(carousel).toContain("autoplay.play()")
-  })
-
-  it("removes backdrop filters from large special-page surfaces on touch devices", () => {
-    const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8")
-    const targetSources = [
-      "app/(public)/about/AboutClient.tsx",
-      "app/(public)/nhap-mon-sakuga/IntroToSakugaClient.tsx",
-      "app/(public)/resources/ResourcesClient.tsx",
-      "app/(public)/search/page.tsx",
-    ].map((path) => readFileSync(join(process.cwd(), path), "utf8"))
-
-    expect(css).toMatch(
-      /@media \(pointer: coarse\)[\s\S]*?\.mobile-no-backdrop\s*\{[\s\S]*?backdrop-filter:\s*none\s*!important/,
-    )
-    targetSources.forEach((source) => {
-      expect(source).toContain("mobile-no-backdrop")
-    })
-  })
 })

@@ -397,7 +397,7 @@ export function IntroToSakugaClient({ initialPage, isAdmin }: IntroToSakugaClien
       )}
 
       {isEditing && (
-        <div className="mobile-no-backdrop fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] flex items-center justify-between bg-background/95 backdrop-blur-md py-3 px-6 rounded-full border-[2px] border-border-default shadow-2xl gap-8 animate-in slide-in-from-bottom-8">
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] flex items-center justify-between bg-background/95 backdrop-blur-md py-3 px-6 rounded-full border-[2px] border-border-default shadow-2xl gap-8 animate-in slide-in-from-bottom-8">
           <h2 className="text-sm font-bold uppercase tracking-widest text-editorial whitespace-nowrap">
             Đang chỉnh sửa...
           </h2>
@@ -427,7 +427,7 @@ export function IntroToSakugaClient({ initialPage, isAdmin }: IntroToSakugaClien
       )}
 
       <main className="flex-1 w-full max-w-[800px] mx-auto pt-8 md:pt-16 pb-32 px-4 md:px-0">
-        <div className={cn("mobile-no-backdrop bg-subtle-bg/80 backdrop-blur-sm border-[3px] border-border/60 rounded-[24px] p-6 md:p-12 shadow-xl relative isolate overflow-hidden", isEditing && "border-editorial/40 shadow-editorial/10")}>
+        <div className={cn("bg-subtle-bg/80 backdrop-blur-sm border-[3px] border-border/60 rounded-[24px] p-6 md:p-12 shadow-xl relative isolate overflow-hidden", isEditing && "border-editorial/40 shadow-editorial/10")}>
           <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-bl-[100px] -z-10" />
           <div className="absolute bottom-0 left-0 w-40 h-40 bg-accent/10 rounded-tr-[100px] -z-10" />
 

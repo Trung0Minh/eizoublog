@@ -141,7 +141,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
       {/* Beautiful Search Form with Category & Tag Filters */}
       <ScrollReveal delay={0.1}>
-        <div className="mobile-no-backdrop mt-8 mb-10 rounded-[24px] border-[2px] border-border-default bg-background/80 backdrop-blur-md p-6 sm:p-8 shadow-sm">
+        <div className="mt-8 mb-10 rounded-[24px] border-[2px] border-border-default bg-background/80 backdrop-blur-md p-6 sm:p-8 shadow-sm">
           <form action="/search" method="GET" className="flex flex-col gap-4 md:flex-row md:items-end">
             <div className="flex-1 space-y-2">
               <label className="text-xs font-semibold uppercase tracking-wider text-text-tertiary" htmlFor="search-q">

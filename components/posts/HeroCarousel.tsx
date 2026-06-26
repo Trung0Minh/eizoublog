@@ -5,7 +5,6 @@ import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
 import Link from 'next/link';
 import { Sparkles } from 'lucide-react';
-import { useReducedVisualEffects } from '@/hooks/useReducedVisualEffects';
 
 interface HeroCarouselPost {
   category: { name: string } | null
@@ -31,13 +30,7 @@ function formatCarouselDate(post: HeroCarouselPost) {
 }
 
 export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
-  const rootRef = React.useRef<HTMLDivElement>(null);
-  const shouldReduce = useReducedVisualEffects();
-  const autoplay = React.useMemo(
-    () => Autoplay({ delay: 4000, playOnInit: false, stopOnInteraction: false }),
-    [],
-  );
-  const plugins = React.useMemo(() => [autoplay], [autoplay]);
+  const plugins = React.useMemo(() => [Autoplay({ delay: 4000, stopOnInteraction: false })], []);
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, plugins);
   const [selectedIndex, setSelectedIndex] = React.useState(0);
 
@@ -54,36 +47,10 @@ export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
     };
   }, [emblaApi]);
 
-  React.useEffect(() => {
-    const root = rootRef.current;
-    if (!root || !emblaApi) return;
-    if (shouldReduce) {
-      autoplay.stop();
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) {
-          autoplay.play();
-        } else {
-          autoplay.stop();
-        }
-      },
-      { threshold: 0.05 },
-    );
-
-    observer.observe(root);
-    return () => observer.disconnect();
-  }, [autoplay, emblaApi, shouldReduce]);
-
   if (!posts || posts.length === 0) return null;
 
   return (
-    <div
-      className="relative hidden w-full max-w-[1440px] auto mb-8 mt-4 px-4 md:block md:mb-12 md:px-5"
-      ref={rootRef}
-    >
+    <div className="relative w-full max-w-[1440px] auto mb-8 md:mb-12 mt-4 px-4 md:px-5">
       <div className="flex items-center gap-2 mb-4">
         <Sparkles className="w-5 h-5 text-accent animate-pulse" />
         <h2 className="text-[18px] font-bold tracking-tight">Featured Stories</h2>

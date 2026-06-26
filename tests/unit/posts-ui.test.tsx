@@ -163,15 +163,14 @@ describe("PostCard", () => {
     )
   })
 
-  it("keeps desktop card reveals but disables them for reduced visual effects", () => {
+  it("reveals post cards once with an explicit transition", () => {
     const source = readFileSync(
       join(process.cwd(), "components/posts/PostCard.tsx"),
       "utf8",
     )
 
-    expect(source).toContain("useReducedVisualEffects")
-    expect(source).toContain('viewport={shouldReduce ? undefined : { once: true, margin: "-50px" }}')
-    expect(source).toContain('transition={shouldReduce ? undefined : { duration: 0.5, ease: "easeOut" }}')
+    expect(source).toContain('viewport={{ once: true, margin: "-50px" }}')
+    expect(source).toContain('transition={{ duration: 0.5, ease: "easeOut" }}')
   })
 })
 

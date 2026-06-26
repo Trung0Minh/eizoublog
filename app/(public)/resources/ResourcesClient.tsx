@@ -445,7 +445,7 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
       )}
 
       {isEditing && (
-        <div className="mobile-no-backdrop fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] flex items-center justify-between bg-background/95 backdrop-blur-md py-3 px-6 rounded-full border-[2px] border-border-default shadow-2xl gap-8 animate-in slide-in-from-bottom-8">
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] flex items-center justify-between bg-background/95 backdrop-blur-md py-3 px-6 rounded-full border-[2px] border-border-default shadow-2xl gap-8 animate-in slide-in-from-bottom-8">
           <h2 className="text-sm font-bold uppercase tracking-widest text-editorial whitespace-nowrap">
             Đang chỉnh sửa Nguồn tham khảo
           </h2>
