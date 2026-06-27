@@ -100,13 +100,14 @@ export function HomeIntro({ appName }: HomeIntroProps) {
   }, [])
 
   const scrollToContent = () => {
+    const intro = document.querySelector<HTMLElement>("[data-home-intro]")
     window.scrollTo({
-      top: window.innerHeight,
+      top: intro?.offsetHeight ?? window.innerHeight,
       behavior: "smooth",
     })
   }
 
-  if (!mounted) return <div className="w-full h-[calc(100dvh-70px)]" />
+  if (!mounted) return <div className="h-[calc(100svh-70px)] w-full md:h-[calc(100dvh-70px)]" />
 
   const config = seasonConfigs[season]
   const titleSizeClass = season === "summer"
@@ -115,7 +116,7 @@ export function HomeIntro({ appName }: HomeIntroProps) {
 
   return (
     <div
-      className="w-full h-[calc(100dvh-70px)] flex flex-col items-center justify-center relative overflow-hidden"
+      className="h-[calc(100svh-70px)] w-full flex flex-col items-center justify-center relative overflow-hidden md:h-[calc(100dvh-70px)]"
       data-home-intro
     >
       <AnimatePresence mode="wait">

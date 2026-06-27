@@ -36,9 +36,10 @@ export function DynamicBackground({
     if (!isHome) return
 
     let frame: number | null = null
+    const activationPoint = window.innerHeight * 0.75
     const updateHomeContentState = () => {
       frame = null
-      const nextActive = window.scrollY >= window.innerHeight * 0.75
+      const nextActive = window.scrollY >= activationPoint
       if (homeContentActiveRef.current !== nextActive) {
         homeContentActiveRef.current = nextActive
         setHomeContentActive(nextActive)

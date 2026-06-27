@@ -360,9 +360,7 @@
     @apply px-3 py-1 border border-white/20 dark:border-white/10 backdrop-blur-md rounded-full shadow-[0_4px_16px_rgba(0,0,0,0.05)] font-medium text-[11px] text-text-primary transition-all duration-300 hover:border-accent hover:shadow-[0_4px_16px_var(--accent)];
   }
 
-  /* Mobile: strip backdrop-filter from all glass elements.
-     backdrop-blur on mobile GPUs forces expensive per-card layer compositing —
-     replaced with a solid opaque background that looks nearly identical. */
+  /* Mobile: simplify repeated glass surfaces while preserving opacity. */
   @media (pointer: coarse) {
     [class*="backdrop-blur"] {
       backdrop-filter: none !important;
@@ -378,11 +376,20 @@
       backdrop-filter: none;
       -webkit-backdrop-filter: none;
       background-color: hsl(var(--background) / 0.92);
+      background-image: none;
+      box-shadow: none;
+      transition-property: background-color, border-color, color;
+    }
+    .glass-card:hover {
+      transform: none;
+      box-shadow: none;
     }
     .glass-badge {
       backdrop-filter: none;
       -webkit-backdrop-filter: none;
       background-color: hsl(var(--background) / 0.85);
+      box-shadow: none;
+      transition-property: background-color, border-color, color;
     }
   }
 
