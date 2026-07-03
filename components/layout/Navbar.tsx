@@ -9,6 +9,7 @@ import { SeasonToggle } from "@/components/ui/SeasonToggle"
 import { MagneticEffect } from "@/components/ui/MagneticEffect"
 import { CommandMenuTrigger } from "@/components/ui/CommandMenuTrigger"
 import { MobileSettings } from "@/components/layout/MobileSettings"
+import { DesktopNavLinks } from "@/components/layout/DesktopNavLinks"
 
 const NAV_LINKS = [
   { href: "/nhap-mon-sakuga", label: "Nhập môn Sakuga" },
@@ -37,18 +38,9 @@ export function Navbar({ user }: { user?: WriterMenuUser | null }) {
 
         <nav
           aria-label="Primary navigation"
-          className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-8 md:flex"
+          className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-2 md:flex"
         >
-          {NAV_LINKS.map((link) => (
-            <MagneticEffect key={link.href}>
-              <Link
-                className="flex items-center gap-2 text-[14px] font-display font-bold tracking-wide text-text-secondary hover:text-accent transition-colors"
-                href={link.href}
-              >
-                {link.label}
-              </Link>
-            </MagneticEffect>
-          ))}
+          <DesktopNavLinks links={NAV_LINKS} />
         </nav>
 
         <div className="ml-auto flex items-center gap-1 sm:gap-2">
