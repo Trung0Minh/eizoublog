@@ -80,7 +80,7 @@ export function PostCard({ post }: PostCardProps) {
     >
       {post.coverUrl && (
         <Link className="mb-4 block overflow-hidden rounded-[8px]" href={`/${post.slug}`}>
-          <div className="relative w-full aspect-video isolate bg-subtle-bg rounded-[8px] overflow-hidden border-2 border-dashed border-border-default group-hover:border-accent/40 transition-colors">
+          <div className="relative w-full aspect-video isolate bg-subtle-bg rounded-[8px] overflow-hidden border-2 border-border-default group-hover:border-accent/40 transition-colors">
             <img
               alt={post.coverAlt ?? post.title}
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05] group-hover:-rotate-1"
@@ -120,23 +120,39 @@ export function PostCard({ post }: PostCardProps) {
 
       <div className="mt-4 flex items-center justify-between text-[13px] text-text-primary/80">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          {authors.map((author, i) => (
-            <div className="flex items-center gap-2" key={author.username}>
-              {i > 0 && <span className="text-text-tertiary">·</span>}
-              <Link
-                className="flex items-center gap-2 hover:text-accent transition-colors"
-                href={`/authors/${author.username}`}
-              >
-                <AuthorAvatar
-                  avatarUrl={author.avatarUrl}
-                  name={author.name}
-                />
-                <span className="font-semibold text-text-primary hover:text-accent">
-                  {author.name}
-                </span>
-              </Link>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center">
+              {authors.map((author, index) => (
+                <Link
+                  aria-label={author.name}
+                  className="relative hover:z-20"
+                  href={`/authors/${author.username}`}
+                  key={author.username}
+                  style={{
+                    marginLeft: index === 0 ? 0 : -8,
+                    zIndex: index + 1,
+                  }}
+                >
+                  <AuthorAvatar
+                    avatarUrl={author.avatarUrl}
+                    name={author.name}
+                  />
+                </Link>
+              ))}
             </div>
-          ))}
+            <div className="flex flex-wrap items-center gap-1">
+              {authors.map((author, i) => (
+                <Link
+                  className="font-semibold text-text-primary hover:text-accent transition-colors"
+                  href={`/authors/${author.username}`}
+                  key={author.username}
+                >
+                  {i > 0 && <span className="mr-1 text-text-tertiary">·</span>}
+                  {author.name}
+                </Link>
+              ))}
+            </div>
+          </div>
           <span className="text-text-tertiary px-1">&middot;</span>
           {post.publishedAt ? (
             <RelativeTime

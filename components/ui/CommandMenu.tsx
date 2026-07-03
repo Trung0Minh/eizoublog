@@ -127,7 +127,7 @@ export function CommandMenu() {
       />
       <Command
         shouldFilter={false}
-        className="relative z-50 w-full max-w-[640px] overflow-hidden rounded-[20px] border-[1.5px] border-white/20 dark:border-white/10 bg-subtle-bg backdrop-blur-2xl shadow-[0_0_40px_rgba(0,0,0,0.15)] mx-4"
+        className="relative z-50 w-full max-w-[640px] overflow-hidden rounded-[20px] border-[1.5px] border-border-default bg-background/95 text-text-primary shadow-[0_0_40px_rgba(0,0,0,0.22)] backdrop-blur-xl mx-4"
         label="Global Command Menu"
         onKeyDown={(e) => {
           if (e.key === "Escape") {
@@ -136,13 +136,13 @@ export function CommandMenu() {
           }
         }}
       >
-        <div className="flex items-center border-b border-border-default px-3" cmdk-input-wrapper="">
-          <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+        <div className="flex items-center border-b border-border-default bg-background/80 px-3" cmdk-input-wrapper="">
+          <Search className="mr-2 h-4 w-4 shrink-0 text-text-secondary" />
           <Command.Input
             autoFocus
             value={query}
             onValueChange={setQuery}
-            className="flex h-12 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-text-tertiary disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-12 w-full rounded-md bg-transparent py-3 text-sm text-text-primary outline-none placeholder:text-text-secondary disabled:cursor-not-allowed disabled:opacity-50"
             placeholder="Tìm kiếm bài viết hoặc danh mục..."
           />
         </div>
@@ -161,9 +161,9 @@ export function CommandMenu() {
           
           {!query && (
             <>
-              <Command.Group heading="Điều hướng" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-text-tertiary">
+              <Command.Group heading="Điều hướng" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-text-secondary">
                 <Command.Item
-                  className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm outline-none data-[selected=true]:bg-accent/10 data-[selected=true]:text-accent data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 transition-colors"
+                  className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm text-text-primary outline-none data-[selected=true]:bg-accent/10 data-[selected=true]:text-accent data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 transition-colors"
                   onSelect={() => {
                     setOpen(false)
                     router.push("/")
@@ -174,11 +174,11 @@ export function CommandMenu() {
               </Command.Group>
 
               {categories.length > 0 && (
-                <Command.Group heading="Danh mục" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-text-tertiary mt-2">
+                <Command.Group heading="Danh mục" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-text-secondary mt-2">
                   {categories.map((category) => (
                     <Command.Item
                       key={category.id}
-                      className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm outline-none data-[selected=true]:bg-accent/10 data-[selected=true]:text-accent data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 transition-colors"
+                      className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm text-text-primary outline-none data-[selected=true]:bg-accent/10 data-[selected=true]:text-accent data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 transition-colors"
                       onSelect={() => {
                         setOpen(false)
                         router.push(`/category/${category.slug}`)
@@ -193,11 +193,11 @@ export function CommandMenu() {
           )}
 
           {query && results.length > 0 && (
-            <Command.Group heading="Bài viết" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-text-tertiary">
+            <Command.Group heading="Bài viết" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-text-secondary">
               {results.map((post) => (
                 <Command.Item
                   key={post.id}
-                  className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm outline-none data-[selected=true]:bg-accent/10 data-[selected=true]:text-accent data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 transition-colors"
+                  className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm text-text-primary outline-none data-[selected=true]:bg-accent/10 data-[selected=true]:text-accent data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 transition-colors"
                   onSelect={() => {
                     setOpen(false)
                     setQuery("")

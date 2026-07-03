@@ -17,6 +17,7 @@ import { Toaster } from "@/components/ui/Toaster"
 import { CommandMenu } from "@/components/ui/CommandMenu"
 import { CursorSpotlight } from "@/components/ui/CursorSpotlight"
 import { getAppearanceInitScript } from "@/lib/appearanceSession"
+import { RouteScrollReset } from "@/components/ui/RouteScrollReset"
 
 import "./globals.css"
 
@@ -106,6 +107,7 @@ export default async function RootLayout({
           enableSystem
         >
           <DynamicBackground customBackgrounds={customBackgrounds} />
+          <RouteScrollReset />
           <GlobalEffects />
           <CursorSpotlight />
           <div className="flex min-h-screen flex-col relative z-10">

@@ -11,6 +11,7 @@ import { PostJsonLd } from "@/components/posts/PostJsonLd"
 import { PostReadTracker } from "@/components/posts/PostReadTracker"
 import { ReadingProgress } from "@/components/posts/ReadingProgress"
 import { TableOfContents } from "@/components/posts/TableOfContents"
+import { extractHeadings } from "@/lib/postHeadings"
 import { ScrollReveal } from "@/components/ui/ScrollReveal"
 import { prisma } from "@/lib/prisma"
 import {
@@ -87,6 +88,7 @@ export default async function PostPage({ params }: PostPageProps) {
   const authors = [post.author.username, ...post.coAuthors.map(c => c.user.username)]
 
   const content = post.content as JSONContent
+  const hasTableOfContents = extractHeadings(content).length > 0
   const fallbackTags = [
     { name: "Animation Analysis", slug: "animation-analysis" },
     { name: "Sakuga", slug: "sakuga" },
@@ -110,12 +112,16 @@ export default async function PostPage({ params }: PostPageProps) {
 
       <PostHero post={post} authorUsernames={authors} />
 
-      <div className="flex-1 w-full max-w-[1440px] mx-auto xl:px-12 flex justify-center pt-4 md:pt-8 pb-20 relative">
+      <div className="relative w-full z-0 pointer-events-none h-0">
+        <div className="absolute top-0 left-0 right-0 h-32 md:h-48 lg:h-64 bg-gradient-to-b from-background to-transparent" />
+      </div>
+
+      <div className="flex-1 w-full max-w-[1440px] mx-auto xl:px-12 flex justify-center pt-0 pb-20 relative z-10">
         <main className="w-full max-w-[840px] px-4 md:px-5 xl:px-0">
           <header className="flex flex-col">
             <ScrollReveal delay={0.1}>
               {post.coverAlt && (
-                <div className="text-right text-[11px] text-text-tertiary italic mb-2">
+                <div className="-mt-1 mb-1 pr-1 text-right text-[13px] md:text-[14px] font-medium text-text-tertiary italic">
                   {post.coverAlt}
                 </div>
               )}
@@ -163,11 +169,13 @@ export default async function PostPage({ params }: PostPageProps) {
           </div>
         </main>
 
-        <aside className="hidden w-[200px] shrink-0 xl:block ml-10 mt-12 sticky top-24 self-start max-h-[calc(100vh-120px)] overflow-y-auto no-scrollbar">
-          <ScrollReveal delay={0.5}>
-            <TableOfContents content={content} />
-          </ScrollReveal>
-        </aside>
+        {hasTableOfContents && (
+          <aside className="hidden w-[200px] shrink-0 xl:block ml-10 mt-12 sticky top-24 self-start max-h-[calc(100vh-120px)] overflow-y-auto no-scrollbar">
+            <ScrollReveal delay={0.5}>
+              <TableOfContents content={content} />
+            </ScrollReveal>
+          </aside>
+        )}
       </div>
     </>
   )

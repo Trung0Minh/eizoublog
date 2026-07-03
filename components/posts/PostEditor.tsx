@@ -421,15 +421,15 @@ export function PostEditor({
                       value={coverUrl}
                     />
                     {coverUrl && (
-                      <div className="mt-4 space-y-2">
+                      <div className="mt-2 space-y-1.5">
                         <label
-                          className="text-[12px] font-semibold text-text-secondary"
+                          className="text-[13px] font-semibold text-text-secondary"
                           htmlFor="cover-alt"
                         >
                           Văn bản thay thế ảnh bìa
                         </label>
                         <input
-                          className="h-10 w-full rounded-[5px] border border-border-default bg-background px-3 py-2 text-[13px] text-text-primary outline-none transition-colors placeholder:text-text-tertiary focus:border-accent"
+                          className="h-11 w-full rounded-[5px] border border-border-default bg-background px-3 py-2 text-[15px] text-text-primary outline-none transition-colors placeholder:text-text-tertiary focus:border-accent"
                           id="cover-alt"
                           maxLength={200}
                           onChange={(event) => {

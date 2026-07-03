@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation"
 import { PostHero } from "@/components/posts/PostHero"
 import { PostBody } from "@/components/posts/PostBody"
 import { TableOfContents } from "@/components/posts/TableOfContents"
+import { extractHeadings } from "@/lib/postHeadings"
 import { canViewPost } from "@/lib/postAccess"
 import { prisma } from "@/lib/prisma"
 import { getCurrentSession } from "@/lib/session"
@@ -80,6 +81,7 @@ export default async function DashboardPostPreviewPage({
   }
 
   const content = post.content as JSONContent
+  const hasTableOfContents = extractHeadings(content).length > 0
 
   return (
     <>
@@ -92,11 +94,11 @@ export default async function DashboardPostPreviewPage({
 
       <PostHero post={post} />
 
-      <div className="flex-1 w-full max-w-[1440px] mx-auto xl:px-12 flex justify-center pt-8 pb-20 relative">
+      <div className="flex-1 w-full max-w-[1440px] mx-auto xl:px-12 flex justify-center pt-0 pb-20 relative">
         <main className="w-full max-w-[720px] px-5 xl:px-0">
           <header className="flex flex-col">
             {post.coverAlt && (
-              <div className="text-right text-[11px] text-text-tertiary italic mb-4">
+              <div className="-mt-1 mb-1 pr-1 text-right text-[13px] md:text-[14px] font-medium text-text-tertiary italic">
                 {post.coverAlt}
               </div>
             )}
@@ -114,9 +116,11 @@ export default async function DashboardPostPreviewPage({
           </article>
         </main>
 
-        <aside className="hidden w-[200px] shrink-0 xl:block ml-10 mt-12">
-          <TableOfContents content={content} />
-        </aside>
+        {hasTableOfContents && (
+          <aside className="hidden w-[200px] shrink-0 xl:block ml-10 mt-12">
+            <TableOfContents content={content} />
+          </aside>
+        )}
       </div>
     </>
   )

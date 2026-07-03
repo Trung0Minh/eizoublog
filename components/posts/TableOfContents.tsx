@@ -5,42 +5,8 @@ import type { JSONContent } from "@tiptap/react"
 
 import { motion } from "motion/react"
 
-import { cn, generateSlug } from "@/lib/utils"
-
-interface Heading {
-  id: string
-  level: number
-  text: string
-}
-
-function getText(node: JSONContent): string {
-  if (node.type === "text") {
-    return node.text ?? ""
-  }
-
-  return node.content?.map(getText).join("") ?? ""
-}
-
-export function extractHeadings(content: JSONContent): Heading[] {
-  const headings: Heading[] = []
-
-  function walk(node: JSONContent) {
-    if (node.type === "heading") {
-      const level =
-        typeof node.attrs?.level === "number" ? node.attrs.level : 2
-      const text = getText(node).trim()
-
-      if (text) {
-        headings.push({ id: generateSlug(text), level, text })
-      }
-    }
-
-    node.content?.forEach(walk)
-  }
-
-  walk(content)
-  return headings
-}
+import { cn } from "@/lib/utils"
+import { extractHeadings } from "@/lib/postHeadings"
 
 interface TableOfContentsProps {
   content: JSONContent

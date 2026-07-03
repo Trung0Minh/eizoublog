@@ -59,7 +59,7 @@ export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
       <div className="glass-card overflow-hidden" ref={emblaRef}>
         <div className="flex">
           {posts.map((post) => (
-            <div className="flex-[0_0_100%] min-w-0 relative aspect-[16/10] md:aspect-[21/9]" key={post.slug || post.id}>
+            <div className="flex-[0_0_100%] min-w-0 relative aspect-video" key={post.slug || post.id}>
               <Link href={`/${post.slug}`} className="block w-full h-full relative cursor-pointer group">
                 <img
                   src={post.coverUrl || 'https://picsum.photos/seed/placeholder/1200/600'}
@@ -73,15 +73,15 @@ export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
                       <span className="bg-accent text-white text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full w-max mb-3 flex items-center gap-1 shadow-lg md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-700 md:delay-100">
                         <Sparkles className="w-3 h-3" /> {post.category?.name || 'Featured'}
                       </span>
-                      <h3 className="text-white text-[20px] md:text-[40px] font-display font-bold leading-[1.2] md:leading-tight mb-3 md:mb-4 max-w-3xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] opacity-100">
+                      <h3 className="text-white text-[19px] md:text-[34px] lg:text-[38px] font-display font-bold leading-[1.18] md:leading-[1.15] mb-3 md:mb-4 max-w-3xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] opacity-100">
                         {post.title}
                       </h3>
                       <div className="grid grid-rows-[1fr] md:grid-rows-[0fr] md:group-hover:grid-rows-[1fr] transition-all duration-700 ease-out opacity-100">
                         <div className="overflow-hidden md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-700 md:delay-200">
-                          <p className="hidden md:block text-white/80 text-[14px] md:text-[18px] max-w-2xl line-clamp-2 md:line-clamp-3 mb-4 drop-shadow-sm mt-3">
+                          <p className="hidden md:block text-white/80 text-[14px] md:text-[16px] max-w-2xl line-clamp-2 md:line-clamp-3 mb-4 drop-shadow-sm mt-3">
                             {post.excerpt}
                           </p>
-                          <span className="text-white/60 text-[12px] md:text-[14px] font-medium">
+                          <span className="text-white/60 text-[12px] md:text-[13px] font-medium">
                             {formatCarouselDate(post)}
                           </span>
                         </div>
