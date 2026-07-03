@@ -46,6 +46,7 @@ export async function PATCH(request: Request) {
       where: { id: activeSession.user.id },
     })
     revalidateTag("users", "max")
+    revalidateTag("posts", "max")
 
     return Response.json({ data: user })
   } catch (error) {

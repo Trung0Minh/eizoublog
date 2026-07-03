@@ -804,7 +804,7 @@ export const getCachedPublishedPost = unstable_cache(
       where: { slug, status: "PUBLISHED" },
     }),
   ["published-post"],
-  { revalidate: 300, tags: ["posts", "comments"] },
+  { revalidate: 300, tags: ["posts", "comments", "users"] },
 )
 
 export const getCachedContributors = unstable_cache(
