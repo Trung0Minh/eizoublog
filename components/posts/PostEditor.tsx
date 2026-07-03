@@ -395,7 +395,7 @@ export function PostEditor({
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: "-100%" }}
               transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
-              className="z-50 shrink-0 overflow-y-auto border-r border-border-default/40 bg-card/30 backdrop-blur-xl shadow-glass flex fixed inset-y-0 left-0 pt-6 flex-col lg:static w-full lg:w-[320px] xl:w-[360px]"
+              className="z-50 shrink-0 overflow-y-auto border-r border-border-default/40 bg-card/30 backdrop-blur-xl shadow-glass flex fixed inset-y-0 left-0 pt-6 flex-col w-full lg:w-[320px] xl:w-[360px]"
               id="post-settings-panel"
             >
               <div className="px-5 py-6 min-w-[320px] xl:min-w-[360px]">
@@ -563,88 +563,100 @@ export function PostEditor({
           )}
         </AnimatePresence>
 
-        {/* Robust zero-width tracker for the toggle button */}
-        <div className="hidden lg:flex w-0 relative h-full items-center z-[60]">
-          <button
-            aria-label={isSettingsOpen ? "Đóng cài đặt" : "Mở cài đặt"}
-            className="absolute left-4 h-10 w-10 flex items-center justify-center rounded-full border border-border-default bg-card/60 backdrop-blur-md shadow-glass text-text-secondary transition-all duration-300 hover:bg-card hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-          >
-            <motion.div
-              animate={{ rotate: isSettingsOpen ? 0 : 180 }}
-              transition={{ duration: 0.3, ease: "anticipate" }}
+        {/* Content + toggle button — wrapped together so they shift in sync with the panel.
+             margin-left matches the panel's duration/easing exactly, so all three elements
+             (panel slide, button, content) animate as one coordinated unit. */}
+        <div
+          className={cn(
+            "flex min-w-0 flex-1 h-full",
+            "transition-[margin-left] duration-300",
+            isSettingsOpen ? "lg:ml-[320px] xl:ml-[360px]" : "ml-0",
+          )}
+          style={{ transitionTimingFunction: "cubic-bezier(0.32, 0.72, 0, 1)" }}
+        >
+          {/* Robust zero-width tracker for the toggle button */}
+          <div className="hidden lg:flex w-0 relative h-full items-center z-[60]">
+            <button
+              aria-label={isSettingsOpen ? "Đóng cài đặt" : "Mở cài đặt"}
+              className="absolute left-4 h-10 w-10 flex items-center justify-center rounded-full border border-border-default bg-card/60 backdrop-blur-md shadow-glass text-text-secondary transition-all duration-300 hover:bg-card hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
             >
-              <ChevronLeft className="h-5 w-5" />
-            </motion.div>
-          </button>
-        </div>
-
-        <div className="min-w-0 flex-1 w-full h-full overflow-y-auto">
-          <div 
-            className="mx-auto flex w-full max-w-[1200px] flex-col px-4 pb-[120px] pt-6 md:px-6 md:pt-8"
-          >
-            {error && (
-              <div
-                className="mb-4 rounded-[5px] border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
-                role="alert"
+              <motion.div
+                animate={{ rotate: isSettingsOpen ? 0 : 180 }}
+                transition={{ duration: 0.3, ease: "anticipate" }}
               >
-                {error}
-              </div>
-            )}
+                <ChevronLeft className="h-5 w-5" />
+              </motion.div>
+            </button>
+          </div>
 
-            <section
-              className="relative w-full bg-transparent sm:bg-subtle-bg sm:backdrop-blur-md rounded-[8px] sm:border border-transparent sm:border-border-default mb-8 md:mb-12 z-30"
-              data-testid="editor-writing-surface"
+          <div className="min-w-0 flex-1 w-full h-full overflow-y-auto">
+            <div
+              className="mx-auto flex w-full max-w-[1200px] flex-col px-4 pb-[120px] pt-6 md:px-6 md:pt-8"
             >
-              <div className="px-0 py-4 sm:p-8 md:p-12">
-                <div className="mt-4 pb-2 md:mt-0">
-                  <label className="sr-only" htmlFor="post-title">
-                    Tiêu đề
-                  </label>
-                  <input
-                    className="w-full border-none bg-transparent text-[32px] md:text-[40px] font-bold font-display leading-[1.2] text-text-primary outline-none placeholder:text-text-tertiary placeholder:font-normal"
-                    id="post-title"
-                    maxLength={200}
-                    onChange={(event) => {
-                      setTitle(event.target.value)
+              {error && (
+                <div
+                  className="mb-4 rounded-[5px] border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
+                  role="alert"
+                >
+                  {error}
+                </div>
+              )}
+
+              <section
+                className="relative w-full bg-transparent sm:bg-subtle-bg sm:backdrop-blur-md rounded-[8px] sm:border border-transparent sm:border-border-default mb-8 md:mb-12 z-30"
+                data-testid="editor-writing-surface"
+              >
+                <div className="px-0 py-4 sm:p-8 md:p-12">
+                  <div className="mt-4 pb-2 md:mt-0">
+                    <label className="sr-only" htmlFor="post-title">
+                      Tiêu đề
+                    </label>
+                    <input
+                      className="w-full border-none bg-transparent text-[32px] md:text-[40px] font-bold font-display leading-[1.2] text-text-primary outline-none placeholder:text-text-tertiary placeholder:font-normal"
+                      id="post-title"
+                      maxLength={200}
+                      onChange={(event) => {
+                        setTitle(event.target.value)
+                        markDirtyAndAutosave()
+                      }}
+                      placeholder="Tiêu đề bài viết..."
+                      value={title}
+                    />
+                  </div>
+
+                  <div className="pb-1.5">
+                    <label className="sr-only" htmlFor="post-excerpt">
+                      Đoạn trích
+                    </label>
+                    <Textarea
+                      className="min-h-10 resize-none overflow-hidden border-none bg-transparent px-0 text-[16px] text-text-secondary/80 shadow-none placeholder:text-text-tertiary focus-visible:border-transparent focus-visible:ring-0 leading-relaxed"
+                      id="post-excerpt"
+                      maxLength={500}
+                      onChange={(event) => {
+                        setExcerpt(event.target.value)
+                        markDirtyAndAutosave()
+                      }}
+                      placeholder="Đoạn trích ngắn hiển thị trên trang danh sách..."
+                      ref={excerptRef}
+                      value={excerpt}
+                    />
+                  </div>
+
+                  <div className="mt-2 mb-2 border-t-2 border-transparent bg-gradient-to-r from-accent/0 via-accent/30 to-accent/0 h-[2px] w-full" />
+
+                  <TiptapEditor
+                    content={content}
+                    editable
+                    onChange={(json, text) => {
+                      setContent(json)
+                      setContentText(text)
                       markDirtyAndAutosave()
                     }}
-                    placeholder="Tiêu đề bài viết..."
-                    value={title}
                   />
                 </div>
-
-                <div className="pb-1.5">
-                  <label className="sr-only" htmlFor="post-excerpt">
-                    Đoạn trích
-                  </label>
-                  <Textarea
-                    className="min-h-10 resize-none overflow-hidden border-none bg-transparent px-0 text-[16px] text-text-secondary/80 shadow-none placeholder:text-text-tertiary focus-visible:border-transparent focus-visible:ring-0 leading-relaxed"
-                    id="post-excerpt"
-                    maxLength={500}
-                    onChange={(event) => {
-                      setExcerpt(event.target.value)
-                      markDirtyAndAutosave()
-                    }}
-                    placeholder="Đoạn trích ngắn hiển thị trên trang danh sách..."
-                    ref={excerptRef}
-                    value={excerpt}
-                  />
-                </div>
-
-                <div className="mt-2 mb-2 border-t-2 border-transparent bg-gradient-to-r from-accent/0 via-accent/30 to-accent/0 h-[2px] w-full" />
-
-                <TiptapEditor
-                  content={content}
-                  editable
-                  onChange={(json, text) => {
-                    setContent(json)
-                    setContentText(text)
-                    markDirtyAndAutosave()
-                  }}
-                />
-              </div>
-            </section>
+              </section>
+            </div>
           </div>
         </div>
       </main>
