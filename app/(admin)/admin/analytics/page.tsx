@@ -11,12 +11,12 @@ export default async function AdminAnalyticsPage() {
       <AdminPageHeader
         action={
           <div className="flex items-center gap-2">
-            <button className="flex h-[34px] items-center gap-1.5 rounded-full border border-border-default px-4 text-[13px] font-medium text-text-secondary transition-colors hover:bg-subtle-bg">
-              <Calendar aria-hidden="true" className="h-3.5 w-3.5" />
+            <button className="flex h-9 items-center gap-2 rounded-full border border-border-default bg-subtle-bg/50 px-4 text-[13px] font-semibold text-text-secondary transition-all hover:bg-white/40 hover:text-text-primary dark:hover:bg-white/10 shadow-sm backdrop-blur-sm">
+              <Calendar aria-hidden="true" className="h-4 w-4" />
               Last 30 Days
             </button>
-            <button className="flex h-[34px] items-center gap-1.5 rounded-full border border-border-default px-4 text-[13px] font-medium text-text-secondary transition-colors hover:bg-subtle-bg">
-              <Download aria-hidden="true" className="h-3.5 w-3.5" />
+            <button className="flex h-9 items-center gap-2 rounded-full border border-border-default bg-subtle-bg/50 px-4 text-[13px] font-semibold text-text-secondary transition-all hover:bg-white/40 hover:text-text-primary dark:hover:bg-white/10 shadow-sm backdrop-blur-sm">
+              <Download aria-hidden="true" className="h-4 w-4" />
               Export
             </button>
           </div>
@@ -25,7 +25,7 @@ export default async function AdminAnalyticsPage() {
         title="Analytics"
       />
 
-      <ScrollReveal index={0} className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6">
+      <ScrollReveal index={0} className="w-full">
         <Suspense
           fallback={
             <div className="rounded-[8px] border border-dashed p-5 text-sm text-text-secondary">

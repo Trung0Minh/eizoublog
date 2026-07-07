@@ -957,11 +957,24 @@ export const getCachedAdminPosts = unstable_cache(
     status: PostStatus | undefined,
     pageSize: number,
     sort: PostListSort = "latest",
+    searchQuery?: string,
   ) => {
     const offset = (page - 1) * pageSize
-    const statusFilter = status
-      ? Prisma.sql`WHERE p.status = ${status}::"PostStatus"`
+
+    // Build where clause
+    const conditions = []
+    if (status) {
+      conditions.push(Prisma.sql`p.status = ${status}::"PostStatus"`)
+    }
+    if (searchQuery) {
+      const searchPattern = `%${searchQuery}%`
+      conditions.push(Prisma.sql`p.title ILIKE ${searchPattern}`)
+    }
+
+    const statusFilter = conditions.length > 0
+      ? Prisma.sql`WHERE ${Prisma.join(conditions, " AND ")}`
       : Prisma.empty
+
     const chronologicalOrderBy = sort === "oldest"
       ? Prisma.sql`ORDER BY "publishedAt" ASC NULLS LAST, "updatedAt" ASC`
       : Prisma.sql`ORDER BY "publishedAt" DESC NULLS FIRST, "updatedAt" DESC`

@@ -56,11 +56,11 @@ function getApiError(value: unknown) {
 function statusTone(status: AwardEventStatus) {
   switch (status) {
     case "OPEN":
-      return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+      return "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 shadow-sm"
     case "PUBLISHED":
-      return "bg-accent/10 text-accent"
+      return "border-accent/30 bg-accent/10 text-accent shadow-sm"
     default:
-      return "bg-subtle-bg text-text-tertiary"
+      return "border-border-default bg-subtle-bg text-text-tertiary shadow-sm"
   }
 }
 
@@ -169,26 +169,26 @@ export function AdminEventDetailManager({
         </div>
       )}
 
-      <section className="rounded-[8px] border border-border-default bg-background p-5">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <section className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 backdrop-blur-md p-6 shadow-sm">
+        <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
           <div>
             <span
               className={cn(
-                "rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-bold tracking-wide uppercase",
                 statusTone(event.status),
               )}
             >
               {event.status}
             </span>
-            <p className="mt-2 text-[13px] text-text-secondary">
-              {submittedRooms.length} submitted submissions are eligible for the final article.
+            <p className="mt-3 text-[14px] font-medium text-text-secondary">
+              <span className="font-bold text-text-primary">{submittedRooms.length}</span> submitted submissions are eligible for the final article.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button
               disabled={isPending}
               onClick={() => void patchEvent({ status: "OPEN" })}
-              size="sm"
+              className="h-10 rounded-full font-semibold px-4 transition-all hover:scale-105"
               type="button"
               variant="outline"
             >
@@ -197,7 +197,7 @@ export function AdminEventDetailManager({
             <Button
               disabled={isPending}
               onClick={() => void patchEvent({ status: "CLOSED" })}
-              size="sm"
+              className="h-10 rounded-full font-semibold px-4 transition-all hover:scale-105"
               type="button"
               variant="outline"
             >
@@ -206,7 +206,7 @@ export function AdminEventDetailManager({
             <Button
               disabled={isPending}
               onClick={() => void action("shuffle")}
-              size="sm"
+              className="h-10 rounded-full font-semibold px-4 transition-all hover:scale-105"
               type="button"
               variant="outline"
             >
@@ -216,14 +216,14 @@ export function AdminEventDetailManager({
             <Button
               disabled={isPending}
               onClick={() => void action("publish")}
-              size="sm"
+              className="h-10 rounded-full font-bold px-5 bg-accent text-white shadow-md shadow-accent/20 transition-all hover:scale-105 hover:shadow-accent/40"
               type="button"
             >
               <Upload aria-hidden="true" className="mr-2 h-4 w-4" />
               Publish/update
             </Button>
             {event.finalPost && (
-              <Button asChild size="sm" variant="ghost">
+              <Button asChild className="h-10 rounded-full font-semibold px-4 transition-all hover:scale-105" variant="ghost">
                 <Link href={`/${event.finalPost.slug}`}>
                   <ExternalLink aria-hidden="true" className="mr-2 h-4 w-4" />
                   View post
@@ -234,15 +234,15 @@ export function AdminEventDetailManager({
         </div>
       </section>
 
-      <section className="rounded-[8px] border border-border-default bg-background p-5">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-[15px] font-semibold text-text-primary">
+      <section className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 backdrop-blur-md p-6 shadow-sm">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-[16px] font-bold text-text-primary">
             Event introduction
           </h2>
           <Button
             disabled={isPending}
             onClick={() => void patchEvent({ introText })}
-            size="sm"
+            className="h-9 rounded-full px-4 font-semibold hover:bg-accent/10 hover:text-accent hover:border-accent transition-colors"
             type="button"
             variant="outline"
           >
@@ -250,100 +250,111 @@ export function AdminEventDetailManager({
           </Button>
         </div>
         <Textarea
-          className="min-h-28"
+          className="min-h-32 rounded-[16px] border-border-default/60 bg-background/50 p-5 focus:border-accent focus:bg-background focus:ring-2 focus:ring-accent/20 transition-all text-[14px] resize-y"
           onChange={(changeEvent) => setIntroText(changeEvent.target.value)}
           placeholder="Short editor intro shown before the entries list."
           value={introText}
         />
       </section>
 
-      <section className="overflow-hidden rounded-[8px] border border-border-default bg-background">
-        <div className="flex h-10 items-center border-b border-border-default bg-subtle-bg px-4 text-[11px] font-semibold uppercase tracking-[0.06em] text-text-secondary">
+      <section className="space-y-4">
+        <div className="flex items-center px-2 text-[12px] font-bold uppercase tracking-[0.1em] text-text-tertiary">
           Submissions
         </div>
-        {rooms.length === 0 ? (
-          <div className="p-8 text-center text-[13px] text-text-tertiary">
-            No writers have joined yet.
-          </div>
-        ) : (
-          rooms.map((room, index) => (
-            <article
-              className="flex flex-col gap-3 border-b border-border-default p-4 last:border-0 md:flex-row md:items-center md:justify-between"
-              key={room.id}
-            >
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-medium text-text-primary">
-                    {room.writer.name}
-                  </h3>
-                  <span className="rounded-full bg-subtle-bg px-2 py-0.5 text-[11px] text-text-secondary">
-                    {room.status}
-                  </span>
-                  <span className="rounded-full bg-subtle-bg px-2 py-0.5 text-[11px] text-text-secondary">
-                    {room.visibility === "PARTICIPANTS" ? "Shared" : "Private"}
-                  </span>
-                </div>
-                <p className="mt-1 text-[12px] text-text-tertiary">
-                  @{room.writer.username} · {room._count.comments} feedback comments
-                </p>
-                {room.selectedPost ? (
-                  <p className="mt-2 text-[13px] text-text-secondary">
-                    {room.selectedPost.title}
-                    <span className="ml-2 text-[12px] text-text-tertiary">
-                      {room.selectedPost.status} source post
+        <div className="flex flex-col gap-3">
+          {rooms.length === 0 ? (
+            <div className="rounded-[24px] border border-dashed border-border-default/50 bg-subtle-bg/20 p-12 text-center text-[14px] text-text-tertiary">
+              No writers have joined yet.
+            </div>
+          ) : (
+            rooms.map((room, index) => (
+              <article
+                className="group flex flex-col gap-4 rounded-[20px] border border-transparent bg-subtle-bg/40 p-5 transition-all duration-300 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10 sm:flex-row sm:items-center sm:justify-between animate-in fade-in slide-in-from-bottom-2"
+                style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
+                key={room.id}
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <h3 className="text-[16px] font-bold text-text-primary">
+                      {room.writer.name}
+                    </h3>
+                    <span className="rounded-full border border-border-default/60 bg-background/50 px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase text-text-secondary shadow-sm">
+                      {room.status}
                     </span>
+                    <span className="rounded-full border border-border-default/60 bg-background/50 px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase text-text-secondary shadow-sm">
+                      {room.visibility === "PARTICIPANTS" ? "Shared" : "Private"}
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-[13px] font-medium text-text-secondary">
+                    <span className="text-accent">@{room.writer.username}</span>
+                    <span className="mx-2 text-text-tertiary">·</span>
+                    {room._count.comments} feedback comments
                   </p>
-                ) : (
-                  <p className="mt-2 text-[13px] text-text-tertiary">
-                    No source post selected yet.
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-1">
-                <Button
-                  disabled={index === 0 || isPending}
-                  onClick={() => moveRoom(room.id, -1)}
-                  size="icon"
-                  title="Move up"
-                  type="button"
-                  variant="outline"
-                >
-                  <ArrowUp aria-hidden="true" className="h-4 w-4" />
-                </Button>
-                <Button
-                  disabled={index === rooms.length - 1 || isPending}
-                  onClick={() => moveRoom(room.id, 1)}
-                  size="icon"
-                  title="Move down"
-                  type="button"
-                  variant="outline"
-                >
-                  <ArrowDown aria-hidden="true" className="h-4 w-4" />
-                </Button>
-                {room.selectedPost ? (
-                  <Button asChild size="icon" variant="ghost">
-                    <Link
-                      href={`/dashboard/preview/${room.selectedPost.id}`}
-                      title="Preview selected post"
-                    >
-                      <Eye aria-hidden="true" className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                ) : (
+                  {room.selectedPost ? (
+                    <div className="mt-3 flex items-center gap-2 rounded-[12px] border border-accent/20 bg-accent/5 p-3">
+                      <p className="text-[14px] font-semibold text-text-primary truncate">
+                        {room.selectedPost.title}
+                      </p>
+                      <span className="shrink-0 rounded-full bg-background/80 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-text-secondary shadow-sm">
+                        {room.selectedPost.status} source
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-[13px] font-medium italic text-text-tertiary">
+                      No source post selected yet.
+                    </p>
+                  )}
+                </div>
+                <div className="flex shrink-0 items-center gap-1.5 rounded-[16px] border border-border-default/50 bg-background/50 p-1.5 shadow-sm backdrop-blur-sm transition-all group-hover:border-accent/30 group-hover:bg-background/80">
                   <Button
-                    disabled
-                    size="icon"
-                    title="No selected post to preview"
+                    disabled={index === 0 || isPending}
+                    onClick={() => moveRoom(room.id, -1)}
+                    className="h-9 w-9 rounded-[12px] text-text-secondary hover:bg-subtle-bg hover:text-text-primary"
+                    title="Move up"
                     type="button"
                     variant="ghost"
+                    size="icon"
                   >
-                    <Eye aria-hidden="true" className="h-4 w-4" />
+                    <ArrowUp aria-hidden="true" className="h-4 w-4" />
                   </Button>
-                )}
-              </div>
-            </article>
-          ))
-        )}
+                  <Button
+                    disabled={index === rooms.length - 1 || isPending}
+                    onClick={() => moveRoom(room.id, 1)}
+                    className="h-9 w-9 rounded-[12px] text-text-secondary hover:bg-subtle-bg hover:text-text-primary"
+                    title="Move down"
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                  >
+                    <ArrowDown aria-hidden="true" className="h-4 w-4" />
+                  </Button>
+                  <div className="h-5 w-px bg-border-default/50 mx-1"></div>
+                  {room.selectedPost ? (
+                    <Button asChild variant="ghost" size="icon" className="h-9 w-9 rounded-[12px] text-text-secondary hover:bg-accent/10 hover:text-accent">
+                      <Link
+                        href={`/dashboard/preview/${room.selectedPost.id}`}
+                        title="Preview selected post"
+                      >
+                        <Eye aria-hidden="true" className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  ) : (
+                    <Button
+                      disabled
+                      size="icon"
+                      title="No selected post to preview"
+                      type="button"
+                      variant="ghost"
+                      className="h-9 w-9 rounded-[12px]"
+                    >
+                      <Eye aria-hidden="true" className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </article>
+            ))
+          )}
+        </div>
       </section>
     </div>
   )

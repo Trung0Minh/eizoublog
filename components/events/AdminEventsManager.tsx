@@ -1,7 +1,7 @@
 "use client"
 
 import type { AwardEventStatus } from "@prisma/client"
-import { CalendarPlus, Settings2 } from "lucide-react"
+import { CalendarPlus, Settings2, Plus, X } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -87,8 +87,23 @@ export function AdminEventsManager({
   const [categoryId, setCategoryId] = useState("")
   const [error, setError] = useState("")
   const [isPending, setIsPending] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([])
   const [title, setTitle] = useState("")
+
+  function toggleTag(tagId: string) {
+    setSelectedTagIds((prev) =>
+      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
+    )
+  }
+
+  function resetForm() {
+    setTitle("")
+    setCategoryId("")
+    setSelectedTagIds([])
+    setError("")
+    setIsModalOpen(false)
+  }
 
   async function createEvent() {
     setError("")
@@ -110,9 +125,7 @@ export function AdminEventsManager({
         throw new Error(getApiError(result))
       }
 
-      setTitle("")
-      setCategoryId("")
-      setSelectedTagIds([])
+      resetForm()
       router.refresh()
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "Failed to create event")
@@ -122,37 +135,161 @@ export function AdminEventsManager({
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-      <section className="overflow-hidden rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 backdrop-blur-md shadow-sm">
+    <div className="w-full">
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-[32px] border border-border-default/50 bg-background/95 backdrop-blur-xl p-8 shadow-2xl animate-in zoom-in-95 duration-200 relative">
+            <button
+              onClick={resetForm}
+              className="absolute right-6 top-6 rounded-full p-1.5 text-text-secondary hover:bg-subtle-bg hover:text-text-primary transition-colors"
+            >
+              <X className="h-5 w-5"/>
+            </button>
+
+            {error && (
+              <div className="mb-6 rounded-[12px] border border-destructive/30 bg-destructive/5 px-4 py-3 text-[13px] text-destructive shadow-sm">
+                {error}
+              </div>
+            )}
+
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-[18px] font-bold text-text-primary">
+                  Open a new event
+                </h2>
+                <p className="mt-1 text-[13px] text-text-tertiary">
+                  Create a new annual writing event and assign its category.
+                </p>
+              </div>
+
+              <div className="space-y-2.5">
+                <label className="text-[12px] font-bold uppercase tracking-wider text-text-secondary ml-1" htmlFor="event-title">
+                  Event Title
+                </label>
+                <Input
+                  id="event-title"
+                  maxLength={100}
+                  onChange={(event) => setTitle(event.target.value)}
+                  value={title}
+                  className="h-11 rounded-[12px] border-border-default/60 bg-subtle-bg/30 px-4 focus:border-accent focus:bg-background focus:ring-2 focus:ring-accent/20 transition-all text-[14px]"
+                  placeholder="e.g. Sakuga Awards 2026"
+                />
+              </div>
+
+              <div className="space-y-2.5">
+                <label className="text-[12px] font-bold uppercase tracking-wider text-text-secondary ml-1" htmlFor="event-category">
+                  Category
+                </label>
+                <select
+                  className="h-11 w-full rounded-[12px] border border-border-default/60 bg-subtle-bg/30 px-4 text-[14px] text-text-primary outline-none focus:border-accent focus:bg-background focus:ring-2 focus:ring-accent/20 transition-all appearance-none cursor-pointer"
+                  id="event-category"
+                  onChange={(event) => setCategoryId(event.target.value)}
+                  value={categoryId}
+                >
+                  <option value="">No category</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2.5">
+                <label className="text-[12px] font-bold uppercase tracking-wider text-text-secondary ml-1">
+                  Tags
+                </label>
+                <div className="flex max-h-40 flex-wrap gap-2 overflow-y-auto rounded-[12px] border border-border-default/60 bg-subtle-bg/20 p-3">
+                  {tags.map((tag) => {
+                    const isSelected = selectedTagIds.includes(tag.id)
+                    return (
+                      <button
+                        key={tag.id}
+                        type="button"
+                        onClick={() => toggleTag(tag.id)}
+                        className={cn(
+                          "rounded-full px-3 py-1.5 text-[12px] font-semibold transition-all duration-200 border",
+                          isSelected
+                            ? "border-accent bg-accent text-white shadow-md shadow-accent/20"
+                            : "border-border-default/60 bg-background text-text-secondary hover:border-accent/40 hover:text-accent"
+                        )}
+                      >
+                        {tag.name}
+                      </button>
+                    )
+                  })}
+                  {tags.length === 0 && (
+                    <div className="w-full text-center text-[12px] text-text-tertiary py-2">
+                      No tags available.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <Button
+                className="w-full h-11 rounded-[12px] bg-accent font-bold text-white shadow-md shadow-accent/20 transition-all hover:scale-[1.02] hover:shadow-accent/40 mt-4"
+                disabled={isPending || !title.trim()}
+                onClick={() => void createEvent()}
+                type="button"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Create event
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="mb-6 flex items-center justify-between">
+        <h2 className="text-[18px] font-bold text-text-primary">All Events</h2>
+        <Button
+          onClick={() => setIsModalOpen(true)}
+          className="h-10 rounded-full bg-accent px-5 font-bold text-white shadow-md shadow-accent/20 transition-all hover:scale-105 hover:shadow-accent/40"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Add Event
+        </Button>
+      </div>
+
+      <div className="flex flex-col gap-3">
         {events.length === 0 ? (
-          <div className="p-8 text-center text-[13px] text-text-tertiary">
-            No writing events yet.
+          <div className="rounded-[24px] border border-dashed border-border-default/50 bg-subtle-bg/20 p-12 text-center text-[14px] text-text-tertiary">
+            No writing events yet. Click "Add Event" to start one!
           </div>
         ) : (
-          events.map((event) => (
+          events.map((event, index) => (
             <article
-              className="group flex flex-col gap-4 border-b border-border-default p-6 last:border-0 sm:flex-row sm:items-center sm:justify-between hover:bg-accent/5 transition-colors"
+              className="group relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-[24px] border border-transparent bg-subtle-bg/30 p-5 transition-all duration-300 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10 animate-in fade-in slide-in-from-bottom-2"
+              style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
               key={event.id}
             >
               <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="truncate text-[15px] font-semibold text-text-primary">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h2 className="truncate text-[16px] font-bold text-text-primary">
                     {event.title}
                   </h2>
                   <span
                     className={cn(
-                      "rounded-full border px-2 py-0.5 text-[11px] font-semibold",
+                      "rounded-full border px-2.5 py-0.5 text-[11px] font-bold tracking-wide uppercase shadow-sm",
                       statusClass(event.status),
                     )}
                   >
                     {statusLabel(event.status)}
                   </span>
                 </div>
-                <p className="mt-1 text-[12px] text-text-tertiary">
-                  {event._count.rooms} rooms · /{event.slug}
+                <p className="mt-1.5 flex items-center gap-2 text-[13px] font-medium text-text-secondary">
+                  <span className="flex items-center gap-1.5 rounded-full bg-background/50 px-2 py-0.5 border border-border-default/50">
+                    <CalendarPlus className="h-3 w-3 text-accent" />
+                    {event._count.rooms} rooms
+                  </span>
+                  <span className="text-text-tertiary">·</span>
+                  <span className="font-mono text-[11.5px] text-text-tertiary">/{event.slug}</span>
                 </p>
               </div>
-              <Button asChild size="sm" variant="outline">
+              <Button
+                asChild
+                className="h-10 rounded-full bg-background/80 px-5 font-semibold text-text-secondary border border-border-default/50 shadow-sm transition-all hover:bg-accent hover:text-white hover:border-accent hover:shadow-accent/20 group-hover:scale-105"
+              >
                 <Link href={`/admin/events/${event.id}`} prefetch={false}>
                   <Settings2 aria-hidden="true" className="mr-2 h-4 w-4" />
                   Manage
@@ -161,66 +298,7 @@ export function AdminEventsManager({
             </article>
           ))
         )}
-      </section>
-
-      <aside className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 backdrop-blur-md p-6 shadow-sm">
-        <div className="mb-4 flex items-center gap-2">
-          <CalendarPlus aria-hidden="true" className="h-4 w-4 text-accent" />
-          <h2 className="text-[15px] font-semibold text-text-primary">
-            Open a new event
-          </h2>
-        </div>
-        {error && (
-          <div className="mb-3 rounded-[5px] border border-destructive/30 bg-destructive/5 p-3 text-[13px] text-destructive">
-            {error}
-          </div>
-        )}
-        <div className="space-y-3">
-          <Input
-            onChange={(event) => setTitle(event.target.value)}
-            placeholder="Sakuga Awards 2026"
-            value={title}
-          />
-          <select
-            className="h-10 w-full rounded-[5px] border border-border-default bg-background px-3 text-[13px]"
-            onChange={(event) => setCategoryId(event.target.value)}
-            value={categoryId}
-          >
-            <option value="">No category</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-          <select
-            className="min-h-24 w-full rounded-[5px] border border-border-default bg-background px-3 py-2 text-[13px]"
-            multiple
-            onChange={(event) =>
-              setSelectedTagIds(
-                Array.from(event.currentTarget.selectedOptions).map(
-                  (option) => option.value,
-                ),
-              )
-            }
-            value={selectedTagIds}
-          >
-            {tags.map((tag) => (
-              <option key={tag.id} value={tag.id}>
-                {tag.name}
-              </option>
-            ))}
-          </select>
-          <Button
-            className="w-full"
-            disabled={isPending || title.trim().length === 0}
-            onClick={() => void createEvent()}
-            type="button"
-          >
-            Create event
-          </Button>
-        </div>
-      </aside>
+      </div>
     </div>
   )
 }

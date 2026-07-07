@@ -236,13 +236,13 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
         </div>
       )}
 
-      <div className="w-full overflow-x-auto rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 backdrop-blur-md shadow-sm transition-all hover:border-accent/40">
-        <div className="min-w-[700px]">
-          <div className="flex h-12 items-center border-b border-border-default bg-subtle-bg px-6 text-[11px] font-semibold uppercase tracking-[0.05em] text-text-secondary">
+      <div className="w-full overflow-x-auto pb-4 px-2">
+        <div className="min-w-[750px] flex flex-col gap-2">
+          <div className="flex h-10 items-center px-6 text-[11px] font-bold uppercase tracking-[0.1em] text-text-tertiary">
             <div className="mr-4 flex shrink-0 items-center">
               <input
                 type="checkbox"
-                className="h-4 w-4 rounded border-border-default text-accent focus:ring-accent"
+                className="h-4 w-4 rounded border-border-default text-accent focus:ring-accent accent-accent cursor-pointer"
                 checked={selectedIds.size === visiblePosts.length && visiblePosts.length > 0}
                 onChange={toggleSelectAll}
               />
@@ -264,11 +264,11 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
               Comments
               {currentSort === "comments" && " ↓"}
             </Link>
-            <div className="w-[80px] shrink-0 text-right">Actions</div>
+            <div className="w-[80px] shrink-0 text-right opacity-0">Actions</div>
           </div>
 
-          <div className="flex flex-col">
-            {visiblePosts.map((post) => {
+          <div className="flex flex-col gap-3">
+            {visiblePosts.map((post, index) => {
               const statusLabel =
                 post.status === "PUBLISHED"
                   ? "Published"
@@ -278,26 +278,27 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
 
               return (
                 <div
-                  className={`group flex h-[64px] items-center border-b border-border-default px-6 transition-colors last:border-0 hover:bg-accent/5 ${selectedIds.has(post.id) ? "bg-accent/10" : ""}`}
+                  className={`group relative flex items-center rounded-[20px] border border-transparent bg-subtle-bg/20 p-4 pl-6 transition-all duration-300 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10 ${selectedIds.has(post.id) ? "border-accent/30 bg-accent/5 ring-1 ring-accent/20" : ""} animate-in fade-in slide-in-from-bottom-2`}
+                  style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
                   key={post.id}
                 >
                   <div className="mr-4 flex shrink-0 items-center">
                     <input
                       type="checkbox"
-                      className="h-4 w-4 rounded border-border-default text-accent focus:ring-accent"
+                      className="h-4 w-4 rounded border-border-default text-accent focus:ring-accent accent-accent cursor-pointer"
                       checked={selectedIds.has(post.id)}
                       onChange={() => toggleSelect(post.id)}
                     />
                   </div>
                   <div className="flex min-w-0 flex-1 flex-col justify-center pr-4">
                     <Link
-                      className="block truncate text-[13px] font-medium text-text-primary transition-colors hover:text-accent"
+                      className="block truncate text-[14px] font-bold text-text-primary transition-colors group-hover:text-accent"
                       href={`/dashboard/edit/${post.id}`}
                       prefetch={false}
                     >
                       {post.title}
                     </Link>
-                    <div className="mt-0.5 truncate font-mono text-[11px] text-text-tertiary">
+                    <div className="mt-1 truncate font-mono text-[11px] text-text-tertiary">
                       /{post.slug}
                     </div>
                   </div>
@@ -325,11 +326,14 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
                     {post._count.comments}
                   </div>
 
-                  <div className="flex w-[80px] shrink-0 items-center justify-end gap-0.5 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
+                  {/* Spacer for absolute actions to match header layout */}
+                  <div className="w-[80px] shrink-0" />
+
+                  <div className="absolute right-6 flex items-center justify-end gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100 bg-background/90 backdrop-blur-md rounded-[12px] shadow-sm border border-border-default/50 p-1.5 translate-x-4 group-hover:translate-x-0">
                     {post.status === "PUBLISHED" && (
-                      <Button asChild className="h-7 w-7 p-0" size="sm" variant="ghost">
+                      <Button asChild className="h-8 w-8 rounded-[8px] p-0 hover:bg-subtle-bg text-text-secondary hover:text-text-primary transition-colors" size="sm" variant="ghost">
                         <Link aria-label="View post" href={`/${post.slug}`} prefetch={false}>
-                          <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" />
+                          <ExternalLink aria-hidden="true" className="h-4 w-4" />
                         </Link>
                       </Button>
                     )}
@@ -339,7 +343,7 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
                           ? "Restore post to draft"
                           : "Archive post"
                       }
-                      className="h-7 w-7 p-0 hover:text-orange-500"
+                      className="h-8 w-8 rounded-[8px] p-0 hover:bg-orange-500/10 text-text-secondary hover:text-orange-500 transition-colors"
                       disabled={archivingId === post.id}
                       onClick={() => setArchiveTarget(post)}
                       size="sm"
@@ -347,21 +351,21 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
                       variant="ghost"
                     >
                       {post.status === "ARCHIVED" ? (
-                        <ArchiveRestore aria-hidden="true" className="h-3.5 w-3.5" />
+                        <ArchiveRestore aria-hidden="true" className="h-4 w-4" />
                       ) : (
-                        <Archive aria-hidden="true" className="h-3.5 w-3.5" />
+                        <Archive aria-hidden="true" className="h-4 w-4" />
                       )}
                     </Button>
                     <Button
                       aria-label="Delete post"
-                      className="h-7 w-7 p-0 hover:text-accent"
+                      className="h-8 w-8 rounded-[8px] p-0 hover:bg-accent/10 text-text-secondary hover:text-accent transition-colors"
                       disabled={deletingId === post.id}
                       onClick={() => setDeleteTarget(post)}
                       size="sm"
                       type="button"
                       variant="ghost"
                     >
-                      <Trash2 aria-hidden="true" className="h-3.5 w-3.5" />
+                      <Trash2 aria-hidden="true" className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>

@@ -117,20 +117,20 @@ export function NewsletterBroadcastForm({
   }
 
   return (
-    <form className="space-y-5" onSubmit={handleSubmit}>
+    <form className="space-y-6" onSubmit={handleSubmit}>
       {result && (
-        <p className="text-sm text-green-700 dark:text-green-400" role="status">
+        <div className="rounded-[16px] border border-emerald-500/20 bg-emerald-500/10 p-4 text-[14px] font-medium text-emerald-700 dark:text-emerald-400" role="status">
           Queued for {result.queued} of {result.total} subscribers
-        </p>
+        </div>
       )}
       {error && (
-        <p className="text-sm text-destructive" role="alert">
+        <div className="rounded-[16px] border border-destructive/20 bg-destructive/10 p-4 text-[14px] font-medium text-destructive" role="alert">
           {error}
-        </p>
+        </div>
       )}
 
       <div className="space-y-2">
-        <label className="text-[13px] font-medium text-text-primary" htmlFor="broadcast-subject">
+        <label className="text-[14px] font-bold text-text-primary" htmlFor="broadcast-subject">
           Subject
         </label>
         <Input
@@ -140,11 +140,12 @@ export function NewsletterBroadcastForm({
           placeholder="New essay from the blog"
           required
           value={subject}
+          className="h-11 rounded-[12px] border-[2px] border-border-default bg-subtle-bg/30 text-[14px] font-medium outline-none transition-all focus:border-accent focus:bg-background focus:ring-2 focus:ring-accent/20"
         />
       </div>
 
       <div className="space-y-2">
-        <label className="text-[13px] font-medium text-text-primary" htmlFor="broadcast-preview">
+        <label className="text-[14px] font-bold text-text-primary" htmlFor="broadcast-preview">
           Preview text
         </label>
         <Input
@@ -153,30 +154,36 @@ export function NewsletterBroadcastForm({
           onChange={(event) => setPreviewText(event.target.value)}
           placeholder="Optional inbox preview"
           value={previewText}
+          className="h-11 rounded-[12px] border-[2px] border-border-default bg-subtle-bg/30 text-[14px] font-medium outline-none transition-all focus:border-accent focus:bg-background focus:ring-2 focus:ring-accent/20"
         />
       </div>
 
       <div className="space-y-2">
-        <label className="text-[13px] font-medium text-text-primary" htmlFor="broadcast-post">
+        <label className="text-[14px] font-bold text-text-primary" htmlFor="broadcast-post">
           Featured post
         </label>
-        <select
-          className="flex h-10 w-full rounded-[5px] border border-border-default bg-background px-3 py-2 text-[13px] ring-offset-background focus-visible:border-accent focus-visible:outline-none"
-          id="broadcast-post"
-          onChange={(event) => setPostId(event.target.value)}
-          value={postId}
-        >
-          <option value="">No featured post</option>
-          {recentPosts.map((post) => (
-            <option key={post.id} value={post.id}>
-              {post.title}
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+          <select
+            className="h-11 w-full rounded-[12px] border-[2px] border-border-default bg-subtle-bg/30 px-3 py-2 text-[14px] font-medium outline-none transition-all focus:border-accent focus:bg-background focus:ring-2 focus:ring-accent/20 appearance-none pr-10"
+            id="broadcast-post"
+            onChange={(event) => setPostId(event.target.value)}
+            value={postId}
+          >
+            <option value="">No featured post</option>
+            {recentPosts.map((post) => (
+              <option key={post.id} value={post.id}>
+                {post.title}
+              </option>
+            ))}
+          </select>
+          <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-2">
-        <label className="text-[13px] font-medium text-text-primary" htmlFor="broadcast-body">
+        <label className="text-[14px] font-bold text-text-primary" htmlFor="broadcast-body">
           Custom message
         </label>
         <Textarea
@@ -186,10 +193,11 @@ export function NewsletterBroadcastForm({
           placeholder="Write a personal note, or select a featured post above."
           rows={7}
           value={customBody}
+          className="rounded-[16px] border-[2px] border-border-default bg-subtle-bg/30 p-4 text-[14px] font-medium outline-none transition-all focus:border-accent focus:bg-background focus:ring-2 focus:ring-accent/20"
         />
       </div>
 
-      <Button className="h-9 px-4 font-semibold" disabled={loading || !subject.trim()} type="submit">
+      <Button className="h-11 rounded-full bg-accent px-6 text-[14px] font-bold text-white shadow-md shadow-accent/20 transition-all hover:scale-105 hover:shadow-accent/40 w-full sm:w-auto" disabled={loading || !subject.trim()} type="submit">
         {loading ? "Sending..." : "Send broadcast"}
       </Button>
     </form>

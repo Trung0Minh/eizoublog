@@ -76,6 +76,25 @@ export async function AnalyticsWidget({
 
   try {
     ;({ stats, topPages } = await getCachedAdminAnalyticsData(startAt, endAt))
+
+    // Aggregate by path to merge duplicates (e.g. tracking variations with different postSlugs)
+    const aggregatedPagesMap = topPages.reduce((acc, page) => {
+      if (!acc.has(page.path)) {
+        acc.set(page.path, { ...page })
+      } else {
+        const existing = acc.get(page.path)!
+        existing.views += page.views
+        existing.reads += page.reads
+        existing.comments += page.comments
+        if (page.lastViewedAt && (!existing.lastViewedAt || page.lastViewedAt > existing.lastViewedAt)) {
+          existing.lastViewedAt = page.lastViewedAt
+        }
+        existing.readRate = existing.views > 0 ? Math.round((existing.reads / existing.views) * 100) : 0
+      }
+      return acc
+    }, new Map<string, InternalTopPage>())
+
+    topPages = Array.from(aggregatedPagesMap.values()).sort((a, b) => b.views - a.views)
   } catch {
     return (
       <section className="rounded-[24px] border-[2px] border-dashed border-border-default bg-subtle-bg/30 backdrop-blur-md p-5 text-[13px] text-text-tertiary shadow-sm">
@@ -245,6 +264,9 @@ export async function AnalyticsWidget({
                   fill="var(--text-tertiary)"
                   fontSize="11"
                   key={label}
+                  textAnchor={
+                    index === 0 ? "start" : index === chartLabels.length - 1 ? "end" : "middle"
+                  }
                   x={index * 240}
                   y="292"
                 >
@@ -257,8 +279,8 @@ export async function AnalyticsWidget({
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
           <div className="overflow-hidden rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 backdrop-blur-md shadow-sm">
-            <div className="border-b border-border-default bg-subtle-bg/50 p-4">
-              <h3 className="text-[13px] font-semibold text-text-primary">
+            <div className="border-b border-border-default/50 p-5 sm:p-6">
+              <h3 className="text-[16px] font-bold text-text-primary">
                 Top Referrers
               </h3>
             </div>
@@ -266,28 +288,28 @@ export async function AnalyticsWidget({
               {topPanelPages.length > 0 ? (
                 topPanelPages.map((page, index) => (
                   <div
-                    className="flex items-center justify-between border-b border-border-default p-4 last:border-0"
+                    className="group flex items-center justify-between border-b border-border-default/50 px-5 sm:px-6 py-4 last:border-0 transition-colors hover:bg-white/40 dark:hover:bg-white/5"
                     key={`${page.path}-${index}`}
                   >
                     <Link
-                      className="min-w-0 truncate text-[13px] font-medium text-text-primary hover:text-accent"
+                      className="min-w-0 truncate text-[14px] font-semibold text-text-primary group-hover:text-accent transition-colors"
                       href={page.path}
                       prefetch={false}
                     >
                       {page.path}
                     </Link>
                     <div className="flex items-center gap-4">
-                      <span className="text-[13px] text-text-secondary">
+                      <span className="text-[14px] font-semibold text-text-secondary">
                         {page.views.toLocaleString()}
                       </span>
-                      <span className="w-8 text-right text-[12px] text-text-tertiary">
+                      <span className="w-12 rounded-full bg-subtle-bg px-2 py-0.5 text-center text-[11px] font-bold text-text-secondary shadow-sm">
                         {page.readRate}%
                       </span>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="p-4 text-[13px] text-text-tertiary">
+                <div className="p-8 text-center text-[14px] font-medium text-text-tertiary">
                   No page data yet.
                 </div>
               )}
@@ -295,28 +317,28 @@ export async function AnalyticsWidget({
           </div>
 
           <div className="overflow-hidden rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 backdrop-blur-md shadow-sm">
-            <div className="border-b border-border-default bg-subtle-bg/50 p-4">
-              <h3 className="text-[13px] font-semibold text-text-primary">
+            <div className="border-b border-border-default/50 p-5 sm:p-6">
+              <h3 className="text-[16px] font-bold text-text-primary">
                 Device Breakdown
               </h3>
             </div>
-            <div className="flex flex-col gap-5 p-5">
+            <div className="flex flex-col gap-6 p-5 sm:p-6">
               {engagementRows.map((row, index) => (
-                <div key={row.label}>
-                  <div className="mb-1.5 flex items-center justify-between">
-                    <span className="text-[13px] font-medium text-text-primary">
+                <div key={row.label} className="group">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-[14px] font-semibold text-text-primary">
                       {row.label}
                     </span>
-                    <span className="text-[13px] text-text-secondary">
+                    <span className="text-[14px] font-semibold text-text-secondary">
                       {row.value}
-                      <span className="ml-1 text-[11px] text-text-tertiary">
-                        ({row.percent}%)
+                      <span className="ml-1.5 rounded-full bg-subtle-bg px-2 py-0.5 text-[11px] font-bold text-text-tertiary shadow-sm">
+                        {row.percent}%
                       </span>
                     </span>
                   </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full border border-border-default bg-subtle-bg">
+                  <div className="h-2.5 w-full overflow-hidden rounded-full border border-border-default/50 bg-subtle-bg/50 shadow-inner">
                     <div
-                      className="h-full rounded-full"
+                      className="h-full rounded-full transition-all duration-500 group-hover:brightness-110"
                       style={{
                         backgroundColor:
                           index === 0
@@ -339,7 +361,7 @@ export async function AnalyticsWidget({
 
   return (
     <section>
-      <div className={compact ? "mb-5 grid grid-cols-2 gap-4 md:flex md:flex-row" : "mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"}>
+      <div className={compact ? "mb-6 grid grid-cols-2 gap-3" : "mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"}>
         {visibleMetrics.map(({ change, icon, label, value }) => {
           const isPositive = change.startsWith("+")
           const isFlat = change === "0%"

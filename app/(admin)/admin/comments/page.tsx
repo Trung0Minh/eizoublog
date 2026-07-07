@@ -72,8 +72,8 @@ export default async function AdminCommentsPage({
         title="Comments"
       />
 
-      <div className="mb-4 flex flex-col justify-between gap-4 md:flex-row md:items-center">
-        <div className="inline-flex w-fit rounded-full border border-border-default bg-subtle-bg/50 p-[3px]">
+      <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center">
+        <div className="inline-flex w-fit rounded-full border-[2px] border-border-default bg-subtle-bg/30 p-1 backdrop-blur-md">
           {COMMENT_TABS.map((tab) => {
             const active = status === tab.key
 
@@ -81,9 +81,9 @@ export default async function AdminCommentsPage({
               <Link
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[12px] font-medium text-text-secondary transition-all hover:text-text-primary",
+                  "flex items-center gap-1.5 rounded-full px-5 py-2 text-[13px] font-bold text-text-secondary transition-all hover:text-text-primary",
                   active &&
-                    "bg-background font-semibold text-text-primary shadow-[0_1px_2px_rgba(0,0,0,0.08)] dark:shadow-[0_1px_2px_rgba(0,0,0,0.3)]",
+                    "bg-white dark:bg-zinc-800 text-text-primary shadow-sm",
                 )}
                 href={tab.href}
                 key={tab.key}
@@ -92,10 +92,10 @@ export default async function AdminCommentsPage({
                 {tab.label}
                 <span
                   className={cn(
-                    "rounded-full px-1.5 py-0.5 text-[10px]",
+                    "ml-1 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide shadow-sm",
                     active
-                      ? "bg-subtle-bg text-text-primary"
-                      : "bg-border-default/50 text-text-tertiary",
+                      ? "bg-accent/10 text-accent border border-accent/20"
+                      : "bg-border-default/50 text-text-tertiary border border-transparent",
                   )}
                 >
                   {tabCounts[tab.key]}
@@ -105,33 +105,35 @@ export default async function AdminCommentsPage({
           })}
         </div>
 
-        <div className="relative w-full md:w-[220px]">
+        <div className="relative w-full md:w-[280px]">
           <Search
             aria-hidden="true"
-            className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-tertiary"
+            className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary"
           />
           <input
-            className="h-[34px] w-full rounded-full border border-border-default bg-transparent pl-8 pr-2.5 text-[13px] outline-none transition-colors placeholder:text-text-tertiary focus:border-accent"
+            className="h-11 w-full rounded-full border-[2px] border-border-default bg-subtle-bg/30 pl-10 pr-4 text-[14px] font-medium outline-none transition-all placeholder:text-text-tertiary focus:border-accent focus:bg-background focus:ring-2 focus:ring-accent/20 backdrop-blur-md"
             placeholder="Search comments..."
             type="text"
           />
         </div>
       </div>
 
-      <ScrollReveal index={0} className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6">
+      <ScrollReveal index={0} className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-2 sm:p-6 backdrop-blur-md shadow-sm">
         <AdminCommentsTable
           comments={commentsData.comments}
           emptyLabel={`No ${COMMENT_TABS.find((tab) => tab.key === status)?.label.toLowerCase()} comments found.`}
           status={status}
         />
 
-        <Pagination
-          page={page}
-          pageSize={PAGE_SIZE}
-          prefetch={false}
-          query={{ status: status === "APPROVED" ? undefined : status }}
-          total={commentsData.total}
-        />
+        <div className="mt-6 px-4 pb-2 sm:px-0 sm:pb-0">
+          <Pagination
+            page={page}
+            pageSize={PAGE_SIZE}
+            prefetch={false}
+            query={{ status: status === "APPROVED" ? undefined : status }}
+            total={commentsData.total}
+          />
+        </div>
       </ScrollReveal>
     </div>
   )

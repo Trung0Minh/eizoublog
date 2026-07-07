@@ -85,7 +85,7 @@ describe("AnalyticsWidget", () => {
     ).not.toBeInTheDocument()
   })
 
-  it("renders repeated top page paths without duplicate React keys", async () => {
+  it("aggregates repeated top page paths without duplicate React keys", async () => {
     const consoleError = vi
       .spyOn(console, "error")
       .mockImplementation(() => undefined)
@@ -105,7 +105,8 @@ describe("AnalyticsWidget", () => {
         expect.stringContaining("Encountered two children with the same key"),
         expect.anything(),
       )
-      expect(screen.getAllByRole("link", { name: "/" })).toHaveLength(2)
+      expect(screen.getAllByRole("link", { name: "/" })).toHaveLength(1)
+      expect(screen.getByText("15")).toBeVisible()
     } finally {
       consoleError.mockRestore()
     }

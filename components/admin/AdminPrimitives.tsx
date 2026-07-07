@@ -50,32 +50,44 @@ export function AdminMetricCard({
   return (
     <div
       className={cn(
-        "flex min-w-0 flex-1 flex-col justify-between rounded-[18px] border border-border-default/70 bg-background/50 p-4 shadow-sm backdrop-blur-md md:p-6",
+        "group relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-[24px] border border-border-default/40 bg-background/30 p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.02)] backdrop-blur-3xl transition-all duration-300 hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_8px_32px_rgba(0,0,0,0.04)] hover:border-border-default/60 md:p-6",
         className,
       )}
     >
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <span className="truncate pr-2 text-[12px] font-medium uppercase tracking-[0.06em] text-text-secondary">
+      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      <div className="relative z-10 mb-4 flex items-center justify-between gap-3">
+        <span className="truncate pr-2 text-[12px] font-semibold uppercase tracking-[0.1em] text-text-secondary">
           {label}
         </span>
-        <Icon aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-text-tertiary" />
+        <div className={cn(
+          "flex h-8 w-8 items-center justify-center rounded-full transition-colors duration-300 shadow-sm border border-transparent",
+          trendTone === "positive" ? "bg-[#15803d]/10 text-[#15803d] border-[#15803d]/20 dark:bg-[#4ade80]/10 dark:text-[#4ade80] dark:border-[#4ade80]/20" :
+          trendTone === "negative" ? "bg-accent/10 text-accent border-accent/20" :
+          "bg-subtle-bg text-text-tertiary border-border-default/50"
+        )}>
+          <Icon aria-hidden="true" className="h-4 w-4" />
+        </div>
       </div>
-      <div>
-        <div className="text-[24px] font-bold leading-tight text-text-primary md:text-[28px]">
+      <div className="relative z-10 flex flex-col justify-end min-h-[56px]">
+        <div className="font-display text-[28px] font-bold leading-none text-text-primary tracking-tight md:text-[34px]">
           {value}
         </div>
-        {trend && (
-          <div
-            className={cn(
-              "mt-1 truncate text-[11px]",
-              trendTone === "positive" && "text-[#15803d] dark:text-[#4ade80]",
-              trendTone === "negative" && "text-accent",
-              trendTone === "neutral" && "text-text-tertiary",
-            )}
-          >
-            {trend}
-          </div>
-        )}
+        <div className="h-5 mt-1.5 flex items-center">
+          {trend ? (
+            <div
+              className={cn(
+                "truncate text-[12px] font-semibold transition-colors",
+                trendTone === "positive" && "text-[#15803d] dark:text-[#4ade80]",
+                trendTone === "negative" && "text-accent",
+                trendTone === "neutral" && "text-text-tertiary",
+              )}
+            >
+              {trend}
+            </div>
+          ) : (
+             <div className="w-full h-full" />
+          )}
+        </div>
       </div>
     </div>
   )
@@ -89,15 +101,21 @@ export function AdminStatusBadge({
   return (
     <span
       className={cn(
-        "inline-block rounded-full px-3 py-1 text-[11px] font-semibold",
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold backdrop-blur-sm border",
         status === "Published" &&
-          "bg-[#f0fdf4] text-[#15803d] dark:bg-[#14532d30] dark:text-[#4ade80]",
+          "border-[#15803d]/20 bg-[#f0fdf4]/50 text-[#15803d] dark:border-[#4ade80]/20 dark:bg-[#14532d]/40 dark:text-[#4ade80]",
         status === "Draft" &&
-          "border border-border-default bg-subtle-bg text-text-tertiary",
+          "border-border-default/50 bg-subtle-bg/50 text-text-secondary",
         status === "Archived" &&
-          "bg-[#fff7ed] text-[#c2410c] dark:bg-[#7c2d1230] dark:text-[#fb923c]",
+          "border-[#c2410c]/20 bg-[#fff7ed]/50 text-[#c2410c] dark:border-[#fb923c]/20 dark:bg-[#7c2d12]/40 dark:text-[#fb923c]",
       )}
     >
+      <span className={cn(
+        "h-1.5 w-1.5 rounded-full",
+        status === "Published" && "bg-[#15803d] dark:bg-[#4ade80] shadow-[0_0_8px_rgba(74,222,128,0.6)]",
+        status === "Draft" && "bg-text-tertiary",
+        status === "Archived" && "bg-[#c2410c] dark:bg-[#fb923c] shadow-[0_0_8px_rgba(251,146,60,0.6)]"
+      )} />
       {status}
     </span>
   )

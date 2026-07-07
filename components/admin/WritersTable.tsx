@@ -1,9 +1,11 @@
 "use client"
 
 import type { Role } from "@prisma/client"
-import { Mail, MoreHorizontal, ShieldOff } from "lucide-react"
+import { Mail, MoreHorizontal, ShieldOff, Search, Plus, X } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState, useMemo } from "react"
+
+import { InviteWriterForm } from "@/components/admin/InviteWriterForm"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -39,6 +41,16 @@ function getApiError(value: unknown) {
 export function WritersTable({ writers }: { writers: Writer[] }) {
   const router = useRouter()
   const [removingId, setRemovingId] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
+
+  const filteredWriters = useMemo(() => {
+    if (!searchTerm) return writers
+    const lower = searchTerm.toLowerCase()
+    return writers.filter(
+      (w) => w.name.toLowerCase().includes(lower) || w.email.toLowerCase().includes(lower)
+    )
+  }, [writers, searchTerm])
 
   async function handleRemove(writer: Writer) {
     if (
@@ -68,108 +80,111 @@ export function WritersTable({ writers }: { writers: Writer[] }) {
     }
   }
 
-  if (writers.length === 0) {
-    return (
-      <div className="rounded-[24px] border-[2px] border-dashed border-border-default bg-subtle-bg/30 backdrop-blur-md p-8 text-center text-[13px] text-text-tertiary shadow-sm">
-        No active writers found.
-      </div>
-    )
-  }
-
   return (
-    <div className="w-full overflow-x-auto rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 backdrop-blur-md shadow-sm transition-all hover:border-accent/40">
-      <div className="min-w-[700px]">
-        <div className="flex h-[48px] items-center border-b border-border-default bg-subtle-bg px-6 text-[11px] font-semibold uppercase tracking-[0.05em] text-text-secondary">
-          <div className="min-w-0 flex-1 pr-4">Name</div>
-          <div className="w-[120px] shrink-0">Role</div>
-          <div className="w-[100px] shrink-0 text-right">Posts</div>
-          <div className="w-[120px] shrink-0 text-right">Status</div>
-          <div className="w-[120px] shrink-0 pr-2 text-right">Actions</div>
+    <div className="space-y-6">
+      {/* Search and Action Bar */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full sm:w-[280px]">
+          <Search
+            aria-hidden="true"
+            className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary"
+          />
+          <input
+            className="h-10 w-full rounded-full border border-border-default bg-subtle-bg/30 pl-9 pr-4 text-[13px] outline-none transition-all placeholder:text-text-tertiary focus:border-accent focus:bg-background focus:ring-2 focus:ring-accent/20"
+            placeholder="Search writers by name or email..."
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
+        <Button
+          onClick={() => setIsInviteModalOpen(true)}
+          className="h-10 rounded-full bg-accent px-5 font-semibold text-white shadow-md shadow-accent/20 transition-all hover:scale-105 hover:shadow-accent/40"
+        >
+          <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
+          Invite Writer
+        </Button>
+      </div>
 
-        <div className="flex flex-col">
-          {writers.map((writer, index) => {
+      {/* Writers List */}
+      <div className="flex flex-col gap-3">
+        {filteredWriters.length === 0 ? (
+          <div className="rounded-[24px] border border-dashed border-border-default/50 bg-subtle-bg/20 p-12 text-center text-[14px] text-text-tertiary">
+            No writers found matching your search.
+          </div>
+        ) : (
+          filteredWriters.map((writer, index) => {
             const colors = [
-              "#0d9488",
-              "#c2410c",
-              "#475569",
-              "#7e22ce",
-              "#9f1239",
-              "#15803d",
+              "#0d9488", "#c2410c", "#475569", "#7e22ce", "#9f1239", "#15803d",
             ]
-            const role =
-              writer.role === "ADMIN"
-                ? "Admin"
-                : writer.role === "REVOKED"
-                  ? "Revoked"
-                  : "Writer"
+            const role = writer.role === "ADMIN" ? "Admin" : writer.role === "REVOKED" ? "Revoked" : "Writer"
 
             return (
-              <div
-                className="group flex h-[64px] items-center border-b border-border-default px-6 transition-colors last:border-0 hover:bg-accent/5"
+              <article
+                className="group flex flex-col gap-4 rounded-[20px] border border-transparent bg-subtle-bg/40 p-5 transition-all duration-300 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10 sm:flex-row sm:items-center sm:justify-between animate-in fade-in slide-in-from-bottom-2"
+                style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
                 key={writer.id}
               >
-                <div className="flex min-w-0 flex-1 items-center gap-3 pr-4">
+                <div className="flex min-w-0 flex-1 items-center gap-4">
                   <div
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold text-white"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[15px] font-bold text-white shadow-sm"
                     style={{ backgroundColor: colors[index % colors.length] }}
                   >
-                    {writer.name.charAt(0)}
+                    {writer.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <div className="truncate text-[13px] font-medium text-text-primary">
-                      {writer.name}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="truncate text-[16px] font-bold text-text-primary">
+                        {writer.name}
+                      </h3>
+                      <span className="rounded-full border border-border-default/60 bg-background/50 px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase text-text-secondary shadow-sm">
+                        {role}
+                      </span>
+                      {writer.role !== "REVOKED" && (
+                        <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase text-emerald-600 dark:text-emerald-400">
+                          Active
+                        </span>
+                      )}
                     </div>
-                    <div className="mt-0.5 truncate text-[12px] text-text-tertiary">
+                    <p className="mt-1 truncate text-[13px] font-medium text-text-secondary">
                       {writer.email}
-                    </div>
+                      <span className="mx-2 text-text-tertiary">·</span>
+                      {writer._count.posts} posts published
+                    </p>
                   </div>
                 </div>
 
-                <div className="w-[120px] shrink-0">
-                  <span className="inline-flex items-center rounded-[4px] border border-border-default bg-subtle-bg px-2 py-0.5 text-[11px] font-medium text-text-secondary">
-                    {role}
-                  </span>
-                </div>
-
-                <div className="w-[100px] shrink-0 text-right text-[13px] font-medium text-text-secondary">
-                  {writer._count.posts}
-                </div>
-
-                <div className="w-[120px] shrink-0 text-right text-[12px] text-[#15803d] dark:text-[#4ade80]">
-                  Active
-                </div>
-
-                <div className="flex w-[120px] shrink-0 items-center justify-end gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 pr-1">
+                <div className="flex shrink-0 items-center gap-1.5 rounded-[16px] border border-border-default/50 bg-background/50 p-1.5 shadow-sm backdrop-blur-sm transition-all group-hover:border-accent/30 group-hover:bg-background/80">
                   <Button
                     asChild
-                    className="h-8 w-8 border border-transparent p-0 text-text-tertiary hover:border-border-default hover:bg-background"
-                    size="sm"
+                    className="h-9 w-9 rounded-[12px] text-text-secondary hover:bg-subtle-bg hover:text-text-primary"
+                    size="icon"
                     title="Email writer"
                     variant="ghost"
                   >
                     <a href={`mailto:${writer.email}`}>
-                      <Mail aria-hidden="true" className="h-3.5 w-3.5" />
+                      <Mail aria-hidden="true" className="h-4 w-4" />
                     </a>
                   </Button>
                   <Button
                     aria-label={`Remove writer access for ${writer.name}`}
-                    className="h-8 w-8 border border-transparent p-0 text-text-tertiary hover:border-border-default hover:bg-background hover:text-accent"
+                    className="h-9 w-9 rounded-[12px] text-text-secondary hover:bg-destructive/10 hover:text-destructive"
                     disabled={removingId === writer.id}
                     onClick={() => void handleRemove(writer)}
-                    size="sm"
+                    size="icon"
                     title="Remove access"
                     type="button"
                     variant="ghost"
                   >
-                    <ShieldOff aria-hidden="true" className="h-3.5 w-3.5" />
+                    <ShieldOff aria-hidden="true" className="h-4 w-4" />
                   </Button>
+                  <div className="h-5 w-px bg-border-default/50 mx-1"></div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
                         aria-label="More options"
-                        className="h-8 w-8 border border-transparent p-0 text-text-tertiary hover:border-border-default hover:bg-background"
-                        size="sm"
+                        className="h-9 w-9 rounded-[12px] text-text-secondary hover:bg-subtle-bg hover:text-text-primary"
+                        size="icon"
                         title="More options"
                         type="button"
                         variant="ghost"
@@ -177,8 +192,8 @@ export function WritersTable({ writers }: { writers: Writer[] }) {
                         <MoreHorizontal aria-hidden="true" className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem asChild>
+                    <DropdownMenuContent align="end" className="rounded-[12px]">
+                      <DropdownMenuItem asChild className="rounded-[8px] cursor-pointer">
                         <a href={`/authors/${writer.username}`} target="_blank" rel="noopener noreferrer">
                           Xem hồ sơ
                         </a>
@@ -186,11 +201,40 @@ export function WritersTable({ writers }: { writers: Writer[] }) {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
-              </div>
+              </article>
             )
-          })}
-        </div>
+          })
+        )}
       </div>
+
+      {/* Invite Modal */}
+      {isInviteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+          <div
+            className="absolute inset-0 bg-background/80 backdrop-blur-sm transition-opacity"
+            onClick={() => setIsInviteModalOpen(false)}
+          />
+          <div className="relative w-full max-w-md animate-in fade-in zoom-in-95 duration-200">
+            <div className="overflow-hidden rounded-[24px] border-[2px] border-border-default bg-background p-6 shadow-2xl">
+              <div className="mb-6 flex items-start justify-between">
+                <div>
+                  <h2 className="text-[18px] font-bold text-text-primary">Invite a writer</h2>
+                  <p className="mt-1 text-[14px] text-text-secondary">Send an invite link to create a writer account.</p>
+                </div>
+                <Button
+                  onClick={() => setIsInviteModalOpen(false)}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0 rounded-full hover:bg-subtle-bg"
+                >
+                  <X className="h-4 w-4 text-text-secondary" />
+                </Button>
+              </div>
+              <InviteWriterForm />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

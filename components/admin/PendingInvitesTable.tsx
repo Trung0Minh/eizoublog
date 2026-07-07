@@ -57,41 +57,47 @@ export function PendingInvitesTable({ invites }: { invites: PendingInvite[] }) {
 
   if (invites.length === 0) {
     return (
-      <div className="rounded-[24px] border-[2px] border-dashed border-border-default bg-subtle-bg/30 backdrop-blur-md p-5 text-sm text-text-tertiary shadow-sm">
+      <div className="rounded-[24px] border-[2px] border-dashed border-border-default bg-subtle-bg/30 backdrop-blur-md p-8 text-center text-[13px] text-text-tertiary shadow-sm">
         No pending invites.
       </div>
     )
   }
 
   return (
-    <div>
-      {invites.map((invite) => (
-        <article className="group border-b border-border-default px-6 py-4 transition-colors last:border-0 hover:bg-accent/5" key={invite.id}>
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="truncate text-[13px] font-medium text-text-primary">{invite.email}</p>
-              <p className="mt-1 text-[11px] text-text-tertiary">
-                Invited by {invite.createdBy.name} on {formatDate(invite.createdAt)}
-              </p>
-              <p className="mt-1 text-[11px] text-text-tertiary">
-                Expires {formatDate(invite.expiresAt)}
-              </p>
+    <div className="flex flex-col gap-3">
+      {invites.map((invite, index) => (
+        <article
+          className="group flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-[20px] border border-transparent bg-subtle-bg/40 p-5 transition-all duration-300 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10 animate-in fade-in slide-in-from-bottom-2"
+          style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
+          key={invite.id}
+        >
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="truncate text-[15px] font-bold text-text-primary">{invite.email}</p>
+              <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide">
+                Pending
+              </Badge>
             </div>
-            <div className="flex items-center gap-3">
-              <Badge variant="secondary">Pending</Badge>
-              <Button
-                aria-label="Remove invite"
-                className="h-8 w-8 border border-transparent p-0 text-text-tertiary hover:border-border-default hover:bg-background hover:text-accent"
-                disabled={deletingId === invite.id}
-                onClick={() => void handleRemove(invite)}
-                size="sm"
-                title="Remove invite"
-                type="button"
-                variant="ghost"
-              >
-                <Trash2 aria-hidden="true" className="h-3.5 w-3.5" />
-              </Button>
-            </div>
+            <p className="mt-1.5 text-[13px] font-medium text-text-secondary">
+              Invited by <span className="text-text-primary font-bold">{invite.createdBy.name}</span> on {formatDate(invite.createdAt)}
+            </p>
+            <p className="mt-1 text-[12px] font-medium text-text-tertiary">
+              Expires {formatDate(invite.expiresAt)}
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-1.5 rounded-[16px] border border-border-default/50 bg-background/50 p-1.5 shadow-sm backdrop-blur-sm transition-all group-hover:border-accent/30 group-hover:bg-background/80">
+            <Button
+              aria-label="Remove invite"
+              className="h-9 w-9 rounded-[12px] text-text-secondary hover:bg-destructive/10 hover:text-destructive"
+              disabled={deletingId === invite.id}
+              onClick={() => void handleRemove(invite)}
+              size="icon"
+              title="Remove invite"
+              type="button"
+              variant="ghost"
+            >
+              <Trash2 aria-hidden="true" className="h-4 w-4" />
+            </Button>
           </div>
         </article>
       ))}

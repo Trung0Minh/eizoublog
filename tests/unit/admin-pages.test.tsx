@@ -34,9 +34,20 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/lib/auth", () => ({ auth: mocks.auth }))
 vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }))
 vi.mock("next/cache", () => ({ unstable_cache: mocks.unstableCache }))
-vi.mock("next/navigation", () => ({ redirect: mocks.redirect }))
-vi.mock("@/components/admin/AdminNav", () => ({
-  AdminNav: () => <nav aria-label="Admin navigation">Admin navigation</nav>,
+vi.mock("next/navigation", () => ({
+  redirect: mocks.redirect,
+  usePathname: () => "/admin",
+  useRouter: () => ({ push: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+}))
+vi.mock("@/components/admin/AdminHeader", () => ({
+  AdminHeader: () => <header aria-label="Admin mobile controls">Admin controls</header>,
+}))
+vi.mock("@/components/admin/AdminSidebar", () => ({
+  AdminSidebar: () => <nav aria-label="Admin navigation">Admin navigation</nav>,
+}))
+vi.mock("@/components/admin/AdminPostSearch", () => ({
+  AdminPostSearch: () => <input aria-label="Search posts" />,
 }))
 vi.mock("@/components/admin/AdminPostsTable", () => ({
   AdminPostsTable: ({ posts }: { posts: unknown[] }) => (
@@ -164,7 +175,7 @@ describe("admin server pages", () => {
 
     expect(screen.getByRole("heading", { name: "Dashboard" })).toBeVisible()
     expect(screen.getByText(/Published posts/i)).toBeVisible()
-    expect(screen.getByText(/Drafts/i)).toBeVisible()
+    expect(screen.getAllByText(/Drafts/i).length).toBeGreaterThan(0)
     expect(screen.getByText(/Subscribers/i)).toBeVisible()
     expect(screen.getByTestId("analytics-widget")).toBeVisible()
     expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(1)
