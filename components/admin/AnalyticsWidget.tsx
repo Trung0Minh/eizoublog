@@ -264,10 +264,10 @@ export async function AnalyticsWidget({
             </div>
             <div className="flex flex-col">
               {topPanelPages.length > 0 ? (
-                topPanelPages.map((page) => (
+                topPanelPages.map((page, index) => (
                   <div
                     className="flex items-center justify-between border-b border-border-default p-4 last:border-0"
-                    key={page.path}
+                    key={`${page.path}-${index}`}
                   >
                     <Link
                       className="min-w-0 truncate text-[13px] font-medium text-text-primary hover:text-accent"
@@ -369,10 +369,10 @@ export async function AnalyticsWidget({
 
         {topPages.length > 0 ? (
           <div className={compact ? "mt-3 flex flex-col" : "mt-4 space-y-3"}>
-            {topPages.map((page) => (
+            {topPages.map((page, index) => (
               <div
                 className={compact ? "flex items-center justify-between gap-4 border-b border-border-default py-2.5 text-[13px] last:border-0" : "flex items-center justify-between gap-4 text-sm"}
-                key={page.path}
+                key={`${page.path}-${index}`}
               >
                 <Link
                   className="min-w-0 truncate font-mono text-text-secondary transition-colors hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

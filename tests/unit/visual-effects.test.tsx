@@ -3,6 +3,14 @@ import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+const navigationMocks = vi.hoisted(() => ({
+  pathname: "/",
+}))
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => navigationMocks.pathname,
+}))
+
 vi.mock("motion/react", async () => {
   const React = await import("react")
 
@@ -22,6 +30,7 @@ vi.mock("motion/react", async () => {
 
 import { AmbientBackground } from "@/components/ui/AmbientBackground"
 import { CustomCursor } from "@/components/ui/CustomCursor"
+import { GlobalEffects } from "@/components/ui/GlobalEffects"
 import { NoiseOverlay } from "@/components/ui/NoiseOverlay"
 import { SeasonalEffects } from "@/components/ui/SakuraFalling"
 
@@ -43,6 +52,7 @@ function setMedia({ coarse = false, reduced = false } = {}) {
 describe("responsive visual effects", () => {
   beforeEach(() => {
     setMedia()
+    navigationMocks.pathname = "/"
     document.cookie = "particleEffects=; path=/; max-age=0"
     document.documentElement.setAttribute("data-season", "summer")
   })
@@ -68,6 +78,20 @@ describe("responsive visual effects", () => {
     await waitFor(() => {
       expect(screen.getAllByTestId("seasonal-particle")).toHaveLength(16)
     })
+  })
+
+  it("keeps seasonal particles on admin routes without the heavier global effects", async () => {
+    navigationMocks.pathname = "/admin"
+
+    render(<GlobalEffects />)
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId("seasonal-particle")).toHaveLength(16)
+    })
+    expect(screen.queryByTestId("ambient-motion-layer")).not.toBeInTheDocument()
+    expect(screen.queryByTestId("ambient-grid")).not.toBeInTheDocument()
+    expect(screen.queryByTestId("noise-overlay")).not.toBeInTheDocument()
+    expect(screen.queryByTestId("custom-cursor")).not.toBeInTheDocument()
   })
 
   it("removes seasonal particles and the custom cursor on touch devices", async () => {

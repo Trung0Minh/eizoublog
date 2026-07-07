@@ -56,8 +56,8 @@ describe("admin client components", () => {
     clearSessionUserCache()
   })
 
-  it("renders admin navigation", () => {
-    render(<AdminNav />)
+  it("renders admin navigation without overlaying desktop controls", () => {
+    const { container } = render(<AdminNav />)
 
     expect(screen.getByRole("link", { name: /posts/i })).toHaveAttribute(
       "href",
@@ -75,6 +75,12 @@ describe("admin client components", () => {
       "aria-current",
       "page",
     )
+    expect(screen.getByRole("link", { name: /posts/i })).toHaveStyle({
+      backgroundColor: "color-mix(in srgb, var(--accent) 13%, transparent)",
+    })
+    expect(screen.getByRole("link", { name: /posts/i }).className).not.toContain(
+      "ring-border-default",
+    )
     expect(screen.getByRole("link", { name: /dashboard/i })).toHaveAttribute(
       "href",
       "/admin",
@@ -85,6 +91,17 @@ describe("admin client components", () => {
     )
 
     expect(screen.getByRole("button", { name: /open admin menu/i })).toBeVisible()
+    expect(container.querySelector("header > div")).toHaveClass("grid")
+    expect(screen.getByRole("navigation", { name: "Admin navigation" })).not.toHaveClass(
+      "absolute",
+    )
+    expect(screen.getByRole("navigation", { name: "Admin navigation" })).not.toHaveClass(
+      "overflow-x-auto",
+    )
+    expect(screen.getByRole("link", { name: /blog/i })).toHaveClass(
+      "rounded-full",
+      "border",
+    )
   })
 
   it("uses the server-provided admin user without fetching the session again", () => {

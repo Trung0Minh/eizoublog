@@ -85,6 +85,32 @@ describe("AnalyticsWidget", () => {
     ).not.toBeInTheDocument()
   })
 
+  it("renders repeated top page paths without duplicate React keys", async () => {
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined)
+
+    analyticsMocks.getCachedAdminAnalyticsData.mockResolvedValue({
+      stats: populatedStats,
+      topPages: [
+        { path: "/", readRate: 0, reads: 0, views: 10 },
+        { path: "/", readRate: 0, reads: 0, views: 5 },
+      ],
+    })
+
+    try {
+      renderAsync(await AnalyticsWidget({ compact: true }))
+
+      expect(consoleError).not.toHaveBeenCalledWith(
+        expect.stringContaining("Encountered two children with the same key"),
+        expect.anything(),
+      )
+      expect(screen.getAllByRole("link", { name: "/" })).toHaveLength(2)
+    } finally {
+      consoleError.mockRestore()
+    }
+  })
+
   it("falls back gracefully when analytics data is unavailable", async () => {
     analyticsMocks.getCachedAdminAnalyticsData.mockRejectedValue(
       new Error("offline"),

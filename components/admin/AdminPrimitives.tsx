@@ -50,7 +50,7 @@ export function AdminMetricCard({
   return (
     <div
       className={cn(
-        "flex min-w-0 flex-1 flex-col justify-between rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-4 md:p-6",
+        "flex min-w-0 flex-1 flex-col justify-between rounded-[18px] border border-border-default/70 bg-background/50 p-4 shadow-sm backdrop-blur-md md:p-6",
         className,
       )}
     >

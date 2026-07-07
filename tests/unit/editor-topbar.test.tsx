@@ -15,7 +15,7 @@ vi.mock("next/link", () => ({
 import { EditorTopBar } from "@/components/editor/EditorTopBar"
 
 describe("EditorTopBar", () => {
-  it("shows exit, save status, and save/publish actions", async () => {
+  it("shows a polished dashboard exit and save/publish actions", async () => {
     const user = userEvent.setup()
     const onPublish = vi.fn()
     const onSaveDraft = vi.fn()
@@ -32,11 +32,10 @@ describe("EditorTopBar", () => {
       />,
     )
 
-    expect(screen.getByRole("link", { name: /Bảng điều khiển/ })).toHaveAttribute(
-      "href",
-      "/dashboard",
-    )
-    expect(screen.getByText("Đã lưu")).toBeVisible()
+    const dashboardLink = screen.getByRole("link", { name: /Bảng điều khiển/ })
+    expect(dashboardLink).toHaveAttribute("href", "/dashboard")
+    expect(dashboardLink).toHaveClass("rounded-full", "border")
+    expect(screen.queryByText("✨")).not.toBeInTheDocument()
 
     await user.click(screen.getByRole("button", { name: /Lưu nháp/ }))
     await user.click(screen.getByRole("button", { name: "Xuất bản" }))
@@ -61,8 +60,8 @@ describe("EditorTopBar", () => {
     expect(screen.getByRole("button", { name: /Lưu nháp/ })).toBeDisabled()
     expect(screen.getByRole("button", { name: "Cập nhật" })).toBeDisabled()
     expect(
-      screen.getByText("Thêm tiêu đề để có thể lưu và xuất bản."),
-    ).toBeVisible()
+      screen.queryByText("Thêm tiêu đề để có thể lưu và xuất bản."),
+    ).not.toBeInTheDocument()
   })
 
   it("uses a current-color spinner inside pending publish actions", () => {

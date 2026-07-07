@@ -21,7 +21,6 @@ function ButtonSpinner() {
 }
 
 interface EditorTopBarProps {
-  autosaveHint?: string
   canSave: boolean
   exitHref: string
   isPending: boolean
@@ -35,7 +34,6 @@ interface EditorTopBarProps {
 }
 
 export function EditorTopBar({
-  autosaveHint = "Tự động lưu sau khi chỉnh sửa tiêu đề, đoạn trích hoặc nội dung.",
   canSave,
   exitHref,
   isPending,
@@ -61,14 +59,13 @@ export function EditorTopBar({
       <div className="pt-4 pb-4 pointer-events-none">
         <div className="glass-navbar mx-auto flex h-14 w-[calc(100%-2rem)] max-w-[1440px] items-center justify-between gap-3 px-4 md:px-6 lg:px-8 rounded-full border border-border-default/60 bg-background/80 backdrop-blur-md shadow-glass pointer-events-auto -translate-y-[150%] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 focus-within:translate-y-0 focus-within:opacity-100 transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]">
         <Link
-          className="group flex items-center gap-1.5 text-text-secondary transition-colors hover:text-accent"
+          className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border-default/60 bg-background/45 px-3 text-text-secondary shadow-sm backdrop-blur-md transition-colors hover:border-accent/35 hover:bg-subtle-bg hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           href={exitHref}
         >
           <ArrowLeft aria-hidden="true" className="h-4 w-4" />
           <span className="hidden text-[13px] font-medium md:inline">
             Bảng điều khiển
           </span>
-          <span className="text-lg leading-none opacity-0 group-hover:opacity-100 transition-opacity">✨</span>
         </Link>
 
         <div className="absolute left-1/2 hidden h-full -translate-x-1/2 items-center md:flex">

@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  ArrowLeft,
   BarChart3,
   FolderTree,
   FileText,
@@ -50,25 +51,25 @@ export function AdminNav({ user }: { user?: WriterMenuUser | null }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   return (
-    <header className="sticky top-0 z-40 h-[56px] w-full border-b border-border-default bg-background">
-      <div className="relative mx-auto flex h-full max-w-[1200px] items-center justify-between px-5 md:px-6">
-        <div className="flex items-center">
+    <header className="sticky top-0 z-40 w-full border-b border-border-default/60 bg-background/70 backdrop-blur-xl">
+      <div className="mx-auto grid h-[56px] w-full max-w-[1440px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 md:px-6 lg:px-8">
+        <div className="flex min-w-0 items-center gap-2">
           <Link
-            className="text-[13px] font-medium text-text-tertiary transition-colors hover:text-text-secondary"
+            className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border-default/60 bg-background/45 px-3 text-[13px] font-medium text-text-secondary shadow-sm backdrop-blur-md transition-colors hover:border-accent/35 hover:bg-subtle-bg hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             href="/"
             prefetch={false}
           >
-            &larr; Blog
+            <ArrowLeft aria-hidden="true" className="h-3.5 w-3.5" />
+            Blog
           </Link>
-          <div className="mx-3 h-4 w-px bg-border-default md:mx-4" />
-          <span className="text-[13px] font-semibold text-text-primary">
+          <span className="hidden text-[13px] font-semibold text-text-primary sm:inline">
             Admin
           </span>
         </div>
 
         <nav
           aria-label="Admin navigation"
-          className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 md:flex"
+          className="hidden min-w-0 items-center justify-center gap-1 xl:flex"
         >
           {ADMIN_LINKS.map(({ href, icon: Icon, label }) => {
             const active = isActivePath(pathname, href)
@@ -77,12 +78,23 @@ export function AdminNav({ user }: { user?: WriterMenuUser | null }) {
               <Link
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-[6px] px-3.5 py-1.5 text-[13px] font-medium text-text-secondary transition-colors hover:bg-subtle-bg/50 hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  active && "bg-subtle-bg font-semibold text-text-primary",
+                  "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[10px] px-3 text-[13px] font-medium text-text-secondary transition-colors hover:bg-subtle-bg/45 hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  active &&
+                    "font-semibold text-accent hover:text-accent",
                 )}
                 href={href}
                 key={href}
                 prefetch={false}
+                style={
+                  active
+                    ? {
+                        backgroundColor:
+                          "color-mix(in srgb, var(--accent) 13%, transparent)",
+                        boxShadow:
+                          "0 8px 22px color-mix(in srgb, var(--accent) 10%, transparent)",
+                      }
+                    : undefined
+                }
               >
                 <Icon aria-hidden="true" className="h-3.5 w-3.5" />
                 {label}
@@ -91,19 +103,19 @@ export function AdminNav({ user }: { user?: WriterMenuUser | null }) {
           })}
         </nav>
 
-        <div className="flex items-center gap-2">
-          <div className="hidden md:flex items-center">
+        <div className="flex min-w-0 items-center justify-end gap-2">
+          <div className="hidden items-center xl:flex">
             <SeasonToggle />
             <ParticleToggle />
             <ThemeToggle />
           </div>
-          <div className="hidden md:block ml-2">
+          <div className="ml-1 hidden xl:block">
             <WriterMenu user={user} />
           </div>
 
           <button
             aria-label="Open admin menu"
-            className="p-1.5 text-text-secondary transition-colors hover:text-text-primary md:hidden"
+            className="p-1.5 text-text-secondary transition-colors hover:text-text-primary xl:hidden"
             onClick={() => setDrawerOpen(true)}
             type="button"
           >
@@ -113,7 +125,7 @@ export function AdminNav({ user }: { user?: WriterMenuUser | null }) {
       </div>
 
       {drawerOpen && (
-        <div className="fixed inset-0 z-50 flex md:hidden">
+        <div className="fixed inset-0 z-50 flex xl:hidden">
           <button
             aria-label="Close admin menu"
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"

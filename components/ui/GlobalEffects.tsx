@@ -12,7 +12,7 @@ export function GlobalEffects() {
   const isToolRoute = pathname.startsWith("/admin")
 
   if (isToolRoute) {
-    return null
+    return <SeasonalEffects />
   }
 
   return (

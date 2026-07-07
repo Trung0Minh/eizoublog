@@ -32,7 +32,7 @@ export default async function AdminLayout({
     : null
 
   return (
-    <div className="min-h-screen bg-background font-sans text-text-primary">
+    <div className="min-h-screen bg-transparent font-sans text-text-primary">
       <AdminNav user={menuUser} />
       <main className="mx-auto w-full max-w-[1200px] px-4 py-6 md:px-6 md:py-8">
         {children}

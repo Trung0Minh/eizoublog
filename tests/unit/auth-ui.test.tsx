@@ -58,6 +58,15 @@ describe("LoginPage", () => {
     )
   })
 
+  it("uses an opaque login panel over the seasonal background", () => {
+    render(<LoginForm />)
+
+    const panel = screen.getByRole("heading", { name: "Writer login" }).closest("section")
+
+    expect(panel).toHaveClass("bg-background")
+    expect(panel).not.toHaveClass("bg-subtle-bg/30")
+  })
+
   it("shows a generic invalid credentials error", async () => {
     const user = userEvent.setup()
     mocks.signIn.mockResolvedValue({ error: "CredentialsSignin" })

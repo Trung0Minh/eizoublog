@@ -1,6 +1,6 @@
 "use client"
 
-import { X, ChevronLeft, ChevronRight } from "lucide-react"
+import { X, ChevronLeft } from "lucide-react"
 import { useCallback, useEffect, useRef, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
@@ -171,10 +171,6 @@ export function PostEditor({
   })
   const isEditing = Boolean(postId)
   const canSave = title.trim().length > 0
-  const autosaveHint = postId
-    ? "Tự động lưu sau khi chỉnh sửa tiêu đề, đoạn trích hoặc nội dung."
-    : "Lưu một lần để bật tự động lưu cho bản nháp này."
-
   useEffect(() => {
     autosaveDraftRef.current = {
       categoryId,
@@ -361,7 +357,6 @@ export function PostEditor({
       data-testid="post-editor-shell"
     >
       <EditorTopBar
-        autosaveHint={autosaveHint}
         canSave={canSave}
         exitHref="/dashboard"
         isPending={isPending || savingAction !== null}

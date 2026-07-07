@@ -82,7 +82,7 @@ export default async function AdminDashboardPage() {
         ))}
       </section>
 
-      <ScrollReveal index={0} className="mb-8 rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6">
+      <ScrollReveal index={0} className="mb-8 rounded-[20px] border border-border-default/70 bg-background/50 p-6 shadow-sm backdrop-blur-md">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-[18px] font-semibold text-text-primary">
             Analytics
@@ -106,7 +106,7 @@ export default async function AdminDashboardPage() {
       </ScrollReveal>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
-        <ScrollReveal index={1} className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6">
+        <ScrollReveal index={1} className="rounded-[20px] border border-border-default/70 bg-background/50 p-6 shadow-sm backdrop-blur-md">
           <h3 className="mb-3.5 border-b border-border-default pb-2.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-text-tertiary">
             Recent posts
           </h3>
@@ -138,7 +138,7 @@ export default async function AdminDashboardPage() {
           </div>
         </ScrollReveal>
 
-        <ScrollReveal index={2} className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6">
+        <ScrollReveal index={2} className="rounded-[20px] border border-border-default/70 bg-background/50 p-6 shadow-sm backdrop-blur-md">
           <h3 className="mb-3.5 border-b border-border-default pb-2.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-text-tertiary">
             Recent comments
           </h3>
