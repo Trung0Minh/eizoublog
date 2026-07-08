@@ -1,7 +1,7 @@
 "use client"
 
 import type { AwardEventRoomStatus, AwardEventStatus } from "@prisma/client"
-import { ExternalLink, Plus } from "lucide-react"
+import { ArrowRight, ExternalLink } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -104,12 +104,12 @@ export function WriterEventsList({ events }: { events: WriterEventItem[] }) {
                   <Button
                     disabled={joiningId === event.id}
                     onClick={() => void joinEvent(event.id)}
-                    size="sm"
+                    size="icon"
+                    title="Tham gia"
                     type="button"
                     className="rounded-full bg-accent text-white hover:bg-accent/90"
                   >
-                    <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
-                    Tham gia
+                    <ArrowRight aria-hidden="true" className="h-4 w-4" />
                   </Button>
                 )}
                 {event.finalPost && (

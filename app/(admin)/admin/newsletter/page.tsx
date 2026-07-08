@@ -20,9 +20,13 @@ export default async function AdminNewsletterPage() {
     <div className="animate-in fade-in duration-300">
       <AdminPageHeader
         action={
-          <button className="flex h-10 w-full shrink-0 items-center justify-center gap-1.5 rounded-full bg-accent px-5 font-semibold text-white shadow-md shadow-accent/20 transition-all hover:scale-105 hover:shadow-accent/40 md:w-auto">
-            <Plus aria-hidden="true" className="mr-1 h-4 w-4" />
-            New Email
+          <button
+            aria-label="New email"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent p-0 font-semibold text-white shadow-md shadow-accent/20 transition-all hover:scale-105 hover:shadow-accent/40"
+            title="New email"
+            type="button"
+          >
+            <Plus aria-hidden="true" className="h-4 w-4" />
           </button>
         }
         subtitle="Manage subscribers and email broadcasts"

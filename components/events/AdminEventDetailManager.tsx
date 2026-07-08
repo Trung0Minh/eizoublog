@@ -5,7 +5,7 @@ import type {
   AwardEventStatus,
   PostStatus,
 } from "@prisma/client"
-import { ArrowDown, ArrowUp, ExternalLink, Eye, Shuffle, Upload } from "lucide-react"
+import { ArrowDown, ArrowUp, ExternalLink, Eye, Save, Shuffle, Upload } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useMemo, useState } from "react"
@@ -206,27 +206,32 @@ export function AdminEventDetailManager({
             <Button
               disabled={isPending}
               onClick={() => void action("shuffle")}
-              className="h-10 rounded-full font-semibold px-4 transition-all hover:scale-105"
+              aria-label="Shuffle submissions"
+              className="h-10 w-10 rounded-full p-0 transition-all hover:scale-105"
+              title="Shuffle submissions"
               type="button"
               variant="outline"
             >
-              <Shuffle aria-hidden="true" className="mr-2 h-4 w-4" />
-              Shuffle
+              <Shuffle aria-hidden="true" className="h-4 w-4" />
             </Button>
             <Button
               disabled={isPending}
               onClick={() => void action("publish")}
-              className="h-10 rounded-full font-bold px-5 bg-accent text-white shadow-md shadow-accent/20 transition-all hover:scale-105 hover:shadow-accent/40"
+              aria-label="Publish or update event post"
+              className="h-10 w-10 rounded-full bg-accent p-0 font-bold text-white shadow-md shadow-accent/20 transition-all hover:scale-105 hover:shadow-accent/40"
+              title="Publish/update event post"
               type="button"
             >
-              <Upload aria-hidden="true" className="mr-2 h-4 w-4" />
-              Publish/update
+              <Upload aria-hidden="true" className="h-4 w-4" />
             </Button>
             {event.finalPost && (
-              <Button asChild className="h-10 rounded-full font-semibold px-4 transition-all hover:scale-105" variant="ghost">
-                <Link href={`/${event.finalPost.slug}`}>
-                  <ExternalLink aria-hidden="true" className="mr-2 h-4 w-4" />
-                  View post
+              <Button asChild className="h-10 w-10 rounded-full p-0 transition-all hover:scale-105" variant="ghost">
+                <Link
+                  aria-label="View event post"
+                  href={`/${event.finalPost.slug}`}
+                  title="View event post"
+                >
+                  <ExternalLink aria-hidden="true" className="h-4 w-4" />
                 </Link>
               </Button>
             )}
@@ -242,11 +247,13 @@ export function AdminEventDetailManager({
           <Button
             disabled={isPending}
             onClick={() => void patchEvent({ introText })}
-            className="h-9 rounded-full px-4 font-semibold hover:bg-accent/10 hover:text-accent hover:border-accent transition-colors"
+            aria-label="Save event introduction"
+            className="h-9 w-9 rounded-full p-0 font-semibold hover:bg-accent/10 hover:text-accent hover:border-accent transition-colors"
+            title="Save event introduction"
             type="button"
             variant="outline"
           >
-            Save intro
+            <Save aria-hidden="true" className="h-4 w-4" />
           </Button>
         </div>
         <Textarea
@@ -296,7 +303,7 @@ export function AdminEventDetailManager({
                         {room.selectedPost.title}
                       </p>
                       <span className="shrink-0 rounded-full bg-background/80 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-text-secondary shadow-sm">
-                        {room.selectedPost.status} source
+                        {room.selectedPost.status} source post
                       </span>
                     </div>
                   ) : (

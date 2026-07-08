@@ -244,10 +244,12 @@ export function AdminEventsManager({
         <h2 className="text-[18px] font-bold text-text-primary">All Events</h2>
         <Button
           onClick={() => setIsModalOpen(true)}
-          className="h-10 rounded-full bg-accent px-5 font-bold text-white shadow-md shadow-accent/20 transition-all hover:scale-105 hover:shadow-accent/40"
+          className="h-10 w-10 rounded-full bg-accent p-0 font-bold text-white shadow-md shadow-accent/20 transition-all hover:scale-105 hover:shadow-accent/40"
+          aria-label="Add event"
+          title="Add event"
+          type="button"
         >
-          <Plus className="mr-2 h-4 w-4" />
-          Add Event
+          <Plus aria-hidden="true" className="h-4 w-4" />
         </Button>
       </div>
 
@@ -288,11 +290,15 @@ export function AdminEventsManager({
               </div>
               <Button
                 asChild
-                className="h-10 rounded-full bg-background/80 px-5 font-semibold text-text-secondary border border-border-default/50 shadow-sm transition-all hover:bg-accent hover:text-white hover:border-accent hover:shadow-accent/20 group-hover:scale-105"
+                className="h-10 w-10 rounded-full bg-background/80 p-0 font-semibold text-text-secondary border border-border-default/50 shadow-sm transition-all hover:bg-accent hover:text-white hover:border-accent hover:shadow-accent/20 group-hover:scale-105"
               >
-                <Link href={`/admin/events/${event.id}`} prefetch={false}>
-                  <Settings2 aria-hidden="true" className="mr-2 h-4 w-4" />
-                  Manage
+                <Link
+                  aria-label={`Manage ${event.title}`}
+                  href={`/admin/events/${event.id}`}
+                  prefetch={false}
+                  title={`Manage ${event.title}`}
+                >
+                  <Settings2 aria-hidden="true" className="h-4 w-4" />
                 </Link>
               </Button>
             </article>

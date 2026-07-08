@@ -123,6 +123,39 @@ export function ProfileForm({ user }: ProfileFormProps) {
       </ScrollReveal>
 
       <ScrollReveal delay={0.2}>
+        <div className="grid gap-5 rounded-[24px] border-[2px] border-border-default bg-background/80 backdrop-blur-md p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow sm:grid-cols-2">
+          <div className="space-y-2">
+            <label className="text-sm font-medium" htmlFor="profile-username">
+              Tên người dùng
+            </label>
+            <Input
+              id="profile-username"
+              maxLength={30}
+              minLength={3}
+              pattern="^@?[a-zA-Z0-9_]+$"
+              onChange={(event) => setUsername(event.target.value.replace(/^@/, ''))}
+              required
+              value={username ? `@${username}` : ""}
+              className="rounded-[12px] border-[2px] border-border-default focus-visible:border-accent focus-visible:ring-accent"
+            />
+            <p className="text-xs text-muted-foreground">
+              Đây là một phần của URL hồ sơ công khai của bạn.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium" htmlFor="profile-email">
+              Email
+            </label>
+            <Input disabled id="profile-email" readOnly value={user.email} className="rounded-[12px] border-[2px] border-border-default bg-muted/50 cursor-not-allowed opacity-70" />
+            <p className="text-xs text-muted-foreground">
+              Email được liên kết với tài khoản đăng nhập của bạn.
+            </p>
+          </div>
+        </div>
+      </ScrollReveal>
+
+      <ScrollReveal delay={0.3}>
         <div className="grid gap-5 rounded-[24px] border-[2px] border-border-default bg-background/80 backdrop-blur-md p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow">
           <div className="space-y-2">
             <label className="text-sm font-medium" htmlFor="profile-name">
@@ -151,39 +184,6 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 mode="profile"
               />
             </div>
-          </div>
-        </div>
-      </ScrollReveal>
-
-      <ScrollReveal delay={0.3}>
-        <div className="grid gap-5 border-t border-border-default pt-6 sm:grid-cols-2">
-          <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="profile-username">
-              Tên người dùng
-            </label>
-            <Input
-              id="profile-username"
-              maxLength={30}
-              minLength={3}
-              pattern="^@?[a-zA-Z0-9_]+$"
-              onChange={(event) => setUsername(event.target.value.replace(/^@/, ''))}
-              required
-              value={username ? `@${username}` : ""}
-              className="rounded-[12px] border-[2px] border-border-default focus-visible:border-accent focus-visible:ring-accent"
-            />
-            <p className="text-xs text-muted-foreground">
-              Đây là một phần của URL hồ sơ công khai của bạn.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="profile-email">
-              Email
-            </label>
-            <Input disabled id="profile-email" readOnly value={user.email} className="rounded-[12px] border-[2px] border-border-default bg-muted/50 cursor-not-allowed opacity-70" />
-            <p className="text-xs text-muted-foreground">
-              Email được liên kết với tài khoản đăng nhập của bạn.
-            </p>
           </div>
         </div>
       </ScrollReveal>

@@ -386,13 +386,14 @@ export function IntroToSakugaClient({ initialPage, isAdmin }: IntroToSakugaClien
     <div className="min-h-screen flex flex-col pt-0 group relative">
       {isAdmin && !isEditing && (
         <Button
+          aria-label="Chỉnh sửa trang"
           onClick={() => setIsEditing(true)}
           className="absolute right-0 top-0 opacity-0 transition-opacity group-hover:opacity-100 z-10"
-          size="sm"
+          size="icon"
+          title="Chỉnh sửa trang"
           variant="outline"
         >
-          <Pencil className="h-4 w-4 mr-2" />
-          Chỉnh sửa trang
+          <Pencil aria-hidden="true" className="h-4 w-4" />
         </Button>
       )}
 
@@ -404,8 +405,10 @@ export function IntroToSakugaClient({ initialPage, isAdmin }: IntroToSakugaClien
           <div className="flex gap-2">
             <Button
               variant="outline"
-              size="sm"
+              size="icon"
               className="rounded-full border-border-default font-bold"
+              aria-label="Hủy chỉnh sửa"
+              title="Hủy chỉnh sửa"
               onClick={() => {
                 dataRef.current = initialData
                 contentTextRef.current = initialPage?.contentText || ""
@@ -415,12 +418,17 @@ export function IntroToSakugaClient({ initialPage, isAdmin }: IntroToSakugaClien
               }}
               disabled={isSaving}
             >
-              <X className="h-4 w-4 mr-2" />
-              Hủy
+              <X aria-hidden="true" className="h-4 w-4" />
             </Button>
-            <Button size="sm" className="rounded-full bg-accent text-white hover:bg-accent/90 font-bold" onClick={handleSave} disabled={isSaving}>
-              <Save className="h-4 w-4 mr-2" />
-              {isSaving ? "Đang lưu..." : "Lưu"}
+            <Button
+              aria-label={isSaving ? "Đang lưu trang" : "Lưu trang"}
+              size="icon"
+              className="rounded-full bg-accent text-white hover:bg-accent/90 font-bold"
+              onClick={handleSave}
+              disabled={isSaving}
+              title={isSaving ? "Đang lưu trang" : "Lưu trang"}
+            >
+              <Save aria-hidden="true" className="h-4 w-4" />
             </Button>
           </div>
         </div>

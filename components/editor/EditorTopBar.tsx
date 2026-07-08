@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft, Settings2 } from "lucide-react"
+import { ArrowLeft, Settings2, Save } from "lucide-react"
 import Link from "next/link"
 
 import { ThemeToggle } from "@/components/layout/ThemeToggle"
@@ -59,13 +59,11 @@ export function EditorTopBar({
       <div className="pt-4 pb-4 pointer-events-none">
         <div className="glass-navbar mx-auto flex h-14 w-[calc(100%-2rem)] max-w-[1440px] items-center justify-between gap-3 px-4 md:px-6 lg:px-8 rounded-full border border-border-default/60 bg-background/80 backdrop-blur-md shadow-glass pointer-events-auto -translate-y-[150%] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 focus-within:translate-y-0 focus-within:opacity-100 transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]">
         <Link
-          className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border-default/60 bg-background/45 px-3 text-text-secondary shadow-sm backdrop-blur-md transition-colors hover:border-accent/35 hover:bg-subtle-bg hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border-default/60 bg-background/45 text-text-secondary shadow-sm backdrop-blur-md transition-colors hover:border-accent/35 hover:bg-subtle-bg hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0"
           href={exitHref}
+          title="Bảng điều khiển"
         >
           <ArrowLeft aria-hidden="true" className="h-4 w-4" />
-          <span className="hidden text-[13px] font-medium md:inline">
-            Bảng điều khiển
-          </span>
         </Link>
 
         <div className="absolute left-1/2 hidden h-full -translate-x-1/2 items-center md:flex">
@@ -83,31 +81,26 @@ export function EditorTopBar({
               aria-controls="post-settings-panel"
               aria-expanded={isSettingsOpen}
               aria-label={isSettingsOpen ? "Ẩn cài đặt bài viết" : "Cài đặt bài viết"}
-              className="h-9 rounded-full px-3 lg:hidden border-[2px]"
+              className="h-9 w-9 rounded-full border-[2px] p-0"
               onClick={onToggleSettings}
-              size="sm"
+              size="icon"
+              title="Cài đặt bài viết"
               type="button"
               variant={isSettingsOpen ? "default" : "outline"}
             >
               <Settings2 aria-hidden="true" className="h-4 w-4" />
-              <span className="hidden md:inline">
-                {isSettingsOpen ? "Ẩn cài đặt" : "Cài đặt bài viết"}
-              </span>
             </Button>
           )}
           <Button
-            className="h-9 rounded-full border-[2px] px-3 md:px-4"
+            className="h-9 w-9 rounded-full border-[2px] p-0"
             disabled={actionsDisabled}
             onClick={onSaveDraft}
-            size="sm"
+            size="icon"
+            title="Lưu nháp"
             type="button"
             variant="outline"
           >
-            {isDraftPending && <ButtonSpinner />}
-            <span className="hidden md:inline">
-              {isDraftPending ? "Đang lưu..." : "Lưu nháp"}
-            </span>
-            <span className="md:hidden">{isDraftPending ? "..." : "Nháp"}</span>
+            {isDraftPending ? <ButtonSpinner /> : <Save aria-hidden="true" className="h-4 w-4" />}
           </Button>
           <Button
             className="h-9 rounded-full bg-accent hover:bg-accent/90 text-white px-4 font-semibold"

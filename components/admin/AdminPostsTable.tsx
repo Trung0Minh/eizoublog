@@ -209,28 +209,34 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
           </span>
           <div className="flex gap-2">
             <Button
-              size="sm"
+              aria-label="Restore selected posts"
+              size="icon"
+              title="Restore selected posts"
               variant="outline"
               disabled={isBulkActioning}
               onClick={() => handleBulkAction("UNARCHIVE")}
             >
-              Restore
+              <ArchiveRestore aria-hidden="true" className="h-4 w-4" />
             </Button>
             <Button
-              size="sm"
+              aria-label="Archive selected posts"
+              size="icon"
+              title="Archive selected posts"
               variant="outline"
               disabled={isBulkActioning}
               onClick={() => setBulkArchiveConfirm(true)}
             >
-              Archive
+              <Archive aria-hidden="true" className="h-4 w-4" />
             </Button>
             <Button
-              size="sm"
+              aria-label="Delete selected posts"
+              size="icon"
+              title="Delete selected posts"
               variant="destructive"
               disabled={isBulkActioning}
               onClick={() => setBulkDeleteConfirm(true)}
             >
-              Delete
+              <Trash2 aria-hidden="true" className="h-4 w-4" />
             </Button>
           </div>
         </div>

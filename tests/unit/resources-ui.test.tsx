@@ -80,7 +80,7 @@ describe("ResourcesClient", () => {
     fireEvent.drop(screen.getByTestId("resource-editor-card-Third"), {
       dataTransfer,
     })
-    const saveBtn = screen.getByRole("button", { name: /^Lưu$/ })
+    const saveBtn = screen.getByRole("button", { name: "Lưu trang" })
     fireEvent.click(saveBtn)
 
     await waitFor(() => {

@@ -434,13 +434,14 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
     <div className="relative group min-h-screen flex flex-col pt-0 pb-20">
       {isAdmin && !isEditing && (
         <Button
+          aria-label="Chỉnh sửa trang"
           onClick={() => setIsEditing(true)}
           className="absolute right-0 top-0 z-10 shadow-sm opacity-0 transition-opacity group-hover:opacity-100"
-          size="sm"
+          size="icon"
+          title="Chỉnh sửa trang"
           variant="outline"
         >
-          <Pencil className="h-4 w-4 mr-2" />
-          Chỉnh sửa trang
+          <Pencil aria-hidden="true" className="h-4 w-4" />
         </Button>
       )}
 
@@ -452,20 +453,27 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
           <div className="flex gap-2">
             <Button
               variant="outline"
-              size="sm"
+              size="icon"
               className="rounded-full border-border-default font-bold"
+              aria-label="Hủy chỉnh sửa"
+              title="Hủy chỉnh sửa"
               onClick={() => {
                 setData(initialData)
                 setIsEditing(false)
               }}
               disabled={isSaving}
             >
-              <X className="h-4 w-4 mr-2" />
-              Hủy
+              <X aria-hidden="true" className="h-4 w-4" />
             </Button>
-            <Button size="sm" className="rounded-full bg-accent text-white hover:bg-accent/90 font-bold" onClick={handleSave} disabled={isSaving}>
-              <Save className="h-4 w-4 mr-2" />
-              {isSaving ? "Đang lưu..." : "Lưu"}
+            <Button
+              aria-label={isSaving ? "Đang lưu trang" : "Lưu trang"}
+              size="icon"
+              className="rounded-full bg-accent text-white hover:bg-accent/90 font-bold"
+              onClick={handleSave}
+              disabled={isSaving}
+              title={isSaving ? "Đang lưu trang" : "Lưu trang"}
+            >
+              <Save aria-hidden="true" className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -534,17 +542,19 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
                         
                         {isEditing && (
                           <div className="absolute top-2 right-2 flex gap-1 z-10">
-                            <Button variant="ghost" size="icon" className="h-8 w-8 bg-background/80 hover:bg-background" onClick={(e) => {
+                            <Button aria-label={`Kéo ${resource.domain} để sắp xếp`} draggable title={`Kéo ${resource.domain} để sắp xếp`} variant="ghost" size="icon" className="h-8 w-8 bg-background/80 hover:bg-background" onClick={(e) => {
                               e.preventDefault();
                               if (index > 0) {
                                 const newR = [...data.resources];
                                 [newR[index - 1], newR[index]] = [newR[index], newR[index - 1]];
                                 setData({...data, resources: newR});
                               }
+                            }} onDragStart={() => {
+                              setDraggedResourceIndex(index)
                             }}>
                               <ArrowUp className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 bg-background/80 hover:bg-background" onClick={(e) => {
+                            <Button aria-label={`Đưa ${resource.domain} xuống`} title={`Đưa ${resource.domain} xuống`} variant="ghost" size="icon" className="h-8 w-8 bg-background/80 hover:bg-background" onClick={(e) => {
                               e.preventDefault();
                               if (index < data.resources.length - 1) {
                                 const newR = [...data.resources];
@@ -554,7 +564,7 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
                             }}>
                               <ArrowDown className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 bg-background/80 hover:bg-red-500 hover:text-white" onClick={(e) => {
+                            <Button aria-label={`Xóa ${resource.domain}`} title={`Xóa ${resource.domain}`} variant="ghost" size="icon" className="h-8 w-8 text-red-500 bg-background/80 hover:bg-red-500 hover:text-white" onClick={(e) => {
                               e.preventDefault();
                               const newR = [...data.resources];
                               newR.splice(index, 1);
@@ -660,7 +670,16 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
 
                     return (
                       <ScrollReveal key={index} delay={index * 0.1}>
-                        <div className={commonClasses}>
+                        <div
+                          className={commonClasses}
+                          data-testid={`resource-editor-card-${resource.domain}`}
+                          onDragOver={isEditing ? handleResourceDragOver : undefined}
+                          onDrop={
+                            isEditing
+                              ? (event) => handleResourceDrop(event, index)
+                              : undefined
+                          }
+                        >
                           <CardContent />
                         </div>
                       </ScrollReveal>
@@ -674,8 +693,10 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
             <div className="flex justify-center mt-12 pt-8 border-t border-border-default">
               <Button
                 variant="outline"
-                size="lg"
-                className="rounded-full font-bold border-[2px] text-text-secondary hover:text-text-primary hover:border-accent"
+                size="icon"
+                className="h-12 w-12 rounded-full border-[2px] text-text-secondary hover:text-text-primary hover:border-accent"
+                aria-label="Thêm nguồn tham khảo mới"
+                title="Thêm nguồn tham khảo mới"
                 onClick={() => {
                   setData({
                     ...data,
@@ -683,7 +704,7 @@ export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClie
                   })
                 }}
               >
-                <Plus className="h-5 w-5 mr-2" /> Thêm nguồn tham khảo mới
+                <Plus aria-hidden="true" className="h-5 w-5" />
               </Button>
             </div>
           )}

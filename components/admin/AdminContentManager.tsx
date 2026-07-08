@@ -464,11 +464,13 @@ export function AdminContentManager({
         </div>
 
         <Button
+          aria-label={`Add ${activeTab === "categories" ? "category" : "tag"}`}
           onClick={openAddModal}
-          className="h-10 rounded-full bg-accent px-5 font-bold text-white shadow-md shadow-accent/20 transition-all hover:scale-105 hover:shadow-accent/40"
+          className="h-10 w-10 rounded-full bg-accent p-0 font-bold text-white shadow-md shadow-accent/20 transition-all hover:scale-105 hover:shadow-accent/40"
+          title={`Add ${activeTab === "categories" ? "category" : "tag"}`}
+          type="button"
         >
-          <Plus className="mr-2 h-4 w-4" />
-          Add {activeTab === "categories" ? "Category" : "Tag"}
+          <Plus aria-hidden="true" className="h-4 w-4" />
         </Button>
       </div>
 

@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { Eye, Pencil } from "lucide-react"
+import { Eye, Pencil, Plus } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -32,9 +32,9 @@ export default async function DashboardPage() {
             <TextReveal text={`Chào, ${session.user.name}! ✨`} />
           </h1>
         </div>
-        <Button asChild className="rounded-full bg-accent text-white hover:bg-accent/90">
-          <Link href="/dashboard/new" prefetch={false}>
-            Bài viết mới
+        <Button asChild size="icon" className="rounded-full bg-accent text-white hover:bg-accent/90 shrink-0">
+          <Link href="/dashboard/new" prefetch={false} title="Bài viết mới">
+            <Plus className="h-5 w-5" />
           </Link>
         </Button>
       </div>
@@ -52,7 +52,12 @@ export default async function DashboardPage() {
             <ScrollReveal key={post.id} index={index}>
               <article className="glass-card flex flex-col gap-3 p-5 transition-colors sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
-                  <h2 className="truncate font-medium">{post.title}</h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className="truncate font-medium">{post.title}</h2>
+                    <Badge variant={post.status === "PUBLISHED" ? "default" : "secondary"} className="shrink-0 h-5 px-1.5 text-[10px]">
+                      {post.status === "PUBLISHED" ? "Đã xuất bản" : "Nháp"}
+                    </Badge>
+                  </div>
                   <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
                     {post.status === "PUBLISHED" && post.publishedAt ? (
                       <span>
@@ -72,26 +77,23 @@ export default async function DashboardPage() {
                     <CoAuthorInviteActions postId={post.id} />
                   ) : (
                     <>
-                      <Badge variant={post.status === "PUBLISHED" ? "default" : "secondary"}>
-                        {post.status === "PUBLISHED" ? "Đã xuất bản" : "Bản nháp"}
-                      </Badge>
                       {post.status === "PUBLISHED" && (
-                        <Button asChild size="icon" variant="ghost">
+                        <Button asChild size="icon" variant="ghost" className="hover:bg-subtle-bg text-text-secondary hover:text-text-primary">
                           <Link
-                            aria-label={`Xem ${post.title}`}
+                            aria-label="Xem bài viết"
                             href={`/${post.slug}`}
-                            title={`Xem ${post.title}`}
+                            title="Xem"
                           >
                             <Eye aria-hidden="true" className="h-4 w-4" />
                           </Link>
                         </Button>
                       )}
-                      <Button asChild size="icon" variant="outline">
+                      <Button asChild size="icon" variant="outline" className="hover:bg-subtle-bg text-text-secondary hover:text-text-primary">
                         <Link
-                          aria-label={`Chỉnh sửa ${post.title}`}
+                          aria-label="Chỉnh sửa bài viết"
                           href={`/dashboard/edit/${post.id}`}
                           prefetch={false}
-                          title={`Chỉnh sửa ${post.title}`}
+                          title="Chỉnh sửa"
                         >
                           <Pencil aria-hidden="true" className="h-4 w-4" />
                         </Link>
@@ -100,7 +102,6 @@ export default async function DashboardPage() {
                         <PostOwnerActions
                           postId={post.id}
                           status={post.status}
-                          title={post.title}
                         />
                       )}
                     </>

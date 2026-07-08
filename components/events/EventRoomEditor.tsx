@@ -124,27 +124,32 @@ export function EventRoomEditor({
             <Button
               disabled={isPending || controlsDisabled}
               onClick={() => void save()}
-              size="sm"
+              aria-label="Lưu bài dự thi"
+              size="icon"
+              title="Lưu bài dự thi"
               type="button"
               variant="outline"
             >
-              <Save aria-hidden="true" className="mr-2 h-4 w-4" />
-              Lưu
+              <Save aria-hidden="true" className="h-4 w-4" />
             </Button>
             <Button
               disabled={isPending || controlsDisabled || !postId}
               onClick={() => void save("SUBMITTED")}
-              size="sm"
+              aria-label="Nộp bài dự thi"
+              size="icon"
+              title="Nộp bài dự thi"
               type="button"
             >
-              <Send aria-hidden="true" className="mr-2 h-4 w-4" />
-              Nộp bài
+              <Send aria-hidden="true" className="h-4 w-4" />
             </Button>
             {event.finalPost && (
-              <Button asChild size="sm" variant="ghost">
-                <Link href={`/${event.finalPost.slug}`}>
-                  <ExternalLink aria-hidden="true" className="mr-2 h-4 w-4" />
-                  Bài viết công khai
+              <Button asChild size="icon" variant="ghost">
+                <Link
+                  aria-label="Mở bài viết công khai"
+                  href={`/${event.finalPost.slug}`}
+                  title="Mở bài viết công khai"
+                >
+                  <ExternalLink aria-hidden="true" className="h-4 w-4" />
                 </Link>
               </Button>
             )}

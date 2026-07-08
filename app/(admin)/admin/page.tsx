@@ -1,5 +1,6 @@
 import { Suspense } from "react"
 import {
+  Check,
   Edit2,
   FileText,
   Mail,
@@ -7,6 +8,7 @@ import {
   Users,
   MoreHorizontal,
   Archive,
+  ShieldAlert,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -237,9 +239,23 @@ export default async function AdminDashboardPage() {
                   </div>
 
                   <div className="absolute top-2 right-2 flex opacity-0 transition-all duration-200 group-hover:opacity-100 bg-background/90 backdrop-blur-md rounded-[8px] shadow-sm border border-border-default/50 p-1 scale-95 group-hover:scale-100">
-                    <button className="px-2 py-1 text-[10px] font-medium text-text-secondary hover:text-text-primary transition-colors focus-visible:outline-none rounded-sm">Approve</button>
+                    <button
+                      aria-label="Approve comment"
+                      className="flex h-7 w-7 items-center justify-center rounded-sm text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary focus-visible:outline-none"
+                      title="Approve comment"
+                      type="button"
+                    >
+                      <Check aria-hidden="true" className="h-3.5 w-3.5" />
+                    </button>
                     <div className="w-px bg-border-default/50 my-1 mx-0.5" />
-                    <button className="px-2 py-1 text-[10px] font-medium text-[#c2410c] dark:text-[#fb923c] hover:opacity-80 transition-opacity focus-visible:outline-none rounded-sm">Spam</button>
+                    <button
+                      aria-label="Mark comment as spam"
+                      className="flex h-7 w-7 items-center justify-center rounded-sm text-[#c2410c] transition-colors hover:bg-[#c2410c]/10 hover:opacity-80 focus-visible:outline-none dark:text-[#fb923c]"
+                      title="Mark comment as spam"
+                      type="button"
+                    >
+                      <ShieldAlert aria-hidden="true" className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 </div>
               )) : (

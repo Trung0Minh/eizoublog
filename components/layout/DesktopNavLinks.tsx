@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { motion } from "motion/react"
 
 import { MagneticEffect } from "@/components/ui/MagneticEffect"
 import { cn } from "@/lib/utils"
@@ -25,16 +26,20 @@ export function DesktopNavLinks({ links }: { links: NavLink[] }) {
             <Link
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "relative flex items-center gap-2 rounded-full px-3 py-2 text-[14px] font-display font-bold tracking-wide transition-colors",
+                "relative flex items-center justify-center rounded-full px-4 py-2 text-[14px] font-display font-bold tracking-wide transition-colors",
                 isActive
-                  ? "bg-accent/15 text-accent shadow-[0_0_18px_var(--accent)]"
-                  : "text-text-secondary hover:bg-accent/10 hover:text-accent",
+                  ? "text-accent"
+                  : "text-text-secondary hover:text-accent",
               )}
               href={link.href}
             >
-              {link.label}
+              <span className="relative z-10">{link.label}</span>
               {isActive && (
-                <span className="absolute inset-x-3 -bottom-0.5 h-[2px] rounded-full bg-accent" />
+                <motion.div
+                  layoutId="active-nav-blob"
+                  className="absolute inset-0 z-0 rounded-full bg-accent/15 shadow-[0_0_18px_var(--accent)]"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
               )}
             </Link>
           </MagneticEffect>

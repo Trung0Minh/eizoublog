@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef, useState, useEffect, useCallback } from "react"
-import { Camera, Loader2, X } from "lucide-react"
+import { Camera, Crop, Loader2, Trash2, Upload, X } from "lucide-react"
 import { createPortal } from "react-dom"
 import Cropper from "react-easy-crop"
 
@@ -54,13 +54,13 @@ function getInitials(name: string) {
   )
 }
 
-// Crops a local object URL to a circular area and returns a Blob
 async function getCroppedBlob(
   imageSrc: string,
   croppedAreaPixels: { x: number; y: number; width: number; height: number },
 ): Promise<Blob> {
   const image = await new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image()
+    img.crossOrigin = "anonymous"
     img.onload = () => resolve(img)
     img.onerror = reject
     img.src = imageSrc
@@ -222,7 +222,9 @@ export function AvatarUpload({ name, onChange, value }: AvatarUploadProps) {
   // Clean up object URLs when done
   useEffect(() => {
     return () => {
-      if (localSrc) URL.revokeObjectURL(localSrc)
+      if (localSrc && localSrc.startsWith("blob:")) {
+        URL.revokeObjectURL(localSrc)
+      }
     }
   }, [localSrc])
 
@@ -283,14 +285,22 @@ export function AvatarUpload({ name, onChange, value }: AvatarUploadProps) {
           </div>
         )}
         <button
-          aria-label="Thay đổi ảnh đại diện"
+          aria-label={value ? "Căn chỉnh ảnh đại diện" : "Thay đổi ảnh đại diện"}
           className="absolute inset-0 flex items-center justify-center bg-background/70 opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           disabled={uploading}
-          onClick={() => inputRef.current?.click()}
+          onClick={() => {
+            if (value) {
+              setLocalSrc(value)
+            } else {
+              inputRef.current?.click()
+            }
+          }}
           type="button"
         >
           {uploading ? (
             <Loader2 aria-hidden="true" className="h-5 w-5 animate-spin" />
+          ) : value ? (
+            <Crop aria-hidden="true" className="h-5 w-5" />
           ) : (
             <Camera aria-hidden="true" className="h-5 w-5" />
           )}
@@ -300,23 +310,30 @@ export function AvatarUpload({ name, onChange, value }: AvatarUploadProps) {
       <div className="space-y-2">
         <div className="flex flex-wrap gap-2">
           <Button
+            aria-label={uploading ? "Đang tải ảnh đại diện lên" : "Tải ảnh đại diện mới"}
             disabled={uploading}
             onClick={() => inputRef.current?.click()}
-            size="sm"
+            size="icon"
+            title={uploading ? "Đang tải ảnh đại diện lên" : "Tải ảnh đại diện mới"}
             type="button"
             variant="outline"
           >
-            {uploading ? "Đang tải lên..." : "Tải ảnh đại diện mới"}
+            {uploading ? (
+              <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
+            ) : (
+              <Upload aria-hidden="true" className="h-4 w-4" />
+            )}
           </Button>
           {value && (
             <Button
+              aria-label="Xóa ảnh đại diện"
               onClick={() => onChange("")}
-              size="sm"
+              size="icon"
+              title="Xóa ảnh đại diện"
               type="button"
               variant="ghost"
             >
-              <X aria-hidden="true" className="mr-1 h-3.5 w-3.5" />
-              Xóa
+              <Trash2 aria-hidden="true" className="h-4 w-4" />
             </Button>
           )}
         </div>
@@ -347,11 +364,15 @@ export function AvatarUpload({ name, onChange, value }: AvatarUploadProps) {
         <AvatarCropperModal
           localSrc={localSrc}
           onClose={() => {
-            URL.revokeObjectURL(localSrc)
+            if (localSrc.startsWith("blob:")) {
+              URL.revokeObjectURL(localSrc)
+            }
             setLocalSrc(null)
           }}
           onConfirm={async (blob) => {
-            URL.revokeObjectURL(localSrc)
+            if (localSrc.startsWith("blob:")) {
+              URL.revokeObjectURL(localSrc)
+            }
             setLocalSrc(null)
             await uploadBlob(blob)
           }}

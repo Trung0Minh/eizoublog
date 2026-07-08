@@ -12,10 +12,9 @@ type ActionStatus = "idle" | "withdrawing" | "archiving"
 interface PostOwnerActionsProps {
   postId: string
   status: PostStatus
-  title: string
 }
 
-export function PostOwnerActions({ postId, status, title }: PostOwnerActionsProps) {
+export function PostOwnerActions({ postId, status }: PostOwnerActionsProps) {
   const router = useRouter()
   const [actionStatus, setActionStatus] = useState<ActionStatus>("idle")
 
@@ -56,23 +55,24 @@ export function PostOwnerActions({ postId, status, title }: PostOwnerActionsProp
     <>
       {status === "PUBLISHED" && (
         <Button
-          aria-label={`Rút bài ${title}`}
+          aria-label="Rút bài"
           disabled={actionStatus !== "idle"}
           onClick={() => void updateStatus("DRAFT")}
           size="icon"
-          title={`Rút bài ${title}`}
+          title="Rút bài"
           type="button"
           variant="outline"
+          className="hover:bg-subtle-bg text-text-secondary hover:text-text-primary"
         >
           <RotateCcw aria-hidden="true" className="h-4 w-4" />
         </Button>
       )}
       <Button
-        aria-label={`Lưu trữ ${title}`}
+        aria-label="Lưu trữ"
         disabled={actionStatus !== "idle"}
         onClick={() => void updateStatus("ARCHIVED")}
         size="icon"
-        title={`Lưu trữ ${title}`}
+        title="Lưu trữ"
         type="button"
         variant="outline"
         className="text-text-tertiary hover:text-destructive hover:bg-destructive/10 transition-colors"
