@@ -143,6 +143,11 @@ describe("CommentSection", () => {
       screen.getByRole("button", { name: "Trả lời bình luận của Mina" }),
     ).toHaveClass("text-[12px]", "text-text-tertiary")
     expect(screen.getByText("2 bình luận")).toHaveClass("text-text-secondary")
+    expect(screen.getByRole("heading", { name: "Bình luận" }).closest("section")).toHaveClass(
+      "bg-background/90",
+      "border-border-default/60",
+      "px-4",
+    )
   })
 
   it("renders account avatars in comments when available", () => {

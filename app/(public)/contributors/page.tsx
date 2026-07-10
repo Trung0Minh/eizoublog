@@ -115,7 +115,7 @@ export default async function ContributorsPage({ searchParams }: ContributorsPag
                 )}
               </Link>
 
-              <div className="min-w-0 flex-1">
+              <div className="w-full min-w-0 flex-1">
                 <div className="mb-2 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
                   <Link href={`/authors/${contributor.username}`}>
                     <h2 className="text-[22px] font-display font-bold text-text-primary group-hover:text-accent transition-colors">
@@ -146,7 +146,7 @@ export default async function ContributorsPage({ searchParams }: ContributorsPag
                     <span>Chưa có tiểu sử.</span>
                   )}
                 </div>
-                <div className="bg-background/50 rounded-lg p-3 text-[12px] flex items-center justify-between">
+                <div className="w-full bg-background/50 rounded-lg p-3 text-[12px] flex items-center justify-between">
                   <div>
                     <span className="font-bold text-text-primary">Username:</span> <Link href={`/authors/${contributor.username}`} className="text-text-secondary hover:text-accent">@{contributor.username}</Link>
                   </div>

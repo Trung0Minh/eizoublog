@@ -141,7 +141,7 @@ export default async function PostPage({ params }: PostPageProps) {
 
           <article className="mt-6 md:mt-12 max-w-[80ch] mx-auto text-text-primary font-lora text-[16px] md:text-[17.5px] leading-[1.75] md:leading-[1.8] post-content">
             <ScrollReveal delay={0.2}>
-              <div className="bg-transparent sm:bg-subtle-bg sm:backdrop-blur-md rounded-[8px] sm:border border-transparent sm:border-border-default px-0 py-4 sm:p-8 md:p-12 mb-8 md:mb-12 relative z-30 overflow-hidden">
+              <div className="relative z-30 mb-8 overflow-hidden rounded-[16px] border border-border-default/60 bg-background/90 px-4 py-5 backdrop-blur-sm sm:mb-12 sm:rounded-[8px] sm:bg-subtle-bg/90 sm:p-8 md:p-12">
                 <PostBody content={content} />
               </div>
             </ScrollReveal>

@@ -81,6 +81,11 @@ describe("PostPage analytics", () => {
     expect(screen.getByTestId("comment-section")).toHaveTextContent(
       "frieren-memory",
     )
+    expect(screen.getByText("Post body").parentElement).toHaveClass(
+      "bg-background/90",
+      "border-border-default/60",
+      "px-4",
+    )
   })
 
   it("skips static slug generation outside production", async () => {

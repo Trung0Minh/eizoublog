@@ -232,4 +232,29 @@ describe("ResourcesClient", () => {
       screen.getByRole("link", { name: /Sakugabooru Blog/i }),
     ).toHaveAttribute("href", "https://blog.sakugabooru.com/")
   })
+
+  it("keeps the admin editing toolbar inside mobile viewport gutters", async () => {
+    const user = userEvent.setup()
+
+    render(
+      <ResourcesClient
+        appName="Anime Blog"
+        initialPage={null}
+        isAdmin
+      />,
+    )
+
+    await user.click(screen.getByRole("button", { name: "Chỉnh sửa trang" }))
+
+    const toolbar = screen
+      .getByRole("heading", { name: "Đang chỉnh sửa Nguồn tham khảo" })
+      .parentElement
+
+    expect(toolbar).toHaveClass(
+      "inset-x-4",
+      "max-w-xl",
+      "sm:left-1/2",
+      "sm:right-auto",
+    )
+  })
 })

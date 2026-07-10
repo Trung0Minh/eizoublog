@@ -81,5 +81,9 @@ describe("public profile layouts", () => {
       "justify-center",
       "sm:justify-start",
     )
+
+    const metadata = screen.getByText("@mina").closest("div")?.parentElement
+    expect(metadata).toHaveClass("w-full")
+    expect(metadata?.parentElement).toHaveClass("w-full")
   })
 })

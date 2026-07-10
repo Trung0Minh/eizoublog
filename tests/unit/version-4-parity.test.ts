@@ -13,13 +13,15 @@ describe("anime-blog-4 appearance parity", () => {
   it("uses the parent design-token aliases in adapted public components", () => {
     const hero = read("components/posts/HeroCarousel.tsx")
     const about = read("app/(public)/about/AboutClient.tsx")
+    const intro = read("app/(public)/nhap-mon-sakuga/IntroToSakugaClient.tsx")
 
     expect(hero).toContain("glass-card")
     expect(hero).toContain("text-accent")
     expect(hero).toContain("bg-accent")
     expect(hero).not.toMatch(/(?:^|\s)(?:text-primary|bg-subtle)(?=\s|["'])/)
 
-    expect(about).toContain("bg-subtle-bg/80")
+    expect(about).toContain("bg-background/90")
+    expect(intro).toContain("bg-background/90")
     expect(about).toContain("text-text-secondary")
     expect(about).not.toMatch(
       /(?:^|\s)(?:text-primary|text-secondary|bg-subtle)(?=\s|["'])/,
