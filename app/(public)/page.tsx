@@ -9,8 +9,7 @@ import { HeroCarousel } from "@/components/posts/HeroCarousel"
 import { HomeIntro } from "@/components/home/HomeIntro"
 import { parsePostListSort } from "@/lib/postListSort"
 import { buildMetadata, getAppUrl, getAppName } from "@/lib/seo"
-import { AdminBackgroundFlyout } from "@/components/admin/AdminBackgroundFlyout"
-import { getActiveSession } from "@/lib/authz"
+import { ClientAdminBackgroundFlyout } from "@/components/admin/ClientAdminBackgroundFlyout"
 
 interface HomePageProps {
   searchParams: Promise<{ archive?: string; page?: string; sort?: string }>
@@ -59,7 +58,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     page: pageParam,
     sort: sortParam,
   } = await searchParams
-  const activeSession = await getActiveSession(["ADMIN"])
   const page = parsePage(pageParam)
   const sort = parsePostListSort(sortParam)
   const archive = parseArchiveMonth(archiveParam)
@@ -89,7 +87,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           <HomeSidebar data={sidebarData} />
         </div>
       </PageContainer>
-      {activeSession && <AdminBackgroundFlyout />}
+      <ClientAdminBackgroundFlyout />
     </>
   )
 }

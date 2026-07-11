@@ -125,6 +125,10 @@ describe("comments API", () => {
       },
     })
     expect(mocks.revalidateTag).toHaveBeenCalledWith("comments", "max")
+    expect(mocks.revalidateTag).toHaveBeenCalledWith(
+      "post-detail:frieren",
+      "max",
+    )
   })
 
   it("sends a reply notification to the parent author when enabled", async () => {
@@ -267,7 +271,10 @@ describe("comment admin API", () => {
 
   it("soft-deletes a comment by marking it spam", async () => {
     mocks.auth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } })
-    mocks.prisma.comment.findUnique.mockResolvedValue({ id: "comment-1" })
+    mocks.prisma.comment.findUnique.mockResolvedValue({
+      id: "comment-1",
+      post: { slug: "frieren" },
+    })
     mocks.prisma.comment.update.mockResolvedValue({ id: "comment-1" })
 
     const response = await DELETE(
@@ -286,5 +293,9 @@ describe("comment admin API", () => {
       where: { id: "comment-1" },
     })
     expect(mocks.revalidateTag).toHaveBeenCalledWith("comments", "max")
+    expect(mocks.revalidateTag).toHaveBeenCalledWith(
+      "post-detail:frieren",
+      "max",
+    )
   })
 })

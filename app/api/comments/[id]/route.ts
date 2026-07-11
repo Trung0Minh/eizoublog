@@ -1,6 +1,7 @@
 import { revalidateTag } from "next/cache"
 
 import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
+import { getPostDetailCacheTag } from "@/lib/cacheTags"
 import { prisma } from "@/lib/prisma"
 
 export async function DELETE(
@@ -16,7 +17,10 @@ export async function DELETE(
   try {
     const { id } = await params
     const comment = await prisma.comment.findUnique({
-      select: { id: true },
+      select: {
+        id: true,
+        post: { select: { slug: true } },
+      },
       where: { id },
     })
 
@@ -30,6 +34,7 @@ export async function DELETE(
     })
 
     revalidateTag("comments", "max")
+    revalidateTag(getPostDetailCacheTag(comment.post.slug), "max")
 
     return Response.json({ data: { message: "Comment hidden" } })
   } catch (error) {

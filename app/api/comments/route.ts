@@ -4,6 +4,7 @@ import { ZodError, z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { sendCommentReplyEmail, sendPostCommentEmail } from "@/lib/resend"
 import { auth } from "@/lib/auth"
+import { getPostDetailCacheTag } from "@/lib/cacheTags"
 
 class RouteError extends Error {
   constructor(
@@ -190,6 +191,7 @@ export async function POST(request: Request) {
     }
 
     revalidateTag("comments", "max")
+    revalidateTag(getPostDetailCacheTag(post.slug), "max")
 
     return Response.json({ data: comment }, { status: 201 })
   } catch (error) {

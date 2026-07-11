@@ -1,19 +1,35 @@
 "use client"
 
-import { useCallback, useRef, useState } from "react"
+import dynamic from "next/dynamic"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Pencil, Save, X, HelpCircle } from "lucide-react"
 import type { Editor, JSONContent } from "@tiptap/react"
 import Link from "next/link"
 
-import { TiptapEditor } from "@/components/editor/TiptapEditor"
 import { PostBody } from "@/components/posts/PostBody"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { TextReveal } from "@/components/ui/TextReveal"
 import { ScrollReveal } from "@/components/ui/ScrollReveal"
+import { useAdminAccess } from "@/lib/clientSession"
 import { cn } from "@/lib/utils"
-import { CoverImageUpload } from "@/components/posts/CoverImageUpload"
+
+const TiptapEditor = dynamic(
+  () =>
+    import("@/components/editor/TiptapEditor").then(
+      (module) => module.TiptapEditor,
+    ),
+  { ssr: false },
+)
+
+const CoverImageUpload = dynamic(
+  () =>
+    import("@/components/posts/CoverImageUpload").then(
+      (module) => module.CoverImageUpload,
+    ),
+  { ssr: false },
+)
 
 interface IntroPageContent {
   body: JSONContent
@@ -24,7 +40,7 @@ interface IntroPageContent {
 
 interface IntroToSakugaClientProps {
   initialPage: { content: unknown; contentText: string | null } | null
-  isAdmin: boolean
+  isAdmin?: boolean
 }
 
 const defaultBody: JSONContent = {
@@ -306,10 +322,21 @@ function getApiError(value: unknown) {
   return "Lỗi khi lưu. Vui lòng thử lại."
 }
 
-export function IntroToSakugaClient({ initialPage, isAdmin }: IntroToSakugaClientProps) {
+export function IntroToSakugaClient({
+  initialPage,
+  isAdmin: isAdminOverride,
+}: IntroToSakugaClientProps) {
   const router = useRouter()
+  const isAdmin = useAdminAccess(isAdminOverride)
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    if (!isAdmin) return
+
+    void import("@/components/editor/TiptapEditor")
+    void import("@/components/posts/CoverImageUpload")
+  }, [isAdmin])
 
   const initialData: IntroPageContent = isIntroPageContent(initialPage?.content) ? initialPage.content : {
     title: "Nhập môn Sakuga (作画)",

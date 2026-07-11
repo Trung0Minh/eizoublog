@@ -20,6 +20,7 @@ const mocks = vi.hoisted(() => {
       findMany: vi.fn(),
       findUnique: vi.fn(),
     },
+    sitePage: { findUnique: vi.fn() },
     tag: { findMany: vi.fn(), findUnique: vi.fn() },
     user: { count: vi.fn(), findMany: vi.fn(), findUnique: vi.fn() },
   }
@@ -63,7 +64,9 @@ import {
   getCachedPublishedPosts,
   getCachedProfileUser,
   getCachedSearchResults,
+  getCachedSearchTaxonomy,
   getCachedSidebarData,
+  getCachedSitePage,
   getCachedTagBySlug,
   getCachedTagPosts,
   getCachedWriterDashboardPosts,
@@ -100,6 +103,7 @@ describe("cached Prisma query helpers", () => {
     mocks.prisma.post.count.mockReset()
     mocks.prisma.post.findMany.mockReset()
     mocks.prisma.post.findUnique.mockReset()
+    mocks.prisma.sitePage.findUnique.mockReset()
     mocks.prisma.tag.findMany.mockReset()
     mocks.prisma.tag.findUnique.mockReset()
     mocks.prisma.user.count.mockReset()
@@ -248,8 +252,46 @@ describe("cached Prisma query helpers", () => {
     expect(select.author.select).not.toHaveProperty("email")
     expect(select.comments.select).not.toHaveProperty("authorEmail")
     expect(mocks.cacheEntries).toContainEqual({
-      keyParts: ["published-post"],
-      options: { revalidate: 300, tags: ["posts", "comments"] },
+      keyParts: ["published-post", "essay"],
+      options: {
+        revalidate: 300,
+        tags: ["posts", "users", "post-detail:essay"],
+      },
+    })
+  })
+
+  it("caches editable site pages and search taxonomy data", async () => {
+    mocks.prisma.sitePage.findUnique.mockResolvedValue({
+      content: { title: "About" },
+      contentText: "About",
+    })
+    mocks.prisma.category.findMany.mockResolvedValue([
+      { name: "Analysis", slug: "analysis" },
+    ])
+    mocks.prisma.tag.findMany.mockResolvedValue([
+      { name: "Sakuga", slug: "sakuga" },
+    ])
+
+    await expect(getCachedSitePage("about")).resolves.toEqual({
+      content: { title: "About" },
+      contentText: "About",
+    })
+    await expect(getCachedSearchTaxonomy()).resolves.toEqual({
+      categories: [{ name: "Analysis", slug: "analysis" }],
+      tags: [{ name: "Sakuga", slug: "sakuga" }],
+    })
+
+    expect(mocks.prisma.sitePage.findUnique).toHaveBeenCalledWith({
+      select: { content: true, contentText: true },
+      where: { slug: "about" },
+    })
+    expect(mocks.cacheEntries).toContainEqual({
+      keyParts: ["site-page"],
+      options: { revalidate: 300, tags: ["site-pages"] },
+    })
+    expect(mocks.cacheEntries).toContainEqual({
+      keyParts: ["search-taxonomy"],
+      options: { revalidate: 300, tags: ["categories", "tags"] },
     })
   })
 

@@ -1,7 +1,8 @@
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { ZodError, z } from "zod"
 
 import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
+import { SITE_PAGES_CACHE_TAG } from "@/lib/cacheTags"
 import { prisma } from "@/lib/prisma"
 
 const editablePageSlugs = new Set(["about", "resources", "nhap-mon-sakuga"])
@@ -60,6 +61,7 @@ export async function PATCH(
       where: { slug },
     })
 
+    revalidateTag(SITE_PAGES_CACHE_TAG, "max")
     revalidatePath(`/${slug}`)
 
     return Response.json({

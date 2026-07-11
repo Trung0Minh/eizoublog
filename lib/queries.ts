@@ -16,6 +16,7 @@ import {
   getInternalAnalyticsStats,
   getInternalTopPages,
 } from "@/lib/internalAnalytics"
+import { SITE_PAGES_CACHE_TAG, getPostDetailCacheTag } from "@/lib/cacheTags"
 import type { PostListSort } from "@/lib/postListSort"
 import { prisma } from "@/lib/prisma"
 import type { SearchResult } from "@/lib/search"
@@ -51,6 +52,21 @@ const commandCategorySelect = {
   name: true,
   slug: true,
 } satisfies Prisma.CategorySelect
+
+const searchCategorySelect = {
+  name: true,
+  slug: true,
+} satisfies Prisma.CategorySelect
+
+const searchTagSelect = {
+  name: true,
+  slug: true,
+} satisfies Prisma.TagSelect
+
+const sitePageSelect = {
+  content: true,
+  contentText: true,
+} satisfies Prisma.SitePageSelect
 
 type SidebarArchiveRow = {
   count: bigint
@@ -798,15 +814,20 @@ export const getCachedCommandCategories = unstable_cache(
   { revalidate: 300, tags: ["categories"] },
 )
 
-export const getCachedPublishedPost = unstable_cache(
-  async (slug: string) =>
-    prisma.post.findUnique({
-      select: publishedPostDetailSelect,
-      where: { slug, status: "PUBLISHED" },
-    }),
-  ["published-post"],
-  { revalidate: 300, tags: ["posts", "comments", "users"] },
-)
+export async function getCachedPublishedPost(slug: string) {
+  return unstable_cache(
+    async () =>
+      prisma.post.findUnique({
+        select: publishedPostDetailSelect,
+        where: { slug, status: "PUBLISHED" },
+      }),
+    ["published-post", slug],
+    {
+      revalidate: 300,
+      tags: ["posts", "users", getPostDetailCacheTag(slug)],
+    },
+  )()
+}
 
 export const getCachedContributors = unstable_cache(
   async () =>
@@ -817,6 +838,35 @@ export const getCachedContributors = unstable_cache(
     }),
   ["contributors"],
   { revalidate: 300, tags: ["posts", "users"] },
+)
+
+export const getCachedSitePage = unstable_cache(
+  async (slug: string) =>
+    prisma.sitePage.findUnique({
+      select: sitePageSelect,
+      where: { slug },
+    }),
+  ["site-page"],
+  { revalidate: 300, tags: [SITE_PAGES_CACHE_TAG] },
+)
+
+export const getCachedSearchTaxonomy = unstable_cache(
+  async () => {
+    const [categories, tags] = await Promise.all([
+      prisma.category.findMany({
+        orderBy: { name: "asc" },
+        select: searchCategorySelect,
+      }),
+      prisma.tag.findMany({
+        orderBy: { name: "asc" },
+        select: searchTagSelect,
+      }),
+    ])
+
+    return { categories, tags }
+  },
+  ["search-taxonomy"],
+  { revalidate: 300, tags: ["categories", "tags"] },
 )
 
 export const getCachedEditorReferenceData = unstable_cache(

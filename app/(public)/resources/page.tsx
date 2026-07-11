@@ -1,10 +1,11 @@
 import { Metadata } from "next"
 
 import { PageContainer } from "@/components/layout/PageContainer"
-import { auth } from "@/lib/auth"
 import { getAppName } from "@/lib/seo"
-import { prisma } from "@/lib/prisma"
+import { getCachedSitePage } from "@/lib/queries"
 import { ResourcesClient } from "./ResourcesClient"
+
+export const revalidate = 300
 
 export const metadata: Metadata = {
   title: "Nguồn tham khảo",
@@ -13,16 +14,11 @@ export const metadata: Metadata = {
 
 export default async function ResourcesPage() {
   const appName = getAppName()
-  const session = await auth()
-  const isAdmin = session?.user?.role === "ADMIN"
-
-  const page = await prisma.sitePage.findUnique({
-    where: { slug: "resources" },
-  })
+  const page = await getCachedSitePage("resources")
 
   return (
     <PageContainer>
-      <ResourcesClient initialPage={page} isAdmin={isAdmin} appName={appName} />
+      <ResourcesClient initialPage={page} appName={appName} />
     </PageContainer>
   )
 }

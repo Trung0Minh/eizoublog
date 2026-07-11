@@ -1,19 +1,35 @@
 "use client"
 
-import { useCallback, useRef, useState } from "react"
+import dynamic from "next/dynamic"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Pencil, Save, X, Sparkles, Heart } from "lucide-react"
 import type { Editor, JSONContent } from "@tiptap/react"
 import Link from "next/link"
 
-import { TiptapEditor } from "@/components/editor/TiptapEditor"
 import { PostBody } from "@/components/posts/PostBody"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { TextReveal } from "@/components/ui/TextReveal"
 import { ScrollReveal } from "@/components/ui/ScrollReveal"
 import { cn } from "@/lib/utils"
-import { CoverImageUpload } from "@/components/posts/CoverImageUpload"
+import { useAdminAccess } from "@/lib/clientSession"
+
+const TiptapEditor = dynamic(
+  () =>
+    import("@/components/editor/TiptapEditor").then(
+      (module) => module.TiptapEditor,
+    ),
+  { ssr: false },
+)
+
+const CoverImageUpload = dynamic(
+  () =>
+    import("@/components/posts/CoverImageUpload").then(
+      (module) => module.CoverImageUpload,
+    ),
+  { ssr: false },
+)
 
 interface PublishingNote {
   text: string
@@ -30,7 +46,7 @@ interface AboutPageContent {
 
 interface AboutClientProps {
   initialPage: { content: unknown; contentText: string | null } | null
-  isAdmin: boolean
+  isAdmin?: boolean
 }
 
 const defaultBody: JSONContent = {
@@ -96,10 +112,21 @@ function getApiError(value: unknown) {
   return "Lỗi khi lưu. Vui lòng thử lại."
 }
 
-export function AboutClient({ initialPage, isAdmin }: AboutClientProps) {
+export function AboutClient({
+  initialPage,
+  isAdmin: isAdminOverride,
+}: AboutClientProps) {
   const router = useRouter()
+  const isAdmin = useAdminAccess(isAdminOverride)
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    if (!isAdmin) return
+
+    void import("@/components/editor/TiptapEditor")
+    void import("@/components/posts/CoverImageUpload")
+  }, [isAdmin])
 
   const initialData: AboutPageContent = isAboutPageContent(initialPage?.content) ? initialPage.content : {
     title: `Chào mừng bạn đến với Eizou Blog!`, // Updated title

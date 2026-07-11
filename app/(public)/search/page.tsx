@@ -7,14 +7,13 @@ import { TextReveal } from "@/components/ui/TextReveal"
 import { ScrollReveal } from "@/components/ui/ScrollReveal"
 import { Pagination } from "@/components/ui/Pagination"
 import { RelativeTime } from "@/components/ui/RelativeTime"
-import { getCachedSearchResults } from "@/lib/queries"
+import { getCachedSearchResults, getCachedSearchTaxonomy } from "@/lib/queries"
 import {
   buildSearchQuery,
   sanitizeSearchSnippet,
   type SearchResult,
 } from "@/lib/search"
 import { buildMetadata } from "@/lib/seo"
-import { prisma } from "@/lib/prisma"
 
 interface SearchPageProps {
   searchParams: Promise<{ page?: string; q?: string; category?: string; tag?: string }>
@@ -90,17 +89,11 @@ function SearchResultCard({ result }: { result: SearchResult }) {
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const [{ page: pageParam, q, category, tag }, categories, tags] = await Promise.all([
+  const [{ page: pageParam, q, category, tag }, taxonomy] = await Promise.all([
     searchParams,
-    prisma.category.findMany({
-      orderBy: { name: "asc" },
-      select: { name: true, slug: true },
-    }),
-    prisma.tag.findMany({
-      orderBy: { name: "asc" },
-      select: { name: true, slug: true },
-    }),
+    getCachedSearchTaxonomy(),
   ])
+  const { categories, tags } = taxonomy
 
   const query = (q ?? "").trim()
   const page = parsePage(pageParam)

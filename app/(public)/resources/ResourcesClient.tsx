@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { TextReveal } from "@/components/ui/TextReveal"
 import { ScrollReveal } from "@/components/ui/ScrollReveal"
+import { useAdminAccess } from "@/lib/clientSession"
 import { cn } from "@/lib/utils"
 
 interface ResourceCard {
@@ -28,7 +29,7 @@ interface ResourcesData {
 
 interface ResourcesClientProps {
   initialPage: { content: unknown } | null
-  isAdmin: boolean
+  isAdmin?: boolean
   appName: string
 }
 
@@ -335,8 +336,13 @@ function withMissingDefaultResources(resources: ResourceCard[]) {
   ]
 }
 
-export function ResourcesClient({ initialPage, isAdmin, appName }: ResourcesClientProps) {
+export function ResourcesClient({
+  initialPage,
+  isAdmin: isAdminOverride,
+  appName,
+}: ResourcesClientProps) {
   const router = useRouter()
+  const isAdmin = useAdminAccess(isAdminOverride)
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [draggedResourceIndex, setDraggedResourceIndex] = useState<number | null>(null)

@@ -1,10 +1,11 @@
 import type { Metadata } from "next"
 
 import { PageContainer } from "@/components/layout/PageContainer"
-import { auth } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { getCachedSitePage } from "@/lib/queries"
 import { buildMetadata } from "@/lib/seo"
 import { IntroToSakugaClient } from "./IntroToSakugaClient"
+
+export const revalidate = 300
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
@@ -15,17 +16,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function IntroToSakugaPage() {
-  const session = await auth()
-  const isAdmin = session?.user?.role === "ADMIN"
-
-  const page = await prisma.sitePage.findUnique({
-    where: { slug: "nhap-mon-sakuga" },
-  })
+  const page = await getCachedSitePage("nhap-mon-sakuga")
 
   return (
     <PageContainer>
-      <IntroToSakugaClient initialPage={page} isAdmin={isAdmin} />
+      <IntroToSakugaClient initialPage={page} />
     </PageContainer>
   )
 }
-

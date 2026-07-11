@@ -77,7 +77,7 @@ export async function loadSessionUser() {
   return sessionUserPromise
 }
 
-export function useSessionUser() {
+export function useSessionUser(enabled = true) {
   const [state, setState] = useState<{
     status: SessionStatus
     user: ClientSessionUser | null
@@ -91,6 +91,8 @@ export function useSessionUser() {
   )
 
   useEffect(() => {
+    if (!enabled) return
+
     let isMounted = true
 
     void loadSessionUser().then((user) => {
@@ -105,7 +107,13 @@ export function useSessionUser() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [enabled])
 
   return state
+}
+
+export function useAdminAccess(override?: boolean) {
+  const { user } = useSessionUser(override === undefined)
+
+  return override ?? user?.role === "ADMIN"
 }

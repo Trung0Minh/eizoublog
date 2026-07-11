@@ -76,12 +76,11 @@ describe("background settings admin access", () => {
     expect(mocks.revalidateTag).toHaveBeenCalledWith("backgrounds", "max")
   })
 
-  it("keeps the homepage admin flyout behind database-backed admin access", () => {
+  it("keeps the homepage admin flyout behind shared client-session access", () => {
     const homePage = readFileSync(join(root, "app/(public)/page.tsx"), "utf8")
 
-    expect(homePage).toContain('getActiveSession(["ADMIN"])')
-    expect(homePage).not.toContain("const session = await auth()")
-    expect(homePage).toContain("{activeSession && <AdminBackgroundFlyout />}")
+    expect(homePage).not.toContain("getActiveSession")
+    expect(homePage).toContain("<ClientAdminBackgroundFlyout />")
   })
 
   it("keeps the admin background settings route in the admin route group", () => {
