@@ -1,6 +1,7 @@
 "use client"
 
 import { FormEvent, useMemo, useState } from "react"
+import { useRouter } from "next/navigation"
 import { AvatarUpload } from "@/components/profile/AvatarUpload"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -33,6 +34,7 @@ function getApiError(value: unknown) {
 }
 
 export function ProfileForm({ user }: ProfileFormProps) {
+  const router = useRouter()
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl ?? "")
   const [bio, setBio] = useState(user.bio ?? "")
   const [message, setMessage] = useState<{
@@ -87,9 +89,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
 
       setMessage({ text: "Cập nhật hồ sơ thành công.", type: "success" })
       clearSessionUserCache()
-      setTimeout(() => {
-        window.location.reload()
-      }, 1000)
+      router.refresh()
     } catch (saveError) {
       setMessage({
         text: saveError instanceof Error ? saveError.message : "Lưu hồ sơ thất bại",

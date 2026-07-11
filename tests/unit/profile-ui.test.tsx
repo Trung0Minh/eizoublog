@@ -1,10 +1,18 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { AvatarUpload } from "@/components/profile/AvatarUpload"
 import { ProfileForm } from "@/components/profile/ProfileForm"
+
+const navigationMocks = vi.hoisted(() => ({
+  refresh: vi.fn(),
+}))
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: navigationMocks.refresh }),
+}))
 
 interface CropArea {
   height: number
@@ -16,8 +24,10 @@ interface CropArea {
 vi.mock("react-easy-crop", () => ({
   __esModule: true,
   default: function MockCropper({
+    image,
     onCropComplete,
   }: {
+    image: string
     onCropComplete: (area: CropArea, pixels: CropArea) => void
   }) {
     useEffect(() => {
@@ -27,7 +37,7 @@ vi.mock("react-easy-crop", () => ({
       )
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
-    return <div data-testid="mock-cropper" />
+    return <div data-image={image} data-testid="mock-cropper" />
   },
 }))
 
@@ -147,6 +157,7 @@ describe("ProfileForm", () => {
     expect(
       await screen.findByText("Cập nhật hồ sơ thành công."),
     ).toBeInTheDocument()
+    expect(navigationMocks.refresh).toHaveBeenCalledTimes(1)
   })
 })
 
@@ -232,6 +243,43 @@ describe("AvatarUpload", () => {
     }
     expect(request.method).toBe("POST")
     expect(request.body.get("folder")).toBe("avatars")
+  })
+
+  it("reopens the cropper with the original upload after saving a crop", async () => {
+    const user = userEvent.setup()
+    const createObjectURL = vi
+      .spyOn(URL, "createObjectURL")
+      .mockReturnValue("blob:original-avatar")
+    const revokeObjectURL = vi
+      .spyOn(URL, "revokeObjectURL")
+      .mockImplementation(() => undefined)
+
+    function AvatarHarness() {
+      const [value, setValue] = useState("")
+      return <AvatarUpload name="Mina Writer" onChange={setValue} value={value} />
+    }
+
+    render(<AvatarHarness />)
+
+    await user.upload(
+      screen.getByLabelText("Tải ảnh đại diện lên"),
+      new File(["original"], "avatar.png", { type: "image/png" }),
+    )
+    expect(screen.getByTestId("mock-cropper")).toHaveAttribute(
+      "data-image",
+      "blob:original-avatar",
+    )
+
+    await user.click(screen.getByRole("button", { name: "Xác nhận" }))
+    await screen.findByRole("button", { name: "Căn chỉnh ảnh đại diện" })
+    await user.click(screen.getByRole("button", { name: "Căn chỉnh ảnh đại diện" }))
+
+    expect(screen.getByTestId("mock-cropper")).toHaveAttribute(
+      "data-image",
+      "blob:original-avatar",
+    )
+    expect(createObjectURL).toHaveBeenCalledTimes(1)
+    expect(revokeObjectURL).not.toHaveBeenCalled()
   })
 
   it("stacks avatar controls on mobile and aligns them on wider screens", () => {

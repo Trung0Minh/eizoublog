@@ -214,26 +214,64 @@ function AvatarCropperModal({
 
 export function AvatarUpload({ name, onChange, value }: AvatarUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null)
+  const cropSourceRef = useRef<string | null>(null)
+  const originalSourceRef = useRef<string | null>(null)
   const [error, setError] = useState("")
   const [uploading, setUploading] = useState(false)
   // localSrc: object URL from the file picker, used in the cropper modal
   const [localSrc, setLocalSrc] = useState<string | null>(null)
 
-  // Clean up object URLs when done
+  function setCropSource(source: string | null) {
+    cropSourceRef.current = source
+    setLocalSrc(source)
+  }
+
+  function rememberOriginalSource(source: string) {
+    if (!source.startsWith("blob:")) return
+
+    const previousSource = originalSourceRef.current
+    if (previousSource && previousSource !== source) {
+      URL.revokeObjectURL(previousSource)
+    }
+    originalSourceRef.current = source
+  }
+
+  function clearOriginalSource() {
+    const source = originalSourceRef.current
+    if (source) {
+      URL.revokeObjectURL(source)
+      originalSourceRef.current = null
+    }
+  }
+
+  // Keep the selected original alive for later crop adjustments, then clean it
+  // up only when it is replaced, removed, or the component unmounts.
   useEffect(() => {
     return () => {
-      if (localSrc && localSrc.startsWith("blob:")) {
-        URL.revokeObjectURL(localSrc)
+      const cropSource = cropSourceRef.current
+      const originalSource = originalSourceRef.current
+      if (cropSource?.startsWith("blob:") && cropSource !== originalSource) {
+        URL.revokeObjectURL(cropSource)
+      }
+      if (originalSource) {
+        URL.revokeObjectURL(originalSource)
       }
     }
-  }, [localSrc])
+  }, [])
 
   function openCropper(file: File) {
     const url = URL.createObjectURL(file)
-    setLocalSrc(url)
+    const pendingSource = cropSourceRef.current
+    if (
+      pendingSource?.startsWith("blob:") &&
+      pendingSource !== originalSourceRef.current
+    ) {
+      URL.revokeObjectURL(pendingSource)
+    }
+    setCropSource(url)
   }
 
-  async function uploadBlob(blob: Blob) {
+  async function uploadBlob(blob: Blob, cropSource: string) {
     setError("")
     setUploading(true)
 
@@ -258,7 +296,14 @@ export function AvatarUpload({ name, onChange, value }: AvatarUploadProps) {
       }
 
       onChange(url)
+      rememberOriginalSource(cropSource)
     } catch (uploadError) {
+      if (
+        cropSource.startsWith("blob:") &&
+        cropSource !== originalSourceRef.current
+      ) {
+        URL.revokeObjectURL(cropSource)
+      }
       setError(
         uploadError instanceof Error
           ? uploadError.message
@@ -290,7 +335,7 @@ export function AvatarUpload({ name, onChange, value }: AvatarUploadProps) {
           disabled={uploading}
           onClick={() => {
             if (value) {
-              setLocalSrc(value)
+              setCropSource(originalSourceRef.current ?? value)
             } else {
               inputRef.current?.click()
             }
@@ -327,7 +372,11 @@ export function AvatarUpload({ name, onChange, value }: AvatarUploadProps) {
           {value && (
             <Button
               aria-label="Xóa ảnh đại diện"
-              onClick={() => onChange("")}
+              onClick={() => {
+                clearOriginalSource()
+                setCropSource(null)
+                onChange("")
+              }}
               size="icon"
               title="Xóa ảnh đại diện"
               type="button"
@@ -364,17 +413,18 @@ export function AvatarUpload({ name, onChange, value }: AvatarUploadProps) {
         <AvatarCropperModal
           localSrc={localSrc}
           onClose={() => {
-            if (localSrc.startsWith("blob:")) {
+            if (
+              localSrc.startsWith("blob:") &&
+              localSrc !== originalSourceRef.current
+            ) {
               URL.revokeObjectURL(localSrc)
             }
-            setLocalSrc(null)
+            setCropSource(null)
           }}
           onConfirm={async (blob) => {
-            if (localSrc.startsWith("blob:")) {
-              URL.revokeObjectURL(localSrc)
-            }
-            setLocalSrc(null)
-            await uploadBlob(blob)
+            const cropSource = localSrc
+            setCropSource(null)
+            await uploadBlob(blob, cropSource)
           }}
         />
       )}
