@@ -269,6 +269,10 @@ describe("AvatarUpload", () => {
       "data-image",
       "blob:original-avatar",
     )
+    expect(screen.getByTestId("mock-cropper").parentElement).not.toHaveClass(
+      "rounded-full",
+      "ring-2",
+    )
 
     await user.click(screen.getByRole("button", { name: "Xác nhận" }))
     await screen.findByRole("button", { name: "Căn chỉnh ảnh đại diện" })

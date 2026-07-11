@@ -161,8 +161,7 @@ function AvatarCropperModal({
       {/* Square container, circle crop overlay */}
       <div
         ref={containerRef}
-        className="relative h-[340px] w-[340px] overflow-hidden rounded-full bg-black/50 shadow-2xl ring-2 ring-white/20"
-        style={{ borderRadius: "50%" }}
+        className="relative h-[340px] w-[340px] overflow-hidden rounded-[16px] bg-black/50 shadow-2xl"
       >
         <Cropper
           image={localSrc}
