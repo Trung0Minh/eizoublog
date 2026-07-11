@@ -108,6 +108,7 @@ const editorWriterSelect = {
 } satisfies Prisma.UserSelect
 
 const profileUserSelect = {
+  avatarOriginalUrl: true,
   avatarUrl: true,
   bio: true,
   email: true,

@@ -344,17 +344,20 @@ describe("cached Prisma query helpers", () => {
 
   it("caches profile form data by user id behind the users tag", async () => {
     mocks.prisma.user.findUnique.mockResolvedValue({
+      avatarOriginalUrl: "https://cdn.example.com/avatar-originals/writer.png",
       email: "writer@example.com",
       username: "writer",
     })
 
     await expect(getCachedProfileUser("writer-1")).resolves.toEqual({
+      avatarOriginalUrl: "https://cdn.example.com/avatar-originals/writer.png",
       email: "writer@example.com",
       username: "writer",
     })
 
     expect(mocks.prisma.user.findUnique).toHaveBeenCalledWith({
       select: {
+        avatarOriginalUrl: true,
         avatarUrl: true,
         bio: true,
         email: true,

@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button"
 interface AvatarUploadProps {
   name: string
   onChange: (url: string) => void
+  onOriginalChange: (url: string) => void
+  originalValue: string
   value: string
 }
 
@@ -211,10 +213,17 @@ function AvatarCropperModal({
 
 // ─── AvatarUpload ────────────────────────────────────────────────────────────
 
-export function AvatarUpload({ name, onChange, value }: AvatarUploadProps) {
+export function AvatarUpload({
+  name,
+  onChange,
+  onOriginalChange,
+  originalValue,
+  value,
+}: AvatarUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const cropSourceRef = useRef<string | null>(null)
   const originalSourceRef = useRef<string | null>(null)
+  const pendingOriginalFileRef = useRef<File | null>(null)
   const [error, setError] = useState("")
   const [uploading, setUploading] = useState(false)
   // localSrc: object URL from the file picker, used in the cropper modal
@@ -241,6 +250,8 @@ export function AvatarUpload({ name, onChange, value }: AvatarUploadProps) {
       URL.revokeObjectURL(source)
       originalSourceRef.current = null
     }
+    pendingOriginalFileRef.current = null
+    onOriginalChange("")
   }
 
   // Keep the selected original alive for later crop adjustments, then clean it
@@ -267,7 +278,31 @@ export function AvatarUpload({ name, onChange, value }: AvatarUploadProps) {
     ) {
       URL.revokeObjectURL(pendingSource)
     }
+    pendingOriginalFileRef.current = file
     setCropSource(url)
+  }
+
+  async function uploadFile(file: Blob, filename: string, folder: string) {
+    const formData = new FormData()
+    formData.append("file", file, filename)
+    formData.append("folder", folder)
+
+    const response = await fetch("/api/upload", {
+      body: formData,
+      method: "POST",
+    })
+    const result: unknown = await response.json()
+
+    if (!response.ok) {
+      throw new Error(getApiError(result))
+    }
+
+    const url = getUploadUrl(result)
+    if (!url) {
+      throw new Error("Phản hồi tải lên không chứa URL ảnh")
+    }
+
+    return url
   }
 
   async function uploadBlob(blob: Blob, cropSource: string) {
@@ -275,28 +310,23 @@ export function AvatarUpload({ name, onChange, value }: AvatarUploadProps) {
     setUploading(true)
 
     try {
-      const formData = new FormData()
-      formData.append("file", blob, "avatar.webp")
-      formData.append("folder", "avatars")
-
-      const response = await fetch("/api/upload", {
-        body: formData,
-        method: "POST",
-      })
-      const result: unknown = await response.json()
-
-      if (!response.ok) {
-        throw new Error(getApiError(result))
+      const originalFile = pendingOriginalFileRef.current
+      if (originalFile) {
+        const originalUrl = await uploadFile(
+          originalFile,
+          originalFile.name,
+          "avatar-originals",
+        )
+        pendingOriginalFileRef.current = null
+        onOriginalChange(originalUrl)
       }
 
-      const url = getUploadUrl(result)
-      if (!url) {
-        throw new Error("Phản hồi tải lên không chứa URL ảnh")
-      }
+      const url = await uploadFile(blob, "avatar.webp", "avatars")
 
       onChange(url)
       rememberOriginalSource(cropSource)
     } catch (uploadError) {
+      pendingOriginalFileRef.current = null
       if (
         cropSource.startsWith("blob:") &&
         cropSource !== originalSourceRef.current
@@ -334,7 +364,9 @@ export function AvatarUpload({ name, onChange, value }: AvatarUploadProps) {
           disabled={uploading}
           onClick={() => {
             if (value) {
-              setCropSource(originalSourceRef.current ?? value)
+              setCropSource(
+                originalSourceRef.current || originalValue || value,
+              )
             } else {
               inputRef.current?.click()
             }
@@ -418,6 +450,7 @@ export function AvatarUpload({ name, onChange, value }: AvatarUploadProps) {
             ) {
               URL.revokeObjectURL(localSrc)
             }
+            pendingOriginalFileRef.current = null
             setCropSource(null)
           }}
           onConfirm={async (blob) => {

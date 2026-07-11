@@ -12,6 +12,7 @@ import { clearSessionUserCache } from "@/lib/clientSession"
 
 interface ProfileFormProps {
   user: {
+    avatarOriginalUrl: string | null
     avatarUrl: string | null
     bio: string | null
     email: string
@@ -35,6 +36,9 @@ function getApiError(value: unknown) {
 
 export function ProfileForm({ user }: ProfileFormProps) {
   const router = useRouter()
+  const [avatarOriginalUrl, setAvatarOriginalUrl] = useState(
+    user.avatarOriginalUrl ?? "",
+  )
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl ?? "")
   const [bio, setBio] = useState(user.bio ?? "")
   const [message, setMessage] = useState<{
@@ -73,6 +77,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
     try {
       const response = await fetch("/api/profile", {
         body: JSON.stringify({
+          avatarOriginalUrl: avatarOriginalUrl || null,
           avatarUrl: avatarUrl || null,
           bio,
           name,
@@ -118,7 +123,13 @@ export function ProfileForm({ user }: ProfileFormProps) {
       <ScrollReveal delay={0.1}>
         <section className="rounded-[24px] border-[2px] border-border-default bg-background/80 backdrop-blur-md p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow">
           <label className="mb-3 block text-sm font-medium">Ảnh đại diện</label>
-          <AvatarUpload name={name} onChange={setAvatarUrl} value={avatarUrl} />
+          <AvatarUpload
+            name={name}
+            onChange={setAvatarUrl}
+            onOriginalChange={setAvatarOriginalUrl}
+            originalValue={avatarOriginalUrl}
+            value={avatarUrl}
+          />
         </section>
       </ScrollReveal>
 

@@ -58,6 +58,7 @@ describe("PATCH /api/profile", () => {
       username: "mina",
     })
     mocks.userUpdate.mockResolvedValue({
+      avatarOriginalUrl: "https://cdn.example.com/avatar-originals/mina.png",
       avatarUrl: "https://cdn.example.com/avatars/mina.png",
       bio: "Animation writer.",
       email: "writer@example.com",
@@ -80,6 +81,7 @@ describe("PATCH /api/profile", () => {
 
   it("updates only the authenticated user's editable profile fields", async () => {
     mocks.userUpdate.mockResolvedValue({
+      avatarOriginalUrl: "https://cdn.example.com/avatar-originals/mina.png",
       avatarUrl: "https://cdn.example.com/avatars/mina.png",
       bio: "Animation writer.",
       email: "writer@example.com",
@@ -90,6 +92,7 @@ describe("PATCH /api/profile", () => {
 
     const response = await PATCH(
       patchRequest({
+        avatarOriginalUrl: "https://cdn.example.com/avatar-originals/mina.png",
         avatarUrl: "https://cdn.example.com/avatars/mina.png",
         bio: " Animation writer. ",
         email: "changed@example.com",
@@ -102,6 +105,7 @@ describe("PATCH /api/profile", () => {
     expect(response.status).toBe(200)
     await expect(response.json()).resolves.toEqual({
       data: {
+        avatarOriginalUrl: "https://cdn.example.com/avatar-originals/mina.png",
         avatarUrl: "https://cdn.example.com/avatars/mina.png",
         bio: "Animation writer.",
         email: "writer@example.com",
@@ -112,12 +116,14 @@ describe("PATCH /api/profile", () => {
     })
     expect(mocks.userUpdate).toHaveBeenCalledWith({
       data: {
+        avatarOriginalUrl: "https://cdn.example.com/avatar-originals/mina.png",
         avatarUrl: "https://cdn.example.com/avatars/mina.png",
         bio: "Animation writer.",
         name: "Mina Revised",
         username: "changed",
       },
       select: {
+        avatarOriginalUrl: true,
         avatarUrl: true,
         bio: true,
         email: true,
@@ -133,6 +139,7 @@ describe("PATCH /api/profile", () => {
   it("stores blank optional fields as null", async () => {
     await PATCH(
       patchRequest({
+        avatarOriginalUrl: null,
         avatarUrl: null,
         bio: "",
         name: "Mina",
@@ -142,6 +149,7 @@ describe("PATCH /api/profile", () => {
     expect(mocks.userUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: {
+          avatarOriginalUrl: null,
           avatarUrl: null,
           bio: null,
           name: "Mina",

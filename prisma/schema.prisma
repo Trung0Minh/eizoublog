@@ -9,28 +9,29 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String
-  username      String    @unique
-  passwordHash  String?
-  bio           String?   @db.Text
-  avatarUrl     String?
-  emailVerified DateTime?
-  image         String?
-  role          Role      @default(WRITER)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                String    @id @default(cuid())
+  email             String    @unique
+  name              String
+  username          String    @unique
+  passwordHash      String?
+  bio               String?   @db.Text
+  avatarUrl         String?
+  avatarOriginalUrl String?
+  emailVerified     DateTime?
+  image             String?
+  role              Role      @default(WRITER)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
-  posts           Post[]               @relation("PostPrimaryAuthor")
-  coAuthoredPosts PostAuthor[]
-  accounts        Account[]
-  sessions        Session[]
-  invitesSent     Invite[]             @relation("InviteCreatedBy")
-  passwordResets  PasswordResetToken[]
-  comments        Comment[]
-  notifications   Notification[]
-  awardEventsCreated AwardEvent[] @relation("AwardEventCreatedBy")
+  posts              Post[]                  @relation("PostPrimaryAuthor")
+  coAuthoredPosts    PostAuthor[]
+  accounts           Account[]
+  sessions           Session[]
+  invitesSent        Invite[]                @relation("InviteCreatedBy")
+  passwordResets     PasswordResetToken[]
+  comments           Comment[]
+  notifications      Notification[]
+  awardEventsCreated AwardEvent[]            @relation("AwardEventCreatedBy")
   awardEventRooms    AwardEventRoom[]
   awardEventComments AwardEventRoomComment[]
 
@@ -149,8 +150,8 @@ model Post {
   category        Category?                @relation(fields: [categoryId], references: [id])
   tags            PostTag[]
   comments        Comment[]
-  finalAwardEvent AwardEvent? @relation("AwardEventFinalPost")
-  awardEventRooms AwardEventRoom[] @relation("AwardEventRoomSelectedPost")
+  finalAwardEvent AwardEvent?              @relation("AwardEventFinalPost")
+  awardEventRooms AwardEventRoom[]         @relation("AwardEventRoomSelectedPost")
   searchVector    Unsupported("tsvector")? @map("search_vector")
 
   @@index([slug])
@@ -198,9 +199,9 @@ model AwardEvent {
   finalPostId String?          @unique
   categoryId  String?
 
-  createdBy User       @relation("AwardEventCreatedBy", fields: [createdById], references: [id])
-  finalPost Post?      @relation("AwardEventFinalPost", fields: [finalPostId], references: [id])
-  category  Category?  @relation(fields: [categoryId], references: [id])
+  createdBy User             @relation("AwardEventCreatedBy", fields: [createdById], references: [id])
+  finalPost Post?            @relation("AwardEventFinalPost", fields: [finalPostId], references: [id])
+  category  Category?        @relation(fields: [categoryId], references: [id])
   rooms     AwardEventRoom[]
   tags      AwardEventTag[]
 
@@ -234,10 +235,10 @@ model AwardEventRoom {
   createdAt   DateTime                 @default(now())
   updatedAt   DateTime                 @updatedAt
 
-  event    AwardEvent              @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  writer   User                    @relation(fields: [writerId], references: [id], onDelete: Cascade)
-  selectedPost Post?               @relation("AwardEventRoomSelectedPost", fields: [postId], references: [id], onDelete: SetNull)
-  comments AwardEventRoomComment[]
+  event        AwardEvent              @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  writer       User                    @relation(fields: [writerId], references: [id], onDelete: Cascade)
+  selectedPost Post?                   @relation("AwardEventRoomSelectedPost", fields: [postId], references: [id], onDelete: SetNull)
+  comments     AwardEventRoomComment[]
 
   @@unique([eventId, writerId])
   @@index([eventId, status, order])
@@ -300,14 +301,14 @@ model PostAuthor {
 }
 
 model Category {
-  id          String     @id @default(cuid())
-  name        String     @unique
-  slug        String     @unique
-  description String?    @db.Text
+  id          String       @id @default(cuid())
+  name        String       @unique
+  slug        String       @unique
+  description String?      @db.Text
   parentId    String?
-  createdAt   DateTime   @default(now())
-  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children    Category[] @relation("CategoryHierarchy")
+  createdAt   DateTime     @default(now())
+  parent      Category?    @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[]   @relation("CategoryHierarchy")
   posts       Post[]
   awardEvents AwardEvent[]
 
@@ -317,11 +318,11 @@ model Category {
 }
 
 model Tag {
-  id        String    @id @default(cuid())
-  name      String    @unique
-  slug      String    @unique
-  createdAt DateTime  @default(now())
-  posts     PostTag[]
+  id          String          @id @default(cuid())
+  name        String          @unique
+  slug        String          @unique
+  createdAt   DateTime        @default(now())
+  posts       PostTag[]
   awardEvents AwardEventTag[]
 
   @@index([slug])
@@ -390,12 +391,12 @@ enum NotificationType {
 }
 
 model NewsletterSubscriber {
-  id             String           @id @default(cuid())
-  email          String           @unique
-  status         SubscriberStatus @default(ACTIVE)
-  token          String           @unique @default(cuid())
-  subscribedAt   DateTime         @default(now())
-  unsubscribedAt DateTime?
+  id                  String                         @id @default(cuid())
+  email               String                         @unique
+  status              SubscriberStatus               @default(ACTIVE)
+  token               String                         @unique @default(cuid())
+  subscribedAt        DateTime                       @default(now())
+  unsubscribedAt      DateTime?
   broadcastRecipients NewsletterBroadcastRecipient[]
 
   @@index([email])
@@ -425,19 +426,19 @@ enum NewsletterRecipientStatus {
 }
 
 model NewsletterBroadcast {
-  id               String                    @id @default(cuid())
+  id               String                         @id @default(cuid())
   subject          String
   previewText      String?
-  customBody       String?                   @db.Text
+  customBody       String?                        @db.Text
   featuredCoverUrl String?
-  featuredExcerpt  String?                   @db.Text
+  featuredExcerpt  String?                        @db.Text
   featuredTitle    String?
   featuredUrl      String?
-  status           NewsletterBroadcastStatus @default(QUEUED)
-  totalCount       Int                       @default(0)
-  sentCount        Int                       @default(0)
-  failedCount      Int                       @default(0)
-  createdAt        DateTime                  @default(now())
+  status           NewsletterBroadcastStatus      @default(QUEUED)
+  totalCount       Int                            @default(0)
+  sentCount        Int                            @default(0)
+  failedCount      Int                            @default(0)
+  createdAt        DateTime                       @default(now())
   startedAt        DateTime?
   completedAt      DateTime?
   recipients       NewsletterBroadcastRecipient[]

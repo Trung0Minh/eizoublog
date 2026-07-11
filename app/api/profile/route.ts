@@ -5,6 +5,7 @@ import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
 import { prisma } from "@/lib/prisma"
 
 const profileSchema = z.object({
+  avatarOriginalUrl: z.string().url().nullable().optional(),
   avatarUrl: z.string().url().nullable().optional(),
   bio: z.string().trim().optional(),
   name: z.string().trim().min(2).max(50),
@@ -30,12 +31,16 @@ export async function PATCH(request: Request) {
 
     const user = await prisma.user.update({
       data: {
+        ...(data.avatarOriginalUrl !== undefined && {
+          avatarOriginalUrl: data.avatarOriginalUrl,
+        }),
         avatarUrl: data.avatarUrl ?? null,
         bio: data.bio || null,
         name: data.name,
         ...(data.username && { username: data.username }),
       },
       select: {
+        avatarOriginalUrl: true,
         avatarUrl: true,
         bio: true,
         email: true,

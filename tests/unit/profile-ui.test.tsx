@@ -85,6 +85,7 @@ describe("ProfileForm", () => {
         new Response(
           JSON.stringify({
             data: {
+              avatarOriginalUrl: null,
               avatarUrl: null,
               bio: "Production notes and layout analysis.",
               email: "mina@example.com",
@@ -105,6 +106,7 @@ describe("ProfileForm", () => {
     render(
       <ProfileForm
         user={{
+          avatarOriginalUrl: null,
           avatarUrl: null,
           bio: "Initial bio",
           email: "mina@example.com",
@@ -132,6 +134,7 @@ describe("ProfileForm", () => {
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith("/api/profile", {
         body: JSON.stringify({
+          avatarOriginalUrl: null,
           avatarUrl: null,
           bio: JSON.stringify({
             type: "doc",
@@ -168,12 +171,14 @@ describe("AvatarUpload", () => {
     vi.clearAllMocks()
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
-        new Response(
-          JSON.stringify({
-            data: { url: "https://cdn.example.com/avatars/avatar.png" },
-          }),
-          { status: 201 },
+      vi.fn().mockImplementation(() =>
+        Promise.resolve(
+          new Response(
+            JSON.stringify({
+              data: { url: "https://cdn.example.com/avatars/avatar.png" },
+            }),
+            { status: 201 },
+          ),
         ),
       ),
     )
@@ -221,8 +226,17 @@ describe("AvatarUpload", () => {
   it("uploads avatar files to the avatars folder", async () => {
     const user = userEvent.setup()
     const onChange = vi.fn()
+    const onOriginalChange = vi.fn()
 
-    render(<AvatarUpload name="Mina Writer" onChange={onChange} value="" />)
+    render(
+      <AvatarUpload
+        name="Mina Writer"
+        onChange={onChange}
+        onOriginalChange={onOriginalChange}
+        originalValue=""
+        value=""
+      />,
+    )
 
     await user.upload(
       screen.getByLabelText("Tải ảnh đại diện lên"),
@@ -237,12 +251,21 @@ describe("AvatarUpload", () => {
         "https://cdn.example.com/avatars/avatar.png",
       )
     })
-    const request = (fetch as ReturnType<typeof vi.fn>).mock.calls[0]?.[1] as {
+    expect(onOriginalChange).toHaveBeenCalledWith(
+      "https://cdn.example.com/avatars/avatar.png",
+    )
+    const originalRequest = (fetch as ReturnType<typeof vi.fn>).mock.calls[0]?.[1] as {
       body: FormData
       method: string
     }
-    expect(request.method).toBe("POST")
-    expect(request.body.get("folder")).toBe("avatars")
+    const croppedRequest = (fetch as ReturnType<typeof vi.fn>).mock.calls[1]?.[1] as {
+      body: FormData
+      method: string
+    }
+    expect(originalRequest.method).toBe("POST")
+    expect(originalRequest.body.get("folder")).toBe("avatar-originals")
+    expect(croppedRequest.method).toBe("POST")
+    expect(croppedRequest.body.get("folder")).toBe("avatars")
   })
 
   it("reopens the cropper with the original upload after saving a crop", async () => {
@@ -255,8 +278,17 @@ describe("AvatarUpload", () => {
       .mockImplementation(() => undefined)
 
     function AvatarHarness() {
+      const [originalValue, setOriginalValue] = useState("")
       const [value, setValue] = useState("")
-      return <AvatarUpload name="Mina Writer" onChange={setValue} value={value} />
+      return (
+        <AvatarUpload
+          name="Mina Writer"
+          onChange={setValue}
+          onOriginalChange={setOriginalValue}
+          originalValue={originalValue}
+          value={value}
+        />
+      )
     }
 
     render(<AvatarHarness />)
@@ -286,9 +318,36 @@ describe("AvatarUpload", () => {
     expect(revokeObjectURL).not.toHaveBeenCalled()
   })
 
+  it("reopens the cropper with the persisted original after a reload", async () => {
+    const user = userEvent.setup()
+
+    render(
+      <AvatarUpload
+        name="Mina Writer"
+        onChange={vi.fn()}
+        onOriginalChange={vi.fn()}
+        originalValue="https://cdn.example.com/avatar-originals/avatar.png"
+        value="https://cdn.example.com/avatars/avatar.webp"
+      />,
+    )
+
+    await user.click(screen.getByRole("button", { name: "Căn chỉnh ảnh đại diện" }))
+
+    expect(screen.getByTestId("mock-cropper")).toHaveAttribute(
+      "data-image",
+      "https://cdn.example.com/avatar-originals/avatar.png",
+    )
+  })
+
   it("stacks avatar controls on mobile and aligns them on wider screens", () => {
     const { container } = render(
-      <AvatarUpload name="Mina Writer" onChange={vi.fn()} value="" />,
+      <AvatarUpload
+        name="Mina Writer"
+        onChange={vi.fn()}
+        onOriginalChange={vi.fn()}
+        originalValue=""
+        value=""
+      />,
     )
 
     expect(container.firstElementChild).toHaveClass(
