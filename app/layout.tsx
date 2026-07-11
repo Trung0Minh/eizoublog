@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { Nunito, M_PLUS_Rounded_1c } from "next/font/google"
+import { cookies } from "next/headers"
 import { Suspense } from "react"
 
 import { InternalAnalyticsTracker } from "@/components/analytics/InternalAnalyticsTracker"
@@ -16,8 +17,13 @@ import { getCustomBackgrounds } from "@/lib/backgrounds"
 import { Toaster } from "@/components/ui/Toaster"
 import { CommandMenu } from "@/components/ui/CommandMenu"
 import { CursorSpotlight } from "@/components/ui/CursorSpotlight"
-import { getAppearanceInitScript } from "@/lib/appearanceSession"
+import {
+  getAppearanceInitScript,
+  resolveAppearanceSeason,
+  resolveAppearanceTheme,
+} from "@/lib/appearanceSession"
 import { RouteScrollReset } from "@/components/ui/RouteScrollReset"
+import { HomeRoutePrefetch } from "@/components/ui/HomeRoutePrefetch"
 
 import "./globals.css"
 
@@ -69,7 +75,16 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const customBackgrounds = await getCustomBackgrounds()
+  const [customBackgrounds, cookieStore] = await Promise.all([
+    getCustomBackgrounds(),
+    cookies(),
+  ])
+  const initialSeason = resolveAppearanceSeason(
+    cookieStore.get("appearanceSeason")?.value,
+  )
+  const initialTheme = resolveAppearanceTheme(
+    cookieStore.get("appearanceTheme")?.value,
+  )
   return (
     <html
       lang="vi"
@@ -83,6 +98,8 @@ export default async function RootLayout({
             __html: `
               try {
                 ${getAppearanceInitScript()}
+                history.scrollRestoration = 'manual';
+                window.scrollTo(0, 0);
                 let particles = document.cookie
                   .split('; ')
                   .find((entry) => entry.indexOf('particleEffects=') === 0)
@@ -106,7 +123,12 @@ export default async function RootLayout({
           disableTransitionOnChange
           enableSystem
         >
-          <DynamicBackground customBackgrounds={customBackgrounds} />
+          <DynamicBackground
+            customBackgrounds={customBackgrounds}
+            initialSeason={initialSeason}
+            initialTheme={initialTheme}
+          />
+          <HomeRoutePrefetch />
           <RouteScrollReset />
           <GlobalEffects />
           <CursorSpotlight />

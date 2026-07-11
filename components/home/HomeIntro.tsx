@@ -2,14 +2,16 @@
 
 import { motion, AnimatePresence, type Variants } from "motion/react"
 import { ChevronDown } from "lucide-react"
-import { useEffect, useState, useSyncExternalStore } from "react"
+import { useEffect, useState } from "react"
+import type { AppearanceSeason } from "@/lib/appearanceSession"
 import { getDocumentSeason } from "@/lib/appearanceSession"
 
 interface HomeIntroProps {
   appName: string
+  initialSeason: AppearanceSeason
 }
 
-type Season = "spring" | "summer" | "autumn" | "winter"
+type Season = AppearanceSeason
 
 interface SeasonConfig {
   container: Variants
@@ -19,8 +21,6 @@ interface SeasonConfig {
   textColor: string
   titleFont: string
 }
-
-const emptySubscribe = () => () => undefined
 
 const seasonConfigs: Record<Season, SeasonConfig> = {
   spring: {
@@ -81,14 +81,8 @@ const seasonConfigs: Record<Season, SeasonConfig> = {
   }
 }
 
-export function HomeIntro({ appName }: HomeIntroProps) {
-  const [season, setSeason] = useState<Season>("spring")
-  const mounted = useSyncExternalStore(
-    emptySubscribe,
-    () => true,
-    () => false,
-  )
-
+export function HomeIntro({ appName, initialSeason }: HomeIntroProps) {
+  const [season, setSeason] = useState<Season>(initialSeason)
   useEffect(() => {
     const updateSeason = () => {
       setSeason(getDocumentSeason())
@@ -106,8 +100,6 @@ export function HomeIntro({ appName }: HomeIntroProps) {
       behavior: "smooth",
     })
   }
-
-  if (!mounted) return <div className="h-[calc(100svh-70px)] w-full md:h-[calc(100dvh-70px)]" />
 
   const config = seasonConfigs[season]
   const titleSizeClass = season === "summer"

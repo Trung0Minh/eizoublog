@@ -19,6 +19,16 @@ function isAppearanceSeason(value: string | undefined): value is AppearanceSeaso
   )
 }
 
+export function resolveAppearanceSeason(value: string | undefined, date = new Date()) {
+  return isAppearanceSeason(value) ? value : getAutomaticSeason(date)
+}
+
+export function resolveAppearanceTheme(value: string | undefined, date = new Date()): AppearanceTheme {
+  return value === "dark" || value === "light"
+    ? value
+    : getVietnamIsDark(date) ? "dark" : "light"
+}
+
 export function getVietnamIsDark(date = new Date()) {
   const hour = getVietnamDate(date).getUTCHours()
   return hour < 6 || hour >= 18

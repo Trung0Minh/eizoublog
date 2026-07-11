@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { cookies } from "next/headers"
 
 import { PageContainer } from "@/components/layout/PageContainer"
 import { Sidebar } from "@/components/layout/Sidebar"
@@ -10,6 +11,9 @@ import { HomeIntro } from "@/components/home/HomeIntro"
 import { parsePostListSort } from "@/lib/postListSort"
 import { buildMetadata, getAppUrl, getAppName } from "@/lib/seo"
 import { ClientAdminBackgroundFlyout } from "@/components/admin/ClientAdminBackgroundFlyout"
+import {
+  resolveAppearanceSeason,
+} from "@/lib/appearanceSession"
 
 interface HomePageProps {
   searchParams: Promise<{ archive?: string; page?: string; sort?: string }>
@@ -53,11 +57,15 @@ export async function generateMetadata({
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {
+  const [resolvedSearchParams, cookieStore] = await Promise.all([
+    searchParams,
+    cookies(),
+  ])
   const {
     archive: archiveParam,
     page: pageParam,
     sort: sortParam,
-  } = await searchParams
+  } = resolvedSearchParams
   const page = parsePage(pageParam)
   const sort = parsePostListSort(sortParam)
   const archive = parseArchiveMonth(archiveParam)
@@ -67,10 +75,13 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     page,
     sort,
   })
+  const initialSeason = resolveAppearanceSeason(
+    cookieStore.get("appearanceSeason")?.value,
+  )
 
   return (
     <>
-      <HomeIntro appName={getAppName()} />
+      <HomeIntro appName={getAppName()} initialSeason={initialSeason} />
       <PageContainer size="default">
         <div className="w-full flex justify-center">
           <HeroCarousel posts={carouselPosts} />

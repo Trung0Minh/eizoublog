@@ -6,18 +6,23 @@ import { AnimatePresence, motion } from "motion/react"
 import { usePathname } from "next/navigation"
 
 import { useReducedVisualEffects } from "@/hooks/useReducedVisualEffects"
+import type { AppearanceSeason, AppearanceTheme } from "@/lib/appearanceSession"
 import { getDocumentSeason } from "@/lib/appearanceSession"
 import { getCoverStyle } from "@/lib/cover-style"
 
 const emptySubscribe = () => () => undefined
 
 export function DynamicBackground({
-  customBackgrounds
+  customBackgrounds,
+  initialSeason,
+  initialTheme,
 }: {
   customBackgrounds?: Record<string, string> | null
+  initialSeason: AppearanceSeason
+  initialTheme: AppearanceTheme
 }) {
   const { theme, systemTheme } = useTheme()
-  const [season, setSeason] = useState("spring")
+  const [season, setSeason] = useState<AppearanceSeason>(initialSeason)
   // Use a CSS class toggle instead of Framer Motion animate prop for scroll transitions.
   // This lets the browser interpolate via CSS transition natively, which is smooth
   // during momentum scrolling rather than only firing after finger lift.
@@ -95,9 +100,9 @@ export function DynamicBackground({
     preload()
   }, [customBackgrounds])
 
-  if (!mounted) return null
-
-  const currentTheme = theme === "system" ? systemTheme : theme
+  const currentTheme = mounted
+    ? theme === "system" ? systemTheme : theme
+    : initialTheme
   const isDark = currentTheme === "dark"
 
   const bgKey = `${season}_${isDark ? "dark" : "light"}`
@@ -112,12 +117,14 @@ export function DynamicBackground({
   // CSS-driven transitions for the scroll fade — far smoother than Framer Motion
   // animate prop because the browser interpolates these natively every paint frame.
   const wrapperStyle: React.CSSProperties = {
+    backfaceVisibility: "hidden",
     filter: backgroundFilter,
     opacity: isHome ? (isHomeContentVisible ? 0.4 : 1) : 0.4,
     transform: isHome
-      ? isHomeContentVisible ? "scale(1.05)" : "scale(1)"
-      : "scale(1.05)",
+      ? isHomeContentVisible ? "translate3d(0, 0, 0) scale(1.05)" : "translate3d(0, 0, 0) scale(1)"
+      : "translate3d(0, 0, 0) scale(1.05)",
     transition: "opacity 0.8s ease-out, transform 0.8s ease-out",
+    willChange: "filter, opacity, transform",
   }
 
   const overlayStyle: React.CSSProperties = {
@@ -131,7 +138,7 @@ export function DynamicBackground({
         <AnimatePresence initial={false}>
           <motion.div
             key={bgUrl}
-            initial={{ opacity: 0 }}
+            initial={mounted ? { opacity: 0 } : false}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1.5, ease: "easeInOut" }}
