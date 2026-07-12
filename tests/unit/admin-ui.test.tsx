@@ -310,6 +310,10 @@ describe("admin client components", () => {
     await user.click(
       screen.getByRole("button", { name: /remove writer access/i }),
     )
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Remove writer access?" }))
+        .getByRole("button", { name: "Remove writer access" }),
+    )
 
     expect(fetchMock).toHaveBeenCalledWith("/api/admin/writers/writer-1", {
       method: "DELETE",
@@ -393,6 +397,10 @@ describe("admin client components", () => {
     expect(screen.getByText("<script>alert(1)</script>")).toBeVisible()
 
     await user.click(screen.getByRole("button", { name: /mark as spam/i }))
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Mark comment as spam?" }))
+        .getByRole("button", { name: "Mark as spam" }),
+    )
 
     expect(fetchMock).toHaveBeenCalledWith("/api/comments/comment-1", {
       method: "DELETE",
@@ -428,6 +436,10 @@ describe("admin client components", () => {
       "Hello readers",
     )
     await user.click(screen.getByRole("button", { name: /send broadcast/i }))
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Send newsletter now?" }))
+        .getByRole("button", { name: "Send newsletter" }),
+    )
 
     expect(fetchMock).toHaveBeenCalledWith("/api/newsletter/broadcast", {
       body: JSON.stringify({

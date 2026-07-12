@@ -6,6 +6,7 @@ import {
   Code,
   CodeSquare,
   Eye,
+  FileCode2,
   AlignCenter,
   AlignLeft,
   AlignRight,
@@ -26,7 +27,6 @@ import {
   SpellCheck,
   Strikethrough,
   Underline,
-  Video,
 } from "lucide-react"
 import { useRef, useState } from "react"
 import { createPortal } from "react-dom"
@@ -463,13 +463,6 @@ export function EditorToolbar({
           <IndentDecrease aria-hidden="true" className="h-[15px] w-[15px]" />
         </ToolbarButton>
         <ToolbarButton
-          active={editor.isActive("blockquote")}
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          title="Blockquote"
-        >
-          <Quote aria-hidden="true" className="h-[15px] w-[15px]" />
-        </ToolbarButton>
-        <ToolbarButton
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
           title="Horizontal rule"
         >
@@ -516,7 +509,7 @@ export function EditorToolbar({
           title="Embed video"
           trigger="click"
         >
-          <Video aria-hidden="true" className="h-[15px] w-[15px]" />
+          <FileCode2 aria-hidden="true" className="h-[15px] w-[15px]" />
         </ToolbarButton>
 
         <Divider />
@@ -527,6 +520,13 @@ export function EditorToolbar({
           title="Spoiler block"
         >
           <Eye aria-hidden="true" className="h-[15px] w-[15px]" />
+        </ToolbarButton>
+        <ToolbarButton
+          active={editor.isActive("blockquote")}
+          onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          title="Blockquote"
+        >
+          <Quote aria-hidden="true" className="h-[15px] w-[15px]" />
         </ToolbarButton>
         <ToolbarButton
           active={editor.isActive("code")}

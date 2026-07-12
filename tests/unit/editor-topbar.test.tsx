@@ -15,7 +15,7 @@ vi.mock("next/link", () => ({
 import { EditorTopBar } from "@/components/editor/EditorTopBar"
 
 describe("EditorTopBar", () => {
-  it("shows a polished dashboard exit and save/publish actions", async () => {
+  it("renders a persistent left action rail with dashboard, preview, and save actions", async () => {
     const user = userEvent.setup()
     const onPublish = vi.fn()
     const onSaveDraft = vi.fn()
@@ -28,17 +28,26 @@ describe("EditorTopBar", () => {
         isPublished={false}
         onPublish={onPublish}
         onSaveDraft={onSaveDraft}
-        
+        previewHref="/dashboard/preview/post-1"
       />,
     )
 
     const dashboardLink = screen.getByRole("link", { name: /Bảng điều khiển/ })
     expect(dashboardLink).toHaveAttribute("href", "/dashboard")
     expect(dashboardLink).toHaveClass("rounded-full", "border")
+    expect(screen.getByRole("link", { name: "Xem trước bài viết" })).toHaveAttribute(
+      "href",
+      "/dashboard/preview/post-1",
+    )
+    expect(screen.getByTestId("editor-action-rail")).toHaveClass(
+      "left-4",
+      "top-1/2",
+      "flex-col",
+    )
     expect(screen.queryByText("✨")).not.toBeInTheDocument()
 
     await user.click(screen.getByRole("button", { name: /Lưu nháp/ }))
-    await user.click(screen.getByRole("button", { name: "Xuất bản" }))
+    await user.click(screen.getByRole("button", { name: "Xuất bản bài viết" }))
 
     expect(onSaveDraft).toHaveBeenCalledTimes(1)
     expect(onPublish).toHaveBeenCalledTimes(1)
@@ -58,7 +67,7 @@ describe("EditorTopBar", () => {
     )
 
     expect(screen.getByRole("button", { name: /Lưu nháp/ })).toBeDisabled()
-    expect(screen.getByRole("button", { name: "Cập nhật" })).toBeDisabled()
+    expect(screen.getByRole("button", { name: "Cập nhật bài viết" })).toBeDisabled()
     expect(
       screen.queryByText("Thêm tiêu đề để có thể lưu và xuất bản."),
     ).not.toBeInTheDocument()
@@ -78,7 +87,7 @@ describe("EditorTopBar", () => {
       />,
     )
 
-    const updateButton = screen.getByRole("button", { name: /Đang cập nhật/ })
+    const updateButton = screen.getByRole("button", { name: /Cập nhật bài viết/ })
     const spinner = updateButton.querySelector("[data-button-spinner='true']")
 
     expect(spinner).not.toBeNull()

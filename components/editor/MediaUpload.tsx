@@ -2,6 +2,7 @@
 
 import { ImageIcon } from "lucide-react"
 import { ChangeEvent, useRef, useState } from "react"
+import { toast } from "sonner"
 
 import type { GalleryImage } from "@/components/editor/gallery"
 
@@ -26,7 +27,7 @@ function getUploadError(value: unknown) {
   return "Upload failed"
 }
 
-function uploadFiles(
+export function uploadFiles(
   files: readonly File[],
   onProgress: (percent: number) => void,
 ): Promise<string[]> {
@@ -102,6 +103,57 @@ function uploadFiles(
   })
 }
 
+export async function uploadFilesThroughServer(
+  files: readonly File[],
+  onProgress: (percent: number) => void,
+) {
+  const form = new FormData()
+  form.set("folder", "content-images")
+  files.forEach((file) => form.append("file", file))
+
+  onProgress(0)
+  const response = await fetch("/api/upload", {
+    body: form,
+    method: "POST",
+  })
+  const result: unknown = await response.json()
+
+  if (!response.ok) {
+    throw new Error(getUploadError(result))
+  }
+
+  if (
+    typeof result !== "object" ||
+    result === null ||
+    !("data" in result) ||
+    typeof result.data !== "object" ||
+    result.data === null
+  ) {
+    throw new Error("Upload returned an invalid response")
+  }
+
+  let urls: string[] = []
+  if ("url" in result.data && typeof result.data.url === "string") {
+    urls = [result.data.url]
+  } else if ("files" in result.data && Array.isArray(result.data.files)) {
+    urls = result.data.files.flatMap((file) =>
+      typeof file === "object" &&
+      file !== null &&
+      "url" in file &&
+      typeof file.url === "string"
+        ? [file.url]
+        : [],
+    )
+  }
+
+  if (urls.length !== files.length) {
+    throw new Error("Upload returned an invalid response")
+  }
+
+  onProgress(100)
+  return urls
+}
+
 export function MediaUpload({
   onInsertGallery,
   onInsertSingle,
@@ -134,7 +186,9 @@ export function MediaUpload({
         }
       }
     } catch (error) {
-      window.alert(error instanceof Error ? error.message : "Upload failed")
+      toast.error("Media upload failed", {
+        description: error instanceof Error ? error.message : "Please try again.",
+      })
     } finally {
       setUploadProgress(null)
       if (inputRef.current) {

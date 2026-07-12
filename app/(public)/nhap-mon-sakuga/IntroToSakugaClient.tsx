@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { Pencil, Save, X, HelpCircle } from "lucide-react"
 import type { Editor, JSONContent } from "@tiptap/react"
 import Link from "next/link"
+import { toast } from "sonner"
 
 import { PostBody } from "@/components/posts/PostBody"
 import { Button } from "@/components/ui/button"
@@ -400,10 +401,13 @@ export function IntroToSakugaClient({
       }
 
       setIsEditing(false)
+      toast.success("Đã lưu trang Nhập môn Sakuga")
       router.refresh()
     } catch (error) {
       console.error("Failed to save:", error)
-      alert(error instanceof Error ? error.message : "Lỗi khi lưu. Vui lòng thử lại.")
+      toast.error("Không thể lưu trang Nhập môn Sakuga", {
+        description: error instanceof Error ? error.message : "Vui lòng thử lại.",
+      })
     } finally {
       setIsSaving(false)
     }

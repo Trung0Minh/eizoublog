@@ -3,8 +3,10 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Trash2 } from "lucide-react"
+import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog"
 import { formatDate } from "@/lib/utils"
 
 interface PendingInvite {
@@ -30,12 +32,9 @@ function getApiError(value: unknown) {
 export function PendingInvitesTable({ invites }: { invites: PendingInvite[] }) {
   const router = useRouter()
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [removeTarget, setRemoveTarget] = useState<PendingInvite | null>(null)
 
   async function handleRemove(invite: PendingInvite) {
-    if (!confirm(`Remove pending invite for ${invite.email}?`)) {
-      return
-    }
-
     setDeletingId(invite.id)
     try {
       const response = await fetch(`/api/invite/${invite.id}`, {
@@ -47,9 +46,13 @@ export function PendingInvitesTable({ invites }: { invites: PendingInvite[] }) {
         throw new Error(getApiError(result))
       }
 
+      setRemoveTarget(null)
+      toast.success("Pending invitation removed", { description: invite.email })
       router.refresh()
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to remove invite")
+      toast.error("Failed to remove invitation", {
+        description: error instanceof Error ? error.message : invite.email,
+      })
     } finally {
       setDeletingId(null)
     }
@@ -64,6 +67,7 @@ export function PendingInvitesTable({ invites }: { invites: PendingInvite[] }) {
   }
 
   return (
+    <>
     <div className="flex flex-col gap-3">
       {invites.map((invite, index) => (
         <article
@@ -90,7 +94,7 @@ export function PendingInvitesTable({ invites }: { invites: PendingInvite[] }) {
               aria-label="Remove invite"
               className="h-9 w-9 rounded-[12px] text-text-secondary hover:bg-destructive/10 hover:text-destructive"
               disabled={deletingId === invite.id}
-              onClick={() => void handleRemove(invite)}
+              onClick={() => setRemoveTarget(invite)}
               size="icon"
               title="Remove invite"
               type="button"
@@ -102,5 +106,24 @@ export function PendingInvitesTable({ invites }: { invites: PendingInvite[] }) {
         </article>
       ))}
     </div>
+      <ConfirmationDialog
+        cancelLabel="Keep invitation"
+        confirmLabel="Revoke invitation"
+        description={
+          removeTarget ? (
+            <>
+              The invitation for <strong className="text-text-primary">{removeTarget.email}</strong> will stop working immediately.
+            </>
+          ) : null
+        }
+        icon={Trash2}
+        onConfirm={() => removeTarget && void handleRemove(removeTarget)}
+        onOpenChange={(open) => !open && setRemoveTarget(null)}
+        open={removeTarget !== null}
+        pending={deletingId !== null}
+        title="Revoke pending invitation?"
+        tone="destructive"
+      />
+    </>
   )
 }

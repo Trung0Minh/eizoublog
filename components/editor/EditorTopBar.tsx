@@ -1,6 +1,13 @@
 "use client"
 
-import { ArrowLeft, Settings2, Save } from "lucide-react"
+import {
+  ArrowLeft,
+  Eye,
+  RefreshCw,
+  Save,
+  Send,
+  Settings2,
+} from "lucide-react"
 import Link from "next/link"
 
 import { ThemeToggle } from "@/components/layout/ThemeToggle"
@@ -27,11 +34,14 @@ interface EditorTopBarProps {
   isSettingsOpen?: boolean
   isPublished: boolean
   pendingAction?: PendingAction
+  previewHref?: string | null
   onToggleSettings?: () => void
   onPublish: () => void
   onSaveDraft: () => void
-  titlePreview?: string
 }
+
+const railButtonClass =
+  "h-9 w-9 rounded-full border border-border-default/60 bg-background/45 p-0 text-text-secondary shadow-sm backdrop-blur-md hover:border-accent/35 hover:bg-subtle-bg hover:text-text-primary"
 
 export function EditorTopBar({
   canSave,
@@ -40,81 +50,105 @@ export function EditorTopBar({
   isSettingsOpen = false,
   isPublished,
   pendingAction = null,
+  previewHref,
   onToggleSettings,
   onPublish,
   onSaveDraft,
-  titlePreview,
 }: EditorTopBarProps) {
   const actionsDisabled = isPending || !canSave
   const isDraftPending = pendingAction === "draft"
   const isPublishPending = pendingAction === "publish"
-  const publishLabel = isPublished ? "Cập nhật" : "Xuất bản"
-  const publishPendingLabel = isPublished ? "Đang cập nhật..." : "Đang xuất bản..."
+  const publishLabel = isPublished ? "Cập nhật bài viết" : "Xuất bản bài viết"
 
   return (
-    <header className="fixed left-0 right-0 top-0 z-[100] group">
-      {/* Invisible hover area */}
-      <div className="absolute top-0 left-0 right-0 h-8 bg-transparent z-[101]" />
-      
-      <div className="pt-4 pb-4 pointer-events-none">
-        <div className="glass-navbar mx-auto flex h-14 w-[calc(100%-2rem)] max-w-[1440px] items-center justify-between gap-3 px-4 md:px-6 lg:px-8 rounded-full border border-border-default/60 bg-background/80 backdrop-blur-md shadow-glass pointer-events-auto -translate-y-[150%] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 focus-within:translate-y-0 focus-within:opacity-100 transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]">
+    <aside
+      aria-label="Thao tác bài viết"
+      className="fixed left-4 top-1/2 z-[100] flex -translate-y-1/2 flex-col items-center gap-2 rounded-full border border-border-default/60 bg-background/80 p-2 shadow-glass backdrop-blur-xl"
+      data-testid="editor-action-rail"
+    >
+      <Link
+        aria-label="Bảng điều khiển"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border-default/60 bg-background/45 text-text-secondary shadow-sm transition-colors hover:border-accent/35 hover:bg-subtle-bg hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        href={exitHref}
+        title="Bảng điều khiển"
+      >
+        <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+      </Link>
+
+      <div className="h-px w-5 bg-border-default" />
+
+      {previewHref ? (
         <Link
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border-default/60 bg-background/45 text-text-secondary shadow-sm backdrop-blur-md transition-colors hover:border-accent/35 hover:bg-subtle-bg hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0"
-          href={exitHref}
-          title="Bảng điều khiển"
+          aria-label="Xem trước bài viết"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          href={previewHref}
+          title="Xem trước bài viết"
         >
-          <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+          <Eye aria-hidden="true" className="h-4 w-4" />
         </Link>
+      ) : (
+        <Button
+          aria-label="Xem trước bài viết"
+          className={railButtonClass}
+          disabled
+          size="icon"
+          title="Lưu nháp trước để xem trước"
+          type="button"
+          variant="ghost"
+        >
+          <Eye aria-hidden="true" className="h-4 w-4" />
+        </Button>
+      )}
+      <SeasonToggle />
+      <ParticleToggle />
+      <ThemeToggle />
+      {onToggleSettings && (
+        <Button
+          aria-controls="post-settings-panel"
+          aria-expanded={isSettingsOpen}
+          aria-label={isSettingsOpen ? "Ẩn cài đặt bài viết" : "Cài đặt bài viết"}
+          className={railButtonClass}
+          onClick={onToggleSettings}
+          size="icon"
+          title="Cài đặt bài viết"
+          type="button"
+          variant={isSettingsOpen ? "default" : "ghost"}
+        >
+          <Settings2 aria-hidden="true" className="h-4 w-4" />
+        </Button>
+      )}
 
-        <div className="absolute left-1/2 hidden h-full -translate-x-1/2 items-center md:flex">
-          <div className="hidden max-w-[280px] truncate text-[13px] font-medium text-text-tertiary md:block">
-            {titlePreview?.trim() || "Bài viết không có tiêu đề"}
-          </div>
-        </div>
+      <div className="h-px w-5 bg-border-default" />
 
-        <div className="flex shrink-0 items-center gap-2">
-          <SeasonToggle />
-          <ParticleToggle />
-          <ThemeToggle />
-          {onToggleSettings && (
-            <Button
-              aria-controls="post-settings-panel"
-              aria-expanded={isSettingsOpen}
-              aria-label={isSettingsOpen ? "Ẩn cài đặt bài viết" : "Cài đặt bài viết"}
-              className="h-9 w-9 rounded-full border-[2px] p-0"
-              onClick={onToggleSettings}
-              size="icon"
-              title="Cài đặt bài viết"
-              type="button"
-              variant={isSettingsOpen ? "default" : "outline"}
-            >
-              <Settings2 aria-hidden="true" className="h-4 w-4" />
-            </Button>
-          )}
-          <Button
-            className="h-9 w-9 rounded-full border-[2px] p-0"
-            disabled={actionsDisabled}
-            onClick={onSaveDraft}
-            size="icon"
-            title="Lưu nháp"
-            type="button"
-            variant="outline"
-          >
-            {isDraftPending ? <ButtonSpinner /> : <Save aria-hidden="true" className="h-4 w-4" />}
-          </Button>
-          <Button
-            className="h-9 rounded-full bg-accent hover:bg-accent/90 text-white px-4 font-semibold"
-            disabled={actionsDisabled}
-            onClick={onPublish}
-            size="sm"
-            type="button"
-          >
-            {isPublishPending && <ButtonSpinner />}
-            {isPublishPending ? publishPendingLabel : publishLabel}
-          </Button>
-        </div>
-        </div>
-      </div>
-    </header>
+      <Button
+        aria-label="Lưu nháp"
+        className={railButtonClass}
+        disabled={actionsDisabled}
+        onClick={onSaveDraft}
+        size="icon"
+        title="Lưu nháp"
+        type="button"
+        variant="ghost"
+      >
+        {isDraftPending ? <ButtonSpinner /> : <Save aria-hidden="true" className="h-4 w-4" />}
+      </Button>
+      <Button
+        aria-label={publishLabel}
+        className="h-9 w-9 rounded-full bg-accent p-0 text-white shadow-sm hover:bg-accent/90"
+        disabled={actionsDisabled}
+        onClick={onPublish}
+        size="icon"
+        title={publishLabel}
+        type="button"
+      >
+        {isPublishPending ? (
+          <ButtonSpinner />
+        ) : isPublished ? (
+          <RefreshCw aria-hidden="true" className="h-4 w-4" />
+        ) : (
+          <Send aria-hidden="true" className="h-4 w-4" />
+        )}
+      </Button>
+    </aside>
   )
 }

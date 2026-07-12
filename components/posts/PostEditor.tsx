@@ -144,7 +144,7 @@ export function PostEditor({
     }
   }, [excerpt])
   const [isDirty, setIsDirty] = useState(false)
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(true)
   const [savingAction, setSavingAction] = useState<"draft" | "publish" | null>(null)
   const [postId, setPostId] = useState<string | null>(initialData?.id ?? null)
   const [selectedTags, setSelectedTags] = useState<TagOption[]>(
@@ -365,12 +365,12 @@ export function PostEditor({
         onPublish={() => startTransition(() => void savePost("PUBLISHED"))}
         onSaveDraft={() => startTransition(() => void savePost("DRAFT"))}
         pendingAction={savingAction}
+        previewHref={postId ? `/dashboard/preview/${postId}` : null}
         onToggleSettings={() => setIsSettingsOpen((current) => !current)}
-        titlePreview={title}
       />
 
       {/* Floating Save Status Pill */}
-      <div className="fixed bottom-6 right-6 z-[90] flex items-center gap-2 rounded-full border border-border-default bg-card/60 px-4 py-2 text-[13px] backdrop-blur-md shadow-glass">
+      <div className="fixed bottom-6 left-6 z-[90] flex items-center gap-2 rounded-full border border-border-default bg-card/60 px-4 py-2 text-[13px] backdrop-blur-md shadow-glass">
         {isPending || savingAction !== null ? (
           <span className="text-text-tertiary">Đang lưu...</span>
         ) : saveStatus === "idle" ? (
@@ -386,16 +386,17 @@ export function PostEditor({
         <AnimatePresence initial={false}>
           {isSettingsOpen && (
             <motion.aside
-              initial={{ opacity: 0, x: "-100%" }}
+              aria-label="Cài đặt bài viết"
+              initial={{ opacity: 0, x: "100%" }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: "-100%" }}
+              exit={{ opacity: 0, x: "100%" }}
               transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
-              className="z-50 shrink-0 overflow-y-auto border-r border-border-default/40 bg-card/30 backdrop-blur-xl shadow-glass flex fixed inset-y-0 left-0 pt-6 flex-col w-full lg:w-[320px] xl:w-[360px]"
+              className="z-50 shrink-0 overflow-y-auto border-l border-border-default/40 bg-card/30 backdrop-blur-xl shadow-glass flex fixed inset-y-0 right-0 pt-6 flex-col w-full lg:w-[320px] xl:w-[360px]"
               id="post-settings-panel"
             >
-              <div className="px-5 py-6 min-w-[320px] xl:min-w-[360px]">
+              <div className="w-full px-5 py-6">
 
-              <div className="mb-6 flex items-center justify-between gap-4 lg:mb-8">
+              <div className="mb-6 space-y-4 lg:mb-8">
                 <div>
                   <h2 className="text-[13px] font-bold uppercase tracking-widest text-text-primary">
                     Cài đặt bài viết
@@ -452,7 +453,11 @@ export function PostEditor({
                           markDirtyAndAutosave()
                         }}
                       >
-                        <SelectTrigger className="w-full bg-background border-border-default text-[13px] transition-colors focus:border-accent">
+                        <SelectTrigger
+                          aria-label="Danh mục"
+                          className="w-full bg-background border-border-default text-[13px] transition-colors focus:border-accent"
+                          id="post-category"
+                        >
                           <SelectValue placeholder="Không có danh mục" />
                         </SelectTrigger>
                         <SelectContent className="z-[110]">
@@ -535,7 +540,10 @@ export function PostEditor({
                             }
                           }}
                         >
-                          <SelectTrigger className="w-full bg-background border-border-default text-[13px] transition-colors focus:border-accent text-text-secondary">
+                          <SelectTrigger
+                            aria-label="Thêm đồng tác giả"
+                            className="w-full bg-background border-border-default text-[13px] transition-colors focus:border-accent text-text-secondary"
+                          >
                             <SelectValue placeholder="Thêm đồng tác giả..." />
                           </SelectTrigger>
                           <SelectContent className="z-[110]">
@@ -559,25 +567,25 @@ export function PostEditor({
         </AnimatePresence>
 
         {/* Content + toggle button — wrapped together so they shift in sync with the panel.
-             margin-left matches the panel's duration/easing exactly, so all three elements
+             margin-right matches the panel's duration/easing exactly, so all three elements
              (panel slide, button, content) animate as one coordinated unit. */}
         <div
           className={cn(
             "flex min-w-0 flex-1 h-full",
             "transition-[margin-left] duration-300",
-            isSettingsOpen ? "lg:ml-[320px] xl:ml-[360px]" : "ml-0",
+            isSettingsOpen ? "lg:mr-[320px] xl:mr-[360px]" : "mr-0",
           )}
           style={{ transitionTimingFunction: "cubic-bezier(0.32, 0.72, 0, 1)" }}
         >
           {/* Robust zero-width tracker for the toggle button */}
-          <div className="hidden lg:flex w-0 relative h-full items-center z-[60]">
+          <div className="hidden lg:flex w-0 relative h-full items-center z-[60] order-last">
             <button
               aria-label={isSettingsOpen ? "Đóng cài đặt" : "Mở cài đặt"}
-              className="absolute left-4 h-10 w-10 flex items-center justify-center rounded-full border border-border-default bg-card/60 backdrop-blur-md shadow-glass text-text-secondary transition-all duration-300 hover:bg-card hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="absolute right-4 h-10 w-10 flex items-center justify-center rounded-full border border-border-default bg-card/60 backdrop-blur-md shadow-glass text-text-secondary transition-all duration-300 hover:bg-card hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               onClick={() => setIsSettingsOpen(!isSettingsOpen)}
             >
               <motion.div
-                animate={{ rotate: isSettingsOpen ? 0 : 180 }}
+                animate={{ rotate: isSettingsOpen ? 180 : 0 }}
                 transition={{ duration: 0.3, ease: "anticipate" }}
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -585,7 +593,7 @@ export function PostEditor({
             </button>
           </div>
 
-          <div className="min-w-0 flex-1 w-full h-full overflow-y-auto">
+          <div className="min-w-0 flex-1 w-full h-full overflow-y-auto lg:ml-20">
             <div
               className="mx-auto flex w-full max-w-[1200px] flex-col px-4 pb-[120px] pt-6 md:px-6 md:pt-8"
             >

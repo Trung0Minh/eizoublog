@@ -4,10 +4,12 @@ import type { Role } from "@prisma/client"
 import { Mail, MoreHorizontal, ShieldOff, Search, Plus, X } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState, useMemo } from "react"
+import { toast } from "sonner"
 
 import { InviteWriterForm } from "@/components/admin/InviteWriterForm"
 
 import { Button } from "@/components/ui/button"
+import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +45,7 @@ export function WritersTable({ writers }: { writers: Writer[] }) {
   const [removingId, setRemovingId] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
+  const [removeTarget, setRemoveTarget] = useState<Writer | null>(null)
 
   const filteredWriters = useMemo(() => {
     if (!searchTerm) return writers
@@ -53,14 +56,6 @@ export function WritersTable({ writers }: { writers: Writer[] }) {
   }, [writers, searchTerm])
 
   async function handleRemove(writer: Writer) {
-    if (
-      !confirm(
-        `Remove writer access for ${writer.name}? Their published attribution will remain.`,
-      )
-    ) {
-      return
-    }
-
     setRemovingId(writer.id)
     try {
       const response = await fetch(`/api/admin/writers/${writer.id}`, {
@@ -72,9 +67,13 @@ export function WritersTable({ writers }: { writers: Writer[] }) {
         throw new Error(getApiError(result))
       }
 
+      setRemoveTarget(null)
+      toast.success("Writer access removed", { description: writer.name })
       router.refresh()
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to remove writer")
+      toast.error("Failed to remove writer", {
+        description: error instanceof Error ? error.message : writer.name,
+      })
     } finally {
       setRemovingId(null)
     }
@@ -170,7 +169,7 @@ export function WritersTable({ writers }: { writers: Writer[] }) {
                     aria-label={`Remove writer access for ${writer.name}`}
                     className="h-9 w-9 rounded-[12px] text-text-secondary hover:bg-destructive/10 hover:text-destructive"
                     disabled={removingId === writer.id}
-                    onClick={() => void handleRemove(writer)}
+                    onClick={() => setRemoveTarget(writer)}
                     size="icon"
                     title="Remove access"
                     type="button"
@@ -235,6 +234,24 @@ export function WritersTable({ writers }: { writers: Writer[] }) {
           </div>
         </div>
       )}
+      <ConfirmationDialog
+        cancelLabel="Keep access"
+        confirmLabel="Remove writer access"
+        description={
+          removeTarget ? (
+            <>
+              <strong className="text-text-primary">{removeTarget.name}</strong> will lose writer access and can no longer edit posts. Existing published attribution will remain.
+            </>
+          ) : null
+        }
+        icon={ShieldOff}
+        onConfirm={() => removeTarget && void handleRemove(removeTarget)}
+        onOpenChange={(open) => !open && setRemoveTarget(null)}
+        open={removeTarget !== null}
+        pending={removingId !== null}
+        title="Remove writer access?"
+        tone="destructive"
+      />
     </div>
   )
 }

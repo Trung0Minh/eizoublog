@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type DragEvent } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowUp, ArrowDown, Pencil, Plus, Save, Trash2, X } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -424,10 +425,13 @@ export function ResourcesClient({
       }
 
       setIsEditing(false)
+      toast.success("Đã lưu trang Tài nguyên")
       router.refresh()
     } catch (error) {
       console.error("Failed to save:", error)
-      alert(error instanceof Error ? error.message : "Lỗi khi lưu. Vui lòng thử lại.")
+      toast.error("Không thể lưu trang Tài nguyên", {
+        description: error instanceof Error ? error.message : "Vui lòng thử lại.",
+      })
     } finally {
       setIsSaving(false)
     }

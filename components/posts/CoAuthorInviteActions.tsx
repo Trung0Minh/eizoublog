@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Check, X } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 
@@ -15,10 +16,13 @@ export function CoAuthorInviteActions({ postId }: { postId: string }) {
     try {
       const res = await fetch(`/api/posts/${postId}/co-authors/accept`, { method: "POST" })
       if (!res.ok) throw new Error()
+      toast.success("Invitation accepted")
       window.dispatchEvent(new Event("notifications:changed"))
       router.refresh()
     } catch {
-      alert("Failed to accept invitation")
+      toast.error("Failed to accept invitation", {
+        description: "Your invitation is unchanged. Please try again.",
+      })
       setIsPending(false)
     }
   }
@@ -28,10 +32,13 @@ export function CoAuthorInviteActions({ postId }: { postId: string }) {
     try {
       const res = await fetch(`/api/posts/${postId}/co-authors/decline`, { method: "POST" })
       if (!res.ok) throw new Error()
+      toast.success("Invitation declined")
       window.dispatchEvent(new Event("notifications:changed"))
       router.refresh()
     } catch {
-      alert("Failed to decline invitation")
+      toast.error("Failed to decline invitation", {
+        description: "Your invitation is unchanged. Please try again.",
+      })
       setIsPending(false)
     }
   }

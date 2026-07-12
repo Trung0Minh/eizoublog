@@ -4,8 +4,10 @@ import { Check, ShieldAlert, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
+import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog"
 import { formatDate } from "@/lib/utils"
 
 interface AdminComment {
@@ -41,10 +43,9 @@ export function AdminCommentsTable({
 }) {
   const router = useRouter()
   const [spammingId, setSpammingId] = useState<string | null>(null)
+  const [spamTarget, setSpamTarget] = useState<AdminComment | null>(null)
 
   async function handleMarkSpam(comment: AdminComment) {
-    if (!confirm("Mark this comment as spam and hide it?")) return
-
     setSpammingId(comment.id)
     try {
       const response = await fetch(`/api/comments/${comment.id}`, {
@@ -56,9 +57,15 @@ export function AdminCommentsTable({
         throw new Error(getApiError(result))
       }
 
+      setSpamTarget(null)
+      toast.success("Comment marked as spam", {
+        description: `${comment.authorName}'s comment is now hidden.`,
+      })
       router.refresh()
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to hide comment")
+      toast.error("Failed to hide comment", {
+        description: error instanceof Error ? error.message : "Please try again.",
+      })
     } finally {
       setSpammingId(null)
     }
@@ -73,6 +80,7 @@ export function AdminCommentsTable({
   }
 
   return (
+    <>
     <div className="flex flex-col">
       {comments.map((comment, index) => (
         <article
@@ -140,7 +148,7 @@ export function AdminCommentsTable({
                 aria-label="Mark as spam"
                 className="h-8 rounded-[8px] px-3 text-[12px] font-semibold text-text-secondary hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-400 border-none bg-transparent"
                 disabled={spammingId === comment.id}
-                onClick={() => void handleMarkSpam(comment)}
+                onClick={() => setSpamTarget(comment)}
                 size="sm"
                 type="button"
                 variant="ghost"
@@ -171,5 +179,27 @@ export function AdminCommentsTable({
         </article>
       ))}
     </div>
+      <ConfirmationDialog
+        cancelLabel="Keep visible"
+        confirmLabel="Mark as spam"
+        description={
+          spamTarget ? (
+            <>
+              Hide the comment from <strong className="text-text-primary">{spamTarget.authorName}</strong>:
+              <span className="mt-2 block line-clamp-3 rounded-[8px] border border-border-default bg-subtle-bg/60 p-3 text-[13px]">
+                {spamTarget.content}
+              </span>
+            </>
+          ) : null
+        }
+        icon={ShieldAlert}
+        onConfirm={() => spamTarget && void handleMarkSpam(spamTarget)}
+        onOpenChange={(open) => !open && setSpamTarget(null)}
+        open={spamTarget !== null}
+        pending={spammingId !== null}
+        title="Mark comment as spam?"
+        tone="warning"
+      />
+    </>
   )
 }

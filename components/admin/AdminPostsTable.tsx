@@ -4,6 +4,7 @@ import { Archive, ArchiveRestore, ExternalLink, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { useState } from "react"
+import { toast } from "sonner"
 
 import {
   AdminConfirmModal,
@@ -120,8 +121,17 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
       setSelectedIds(new Set())
       setBulkDeleteConfirm(false)
       setBulkArchiveConfirm(false)
+      toast.success(
+        action === "DELETE"
+          ? "Selected posts deleted"
+          : action === "ARCHIVE"
+            ? "Selected posts archived"
+            : "Selected posts restored",
+      )
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Bulk action failed")
+      toast.error("Bulk action failed", {
+        description: error instanceof Error ? error.message : undefined,
+      })
     } finally {
       setIsBulkActioning(false)
     }
@@ -141,8 +151,11 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
 
       updatePostStatusesLocally(new Set([post.id]), "ARCHIVED")
       setArchiveTarget(null)
+      toast.success("Post archived", { description: post.title })
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to archive post")
+      toast.error("Failed to archive post", {
+        description: error instanceof Error ? error.message : post.title,
+      })
     } finally {
       setArchivingId(null)
     }
@@ -162,8 +175,11 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
 
       updatePostStatusesLocally(new Set([post.id]), "DRAFT")
       setArchiveTarget(null)
+      toast.success("Post restored to draft", { description: post.title })
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to restore post")
+      toast.error("Failed to restore post", {
+        description: error instanceof Error ? error.message : post.title,
+      })
     } finally {
       setArchivingId(null)
     }
@@ -183,8 +199,11 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
 
       removePostsLocally(new Set([post.id]))
       setDeleteTarget(null)
+      toast.success("Post deleted", { description: post.title })
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to delete post")
+      toast.error("Failed to delete post", {
+        description: error instanceof Error ? error.message : post.title,
+      })
     } finally {
       setDeletingId(null)
     }

@@ -21,10 +21,14 @@ import {
 import StarterKit from "@tiptap/starter-kit"
 
 import { common, createLowlight } from "lowlight"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { toast } from "sonner"
 
 import { normalizeEditorContent } from "@/components/editor/content"
+import { getClipboardImageFiles } from "@/components/editor/clipboardImages"
+import { getModifiedClickLink } from "@/components/editor/editorLinks"
 import { EditorToolbar } from "@/components/editor/EditorToolbar"
+import { uploadFilesThroughServer } from "@/components/editor/MediaUpload"
 import {
   CustomImageExtension,
   GalleryExtension,
@@ -60,6 +64,9 @@ export function TiptapEditor({
   mode = "default",
 }: TiptapEditorProps) {
   const [spellcheckEnabled, setSpellcheckEnabled] = useState(false)
+  const [pasteUploadProgress, setPasteUploadProgress] = useState<number | null>(null)
+  const [isLinkModifierPressed, setIsLinkModifierPressed] = useState(false)
+  const editorRef = useRef<Editor | null>(null)
   const normalizedContent = useMemo(
     () => (content ? normalizeEditorContent(content) : ""),
     [content],
@@ -75,6 +82,57 @@ export function TiptapEditor({
           : "prose prose-lg dark:prose-invert max-w-none focus:outline-none",
         ...(ariaLabel && { "aria-label": ariaLabel }),
         spellcheck: "false",
+      },
+      handleClick: (_view, _position, event) => {
+        if (!editable) {
+          return false
+        }
+
+        const href = getModifiedClickLink(event)
+        if (!href) {
+          return false
+        }
+
+        event.preventDefault()
+        window.open(href, "_blank", "noopener,noreferrer")
+        return true
+      },
+      handlePaste: (_view, event) => {
+        const imageFiles = event.clipboardData
+          ? getClipboardImageFiles(event.clipboardData)
+          : []
+
+        if (imageFiles.length === 0) {
+          return false
+        }
+
+        event.preventDefault()
+        setPasteUploadProgress(0)
+
+        // Clipboard images use the same-origin upload route. This avoids
+        // browser-to-R2 CORS failures that can occur with presigned PUTs.
+        void uploadFilesThroughServer(imageFiles, setPasteUploadProgress)
+          .then((urls) => {
+            editorRef.current
+              ?.chain()
+              .focus()
+              .insertContent(
+                urls.map((url) => ({
+                  attrs: { alt: "", src: url },
+                  type: "customImage",
+                })),
+              )
+              .run()
+          })
+          .catch((error: unknown) => {
+            toast.error("Could not paste image", {
+              description:
+                error instanceof Error ? error.message : "Please try again.",
+            })
+          })
+          .finally(() => setPasteUploadProgress(null))
+
+        return true
       },
     },
     extensions: [
@@ -152,12 +210,35 @@ export function TiptapEditor({
   }, [editor, spellcheckEnabled])
 
   useEffect(() => {
+    editorRef.current = editor
     onEditorReady?.(editor ?? null)
 
     return () => {
+      editorRef.current = null
       onEditorReady?.(null)
     }
   }, [editor, onEditorReady])
+
+  useEffect(() => {
+    if (!editable) {
+      return
+    }
+
+    const updateModifierState = (event: KeyboardEvent) => {
+      setIsLinkModifierPressed(event.ctrlKey || event.metaKey)
+    }
+    const clearModifierState = () => setIsLinkModifierPressed(false)
+
+    window.addEventListener("keydown", updateModifierState)
+    window.addEventListener("keyup", updateModifierState)
+    window.addEventListener("blur", clearModifierState)
+
+    return () => {
+      window.removeEventListener("keydown", updateModifierState)
+      window.removeEventListener("keyup", updateModifierState)
+      window.removeEventListener("blur", clearModifierState)
+    }
+  }, [editable])
 
   const isReady = !!editor
 
@@ -165,7 +246,13 @@ export function TiptapEditor({
   const readingTime = Math.max(1, Math.ceil(words / 200))
 
   return (
-    <div className="relative w-full">
+    <div
+      className={
+        isLinkModifierPressed
+          ? "relative w-full [&_.ProseMirror_a]:cursor-pointer"
+          : "relative w-full"
+      }
+    >
       {isReady && editable && (
         <>
           <EditorToolbar
@@ -177,6 +264,16 @@ export function TiptapEditor({
             mode={mode}
           />
         </>
+      )}
+
+      {pasteUploadProgress !== null && (
+        <div
+          aria-live="polite"
+          className="mb-2 text-center text-xs font-medium text-accent"
+          role="status"
+        >
+          Đang tải ảnh từ clipboard... {pasteUploadProgress}%
+        </div>
       )}
 
       {children}

@@ -441,10 +441,11 @@ describe("PostEditor", () => {
 
     await user.type(screen.getByLabelText("Tiêu đề"), "New Post")
     await user.click(screen.getByRole("button", { name: "Mock editor" }))
-    await user.click(screen.getByRole("button", { name: /^Cài đặt bài viết/ }))
-    await user.selectOptions(screen.getByLabelText("Danh mục"), "category-1")
-    await user.selectOptions(screen.getByLabelText("Thêm đồng tác giả"), "writer-2")
-    await user.click(screen.getByRole("button", { name: "Xuất bản" }))
+    fireEvent.keyDown(screen.getByLabelText("Danh mục"), { key: "ArrowDown" })
+    await user.click(screen.getByRole("option", { name: "Production" }))
+    fireEvent.keyDown(screen.getByLabelText("Thêm đồng tác giả"), { key: "ArrowDown" })
+    await user.click(screen.getByRole("option", { name: "Ken" }))
+    await user.click(screen.getByRole("button", { name: "Xuất bản bài viết" }))
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith(
@@ -467,7 +468,7 @@ describe("PostEditor", () => {
     expect(routerMocks.push).toHaveBeenCalledWith("/new-post")
   })
 
-  it("uses a fullscreen writing shell with top bar actions and collapsible settings", async () => {
+  it("uses a fullscreen writing shell with a left action rail and right settings", async () => {
     const user = userEvent.setup()
     render(
       <PostEditor
@@ -497,42 +498,35 @@ describe("PostEditor", () => {
     )
 
     const saveDraftButton = screen.getByRole("button", { name: /Lưu nháp/ })
-    const topBar = saveDraftButton.closest("header")
-    if (!topBar) {
-      throw new Error("Editor top bar not found")
-    }
-
-    expect(topBar).toHaveClass(
+    const actionRail = screen.getByTestId("editor-action-rail")
+    expect(actionRail).toHaveClass(
       "fixed",
-      "top-0",
+      "left-4",
+      "top-1/2",
       "z-[100]",
-      "border-border-default/60",
+      "flex-col",
     )
     expect(screen.getByRole("link", { name: /Bảng điều khiển/ })).toHaveAttribute(
       "href",
       "/dashboard",
     )
     expect(screen.getByTestId("editor-writing-surface")).toHaveClass(
-      "md:rounded-[24px]",
-      "md:border-[2px]",
+      "rounded-[8px]",
+      "sm:border",
     )
-    expect(screen.queryByLabelText("Danh mục")).not.toBeInTheDocument()
-
-    await user.click(screen.getByRole("button", { name: /^Cài đặt bài viết/ }))
-
     expect(screen.getByLabelText("Danh mục")).toBeVisible()
     expect(screen.getByLabelText("Thêm đồng tác giả")).toBeVisible()
-    expect(screen.getByRole("complementary")).toHaveClass(
-      "border-r",
+    expect(screen.getByRole("complementary", { name: "Cài đặt bài viết" })).toHaveClass(
+      "border-l",
+      "right-0",
       "xl:w-[360px]",
     )
-    await user.selectOptions(screen.getByLabelText("Thêm đồng tác giả"), "writer-2")
+    fireEvent.keyDown(screen.getByLabelText("Thêm đồng tác giả"), { key: "ArrowDown" })
+    await user.click(screen.getByRole("option", { name: "Ken" }))
     expect(screen.getByRole("button", { name: "Xóa Ken" })).toBeVisible()
-    expect(
-      screen.getAllByRole("button", { name: /^Ẩn cài đặt bài viết/ }),
-    ).toHaveLength(2)
+    expect(screen.getByRole("button", { name: "Ẩn cài đặt bài viết" })).toBeVisible()
     expect(saveDraftButton).toHaveClass("h-9")
-    expect(screen.getByRole("button", { name: "Xuất bản" })).toHaveClass(
+    expect(screen.getByRole("button", { name: "Xuất bản bài viết" })).toHaveClass(
       "h-9",
     )
   })
@@ -693,14 +687,14 @@ describe("PostEditor", () => {
     )
 
     await user.type(screen.getByLabelText("Tiêu đề"), "Shared Draft")
-    await user.click(screen.getByRole("button", { name: /^Cài đặt bài viết/ }))
-    await user.selectOptions(screen.getByLabelText("Thêm đồng tác giả"), "writer-2")
+    fireEvent.keyDown(screen.getByLabelText("Thêm đồng tác giả"), { key: "ArrowDown" })
+    await user.click(screen.getByRole("option", { name: "Ken" }))
 
     expect(screen.queryByText("Quyền truy cập bản nháp")).not.toBeInTheDocument()
     expect(
       screen.queryByRole("button", { name: "Hiển thị với đồng tác giả" }),
     ).not.toBeInTheDocument()
-    await user.click(screen.getByRole("button", { name: /Lưu nháp\s*Nháp/ }))
+    await user.click(screen.getByRole("button", { name: "Lưu nháp" }))
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith(
@@ -730,7 +724,7 @@ describe("PostEditor", () => {
     )
 
     await user.type(screen.getByLabelText("Tiêu đề"), "Test Post")
-    await user.click(screen.getByRole("button", { name: "Xuất bản" }))
+    await user.click(screen.getByRole("button", { name: "Xuất bản bài viết" }))
 
     await screen.findByText("Nội dung bài viết không được để trống khi đăng.")
     expect(fetch).not.toHaveBeenCalled()

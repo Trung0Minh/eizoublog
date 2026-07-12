@@ -1,9 +1,11 @@
 "use client"
 
 import type { FormEvent } from "react"
+import { Send } from "lucide-react"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 
@@ -60,6 +62,7 @@ export function NewsletterBroadcastForm({
   const [error, setError] = useState("")
   const [result, setResult] = useState<BroadcastResult | null>(null)
   const [loading, setLoading] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -67,15 +70,18 @@ export function NewsletterBroadcastForm({
     setResult(null)
 
     const trimmedCustomBody = customBody.trim()
-    const trimmedPreviewText = previewText.trim()
-    const trimmedSubject = subject.trim()
-
     if (!postId && !trimmedCustomBody) {
       setError("Select a featured post or write a custom message.")
       return
     }
 
-    if (!confirm("Send this newsletter to all active subscribers?")) return
+    setConfirmOpen(true)
+  }
+
+  async function sendBroadcast() {
+    const trimmedCustomBody = customBody.trim()
+    const trimmedPreviewText = previewText.trim()
+    const trimmedSubject = subject.trim()
 
     setLoading(true)
     try {
@@ -101,6 +107,7 @@ export function NewsletterBroadcastForm({
       }
 
       setResult(parsedResult)
+      setConfirmOpen(false)
       setSubject("")
       setPreviewText("")
       setPostId("")
@@ -200,6 +207,22 @@ export function NewsletterBroadcastForm({
       <Button className="h-11 rounded-full bg-accent px-6 text-[14px] font-bold text-white shadow-md shadow-accent/20 transition-all hover:scale-105 hover:shadow-accent/40 w-full sm:w-auto" disabled={loading || !subject.trim()} type="submit">
         {loading ? "Sending..." : "Send broadcast"}
       </Button>
+      <ConfirmationDialog
+        cancelLabel="Review message"
+        confirmLabel="Send newsletter"
+        description={
+          <>
+            Send <strong className="text-text-primary">{subject.trim()}</strong> to every active subscriber. Once delivery is queued, it cannot be recalled.
+          </>
+        }
+        icon={Send}
+        onConfirm={() => void sendBroadcast()}
+        onOpenChange={setConfirmOpen}
+        open={confirmOpen}
+        pending={loading}
+        title="Send newsletter now?"
+        tone="default"
+      />
     </form>
   )
 }

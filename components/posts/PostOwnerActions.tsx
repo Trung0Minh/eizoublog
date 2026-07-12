@@ -4,8 +4,10 @@ import type { PostStatus } from "@prisma/client"
 import { Archive, RotateCcw } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
+import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog"
 
 type ActionStatus = "idle" | "withdrawing" | "archiving"
 
@@ -17,20 +19,12 @@ interface PostOwnerActionsProps {
 export function PostOwnerActions({ postId, status }: PostOwnerActionsProps) {
   const router = useRouter()
   const [actionStatus, setActionStatus] = useState<ActionStatus>("idle")
+  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false)
 
   async function updateStatus(
     nextStatus: Extract<PostStatus, "ARCHIVED" | "DRAFT">,
   ) {
     const isArchiving = nextStatus === "ARCHIVED"
-
-    if (
-      isArchiving &&
-      !window.confirm(
-        "Lưu trữ bài viết này? Bài viết sẽ không còn hiển thị công khai.",
-      )
-    ) {
-      return
-    }
 
     setActionStatus(isArchiving ? "archiving" : "withdrawing")
 
@@ -45,9 +39,14 @@ export function PostOwnerActions({ postId, status }: PostOwnerActionsProps) {
         throw new Error("Failed to update post")
       }
 
+      setArchiveConfirmOpen(false)
+      toast.success(isArchiving ? "Đã lưu trữ bài viết" : "Đã rút bài về bản nháp")
       router.refresh()
-    } catch {
+    } catch (error) {
       setActionStatus("idle")
+      toast.error(isArchiving ? "Không thể lưu trữ bài viết" : "Không thể rút bài", {
+        description: error instanceof Error ? error.message : "Vui lòng thử lại.",
+      })
     }
   }
 
@@ -70,7 +69,7 @@ export function PostOwnerActions({ postId, status }: PostOwnerActionsProps) {
       <Button
         aria-label="Lưu trữ"
         disabled={actionStatus !== "idle"}
-        onClick={() => void updateStatus("ARCHIVED")}
+        onClick={() => setArchiveConfirmOpen(true)}
         size="icon"
         title="Lưu trữ"
         type="button"
@@ -79,6 +78,18 @@ export function PostOwnerActions({ postId, status }: PostOwnerActionsProps) {
       >
         <Archive aria-hidden="true" className="h-4 w-4" />
       </Button>
+      <ConfirmationDialog
+        cancelLabel="Hủy"
+        confirmLabel="Lưu trữ"
+        description="Bài viết sẽ không còn hiển thị công khai. Bạn vẫn có thể khôi phục bài viết sau này."
+        icon={Archive}
+        onConfirm={() => void updateStatus("ARCHIVED")}
+        onOpenChange={setArchiveConfirmOpen}
+        open={archiveConfirmOpen}
+        pending={actionStatus === "archiving"}
+        title="Lưu trữ bài viết?"
+        tone="warning"
+      />
     </>
   )
 }
