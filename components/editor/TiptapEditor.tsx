@@ -2,7 +2,9 @@
 
 import CharacterCount from "@tiptap/extension-character-count"
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight"
+import Color from "@tiptap/extension-color"
 import Highlight from "@tiptap/extension-highlight"
+import TextStyle from "@tiptap/extension-text-style"
 
 import Link from "@tiptap/extension-link"
 import Placeholder from "@tiptap/extension-placeholder"
@@ -88,6 +90,10 @@ export function TiptapEditor({
           class: "editor-highlight",
         },
         multicolor: true,
+      }),
+      TextStyle,
+      Color.configure({
+        types: [TextStyle.name],
       }),
       CustomImageExtension,
       GalleryExtension,

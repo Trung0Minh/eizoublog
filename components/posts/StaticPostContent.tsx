@@ -110,6 +110,17 @@ function renderTextNode(node: JSONContent, key: string): ReactNode {
       case "strike":
         rendered = <s key={markKey}>{rendered}</s>
         break
+      case "textStyle": {
+        const color = stringAttr(attrs, "color")
+        if (color) {
+          rendered = (
+            <span key={markKey} style={{ color }}>
+              {rendered}
+            </span>
+          )
+        }
+        break
+      }
       case "underline":
         rendered = <u key={markKey}>{rendered}</u>
         break

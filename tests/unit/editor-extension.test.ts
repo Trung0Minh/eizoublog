@@ -1,5 +1,7 @@
 import { Editor } from "@tiptap/core"
+import Color from "@tiptap/extension-color"
 import StarterKit from "@tiptap/starter-kit"
+import TextStyle from "@tiptap/extension-text-style"
 import { describe, expect, it } from "vitest"
 
 import {
@@ -32,6 +34,36 @@ describe("VideoEmbedExtension", () => {
       "https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0",
     )
     expect(editor.getHTML()).toContain("Opening sequence")
+    editor.destroy()
+  })
+})
+
+describe("text color extension", () => {
+  it("serializes selected text color as a textStyle mark", () => {
+    const editor = new Editor({
+      content: "Colored text",
+      extensions: [StarterKit, TextStyle, Color.configure({ types: [TextStyle.name] })],
+    })
+
+    editor.commands.selectAll()
+    editor.commands.setColor("#dc2626")
+
+    expect(editor.getJSON()).toMatchObject({
+      content: [
+        {
+          content: [
+            {
+              marks: [{ attrs: { color: "#dc2626" }, type: "textStyle" }],
+              text: "Colored text",
+              type: "text",
+            },
+          ],
+          type: "paragraph",
+        },
+      ],
+      type: "doc",
+    })
+    expect(editor.getHTML()).toContain('style="color: rgb(220, 38, 38);"')
     editor.destroy()
   })
 })

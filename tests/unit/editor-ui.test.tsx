@@ -427,13 +427,50 @@ describe("EditorToolbar", () => {
     expect(chain.liftListItem).toHaveBeenCalledWith("listItem")
   })
 
+  it("centers toolbar group dividers vertically", () => {
+    const chain = {
+      focus: vi.fn(() => chain),
+      run: vi.fn(() => true),
+    }
+    const editor = {
+      chain: vi.fn(() => chain),
+      getAttributes: vi.fn(() => ({})),
+      isActive: vi.fn(() => false),
+    }
+
+    const { container } = render(<EditorToolbar editor={editor as never} />)
+
+    expect(container.querySelector(".self-center")).toBeInTheDocument()
+  })
+
+  it("keeps the editor controls in one compact row within the editor width", () => {
+    const chain = {
+      focus: vi.fn(() => chain),
+      run: vi.fn(() => true),
+    }
+    const editor = {
+      chain: vi.fn(() => chain),
+      getAttributes: vi.fn(() => ({})),
+      isActive: vi.fn(() => false),
+    }
+
+    const { container } = render(<EditorToolbar editor={editor as never} />)
+
+    expect(container.querySelector(".max-w-full")).toBeInTheDocument()
+    expect(container.querySelector(".flex-nowrap")).toBeInTheDocument()
+    expect(container.querySelector(".justify-between")).toBeInTheDocument()
+    expect(container.querySelector(".w-\\[32px\\]")).toBeInTheDocument()
+  })
+
   it("supports highlight colors, text alignment, and task list toolbar actions", () => {
     const chain = {
       focus: vi.fn(() => chain),
       run: vi.fn(() => true),
+      setColor: vi.fn(() => chain),
       setHighlight: vi.fn(() => chain),
       setTextAlign: vi.fn(() => chain),
       unsetHighlight: vi.fn(() => chain),
+      unsetColor: vi.fn(() => chain),
       toggleTaskList: vi.fn(() => chain),
     }
     const editor = {
@@ -453,6 +490,10 @@ describe("EditorToolbar", () => {
     fireEvent.mouseDown(screen.getByRole("menuitem", { name: "Highlight rose" }))
     fireEvent.mouseDown(screen.getByRole("button", { name: "Highlight color" }))
     fireEvent.mouseDown(screen.getByRole("menuitem", { name: "Clear highlight" }))
+    fireEvent.mouseDown(screen.getByRole("button", { name: "Text color" }))
+    fireEvent.mouseDown(screen.getByRole("menuitem", { name: "Text color red" }))
+    fireEvent.mouseDown(screen.getByRole("button", { name: "Text color" }))
+    fireEvent.mouseDown(screen.getByRole("menuitem", { name: "Clear text color" }))
     fireEvent.mouseDown(screen.getByRole("button", { name: "Align left" }))
     fireEvent.mouseDown(screen.getByRole("button", { name: "Align center" }))
     fireEvent.mouseDown(screen.getByRole("button", { name: "Align right" }))
@@ -461,6 +502,8 @@ describe("EditorToolbar", () => {
     expect(chain.setHighlight).toHaveBeenCalledWith({ color: "#fef08a" })
     expect(chain.setHighlight).toHaveBeenCalledWith({ color: "#fecdd3" })
     expect(chain.unsetHighlight).toHaveBeenCalled()
+    expect(chain.setColor).toHaveBeenCalledWith("#dc2626")
+    expect(chain.unsetColor).toHaveBeenCalled()
     expect(chain.setTextAlign).toHaveBeenCalledWith("left")
     expect(chain.setTextAlign).toHaveBeenCalledWith("center")
     expect(chain.setTextAlign).toHaveBeenCalledWith("right")
@@ -722,7 +765,11 @@ describe("PostBody", () => {
           attrs: { textAlign: "center" },
           content: [
             {
-              marks: [{ type: "highlight" }, { type: "underline" }],
+              marks: [
+                { type: "highlight" },
+                { attrs: { color: "#dc2626" }, type: "textStyle" },
+                { type: "underline" },
+              ],
               text: "Marked text",
               type: "text",
             },
@@ -754,6 +801,7 @@ describe("PostBody", () => {
     expect(marked.closest("mark")).toHaveClass("editor-highlight")
     expect(marked.closest("mark")).toHaveStyle({ backgroundColor: "#fef08a" })
     expect(marked.closest("mark")).toHaveStyle({ color: "#000000" })
+    expect(marked.closest("span")).toHaveStyle({ color: "#dc2626" })
     expect(marked.closest("u")).not.toBeNull()
     expect(marked.closest("p")).toHaveStyle({ textAlign: "center" })
     expect(screen.getByRole("checkbox")).toBeChecked()

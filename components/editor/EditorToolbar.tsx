@@ -21,6 +21,7 @@ import {
   ListOrdered,
   ListTodo,
   Minus,
+  Palette,
   Quote,
   SpellCheck,
   Strikethrough,
@@ -46,6 +47,17 @@ const HIGHLIGHT_COLORS = [
   { color: "#e5e7eb", label: "gray" },
 ]
 
+const TEXT_COLORS = [
+  { color: "#dc2626", label: "red" },
+  { color: "#ea580c", label: "orange" },
+  { color: "#ca8a04", label: "amber" },
+  { color: "#16a34a", label: "green" },
+  { color: "#0891b2", label: "cyan" },
+  { color: "#2563eb", label: "blue" },
+  { color: "#7c3aed", label: "violet" },
+  { color: "#db2777", label: "pink" },
+]
+
 interface ToolbarButtonProps {
   active?: boolean
   children: React.ReactNode
@@ -66,7 +78,7 @@ function ToolbarButton({
   return (
     <button
       className={[
-        "flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-[8px] transition-all duration-200",
+        "flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-[7px] transition-all duration-200",
         active
           ? "bg-accent/10 text-accent shadow-sm"
           : "text-text-secondary hover:bg-subtle-bg hover:text-text-primary hover:shadow-sm hover:scale-105",
@@ -94,7 +106,7 @@ function ToolbarButton({
 }
 
 function Divider() {
-  return <div className="mx-1 hidden h-4 w-px shrink-0 bg-border-default sm:block" />
+  return <div className="mx-0.5 hidden h-4 w-px shrink-0 self-center bg-border-default sm:block" />
 }
 
 export function EditorToolbar({
@@ -111,11 +123,13 @@ export function EditorToolbar({
   const [showVideoModal, setShowVideoModal] = useState(false)
   const [showLinkModal, setShowLinkModal] = useState(false)
   const [showHighlightMenu, setShowHighlightMenu] = useState(false)
+  const [showTextColorMenu, setShowTextColorMenu] = useState(false)
   const [highlightMenuPosition, setHighlightMenuPosition] = useState({
     left: 0,
     top: 0,
   })
   const highlightButtonRef = useRef<HTMLDivElement>(null)
+  const textColorButtonRef = useRef<HTMLDivElement>(null)
 
   function toggleHighlightMenu() {
     const rect = highlightButtonRef.current?.getBoundingClientRect()
@@ -128,6 +142,19 @@ export function EditorToolbar({
     }
 
     setShowHighlightMenu((current) => !current)
+  }
+
+  function toggleTextColorMenu() {
+    const rect = textColorButtonRef.current?.getBoundingClientRect()
+
+    if (rect) {
+      setHighlightMenuPosition({
+        left: rect.left,
+        top: rect.bottom + 6,
+      })
+    }
+
+    setShowTextColorMenu((current) => !current)
   }
 
   const highlightMenu = showHighlightMenu
@@ -172,6 +199,57 @@ export function EditorToolbar({
             }}
             role="menuitem"
             title="Clear highlight"
+            type="button"
+          >
+            Clear
+          </button>
+        </div>,
+        document.body,
+      )
+    : null
+
+  const textColorMenu = showTextColorMenu
+    ? createPortal(
+        <div
+          aria-label="Text colors"
+          className="fixed z-[120] grid w-[148px] grid-cols-4 gap-1 rounded-[6px] border border-border-default bg-background p-2 shadow-lg"
+          role="menu"
+          style={{
+            left: highlightMenuPosition.left,
+            top: highlightMenuPosition.top,
+          }}
+        >
+          {TEXT_COLORS.map(({ color, label }) => (
+            <button
+              aria-label={`Text color ${label}`}
+              className={[
+                "h-7 w-7 rounded-full border transition-transform hover:scale-110",
+                editor.getAttributes("textStyle").color === color
+                  ? "border-text-primary ring-1 ring-text-primary"
+                  : "border-border-strong",
+              ].join(" ")}
+              key={color}
+              onMouseDown={(event) => {
+                event.preventDefault()
+                editor.chain().focus().setColor(color).run()
+                setShowTextColorMenu(false)
+              }}
+              role="menuitem"
+              style={{ backgroundColor: color }}
+              title={`Text color ${label}`}
+              type="button"
+            />
+          ))}
+          <button
+            aria-label="Clear text color"
+            className="col-span-4 flex h-7 items-center justify-center rounded-[4px] border border-border-default text-xs text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary"
+            onMouseDown={(event) => {
+              event.preventDefault()
+              editor.chain().focus().unsetColor().run()
+              setShowTextColorMenu(false)
+            }}
+            role="menuitem"
+            title="Clear text color"
             type="button"
           >
             Clear
@@ -246,7 +324,7 @@ export function EditorToolbar({
 
   return (
     <>
-      <div className="no-scrollbar sticky top-0 z-40 mb-2 flex w-full max-w-fit mx-auto flex-nowrap justify-start gap-1 overflow-x-auto rounded-[16px] bg-background/80 backdrop-blur-xl px-3 py-2 border-[2px] border-border-default/50 shadow-sm transition-all duration-300">
+      <div className="no-scrollbar sticky top-0 z-40 mb-2 flex w-full max-w-full flex-nowrap justify-between gap-0 overflow-x-auto rounded-[16px] bg-background/80 backdrop-blur-xl px-3 py-2 border-[2px] border-border-default/50 shadow-sm transition-all duration-300">
         <ToolbarButton
           active={editor.isActive("bold")}
           onClick={() => editor.chain().focus().toggleBold().run()}
@@ -282,14 +360,6 @@ export function EditorToolbar({
         >
           <SpellCheck aria-hidden="true" className="h-[15px] w-[15px]" />
         </ToolbarButton>
-        <ToolbarButton
-          active={editor.isActive("code")}
-          onClick={() => editor.chain().focus().toggleCode().run()}
-          title="Inline code"
-        >
-          <Code aria-hidden="true" className="h-[15px] w-[15px]" />
-        </ToolbarButton>
-
         <div ref={highlightButtonRef}>
           <ToolbarButton
             active={editor.isActive("highlight")}
@@ -297,6 +367,15 @@ export function EditorToolbar({
             title="Highlight color"
           >
             <Highlighter aria-hidden="true" className="h-[15px] w-[15px]" />
+          </ToolbarButton>
+        </div>
+        <div ref={textColorButtonRef}>
+          <ToolbarButton
+            active={Boolean(editor.getAttributes("textStyle").color)}
+            onClick={toggleTextColorMenu}
+            title="Text color"
+          >
+            <Palette aria-hidden="true" className="h-[15px] w-[15px]" />
           </ToolbarButton>
         </div>
 
@@ -450,6 +529,13 @@ export function EditorToolbar({
           <Eye aria-hidden="true" className="h-[15px] w-[15px]" />
         </ToolbarButton>
         <ToolbarButton
+          active={editor.isActive("code")}
+          onClick={() => editor.chain().focus().toggleCode().run()}
+          title="Inline code"
+        >
+          <Code aria-hidden="true" className="h-[15px] w-[15px]" />
+        </ToolbarButton>
+        <ToolbarButton
           active={editor.isActive("codeBlock")}
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
           title="Code block"
@@ -493,6 +579,7 @@ export function EditorToolbar({
         />
       )}
       {highlightMenu}
+      {textColorMenu}
     </>
   )
 }
