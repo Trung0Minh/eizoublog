@@ -41,6 +41,7 @@ describe("public profile layouts", () => {
           name: "Mina",
           username: "mina",
         }}
+        className="snap-start"
       />,
     )
 
@@ -48,6 +49,9 @@ describe("public profile layouts", () => {
       "!m-0",
       "!cursor-default",
       "hover:!opacity-100",
+    )
+    expect(screen.getByRole("img", { name: "Mina" }).closest("section")).toHaveClass(
+      "snap-start",
     )
     expect(screen.getByRole("link", { name: "Mina" }).parentElement).toHaveClass(
       "min-w-0",

@@ -142,6 +142,30 @@ describe("HeadingWithIdExtension", () => {
 })
 
 describe("GalleryExtension", () => {
+  it("stores horizontal gallery layout while defaulting legacy galleries to grid", () => {
+    const editor = new Editor({
+      content: {
+        content: [
+          {
+            attrs: {
+              images: JSON.stringify([
+                { alt: "Frame", caption: "", url: "https://cdn.example.com/frame.webp" },
+              ]),
+              layout: "horizontal",
+            },
+            type: "imageGallery",
+          },
+        ],
+        type: "doc",
+      },
+      extensions: [StarterKit, GalleryExtension],
+    })
+
+    expect(editor.getHTML()).toContain('data-layout="horizontal"')
+    expect(editor.getHTML()).toContain("image-gallery__horizontal")
+    editor.destroy()
+  })
+
   it("renders image galleries with captions and accessible alt text", () => {
     const editor = new Editor({
       content: {

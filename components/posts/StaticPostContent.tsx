@@ -3,6 +3,7 @@ import type { CSSProperties, ReactNode } from "react"
 
 import {
   getGalleryImageAlt,
+  normalizeGalleryLayout,
   parseGalleryImages,
 } from "@/components/editor/gallery"
 import { isNativeVideo, toVideoEmbedUrl } from "@/components/editor/video"
@@ -176,6 +177,7 @@ function renderImageGallery(node: JSONContent, key: string) {
   const attrs = attrsFor(node)
   const images = parseGalleryImages(attrs.images)
   const columns = numberAttr(attrs, "columns") || 2
+  const layout = normalizeGalleryLayout(attrs.layout)
 
   if (images.length === 0) {
     return null
@@ -186,8 +188,26 @@ function renderImageGallery(node: JSONContent, key: string) {
   )
 
   return (
-    <div className="image-gallery" data-type="image-gallery" key={key}>
-      <div className="image-gallery__grid" style={{ gridTemplateColumns: `repeat(${Math.min(columns, images.length)}, minmax(0, 1fr))` }}>
+    <div
+      className="image-gallery"
+      data-layout={layout}
+      data-type="image-gallery"
+      key={key}
+    >
+      <div
+        className={
+          layout === "horizontal"
+            ? "image-gallery__horizontal"
+            : "image-gallery__grid"
+        }
+        style={
+          layout === "grid"
+            ? {
+                gridTemplateColumns: `repeat(${Math.min(columns, images.length)}, minmax(0, 1fr))`,
+              }
+            : undefined
+        }
+      >
         {images.map((image, index) => {
           const isNative = isNativeVideo(image.url)
           const isVideoUrl = isNative || image.url.includes("youtube.com") || image.url.includes("youtu.be")

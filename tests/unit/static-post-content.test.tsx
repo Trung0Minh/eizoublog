@@ -5,6 +5,29 @@ import { describe, expect, it } from "vitest"
 import { StaticPostContent } from "@/components/posts/StaticPostContent"
 
 describe("StaticPostContent", () => {
+  it("renders horizontal galleries as a scrollable media list", () => {
+    const content: JSONContent = {
+      content: [
+        {
+          attrs: {
+            images: JSON.stringify([
+              { alt: "Frame A", caption: "", url: "https://cdn.example.com/a.webp" },
+              { alt: "Frame B", caption: "", url: "https://cdn.example.com/b.webp" },
+            ]),
+            layout: "horizontal",
+          },
+          type: "imageGallery",
+        },
+      ],
+      type: "doc",
+    }
+
+    const { container } = render(<StaticPostContent content={content} />)
+
+    expect(container.querySelector(".image-gallery__horizontal")).not.toBeNull()
+    expect(screen.getAllByRole("img")).toHaveLength(2)
+  })
+
   it("hides single image captions when caption visibility is disabled", () => {
     const content: JSONContent = {
       content: [

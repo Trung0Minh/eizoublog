@@ -4,6 +4,7 @@ import { ReactNodeViewRenderer } from "@tiptap/react"
 import { ImageGalleryBlock } from "@/components/editor/ImageGalleryBlock"
 import {
   getGalleryImageAlt,
+  normalizeGalleryLayout,
   parseGalleryImages,
   serializeGalleryImages,
   type GalleryImage,
@@ -41,6 +42,14 @@ export const GalleryExtension = Node.create({
           "data-columns": attributes.columns,
         }),
       },
+      layout: {
+        default: "grid",
+        parseHTML: (element) =>
+          normalizeGalleryLayout(element.getAttribute("data-layout")),
+        renderHTML: (attributes) => ({
+          "data-layout": normalizeGalleryLayout(attributes.layout),
+        }),
+      },
     }
   },
 
@@ -50,7 +59,11 @@ export const GalleryExtension = Node.create({
         (images) =>
         ({ commands }) =>
           commands.insertContent({
-            attrs: { images: serializeGalleryImages(images), columns: 2 },
+            attrs: {
+              columns: 2,
+              images: serializeGalleryImages(images),
+              layout: "grid",
+            },
             type: this.name,
           }),
     }
@@ -67,24 +80,37 @@ export const GalleryExtension = Node.create({
   renderHTML({ HTMLAttributes, node }) {
     const images = parseGalleryImages(node.attrs.images)
     const columns = node.attrs.columns || 2
+    const layout = normalizeGalleryLayout(node.attrs.layout)
     const hasVisibleCaption = images.some(
       (image) => image.caption && image.showCaption !== false,
     )
     const renderedAttributes = { ...HTMLAttributes }
     delete renderedAttributes.images
     delete renderedAttributes.columns
+    delete renderedAttributes.layout
 
     return [
       "div",
       mergeAttributes(renderedAttributes, {
         "data-images": serializeGalleryImages(images),
+        "data-layout": layout,
         "data-columns": columns,
         "data-type": "image-gallery",
         class: "image-gallery",
       }),
       [
         "div",
-        { class: "image-gallery__grid", style: `grid-template-columns: repeat(${columns}, minmax(0, 1fr))` },
+        {
+          class:
+            layout === "horizontal"
+              ? "image-gallery__horizontal"
+              : "image-gallery__grid",
+          ...(layout === "grid"
+            ? {
+                style: `grid-template-columns: repeat(${columns}, minmax(0, 1fr))`,
+              }
+            : {}),
+        },
         ...images.map((image) => {
           const isVideoUrl = image.url.match(/\.(mp4|webm)$/i) || image.url.includes("youtube.com") || image.url.includes("youtu.be")
           const isNative = isNativeVideo(image.url)

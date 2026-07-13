@@ -19,6 +19,7 @@ import {
   type PublishedPostDetail,
 } from "@/lib/queries"
 import { buildMetadata } from "@/lib/seo"
+import { cn } from "@/lib/utils"
 
 interface PostPageProps {
   params: Promise<{ slug: string }>
@@ -86,6 +87,8 @@ export default async function PostPage({ params }: PostPageProps) {
   }
 
   const authors = [post.author.username, ...post.coAuthors.map(c => c.user.username)]
+  const creditAuthors = [post.author, ...post.coAuthors.map(c => c.user)]
+  const authorCreditsOverflow = creditAuthors.length > 3
 
   const content = post.content as JSONContent
   const hasTableOfContents = extractHeadings(content).length > 0
@@ -117,7 +120,7 @@ export default async function PostPage({ params }: PostPageProps) {
       </div>
 
       <div className="flex-1 w-full max-w-[1440px] mx-auto xl:px-12 flex justify-center pt-0 pb-20 relative z-10">
-        <main className="w-full max-w-[840px] px-4 md:px-5 xl:px-0">
+        <main className="w-full max-w-[1000px] px-4 md:px-5 xl:px-0">
           <header className="flex flex-col">
             <ScrollReveal delay={0.1}>
               {post.coverAlt && (
@@ -139,7 +142,7 @@ export default async function PostPage({ params }: PostPageProps) {
             </ScrollReveal>
           </header>
 
-          <article className="mt-6 md:mt-12 max-w-[80ch] mx-auto text-text-primary font-lora text-[16px] md:text-[17.5px] leading-[1.75] md:leading-[1.8] post-content">
+          <article className="mt-6 md:mt-12 w-full mx-auto text-text-primary font-lora text-[16px] md:text-[17.5px] leading-[1.75] md:leading-[1.8] post-content">
             <ScrollReveal delay={0.2}>
               <div className="relative z-30 mb-8 overflow-hidden rounded-[16px] border border-border-default/60 bg-background/90 px-4 py-5 backdrop-blur-sm sm:mb-12 sm:rounded-[8px] sm:bg-subtle-bg/90 sm:p-8 md:p-12">
                 <PostBody content={content} />
@@ -147,13 +150,58 @@ export default async function PostPage({ params }: PostPageProps) {
             </ScrollReveal>
           </article>
 
-          <div className="max-w-[80ch] mx-auto font-lora text-[16px] md:text-[17.5px]">
+          <div className="w-full mx-auto font-lora text-[16px] md:text-[17.5px]">
             <div className="font-sans text-text-primary">
               <ScrollReveal delay={0.3}>
-                <div className="mt-12 md:mt-16 flex flex-col gap-4">
-                  {[post.author, ...post.coAuthors.map(c => c.user)].map(author => (
-                    <AuthorBio key={author.username} author={author} />
-                  ))}
+                <div className="relative mt-12 md:mt-16">
+                  <div
+                    aria-label="Tác giả bài viết"
+                    className={cn(
+                      "gap-4",
+                      creditAuthors.length === 1
+                        ? "block"
+                        : "flex overflow-x-auto pb-3 pr-12 [scroll-snap-type:x_mandatory] [scrollbar-width:thin]",
+                      !authorCreditsOverflow && creditAuthors.length > 1 &&
+                        "sm:grid sm:overflow-visible sm:pb-0 sm:pr-0",
+                      creditAuthors.length === 2 && "sm:grid-cols-2",
+                      creditAuthors.length === 3 && "sm:grid-cols-3",
+                    )}
+                    data-testid="author-credit-list"
+                  >
+                    {creditAuthors.map(author => (
+                      <AuthorBio
+                        className={cn(
+                          "min-w-0 shrink-0 basis-[82%] snap-start sm:basis-[46%]",
+                          authorCreditsOverflow
+                            ? "lg:basis-[31%]"
+                            : "sm:w-auto sm:shrink sm:basis-auto",
+                          creditAuthors.length === 1 && "w-full basis-full",
+                        )}
+                        key={author.username}
+                        author={author}
+                      />
+                    ))}
+                  </div>
+
+                  {creditAuthors.length > 1 && (
+                    <>
+                      <div
+                        aria-hidden="true"
+                        className={cn(
+                          "pointer-events-none absolute bottom-3 right-0 top-0 w-16 bg-gradient-to-l from-background via-background/75 to-transparent sm:hidden",
+                          authorCreditsOverflow && "sm:block",
+                        )}
+                      />
+                      <div
+                        className={cn(
+                          "mt-1 text-right text-[11px] font-medium text-text-tertiary sm:hidden",
+                          authorCreditsOverflow && "sm:block",
+                        )}
+                      >
+                        Kéo ngang để xem thêm →
+                      </div>
+                    </>
+                  )}
                 </div>
               </ScrollReveal>
               

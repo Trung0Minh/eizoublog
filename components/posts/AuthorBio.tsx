@@ -1,6 +1,7 @@
 import Link from "next/link"
 import type { JSONContent } from "@tiptap/react"
 import { StaticPostContent } from "@/components/posts/StaticPostContent"
+import { cn } from "@/lib/utils"
 
 interface AuthorBioAuthor {
   avatarUrl: string | null
@@ -11,6 +12,7 @@ interface AuthorBioAuthor {
 
 interface AuthorBioProps {
   author: AuthorBioAuthor
+  className?: string
 }
 
 function fallbackBio(authorName: string) {
@@ -34,9 +36,14 @@ function stripMediaNodes(node: JSONContent): JSONContent {
   }
 }
 
-export function AuthorBio({ author }: AuthorBioProps) {
+export function AuthorBio({ author, className }: AuthorBioProps) {
   return (
-    <section className="glass-card flex flex-col items-center gap-5 p-5 text-center md:flex-row md:items-start md:p-6 md:text-left">
+    <section
+      className={cn(
+        "glass-card flex h-full flex-col items-center gap-5 p-5 text-center md:flex-row md:items-start md:p-6 md:text-left",
+        className,
+      )}
+    >
       {author.avatarUrl ? (
         <img
           alt={author.name}

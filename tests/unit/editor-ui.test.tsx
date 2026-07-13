@@ -402,6 +402,20 @@ describe("EditorToolbar", () => {
     })
   })
 
+  it("keeps gallery layout controls out of the global editor toolbar", () => {
+    const editor = {
+      chain: vi.fn(),
+      getAttributes: vi.fn(() => ({ layout: "grid" })),
+      isActive: vi.fn((name: string) => name === "imageGallery"),
+    }
+
+    render(<EditorToolbar editor={editor as never} />)
+
+    expect(
+      screen.queryByRole("button", { name: /switch gallery/i }),
+    ).not.toBeInTheDocument()
+  })
+
   it("supports underline and nested list toolbar actions", () => {
     const chain = {
       focus: vi.fn(() => chain),

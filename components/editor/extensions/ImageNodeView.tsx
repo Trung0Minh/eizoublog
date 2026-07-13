@@ -2,6 +2,9 @@ import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/re
 import { useRef } from "react"
 import { AlignCenter, AlignLeft, AlignRight, Maximize, Trash2, Type } from "lucide-react"
 
+import { GalleryAddMediaButton } from "@/components/editor/GalleryAddMediaButton"
+import { serializeGalleryImages } from "@/components/editor/gallery"
+
 export function ImageNodeView(props: NodeViewProps) {
   const { node, updateAttributes, selected } = props
   const captionRef = useRef<HTMLElement>(null)
@@ -87,6 +90,37 @@ export function ImageNodeView(props: NodeViewProps) {
           >
             <Type className="h-4 w-4" />
           </button>
+          <div className="mx-1 h-4 w-px bg-border-default" />
+          <GalleryAddMediaButton
+            onAdd={(newImages) => {
+              const position = props.getPos()
+              const galleryType = props.editor.schema.nodes.imageGallery
+              if (typeof position !== "number" || !galleryType) {
+                return
+              }
+
+              const originalImage = {
+                alt: typeof node.attrs.alt === "string" ? node.attrs.alt : "",
+                caption: node.textContent,
+                showCaption: node.attrs.showCaption === true,
+                url: typeof node.attrs.src === "string" ? node.attrs.src : "",
+              }
+              const galleryNode = galleryType.create({
+                columns: 2,
+                images: serializeGalleryImages([originalImage, ...newImages]),
+                layout: "grid",
+              })
+
+              props.editor.view.dispatch(
+                props.editor.state.tr.replaceWith(
+                  position,
+                  position + node.nodeSize,
+                  galleryNode,
+                ),
+              )
+              props.editor.commands.focus()
+            }}
+          />
           <div className="mx-1 h-4 w-px bg-border-default" />
 
           <button

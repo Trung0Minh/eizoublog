@@ -5,6 +5,34 @@ export interface GalleryImage {
   showCaption?: boolean
 }
 
+export type GalleryLayout = "grid" | "horizontal"
+
+export function normalizeGalleryLayout(value: unknown): GalleryLayout {
+  return value === "horizontal" ? "horizontal" : "grid"
+}
+
+export function reorderGalleryImages(
+  images: readonly GalleryImage[],
+  fromIndex: number,
+  toIndex: number,
+) {
+  if (
+    fromIndex < 0 ||
+    toIndex < 0 ||
+    fromIndex >= images.length ||
+    toIndex >= images.length ||
+    fromIndex === toIndex
+  ) {
+    return images
+  }
+
+  const reordered = [...images]
+  const [movedImage] = reordered.splice(fromIndex, 1)
+  reordered.splice(toIndex, 0, movedImage)
+  return reordered
+}
+
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null
 }

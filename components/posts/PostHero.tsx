@@ -37,7 +37,7 @@ export function PostHero({ post, authorUsernames }: PostHeroProps) {
         </motion.div>
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent flex flex-col justify-end pb-8 md:pb-16">
-        <div className="w-full max-w-[840px] mx-auto px-4 md:px-5 xl:px-0">
+        <div className="w-full max-w-[1000px] mx-auto px-4 md:px-5 xl:px-0">
           <ScrollReveal delay={0.1}>
             {post.category && (
               <div className="text-[11px] font-bold text-white bg-accent px-3 py-1 rounded-full uppercase tracking-[0.1em] w-max mb-4 shadow-lg flex items-center gap-1">

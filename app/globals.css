@@ -739,6 +739,21 @@
     gap: 0.5rem;
   }
 
+  .image-gallery__horizontal {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    padding: 0.25rem 0 0.75rem;
+    scroll-snap-type: inline mandatory;
+    scrollbar-width: thin;
+  }
+
+  .image-gallery__horizontal .image-gallery__item {
+    flex: 0 0 clamp(17rem, 72vw, 38rem);
+    scroll-snap-align: start;
+  }
+
   .post-content .image-gallery__item,
   .image-gallery__item {
     margin: 0;
