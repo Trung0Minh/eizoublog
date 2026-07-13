@@ -276,6 +276,32 @@ export const publishedPostDetailSelect = {
   coverAlt: true,
   coverUrl: true,
   excerpt: true,
+  finalAwardEvent: {
+    select: {
+      coverAlt: true,
+      coverUrl: true,
+      id: true,
+      intro: true,
+      introText: true,
+      rooms: {
+        orderBy: [{ order: "asc" }, { updatedAt: "asc" }],
+        select: {
+          id: true,
+          order: true,
+          selectedPost: {
+            select: { content: true, id: true, status: true, title: true },
+          },
+          status: true,
+          writer: {
+            select: { avatarUrl: true, name: true, username: true },
+          },
+          writerIntro: true,
+        },
+        where: { excludedAt: null, status: "SUBMITTED" },
+      },
+      title: true,
+    },
+  },
   id: true,
   publishedAt: true,
   slug: true,

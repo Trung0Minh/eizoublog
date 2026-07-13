@@ -20,6 +20,7 @@ import {
 } from "@/lib/queries"
 import { buildMetadata } from "@/lib/seo"
 import { cn } from "@/lib/utils"
+import { EventAnthologyView } from "@/components/events/EventAnthologyView"
 
 interface PostPageProps {
   params: Promise<{ slug: string }>
@@ -98,6 +99,33 @@ export default async function PostPage({ params }: PostPageProps) {
   ]
   const tags =
     post.tags.length > 0 ? post.tags.map(({ tag }) => tag) : fallbackTags
+
+  if (post.finalAwardEvent) {
+    return (
+      <>
+        <ReadingProgress />
+        <PostJsonLd
+          authorName={post.author.name}
+          coverUrl={post.coverUrl}
+          description={post.excerpt}
+          publishedAt={post.publishedAt}
+          slug={post.slug}
+          title={post.title}
+          updatedAt={post.updatedAt}
+        />
+        <PostReadTracker slug={post.slug} title={post.title} />
+        <EventAnthologyView event={post.finalAwardEvent} />
+        <div className="mx-auto w-full max-w-4xl px-4 pb-24 sm:px-6">
+          <CommentSection
+            initialComments={post.comments}
+            postId={post.id}
+            postSlug={post.slug}
+            postAuthorUsernames={authors}
+          />
+        </div>
+      </>
+    )
+  }
 
   return (
     <>

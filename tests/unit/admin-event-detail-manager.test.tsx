@@ -58,7 +58,7 @@ describe("AdminEventDetailManager", () => {
               status: "SUBMITTED",
               updatedAt: new Date("2026-06-17T00:00:00.000Z"),
               visibility: "PARTICIPANTS",
-              writer: { name: "Mai", username: "mai" },
+              writer: { name: "Mai", role: "WRITER", username: "mai" },
             },
           ],
           status: "OPEN",
@@ -73,6 +73,10 @@ describe("AdminEventDetailManager", () => {
     expect(screen.getByTitle("Preview selected post")).toHaveAttribute(
       "href",
       "/dashboard/preview/post-1",
+    )
+    expect(screen.getByRole("link", { name: "Preview final event" })).toHaveAttribute(
+      "href",
+      "/admin/events/event-1/preview",
     )
   })
 
@@ -106,7 +110,7 @@ describe("AdminEventDetailManager", () => {
               status: "SUBMITTED",
               updatedAt: new Date("2026-06-17T00:00:00.000Z"),
               visibility: "PARTICIPANTS",
-              writer: { name: "Mai", username: "mai" },
+              writer: { name: "Mai", role: "WRITER", username: "mai" },
             },
             {
               _count: { comments: 0 },
@@ -122,7 +126,7 @@ describe("AdminEventDetailManager", () => {
               status: "SUBMITTED",
               updatedAt: new Date("2026-06-17T00:00:00.000Z"),
               visibility: "PARTICIPANTS",
-              writer: { name: "Ren", username: "ren" },
+              writer: { name: "Ren", role: "WRITER", username: "ren" },
             },
           ],
           status: "OPEN",
@@ -146,5 +150,47 @@ describe("AdminEventDetailManager", () => {
       })
     })
     expect(routerMocks.refresh).not.toHaveBeenCalled()
+  })
+
+  it("lets the admin exclude a submission from the final anthology", async () => {
+    const user = userEvent.setup()
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ data: { id: "event-1" } }), { status: 200 }),
+    )
+    vi.stubGlobal("fetch", fetchMock)
+
+    render(
+      <AdminEventDetailManager
+        event={{
+          finalPost: null,
+          id: "event-1",
+          introText: null,
+          rooms: [
+            {
+              _count: { comments: 0 },
+              excludedAt: null,
+              id: "room-1",
+              order: 0,
+              postId: "post-1",
+              selectedPost: { id: "post-1", status: "DRAFT", title: "Pick" },
+              status: "SUBMITTED",
+              updatedAt: new Date("2026-06-17T00:00:00.000Z"),
+              visibility: "PARTICIPANTS",
+              writer: { name: "Mai", role: "WRITER", username: "mai" },
+            },
+          ],
+          status: "OPEN",
+          title: "Awards",
+        }}
+      />,
+    )
+
+    await user.click(screen.getByRole("button", { name: "Exclude from final event" }))
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/admin/events/event-1", {
+      body: JSON.stringify({ roomExclusion: { excluded: true, id: "room-1" } }),
+      headers: { "Content-Type": "application/json" },
+      method: "PATCH",
+    })
   })
 })

@@ -79,6 +79,7 @@ export const awardEventDetailSelect = {
           avatarUrl: true,
           id: true,
           name: true,
+          role: true,
           username: true,
         },
       },

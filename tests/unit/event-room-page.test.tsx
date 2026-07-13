@@ -87,12 +87,12 @@ describe("DashboardEventRoomPage (Page A)", () => {
     expect(screen.getByText("Awards Event")).toBeVisible()
     expect(screen.getByText("Alice")).toBeVisible()
     expect(screen.getByText("My submission")).toBeVisible()
-    expect(screen.getByRole("link", { name: /Edit/i })).toBeVisible()
-    expect(screen.getByRole("link", { name: /View/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Edit submission" })).toBeVisible()
+    expect(screen.getByRole("link", { name: "Preview submission" })).toHaveAttribute(
       "href",
       "/dashboard/preview/post-1",
     )
-    expect(screen.getByRole("link", { name: /Feedback/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "View feedback" })).toHaveAttribute(
       "href",
       "/dashboard/events/event-1/rooms/room-1",
     )

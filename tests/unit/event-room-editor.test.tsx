@@ -41,10 +41,10 @@ describe("EventRoomEditor", () => {
       />,
     )
 
-    expect(screen.getByLabelText("Bài dự thi")).toBeVisible()
+    expect(screen.getByLabelText("Bài viết được chọn")).toBeVisible()
     expect(screen.getByRole("option", { name: /Draft pick/i })).toBeVisible()
     expect(screen.queryByTestId("event-editor")).not.toBeInTheDocument()
-    expect(screen.getByRole("button", { name: /Lưu/i })).toBeVisible()
     expect(screen.getByRole("button", { name: /Nộp bài/i })).toBeVisible()
+    expect(screen.queryByRole("button", { name: /Lưu/i })).not.toBeInTheDocument()
   })
 })

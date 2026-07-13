@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest"
 import type { JSONContent } from "@tiptap/react"
 
 import {
+  buildAwardEventOutline,
   buildAwardEventPostContent,
   emptyAwardEventDoc,
+  namespaceAwardEventPostContent,
   shuffleAwardEventRooms,
 } from "@/lib/awardEvents"
 
@@ -108,6 +110,79 @@ describe("buildAwardEventPostContent", () => {
 
     expect(JSON.stringify(content)).toContain("No submitted entries yet.")
     expect(JSON.stringify(content)).not.toContain("Empty")
+  })
+})
+
+describe("buildAwardEventOutline", () => {
+  it("places writers above namespaced headings from their submitted posts", () => {
+    const outline = buildAwardEventOutline([
+      {
+        id: "room-a",
+        order: 0,
+        selectedPost: {
+          content: doc({
+            attrs: { level: 2 },
+            content: [{ text: "Introduction", type: "text" }],
+            type: "heading",
+          }),
+          id: "post-a",
+          status: "DRAFT",
+          title: "A",
+        },
+        status: "SUBMITTED",
+        writer: { name: "Writer A", username: "writer-a" },
+        writerIntro: null,
+      },
+      {
+        id: "room-b",
+        order: 1,
+        selectedPost: {
+          content: doc({
+            attrs: { level: 3 },
+            content: [{ text: "Introduction", type: "text" }],
+            type: "heading",
+          }),
+          id: "post-b",
+          status: "PUBLISHED",
+          title: "B",
+        },
+        status: "SUBMITTED",
+        writer: { name: "Writer B", username: "writer-b" },
+        writerIntro: null,
+      },
+    ])
+
+    expect(outline).toEqual([
+      { id: "event-room-room-a", level: 1, text: "Writer A" },
+      { id: "event-room-room-a-introduction", level: 2, text: "Introduction" },
+      { id: "event-room-room-b", level: 1, text: "Writer B" },
+      { id: "event-room-room-b-introduction", level: 3, text: "Introduction" },
+    ])
+  })
+})
+
+describe("namespaceAwardEventPostContent", () => {
+  it("assigns collision-safe room-prefixed ids and demotes headings below the writer", () => {
+    const content = namespaceAwardEventPostContent(
+      doc(
+        {
+          attrs: { level: 2 },
+          content: [{ text: "Introduction", type: "text" }],
+          type: "heading",
+        },
+        {
+          attrs: { level: 2 },
+          content: [{ text: "Introduction", type: "text" }],
+          type: "heading",
+        },
+      ),
+      "room-a",
+    )
+
+    expect(content.content?.map((node) => node.attrs)).toEqual([
+      { id: "event-room-room-a-introduction", level: 3 },
+      { id: "event-room-room-a-introduction-2", level: 3 },
+    ])
   })
 })
 

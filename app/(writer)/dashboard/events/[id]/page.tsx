@@ -127,6 +127,7 @@ export default async function DashboardEventRoomPage({
           avatarUrl: true,
           id: true,
           name: true,
+          role: true,
           username: true,
         },
       },
@@ -139,7 +140,11 @@ export default async function DashboardEventRoomPage({
 
   // Separate current user's room and other participants' rooms
   const ourRoom = participantRooms.find((pr) => pr.writer.id === session.user.id) || room
-  const otherParticipants = participantRooms.filter((pr) => pr.writer.id !== session.user.id)
+  const otherParticipants = participantRooms.filter(
+    (pr) =>
+      pr.writer.id !== session.user.id &&
+      (pr.writer.role !== "REVOKED" || pr.status === "SUBMITTED"),
+  )
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:py-10 md:px-6 lg:px-8">
@@ -168,7 +173,7 @@ export default async function DashboardEventRoomPage({
           <h2 className="text-sm font-bold uppercase tracking-wider text-text-tertiary">
             Your Room
           </h2>
-          <div className="rounded-[20px] border-[2px] border-accent/20 bg-background/80 backdrop-blur-sm p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+          <div className="rounded-[16px] border border-border-default/80 dark:border-white/10 bg-background/60 dark:bg-background/40 backdrop-blur-md hover:bg-background/85 dark:hover:bg-background/60 p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-out flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
             <div className="flex items-start gap-4">
               {session.user.avatarUrl ? (
                 <img
@@ -229,18 +234,24 @@ export default async function DashboardEventRoomPage({
 
             <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
               {ourRoom.postId && ourRoom.selectedPost && (
-                <Button asChild size="sm" variant="outline" className="font-semibold">
-                  <Link href={`/dashboard/preview/${ourRoom.selectedPost.id}`}>
-                    <Eye className="mr-2 h-4 w-4" />
-                    View
+                <Button asChild size="icon" variant="outline">
+                  <Link
+                    aria-label="Preview submission"
+                    href={`/dashboard/preview/${ourRoom.selectedPost.id}`}
+                    title="Preview submission"
+                  >
+                    <Eye aria-hidden="true" className="h-4 w-4" />
                   </Link>
                 </Button>
               )}
               {ourRoom.postId && ourRoom.selectedPost && (
-                <Button asChild size="sm" variant="outline" className="relative font-semibold">
-                  <Link href={`/dashboard/events/${id}/rooms/${ourRoom.id}`}>
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    Feedback
+                <Button asChild size="icon" variant="outline" className="relative">
+                  <Link
+                    aria-label="View feedback"
+                    href={`/dashboard/events/${id}/rooms/${ourRoom.id}`}
+                    title="View feedback"
+                  >
+                    <MessageSquare aria-hidden="true" className="h-4 w-4" />
                     {unreadFeedbackCount > 0 && (
                       <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground animate-pulse shadow-md">
                         {unreadFeedbackCount}
@@ -249,10 +260,13 @@ export default async function DashboardEventRoomPage({
                   </Link>
                 </Button>
               )}
-              <Button asChild size="sm" className="font-semibold">
-                <Link href={`/dashboard/events/${id}/edit`}>
-                  <Edit2 className="mr-2 h-4 w-4" />
-                  Edit
+              <Button asChild size="icon">
+                <Link
+                  aria-label="Edit submission"
+                  href={`/dashboard/events/${id}/edit`}
+                  title="Edit submission"
+                >
+                  <Edit2 aria-hidden="true" className="h-4 w-4" />
                 </Link>
               </Button>
             </div>
@@ -261,9 +275,14 @@ export default async function DashboardEventRoomPage({
 
         {/* Section: Other Participants */}
         <section className="space-y-4">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-text-tertiary">
-            Other Participants
-          </h2>
+          <div className="flex items-end justify-between gap-4">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-text-secondary">
+              Other Participants
+            </h2>
+            <span className="text-xs font-semibold text-text-tertiary">
+              {otherParticipants.length} writers
+            </span>
+          </div>
 
           {otherParticipants.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border-default p-8 text-center text-sm text-text-secondary italic">
@@ -274,34 +293,39 @@ export default async function DashboardEventRoomPage({
               {otherParticipants.map((pr) => (
                 <div
                   key={pr.id}
-                  className="rounded-[20px] border-[2px] border-transparent hover:border-border-default bg-subtle-bg/30 p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                  className="flex flex-col items-start justify-between gap-4 rounded-[16px] border border-border-default/80 dark:border-white/10 bg-background/60 dark:bg-background/40 p-5 shadow-[0_8px_28px_rgba(31,24,38,0.06)] backdrop-blur-md transition-all duration-300 ease-out hover:border-accent/40 hover:bg-background/85 dark:hover:bg-background/60 hover:-translate-y-1 hover:shadow-lg sm:flex-row sm:items-center"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex min-w-0 items-center gap-4">
                     {pr.writer.avatarUrl ? (
                       <img
                         src={pr.writer.avatarUrl}
                         alt={pr.writer.name}
-                        className="h-10 w-10 rounded-full object-cover border border-border-default"
+                        className="h-11 w-11 shrink-0 rounded-full border border-border-default object-cover"
                       />
                     ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-sm font-semibold uppercase text-muted-foreground border border-border-default">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border-default bg-subtle-bg text-sm font-bold uppercase text-text-secondary">
                         {pr.writer.name.charAt(0)}
                       </div>
                     )}
-                    <div className="space-y-1">
-                      <div className="font-semibold text-sm text-text-primary">
+                    <div className="min-w-0 space-y-1.5">
+                      <div className="text-sm font-bold text-text-primary">
                         {pr.writer.name}{" "}
-                        <span className="text-xs font-normal text-text-tertiary ml-1">
+                        <span className="ml-1 text-xs font-medium text-text-secondary">
                           @{pr.writer.username}
                         </span>
                       </div>
+                      {pr.writer.role === "REVOKED" && (
+                        <Badge className="border-destructive/25 bg-destructive/5 text-destructive" variant="outline">
+                          Access removed
+                        </Badge>
+                      )}
                       {!pr.postId || !pr.selectedPost ? (
-                        <p className="text-xs text-text-tertiary italic">Not selected yet</p>
+                        <p className="text-xs font-medium italic text-text-secondary">Not selected yet</p>
                       ) : (
                         <div className="space-y-1">
-                          <div className="flex items-center gap-1 text-xs font-medium text-text-secondary">
-                            <FileText className="h-3.5 w-3.5" />
-                            {pr.selectedPost.title}
+                          <div className="flex min-w-0 items-center gap-1.5 text-xs font-semibold text-text-secondary">
+                            <FileText className="h-3.5 w-3.5 shrink-0 text-accent" />
+                            <span className="truncate">{pr.selectedPost.title}</span>
                           </div>
                           <div className="flex flex-wrap gap-1.5">
                             {pr.visibility === "PARTICIPANTS" ? (
@@ -336,10 +360,13 @@ export default async function DashboardEventRoomPage({
 
                   <div className="flex items-center justify-end w-full sm:w-auto">
                     {pr.postId && pr.selectedPost && pr.visibility === "PARTICIPANTS" ? (
-                      <Button asChild size="sm" variant="outline" className="font-semibold w-full sm:w-auto">
-                        <Link href={`/dashboard/events/${id}/rooms/${pr.id}`}>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View
+                      <Button asChild size="icon" variant="outline">
+                        <Link
+                          aria-label={`View ${pr.writer.name}'s submission`}
+                          href={`/dashboard/events/${id}/rooms/${pr.id}`}
+                          title={`View ${pr.writer.name}'s submission`}
+                        >
+                          <Eye aria-hidden="true" className="h-4 w-4" />
                         </Link>
                       </Button>
                     ) : pr.postId && pr.selectedPost && pr.visibility === "PRIVATE" ? (

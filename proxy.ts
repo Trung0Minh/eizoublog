@@ -26,6 +26,10 @@ const protectedProxy = auth((request) => {
     return NextResponse.redirect(new URL("/", request.url))
   }
 
+  if (isWriterRoute && session?.user.role === "REVOKED") {
+    return NextResponse.redirect(new URL("/login", request.url))
+  }
+
   return NextResponse.next()
 })
 const runProtectedProxy = protectedProxy as unknown as NextMiddleware

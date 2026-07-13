@@ -1,5 +1,7 @@
 import type { JSONContent } from "@tiptap/react"
 
+import { extractHeadings, type PostHeading } from "@/lib/postHeadings"
+
 type AwardEventRoomStatus = "DRAFT" | "SUBMITTED"
 type AwardEventSelectedPostStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED" | "REMOVED"
 
@@ -82,10 +84,72 @@ function getSectionId(room: AwardEventPostRoom) {
   return `event-room-${room.id}`
 }
 
-export function getSubmittedAwardEventRooms(rooms: AwardEventPostRoom[]) {
+export function getSubmittedAwardEventRooms<TRoom extends AwardEventPostRoom>(
+  rooms: TRoom[],
+) {
   return [...rooms]
     .filter((room) => room.status === "SUBMITTED" && room.selectedPost)
     .sort((a, b) => a.order - b.order || a.writer.name.localeCompare(b.writer.name))
+}
+
+export function buildAwardEventOutline(rooms: AwardEventPostRoom[]): PostHeading[] {
+  return getSubmittedAwardEventRooms(rooms).flatMap((room) => {
+    const seen = new Map<string, number>()
+
+    return [
+      {
+        id: getSectionId(room),
+        level: 1,
+        text: room.writer.name,
+      },
+      ...extractHeadings(room.selectedPost?.content ?? emptyAwardEventDoc).map(
+        (heading) => {
+          const baseId = `${getSectionId(room)}-${heading.id}`
+          const occurrence = (seen.get(baseId) ?? 0) + 1
+          seen.set(baseId, occurrence)
+
+          return {
+            ...heading,
+            id: occurrence === 1 ? baseId : `${baseId}-${occurrence}`,
+            level: Math.max(2, heading.level),
+          }
+        },
+      ),
+    ]
+  })
+}
+
+export function namespaceAwardEventPostContent(
+  content: JSONContent,
+  roomId: string,
+): JSONContent {
+  const seen = new Map<string, number>()
+
+  function transform(node: JSONContent): JSONContent {
+    const transformedContent = node.content?.map(transform)
+
+    if (node.type !== "heading") {
+      return { ...node, ...(transformedContent && { content: transformedContent }) }
+    }
+
+    const heading = extractHeadings({ ...node, content: transformedContent })[0]
+    const baseId = `event-room-${roomId}-${heading?.id ?? "section"}`
+    const occurrence = (seen.get(baseId) ?? 0) + 1
+    seen.set(baseId, occurrence)
+    const level = typeof node.attrs?.level === "number" ? node.attrs.level : 2
+
+    return {
+      ...node,
+      attrs: {
+        ...node.attrs,
+        id: occurrence === 1 ? baseId : `${baseId}-${occurrence}`,
+        level: Math.min(4, Math.max(3, level + 1)),
+      },
+      ...(transformedContent && { content: transformedContent }),
+    }
+  }
+
+  return transform(content)
 }
 
 export function buildAwardEventPostContent({

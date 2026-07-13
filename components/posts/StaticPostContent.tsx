@@ -326,8 +326,10 @@ function renderNode(node: JSONContent, key: string): ReactNode {
       const Tag = level === 3 ? "h3" : level === 4 ? "h4" : "h2"
       const text = getNodeText(node).trim()
 
+      const id = stringAttr(attrs, "id") ?? (text ? generateSlug(text) : undefined)
+
       return (
-        <Tag id={text ? generateSlug(text) : undefined} key={key} style={alignStyle}>
+        <Tag id={id} key={key} style={alignStyle}>
           {renderChildren(node)}
         </Tag>
       )

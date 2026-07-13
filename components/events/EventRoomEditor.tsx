@@ -5,7 +5,7 @@ import type {
   AwardEventRoomVisibility,
   PostStatus,
 } from "@prisma/client"
-import { ExternalLink, FileText, Save, Send } from "lucide-react"
+import { CheckCircle2, ExternalLink, FileText, Send, Users } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -73,7 +73,7 @@ export function EventRoomEditor({
   const controlsDisabled = event.status === "CLOSED" || event.status === "ARCHIVED"
   const selectedPost = eligiblePosts.find((post) => post.id === postId) ?? room.selectedPost
 
-  async function save(nextStatus = status) {
+  async function submit() {
     setError("")
     setIsPending(true)
 
@@ -81,7 +81,7 @@ export function EventRoomEditor({
       const response = await fetch(`/api/events/${event.id}/room`, {
         body: JSON.stringify({
           postId: postId || null,
-          status: nextStatus,
+          status: "SUBMITTED",
           visibility,
           writerIntro,
         }),
@@ -94,48 +94,49 @@ export function EventRoomEditor({
         throw new Error(getApiError(result))
       }
 
-      setStatus(nextStatus)
+      setStatus("SUBMITTED")
       router.refresh()
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Lưu thất bại")
+      setError(caughtError instanceof Error ? caughtError.message : "Nộp bài thất bại")
     } finally {
       setIsPending(false)
     }
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {error && (
-        <div className="rounded-[6px] border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+        <div className="rounded-[14px] border border-destructive/30 bg-destructive/10 p-4 text-sm font-medium text-destructive">
           {error}
         </div>
       )}
-      <section className="rounded-[8px] border bg-background p-5">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold uppercase text-muted-foreground">
-              {status}
-            </span>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Chọn một trong những bài viết hiện tại của bạn. Các bài dự thi sẽ xuất hiện khi quản trị viên cập nhật bài viết sự kiện.
-            </p>
+      <section className="overflow-hidden rounded-[16px] border border-border-default/80 dark:border-white/10 bg-background/60 dark:bg-background/40 shadow-[0_18px_60px_rgba(31,24,38,0.08)] backdrop-blur-md hover:-translate-y-0.5 hover:shadow-lg hover:border-accent/30 transition-all duration-300 ease-out">
+        <div className="flex flex-col gap-4 border-b border-border-default/70 bg-subtle-bg/55 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-accent/25 bg-accent/10 text-accent">
+              {status === "SUBMITTED" ? (
+                <CheckCircle2 aria-hidden="true" className="h-5 w-5" />
+              ) : (
+                <FileText aria-hidden="true" className="h-5 w-5" />
+              )}
+            </div>
+            <div>
+              <p className="text-sm font-bold text-text-primary">
+                {status === "SUBMITTED" ? "Bài dự thi đã được gửi" : "Chọn bài cho sự kiện"}
+              </p>
+              <p className="mt-0.5 text-xs leading-5 text-text-secondary">
+                {status === "SUBMITTED"
+                  ? "Bạn có thể thay đổi lựa chọn và gửi lại khi sự kiện còn mở."
+                  : "Một bài viết, một lời giới thiệu ngắn, sau đó gửi cho quản trị viên."}
+              </p>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              disabled={isPending || controlsDisabled}
-              onClick={() => void save()}
-              aria-label="Lưu bài dự thi"
-              size="icon"
-              title="Lưu bài dự thi"
-              type="button"
-              variant="outline"
-            >
-              <Save aria-hidden="true" className="h-4 w-4" />
-            </Button>
+          <div className="flex items-center gap-2 self-end sm:self-auto">
             <Button
               disabled={isPending || controlsDisabled || !postId}
-              onClick={() => void save("SUBMITTED")}
+              onClick={() => void submit()}
               aria-label="Nộp bài dự thi"
+              className="h-11 w-11 rounded-[14px] bg-accent text-white shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-colors hover:bg-accent/90"
               size="icon"
               title="Nộp bài dự thi"
               type="button"
@@ -143,7 +144,7 @@ export function EventRoomEditor({
               <Send aria-hidden="true" className="h-4 w-4" />
             </Button>
             {event.finalPost && (
-              <Button asChild size="icon" variant="ghost">
+              <Button asChild className="h-11 w-11 rounded-[14px]" size="icon" variant="outline">
                 <Link
                   aria-label="Mở bài viết công khai"
                   href={`/${event.finalPost.slug}`}
@@ -157,18 +158,19 @@ export function EventRoomEditor({
         </div>
 
         {controlsDisabled && (
-          <div className="mb-4 rounded-[6px] border border-border-default bg-muted/40 p-3 text-sm text-muted-foreground">
+          <div className="mx-5 mt-5 rounded-[14px] border border-border-default bg-muted/50 p-4 text-sm text-text-secondary sm:mx-7">
             Sự kiện này đã đóng, bài dự thi hiện chỉ ở chế độ xem.
           </div>
         )}
 
-        <div className="mb-5 grid gap-4 md:grid-cols-[minmax(0,1fr)_13rem]">
-          <label className="block md:col-span-2" htmlFor="submission-post">
-            <span className="mb-1 block text-xs font-semibold text-muted-foreground">
-              Bài dự thi
+        <div className="grid grid-cols-1 gap-7 p-5 sm:p-7 lg:grid-cols-12">
+          <label className="block lg:col-span-12" htmlFor="submission-post">
+            <span className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-text-tertiary">
+              <FileText aria-hidden="true" className="h-3.5 w-3.5 text-accent" />
+              Bài viết được chọn
             </span>
             <select
-              className="h-10 w-full rounded-[5px] border bg-background px-3 text-sm"
+              className="h-12 w-full rounded-[14px] border border-border-default bg-background px-4 text-sm font-semibold text-text-primary outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/15"
               disabled={controlsDisabled || isPending}
               id="submission-post"
               onChange={(changeEvent) => setPostId(changeEvent.target.value)}
@@ -182,12 +184,12 @@ export function EventRoomEditor({
               ))}
             </select>
           </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-muted-foreground">
+          <label className="block lg:col-span-8">
+            <span className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-text-tertiary">
               Giới thiệu người viết
             </span>
             <Textarea
-              className="min-h-24 bg-background border border-border-default focus:border-accent"
+              className="min-h-40 resize-y rounded-[16px] border border-border-default bg-background p-4 font-lora text-[15px] leading-7 text-text-primary focus-visible:border-accent"
               disabled={controlsDisabled || isPending}
               maxLength={1000}
               onChange={(changeEvent) => setWriterIntro(changeEvent.target.value)}
@@ -195,40 +197,49 @@ export function EventRoomEditor({
               value={writerIntro}
             />
           </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-muted-foreground">
-              Quyền riêng tư bài dự thi
-            </span>
-            <select
-              className="h-10 w-full rounded-[5px] border bg-background px-3 text-sm"
-              disabled={controlsDisabled || isPending}
-              onChange={(changeEvent) =>
-                setVisibility(changeEvent.target.value as AwardEventRoomVisibility)
-              }
-              value={visibility}
-            >
-              <option value="PRIVATE">Riêng tư</option>
-              <option value="PARTICIPANTS">Chia sẻ với những người tham gia</option>
-            </select>
-          </label>
-        </div>
+          <div className="space-y-6 lg:col-span-4">
+            <label className="block">
+              <span className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-text-tertiary">
+                <Users aria-hidden="true" className="h-3.5 w-3.5 text-accent" />
+                Ai có thể xem
+              </span>
+              <select
+                className="h-12 w-full rounded-[14px] border border-border-default bg-background px-4 text-sm font-semibold text-text-primary outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/15"
+                disabled={controlsDisabled || isPending}
+                onChange={(changeEvent) =>
+                  setVisibility(changeEvent.target.value as AwardEventRoomVisibility)
+                }
+                value={visibility}
+              >
+                <option value="PRIVATE">Chỉ tôi và quản trị viên</option>
+                <option value="PARTICIPANTS">Tất cả người tham gia</option>
+              </select>
+            </label>
 
-        {selectedPost ? (
-          <div className="rounded-[8px] border border-border-default bg-muted/20 p-4">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <FileText aria-hidden="true" className="h-4 w-4 text-editorial" />
-              {selectedPost.title}
+            <div className="border-t border-border-default pt-5">
+              {selectedPost ? (
+                <>
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-text-tertiary">
+                    Sẽ gửi
+                  </p>
+                  <p className="mt-2 text-base font-bold leading-snug text-text-primary">
+                    {selectedPost.title}
+                  </p>
+                  <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-accent">
+                    {selectedPost.status}
+                  </p>
+                  <p className="mt-4 text-xs leading-5 text-text-secondary">
+                    Nội dung luôn lấy từ bài viết gốc mới nhất khi quản trị viên xuất bản sự kiện.
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm leading-6 text-text-secondary">
+                  Chưa có bài viết nào được chọn. Tạo hoặc lưu một bản nháp trước, rồi quay lại đây.
+                </p>
+              )}
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {selectedPost.status} · Chỉnh sửa bài viết gốc trong Bài viết của tôi, sau đó nhờ
-              quản trị viên cập nhật bài viết sự kiện.
-            </p>
           </div>
-        ) : (
-          <div className="rounded-[8px] border border-dashed border-border-default p-5 text-sm text-muted-foreground">
-            Tạo hoặc lưu một bản nháp trong Bài viết của tôi, sau đó chọn ở đây cho sự kiện.
-          </div>
-        )}
+        </div>
       </section>
     </div>
   )

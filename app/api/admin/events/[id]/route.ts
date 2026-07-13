@@ -20,6 +20,10 @@ const updateEventSchema = z.object({
     id: z.string().min(1),
     order: z.number().int().min(0),
   })).optional(),
+  roomExclusion: z.object({
+    excluded: z.boolean(),
+    id: z.string().min(1),
+  }).optional(),
   status: z.enum(["DRAFT", "OPEN", "CLOSED", "PUBLISHED", "ARCHIVED"]).optional(),
   tagIds: z.array(z.string().min(1)).optional(),
   title: z.string().trim().min(1).max(200).optional(),
@@ -93,6 +97,13 @@ export async function PATCH(
             }),
           ),
         )
+      }
+
+      if (data.roomExclusion) {
+        await tx.awardEventRoom.updateMany({
+          data: { excludedAt: data.roomExclusion.excluded ? new Date() : null },
+          where: { eventId: id, id: data.roomExclusion.id },
+        })
       }
 
       return tx.awardEvent.update({

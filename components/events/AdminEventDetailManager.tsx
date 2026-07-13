@@ -5,7 +5,7 @@ import type {
   AwardEventStatus,
   PostStatus,
 } from "@prisma/client"
-import { ArrowDown, ArrowUp, ExternalLink, Eye, Save, Shuffle, Upload } from "lucide-react"
+import { ArrowDown, ArrowUp, ExternalLink, Eye, EyeOff, Save, Shuffle, Upload } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useMemo, useState } from "react"
@@ -28,7 +28,7 @@ interface AdminEventRoom {
   status: AwardEventRoomStatus
   updatedAt: Date
   visibility: "PRIVATE" | "PARTICIPANTS"
-  writer: { name: string; username: string }
+  writer: { name: string; role: "ADMIN" | "WRITER" | "REVOKED"; username: string }
 }
 
 interface AdminEventDetail {
@@ -161,6 +161,26 @@ export function AdminEventDetailManager({
     )
   }
 
+  function toggleRoomExclusion(roomId: string) {
+    const previousRooms = rooms
+    const room = rooms.find((candidate) => candidate.id === roomId)
+
+    if (!room) return
+
+    const excluded = !room.excludedAt
+    setRooms((currentRooms) =>
+      currentRooms.map((candidate) =>
+        candidate.id === roomId
+          ? { ...candidate, excludedAt: excluded ? new Date() : null }
+          : candidate,
+      ),
+    )
+    void patchEvent(
+      { roomExclusion: { excluded, id: roomId } },
+      { refreshOnSuccess: false, rollbackRooms: previousRooms },
+    )
+  }
+
   return (
     <div className="space-y-6">
       {error && (
@@ -213,6 +233,15 @@ export function AdminEventDetailManager({
               variant="outline"
             >
               <Shuffle aria-hidden="true" className="h-4 w-4" />
+            </Button>
+            <Button asChild className="h-10 w-10 rounded-full p-0" variant="outline">
+              <Link
+                aria-label="Preview final event"
+                href={`/admin/events/${event.id}/preview`}
+                title="Preview final event"
+              >
+                <Eye aria-hidden="true" className="h-4 w-4" />
+              </Link>
             </Button>
             <Button
               disabled={isPending}
@@ -276,7 +305,10 @@ export function AdminEventDetailManager({
           ) : (
             rooms.map((room, index) => (
               <article
-                className="group flex flex-col gap-4 rounded-[20px] border border-transparent bg-subtle-bg/40 p-5 transition-all duration-300 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10 sm:flex-row sm:items-center sm:justify-between animate-in fade-in slide-in-from-bottom-2"
+                className={cn(
+                  "group flex flex-col gap-4 rounded-[20px] border border-transparent bg-subtle-bg/40 p-5 transition-all duration-300 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10 sm:flex-row sm:items-center sm:justify-between animate-in fade-in slide-in-from-bottom-2",
+                  room.excludedAt && "opacity-60",
+                )}
                 style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
                 key={room.id}
               >
@@ -291,6 +323,16 @@ export function AdminEventDetailManager({
                     <span className="rounded-full border border-border-default/60 bg-background/50 px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase text-text-secondary shadow-sm">
                       {room.visibility === "PARTICIPANTS" ? "Shared" : "Private"}
                     </span>
+                    {room.writer.role === "REVOKED" && (
+                      <span className="rounded-full border border-destructive/30 bg-destructive/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-destructive">
+                        Access removed
+                      </span>
+                    )}
+                    {room.excludedAt && (
+                      <span className="rounded-full border border-border-default bg-muted px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-text-tertiary">
+                        Excluded
+                      </span>
+                    )}
                   </div>
                   <p className="mt-1.5 text-[13px] font-medium text-text-secondary">
                     <span className="text-accent">@{room.writer.username}</span>
@@ -336,6 +378,26 @@ export function AdminEventDetailManager({
                     <ArrowDown aria-hidden="true" className="h-4 w-4" />
                   </Button>
                   <div className="h-5 w-px bg-border-default/50 mx-1"></div>
+                  <Button
+                    aria-label={
+                      room.excludedAt ? "Include in final event" : "Exclude from final event"
+                    }
+                    className="h-9 w-9 rounded-[12px] text-text-secondary hover:bg-subtle-bg hover:text-text-primary"
+                    disabled={isPending || room.status !== "SUBMITTED" || !room.selectedPost}
+                    onClick={() => toggleRoomExclusion(room.id)}
+                    size="icon"
+                    title={
+                      room.excludedAt ? "Include in final event" : "Exclude from final event"
+                    }
+                    type="button"
+                    variant="ghost"
+                  >
+                    {room.excludedAt ? (
+                      <Eye aria-hidden="true" className="h-4 w-4" />
+                    ) : (
+                      <EyeOff aria-hidden="true" className="h-4 w-4" />
+                    )}
+                  </Button>
                   {room.selectedPost ? (
                     <Button asChild variant="ghost" size="icon" className="h-9 w-9 rounded-[12px] text-text-secondary hover:bg-accent/10 hover:text-accent">
                       <Link
