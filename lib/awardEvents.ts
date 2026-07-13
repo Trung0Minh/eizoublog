@@ -1,7 +1,7 @@
 import type { JSONContent } from "@tiptap/react"
 
 type AwardEventRoomStatus = "DRAFT" | "SUBMITTED"
-type AwardEventSelectedPostStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED"
+type AwardEventSelectedPostStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED" | "REMOVED"
 
 export interface AwardEventWriter {
   name: string

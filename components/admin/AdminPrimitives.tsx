@@ -96,7 +96,7 @@ export function AdminMetricCard({
 export function AdminStatusBadge({
   status,
 }: {
-  status: "Archived" | "Draft" | "Published"
+  status: "Archived" | "Draft" | "Published" | "Removed"
 }) {
   return (
     <span
@@ -108,13 +108,16 @@ export function AdminStatusBadge({
           "border-border-default/50 bg-subtle-bg/50 text-text-secondary",
         status === "Archived" &&
           "border-[#c2410c]/20 bg-[#fff7ed]/50 text-[#c2410c] dark:border-[#fb923c]/20 dark:bg-[#7c2d12]/40 dark:text-[#fb923c]",
+        status === "Removed" &&
+          "border-destructive/25 bg-destructive/10 text-destructive",
       )}
     >
       <span className={cn(
         "h-1.5 w-1.5 rounded-full",
         status === "Published" && "bg-[#15803d] dark:bg-[#4ade80] shadow-[0_0_8px_rgba(74,222,128,0.6)]",
         status === "Draft" && "bg-text-tertiary",
-        status === "Archived" && "bg-[#c2410c] dark:bg-[#fb923c] shadow-[0_0_8px_rgba(251,146,60,0.6)]"
+        status === "Archived" && "bg-[#c2410c] dark:bg-[#fb923c] shadow-[0_0_8px_rgba(251,146,60,0.6)]",
+        status === "Removed" && "bg-destructive",
       )} />
       {status}
     </span>
@@ -127,6 +130,9 @@ interface AdminConfirmModalProps {
   icon: React.ReactNode
   onCancel: () => void
   onConfirm: () => void
+  confirmDisabled?: boolean
+  onReasonChange?: (reason: string) => void
+  reason?: string
   title: string
   tone?: "archive" | "delete"
 }
@@ -137,6 +143,9 @@ export function AdminConfirmModal({
   icon,
   onCancel,
   onConfirm,
+  confirmDisabled = false,
+  onReasonChange,
+  reason = "",
   title,
   tone = "delete",
 }: AdminConfirmModalProps) {
@@ -144,11 +153,16 @@ export function AdminConfirmModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <button
         aria-label="Close confirmation"
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/60 backdrop-blur-[3px]"
         onClick={onCancel}
         type="button"
       />
-      <div className="relative w-full max-w-[400px] rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-[28px] shadow-[0_20px_60px_rgba(0,0,0,0.2)] backdrop-blur-md">
+      <div
+        aria-label={title}
+        aria-modal="true"
+        className="relative w-full max-w-[440px] rounded-[24px] border border-border-strong bg-background p-7 shadow-[0_24px_80px_rgba(0,0,0,0.38)]"
+        role="dialog"
+      >
         <div
           className={cn(
             "mb-4 flex h-12 w-12 items-center justify-center rounded-full",
@@ -162,7 +176,21 @@ export function AdminConfirmModal({
         <h2 className="mb-2 text-[17px] font-bold text-text-primary">
           {title}
         </h2>
-        <p className="text-[13px] leading-[1.6] text-text-secondary">{body}</p>
+        <div className="text-[13px] leading-[1.6] text-text-secondary">{body}</div>
+        {onReasonChange && (
+          <label className="mt-5 block text-[12px] font-semibold text-text-primary">
+            Reason
+            <textarea
+              aria-label="Reason"
+              autoFocus
+              className="mt-2 min-h-28 w-full resize-y rounded-[12px] border border-border-strong bg-subtle-bg px-3 py-2.5 text-[13px] font-normal leading-5 text-text-primary outline-none transition-colors placeholder:text-text-tertiary focus:border-accent focus:ring-2 focus:ring-accent/20"
+              maxLength={1000}
+              onChange={(event) => onReasonChange(event.target.value)}
+              placeholder="Explain this decision to the author…"
+              value={reason}
+            />
+          </label>
+        )}
         <div className="mt-6 flex items-center justify-end gap-2">
           <button
             className="h-9 rounded-full border-[2px] border-border-default px-5 text-[13px] font-medium text-text-primary transition-colors hover:bg-subtle-bg"
@@ -173,10 +201,11 @@ export function AdminConfirmModal({
           </button>
           <button
             className={cn(
-              "h-9 rounded-full px-5 text-[13px] font-semibold text-white transition-opacity hover:opacity-90",
+              "h-9 rounded-full px-5 text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40",
               tone === "delete" ? "bg-[#c0392b] dark:bg-[#e05c4a]" : "bg-accent",
             )}
             onClick={onConfirm}
+            disabled={confirmDisabled}
             type="button"
           >
             {confirmLabel}

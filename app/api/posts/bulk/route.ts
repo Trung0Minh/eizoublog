@@ -1,50 +1,137 @@
-import { NextResponse } from "next/server"
+import type { PostStatus } from "@prisma/client"
+import { ZodError, z } from "zod"
 
 import { auth } from "@/lib/auth"
+import {
+  getPostModerationTransition,
+  PostModerationTransitionError,
+  type PostModerationAction,
+} from "@/lib/postModeration"
 import { revalidatePostMutationPaths } from "@/lib/postRevalidation"
 import { prisma } from "@/lib/prisma"
 
-export async function POST(req: Request) {
+const bulkModerationSchema = z.object({
+  action: z.enum(["ARCHIVE", "REMOVE", "RESTORE"]),
+  postIds: z.array(z.string().min(1)).min(1).max(100),
+  reason: z.string().trim().min(3).max(1000),
+})
+
+class RouteError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+  ) {
+    super(message)
+  }
+}
+
+function resolveAction(
+  action: z.infer<typeof bulkModerationSchema>["action"],
+  status: PostStatus,
+): PostModerationAction {
+  if (action === "ARCHIVE") return "ARCHIVE"
+  if (action === "REMOVE") return "REMOVE"
+  if (status === "ARCHIVED") return "RESTORE_ARCHIVED"
+  if (status === "REMOVED") return "RESTORE_REMOVED"
+
+  throw new PostModerationTransitionError(
+    "Action is not valid for the current post status",
+  )
+}
+
+export async function POST(request: Request) {
+  const activeSession = await auth()
+
+  if (activeSession?.user?.role !== "ADMIN") {
+    return Response.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
   try {
-    const session = await auth()
-    if (session?.user?.role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const input = bulkModerationSchema.parse(await request.json())
+    const postIds = Array.from(new Set(input.postIds))
+    const result = await prisma.$transaction(async (tx) => {
+      const posts = await tx.post.findMany({
+        select: {
+          authorId: true,
+          contentText: true,
+          id: true,
+          removedFromStatus: true,
+          slug: true,
+          status: true,
+          title: true,
+        },
+        where: { id: { in: postIds } },
+      })
 
-    const { action, postIds } = await req.json()
-    if (!Array.isArray(postIds) || postIds.length === 0) {
-      return NextResponse.json({ error: "No posts selected" }, { status: 400 })
-    }
+      if (posts.length !== postIds.length) {
+        throw new RouteError("One or more posts were not found", 404)
+      }
 
-    if (!["DELETE", "ARCHIVE", "UNARCHIVE"].includes(action)) {
-      return NextResponse.json({ error: "Invalid action" }, { status: 400 })
-    }
+      const prepared = posts.map((post) => {
+        const action = resolveAction(input.action, post.status)
+        return {
+          action,
+          post,
+          transition: getPostModerationTransition(action, post),
+        }
+      })
 
-    const affectedPosts = await prisma.post.findMany({
-      select: { slug: true },
-      where: { id: { in: postIds } },
+      await Promise.all(
+        prepared.flatMap(({ action, post, transition }) => [
+          tx.post.update({
+            data: {
+              moderationLockedAt: transition.moderationLockedAt,
+              publishedAt: transition.publishedAt,
+              removedFromStatus: transition.removedFromStatus,
+              status: transition.toStatus,
+            },
+            select: { id: true },
+            where: { id: post.id },
+          }),
+          tx.notification.create({
+            data: {
+              data: {
+                action,
+                actorName: activeSession.user.name ?? "Admin",
+                fromStatus: post.status,
+                postId: post.id,
+                postSlug: post.slug,
+                postTitle: post.title,
+                reason: input.reason,
+                toStatus: transition.toStatus,
+              },
+              type: "POST_MODERATION",
+              userId: post.authorId,
+            },
+          }),
+        ]),
+      )
+
+      return {
+        posts: prepared.map(({ post, transition }) => ({
+          id: post.id,
+          status: transition.toStatus,
+        })),
+        slugs: prepared.map(({ post }) => post.slug),
+      }
     })
 
-    if (action === "DELETE") {
-      await prisma.post.deleteMany({
-        where: { id: { in: postIds } },
-      })
-    } else if (action === "ARCHIVE") {
-      await prisma.post.updateMany({
-        where: { id: { in: postIds } },
-        data: { status: "ARCHIVED" },
-      })
-    } else if (action === "UNARCHIVE") {
-      await prisma.post.updateMany({
-        where: { id: { in: postIds } },
-        data: { status: "DRAFT" },
-      })
+    revalidatePostMutationPaths(result.slugs)
+    return Response.json({ data: { posts: result.posts } })
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return Response.json({ error: "Invalid request" }, { status: 400 })
     }
 
-    revalidatePostMutationPaths(affectedPosts.map((post) => post.slug))
+    if (error instanceof RouteError) {
+      return Response.json({ error: error.message }, { status: error.status })
+    }
 
-    return NextResponse.json({ success: true })
-  } catch {
-    return NextResponse.json({ error: "Action failed" }, { status: 500 })
+    if (error instanceof PostModerationTransitionError) {
+      return Response.json({ error: error.message }, { status: 409 })
+    }
+
+    console.error("[POST /api/posts/bulk]", error)
+    return Response.json({ error: "Something went wrong" }, { status: 500 })
   }
 }

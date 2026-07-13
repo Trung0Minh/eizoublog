@@ -6,6 +6,8 @@ describe("Prisma Auth.js adapter schema", () => {
   const schema = readFileSync("prisma/schema.prisma", "utf8")
   const userModel = schema.match(/model User \{[\s\S]*?\n\}/)?.[0] ?? ""
   const postStatusEnum = schema.match(/enum PostStatus \{[\s\S]*?\n\}/)?.[0] ?? ""
+  const notificationTypeEnum =
+    schema.match(/enum NotificationType \{[\s\S]*?\n\}/)?.[0] ?? ""
   const postModel = schema.match(/model Post \{[\s\S]*?\n\}/)?.[0] ?? ""
   const commentModel = schema.match(/model Comment \{[\s\S]*?\n\}/)?.[0] ?? ""
   const inviteModel = schema.match(/model Invite \{[\s\S]*?\n\}/)?.[0] ?? ""
@@ -24,12 +26,19 @@ describe("Prisma Auth.js adapter schema", () => {
     schema.match(/model AnalyticsDailyPage \{[\s\S]*?\n\}/)?.[0] ?? ""
 
   it("includes the standard nullable fields Auth.js writes during email sign-in", () => {
-    expect(userModel).toContain("emailVerified DateTime?")
-    expect(userModel).toContain("image         String?")
+    expect(userModel).toMatch(/emailVerified\s+DateTime\?/)
+    expect(userModel).toMatch(/image\s+String\?/)
   })
 
   it("includes archived posts as a first-class post status", () => {
     expect(postStatusEnum).toContain("ARCHIVED")
+  })
+
+  it("supports reversible post removal and moderation notifications", () => {
+    expect(postStatusEnum).toContain("REMOVED")
+    expect(postModel).toContain("moderationLockedAt")
+    expect(postModel).toContain("removedFromStatus")
+    expect(notificationTypeEnum).toContain("POST_MODERATION")
   })
 
   it("indexes newsletter subscriber status for broadcast queries", () => {

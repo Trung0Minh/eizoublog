@@ -1,6 +1,6 @@
 "use client"
 
-import { Archive, ArchiveRestore, ExternalLink, Trash2 } from "lucide-react"
+import { Archive, ArchiveRestore, ExternalLink, RotateCcw, Send, Trash2, Undo2 } from "lucide-react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { useState } from "react"
@@ -19,7 +19,7 @@ interface AdminPost {
   id: string
   publishedAt: Date | null
   slug: string
-  status: "ARCHIVED" | "DRAFT" | "PUBLISHED"
+  status: "ARCHIVED" | "DRAFT" | "PUBLISHED" | "REMOVED"
   title: string
   updatedAt: Date
 }
@@ -35,6 +35,43 @@ function getApiError(value: unknown) {
   }
 
   return "Something went wrong"
+}
+
+function getBulkUpdates(value: unknown): Array<{
+  id: string
+  status: AdminPost["status"]
+}> | null {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    !("data" in value) ||
+    typeof value.data !== "object" ||
+    value.data === null ||
+    !("posts" in value.data) ||
+    !Array.isArray(value.data.posts)
+  ) {
+    return null
+  }
+
+  const updates = value.data.posts.flatMap((post) => {
+    if (
+      typeof post !== "object" ||
+      post === null ||
+      !("id" in post) ||
+      !("status" in post) ||
+      typeof post.id !== "string" ||
+      (post.status !== "DRAFT" &&
+        post.status !== "PUBLISHED" &&
+        post.status !== "ARCHIVED" &&
+        post.status !== "REMOVED")
+    ) {
+      return []
+    }
+
+    return [{ id: post.id, status: post.status }]
+  })
+
+  return updates.length === value.data.posts.length ? updates : null
 }
 
 export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
@@ -53,22 +90,20 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
     return `/admin/posts?${params.toString()}`
   }
 
-  const [archivingId, setArchivingId] = useState<string | null>(null)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [archiveTarget, setArchiveTarget] = useState<AdminPost | null>(null)
-  const [deleteTarget, setDeleteTarget] = useState<AdminPost | null>(null)
+  const [moderatingId, setModeratingId] = useState<string | null>(null)
+  const [moderationReason, setModerationReason] = useState("")
+  const [moderationTarget, setModerationTarget] = useState<{
+    action: "ARCHIVE" | "PUBLISH" | "REMOVE" | "RESTORE_ARCHIVED" | "RESTORE_REMOVED" | "UNPUBLISH"
+    post: AdminPost
+  } | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [isBulkActioning, setIsBulkActioning] = useState(false)
-  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false)
-  const [bulkArchiveConfirm, setBulkArchiveConfirm] = useState(false)
+  const [bulkAction, setBulkAction] = useState<"ARCHIVE" | "REMOVE" | "RESTORE" | null>(null)
+  const [bulkReason, setBulkReason] = useState("")
 
   const keepStatusInCurrentFilter = (
     status: AdminPost["status"],
   ) => !currentStatus || currentStatus === status
-
-  const removePostsLocally = (ids: Set<string>) => {
-    setVisiblePosts((current) => current.filter((post) => !ids.has(post.id)))
-  }
 
   const updatePostStatusesLocally = (
     ids: Set<string>,
@@ -96,38 +131,37 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
     setSelectedIds(next)
   }
 
-  async function handleBulkAction(action: "DELETE" | "ARCHIVE" | "UNARCHIVE") {
-    if (selectedIds.size === 0) return
+  async function handleBulkAction() {
+    if (selectedIds.size === 0 || !bulkAction || bulkReason.trim().length < 3) return
     setIsBulkActioning(true)
     try {
       const response = await fetch("/api/posts/bulk", {
-        method: "POST",
+        body: JSON.stringify({
+          action: bulkAction,
+          postIds: Array.from(selectedIds),
+          reason: bulkReason.trim(),
+        }),
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, postIds: Array.from(selectedIds) }),
+        method: "POST",
       })
       const result: unknown = await response.json()
-      if (!response.ok) {
-        throw new Error(getApiError(result))
-      }
-      const selectedIdSnapshot = new Set(selectedIds)
-      if (action === "DELETE") {
-        removePostsLocally(selectedIdSnapshot)
-      } else {
-        updatePostStatusesLocally(
-          selectedIdSnapshot,
-          action === "ARCHIVE" ? "ARCHIVED" : "DRAFT",
-        )
-      }
-      setSelectedIds(new Set())
-      setBulkDeleteConfirm(false)
-      setBulkArchiveConfirm(false)
-      toast.success(
-        action === "DELETE"
-          ? "Selected posts deleted"
-          : action === "ARCHIVE"
-            ? "Selected posts archived"
-            : "Selected posts restored",
+      if (!response.ok) throw new Error(getApiError(result))
+
+      const updates = getBulkUpdates(result)
+      if (!updates) throw new Error("Invalid bulk moderation response")
+      const updatesById = new Map(updates.map((update) => [update.id, update.status]))
+      setVisiblePosts((current) =>
+        current
+          .map((post) => {
+            const status = updatesById.get(post.id)
+            return status ? { ...post, status } : post
+          })
+          .filter((post) => keepStatusInCurrentFilter(post.status)),
       )
+      setSelectedIds(new Set())
+      setBulkAction(null)
+      setBulkReason("")
+      toast.success("Selected posts updated")
     } catch (error) {
       toast.error("Bulk action failed", {
         description: error instanceof Error ? error.message : undefined,
@@ -137,10 +171,22 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
     }
   }
 
-  async function handleArchive(post: AdminPost) {
-    setArchivingId(post.id)
+  function openModeration(
+    post: AdminPost,
+    action: NonNullable<typeof moderationTarget>["action"],
+  ) {
+    setModerationReason("")
+    setModerationTarget({ action, post })
+  }
+
+  async function handleModeration() {
+    if (!moderationTarget || moderationReason.trim().length < 3) return
+    const { action, post } = moderationTarget
+    setModeratingId(post.id)
     try {
-      const response = await fetch(`/api/posts/${post.id}/archive`, {
+      const response = await fetch(`/api/admin/posts/${post.id}/moderation`, {
+        body: JSON.stringify({ action, reason: moderationReason.trim() }),
+        headers: { "Content-Type": "application/json" },
         method: "POST",
       })
       const result: unknown = await response.json()
@@ -149,63 +195,37 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
         throw new Error(getApiError(result))
       }
 
-      updatePostStatusesLocally(new Set([post.id]), "ARCHIVED")
-      setArchiveTarget(null)
-      toast.success("Post archived", { description: post.title })
+      const fallbackStatus: AdminPost["status"] =
+        action === "PUBLISH"
+          ? "PUBLISHED"
+          : action === "ARCHIVE"
+            ? "ARCHIVED"
+            : action === "REMOVE"
+              ? "REMOVED"
+              : "DRAFT"
+      const nextStatus =
+        typeof result === "object" &&
+        result !== null &&
+        "data" in result &&
+        typeof result.data === "object" &&
+        result.data !== null &&
+        "status" in result.data &&
+        (result.data.status === "DRAFT" ||
+          result.data.status === "PUBLISHED" ||
+          result.data.status === "ARCHIVED" ||
+          result.data.status === "REMOVED")
+          ? result.data.status
+          : fallbackStatus
+      updatePostStatusesLocally(new Set([post.id]), nextStatus)
+      setModerationTarget(null)
+      setModerationReason("")
+      toast.success("Post moderation updated", { description: post.title })
     } catch (error) {
-      toast.error("Failed to archive post", {
+      toast.error("Failed to update post", {
         description: error instanceof Error ? error.message : post.title,
       })
     } finally {
-      setArchivingId(null)
-    }
-  }
-
-  async function handleUnarchive(post: AdminPost) {
-    setArchivingId(post.id)
-    try {
-      const response = await fetch(`/api/posts/${post.id}/archive`, {
-        method: "DELETE",
-      })
-      const result: unknown = await response.json()
-
-      if (!response.ok) {
-        throw new Error(getApiError(result))
-      }
-
-      updatePostStatusesLocally(new Set([post.id]), "DRAFT")
-      setArchiveTarget(null)
-      toast.success("Post restored to draft", { description: post.title })
-    } catch (error) {
-      toast.error("Failed to restore post", {
-        description: error instanceof Error ? error.message : post.title,
-      })
-    } finally {
-      setArchivingId(null)
-    }
-  }
-
-  async function handleDelete(post: AdminPost) {
-    setDeletingId(post.id)
-    try {
-      const response = await fetch(`/api/posts/${post.id}`, {
-        method: "DELETE",
-      })
-      const result: unknown = await response.json()
-
-      if (!response.ok) {
-        throw new Error(getApiError(result))
-      }
-
-      removePostsLocally(new Set([post.id]))
-      setDeleteTarget(null)
-      toast.success("Post deleted", { description: post.title })
-    } catch (error) {
-      toast.error("Failed to delete post", {
-        description: error instanceof Error ? error.message : post.title,
-      })
-    } finally {
-      setDeletingId(null)
+      setModeratingId(null)
     }
   }
 
@@ -233,7 +253,10 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
               title="Restore selected posts"
               variant="outline"
               disabled={isBulkActioning}
-              onClick={() => handleBulkAction("UNARCHIVE")}
+              onClick={() => {
+                setBulkReason("")
+                setBulkAction("RESTORE")
+              }}
             >
               <ArchiveRestore aria-hidden="true" className="h-4 w-4" />
             </Button>
@@ -243,17 +266,23 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
               title="Archive selected posts"
               variant="outline"
               disabled={isBulkActioning}
-              onClick={() => setBulkArchiveConfirm(true)}
+              onClick={() => {
+                setBulkReason("")
+                setBulkAction("ARCHIVE")
+              }}
             >
               <Archive aria-hidden="true" className="h-4 w-4" />
             </Button>
             <Button
-              aria-label="Delete selected posts"
+              aria-label="Remove selected posts"
               size="icon"
-              title="Delete selected posts"
+              title="Remove selected posts"
               variant="destructive"
               disabled={isBulkActioning}
-              onClick={() => setBulkDeleteConfirm(true)}
+              onClick={() => {
+                setBulkReason("")
+                setBulkAction("REMOVE")
+              }}
             >
               <Trash2 aria-hidden="true" className="h-4 w-4" />
             </Button>
@@ -299,6 +328,8 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
                   ? "Published"
                   : post.status === "ARCHIVED"
                     ? "Archived"
+                    : post.status === "REMOVED"
+                      ? "Removed"
                     : "Draft"
 
               return (
@@ -362,6 +393,45 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
                         </Link>
                       </Button>
                     )}
+                    {post.status === "PUBLISHED" && (
+                      <Button
+                        aria-label="Unpublish post"
+                        className="h-8 w-8 rounded-[8px] p-0 text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary"
+                        disabled={moderatingId === post.id}
+                        onClick={() => openModeration(post, "UNPUBLISH")}
+                        size="sm"
+                        type="button"
+                        variant="ghost"
+                      >
+                        <RotateCcw aria-hidden="true" className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {post.status === "DRAFT" && (
+                      <Button
+                        aria-label="Publish post"
+                        className="h-8 w-8 rounded-[8px] p-0 text-text-secondary transition-colors hover:bg-accent/10 hover:text-accent"
+                        disabled={moderatingId === post.id}
+                        onClick={() => openModeration(post, "PUBLISH")}
+                        size="sm"
+                        type="button"
+                        variant="ghost"
+                      >
+                        <Send aria-hidden="true" className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {post.status === "REMOVED" ? (
+                      <Button
+                        aria-label="Restore removed post"
+                        className="h-8 w-8 rounded-[8px] p-0 text-text-secondary transition-colors hover:bg-accent/10 hover:text-accent"
+                        disabled={moderatingId === post.id}
+                        onClick={() => openModeration(post, "RESTORE_REMOVED")}
+                        size="sm"
+                        type="button"
+                        variant="ghost"
+                      >
+                        <Undo2 aria-hidden="true" className="h-4 w-4" />
+                      </Button>
+                    ) : (
                     <Button
                       aria-label={
                         post.status === "ARCHIVED"
@@ -369,8 +439,15 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
                           : "Archive post"
                       }
                       className="h-8 w-8 rounded-[8px] p-0 hover:bg-orange-500/10 text-text-secondary hover:text-orange-500 transition-colors"
-                      disabled={archivingId === post.id}
-                      onClick={() => setArchiveTarget(post)}
+                      disabled={moderatingId === post.id}
+                      onClick={() =>
+                        openModeration(
+                          post,
+                          post.status === "ARCHIVED"
+                            ? "RESTORE_ARCHIVED"
+                            : "ARCHIVE",
+                        )
+                      }
                       size="sm"
                       type="button"
                       variant="ghost"
@@ -381,17 +458,20 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
                         <Archive aria-hidden="true" className="h-4 w-4" />
                       )}
                     </Button>
+                    )}
+                    {post.status !== "REMOVED" && (
                     <Button
-                      aria-label="Delete post"
+                      aria-label="Remove post"
                       className="h-8 w-8 rounded-[8px] p-0 hover:bg-accent/10 text-text-secondary hover:text-accent transition-colors"
-                      disabled={deletingId === post.id}
-                      onClick={() => setDeleteTarget(post)}
+                      disabled={moderatingId === post.id}
+                      onClick={() => openModeration(post, "REMOVE")}
                       size="sm"
                       type="button"
                       variant="ghost"
                     >
                       <Trash2 aria-hidden="true" className="h-4 w-4" />
                     </Button>
+                    )}
                   </div>
                 </div>
               )
@@ -400,97 +480,80 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
         </div>
       </div>
 
-      {deleteTarget && (
+      {moderationTarget && (
         <AdminConfirmModal
           body={
             <>
-              This will permanently delete{" "}
+              Apply this moderation action to{" "}
               <span className="font-semibold text-text-primary">
-                &quot;{deleteTarget.title}&quot;
+                &quot;{moderationTarget.post.title}&quot;
               </span>
-              . This action cannot be undone.
+              . The author will receive your reason.
             </>
           }
-          confirmLabel="Delete post"
-          icon={<Trash2 aria-hidden="true" className="h-6 w-6 text-accent" />}
-          onCancel={() => setDeleteTarget(null)}
-          onConfirm={() => void handleDelete(deleteTarget)}
-          title="Delete post?"
-          tone="delete"
-        />
-      )}
-
-      {archiveTarget && (
-        <AdminConfirmModal
-          body={
-            archiveTarget.status === "ARCHIVED" ? (
-              <>
-                This will restore{" "}
-                <span className="font-semibold text-text-primary">
-                  &quot;{archiveTarget.title}&quot;
-                </span>
-                . It will be moved back to draft.
-              </>
+          confirmDisabled={moderationReason.trim().length < 3 || moderatingId !== null}
+          confirmLabel={
+            moderationTarget.action === "UNPUBLISH"
+              ? "Unpublish"
+              : moderationTarget.action === "PUBLISH"
+                ? "Publish"
+                : moderationTarget.action === "ARCHIVE"
+                  ? "Archive post"
+                  : moderationTarget.action === "REMOVE"
+                    ? "Remove post"
+                    : "Restore post"
+          }
+          icon={
+            moderationTarget.action === "REMOVE" ? (
+              <Trash2 aria-hidden="true" className="h-6 w-6 text-accent" />
             ) : (
-              <>
-                This will hide{" "}
-                <span className="font-semibold text-text-primary">
-                  &quot;{archiveTarget.title}&quot;
-                </span>{" "}
-                from public view. You can restore it anytime from the Archived
-                filter.
-              </>
+              <Archive aria-hidden="true" className="h-6 w-6 text-orange-600 dark:text-orange-400" />
             )
           }
-          confirmLabel={archiveTarget.status === "ARCHIVED" ? "Restore post" : "Archive post"}
-          icon={<Archive aria-hidden="true" className="h-6 w-6 text-orange-600 dark:text-orange-400" />}
-          onCancel={() => setArchiveTarget(null)}
-          onConfirm={() =>
-            archiveTarget.status === "ARCHIVED"
-              ? void handleUnarchive(archiveTarget)
-              : void handleArchive(archiveTarget)
+          onCancel={() => {
+            setModerationTarget(null)
+            setModerationReason("")
+          }}
+          onConfirm={() => void handleModeration()}
+          onReasonChange={setModerationReason}
+          reason={moderationReason}
+          title={
+            moderationTarget.action === "UNPUBLISH"
+              ? "Unpublish post?"
+              : moderationTarget.action === "PUBLISH"
+                ? "Publish post?"
+                : moderationTarget.action === "ARCHIVE"
+                  ? "Archive post?"
+                  : moderationTarget.action === "REMOVE"
+                    ? "Remove post?"
+                    : "Restore post?"
           }
-          title={archiveTarget.status === "ARCHIVED" ? "Restore post?" : "Archive post?"}
-          tone="archive"
+          tone={moderationTarget.action === "REMOVE" ? "delete" : "archive"}
         />
       )}
-      {bulkDeleteConfirm && (
+      {bulkAction && (
         <AdminConfirmModal
           body={
             <>
-              This will permanently delete{" "}
+              This will {bulkAction.toLowerCase()}{" "}
               <span className="font-semibold text-text-primary">
                 {selectedIds.size} post{selectedIds.size > 1 ? "s" : ""}
               </span>
-              . This action cannot be undone.
+              . Each primary author will receive this reason.
             </>
           }
-          confirmLabel={isBulkActioning ? "Deleting..." : "Delete posts"}
-          icon={<Trash2 aria-hidden="true" className="h-6 w-6 text-accent" />}
-          onCancel={() => setBulkDeleteConfirm(false)}
-          onConfirm={() => void handleBulkAction("DELETE")}
-          title="Delete selected posts?"
-          tone="delete"
-        />
-      )}
-
-      {bulkArchiveConfirm && (
-        <AdminConfirmModal
-          body={
-            <>
-              This will archive{" "}
-              <span className="font-semibold text-text-primary">
-                {selectedIds.size} post{selectedIds.size > 1 ? "s" : ""}
-              </span>
-              .
-            </>
-          }
-          confirmLabel={isBulkActioning ? "Archiving..." : "Archive posts"}
-          icon={<Archive aria-hidden="true" className="h-6 w-6 text-orange-600 dark:text-orange-400" />}
-          onCancel={() => setBulkArchiveConfirm(false)}
-          onConfirm={() => void handleBulkAction("ARCHIVE")}
-          title="Archive selected posts?"
-          tone="archive"
+          confirmDisabled={bulkReason.trim().length < 3 || isBulkActioning}
+          confirmLabel={isBulkActioning ? "Updating…" : `${bulkAction === "RESTORE" ? "Restore" : bulkAction === "REMOVE" ? "Remove" : "Archive"} posts`}
+          icon={bulkAction === "REMOVE" ? <Trash2 aria-hidden="true" className="h-6 w-6 text-accent" /> : <Archive aria-hidden="true" className="h-6 w-6 text-orange-600 dark:text-orange-400" />}
+          onCancel={() => {
+            setBulkAction(null)
+            setBulkReason("")
+          }}
+          onConfirm={() => void handleBulkAction()}
+          onReasonChange={setBulkReason}
+          reason={bulkReason}
+          title={`${bulkAction === "RESTORE" ? "Restore" : bulkAction === "REMOVE" ? "Remove" : "Archive"} selected posts?`}
+          tone={bulkAction === "REMOVE" ? "delete" : "archive"}
         />
       )}
     </>

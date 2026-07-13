@@ -146,6 +146,7 @@ describe("admin server pages", () => {
         archivedPosts: BigInt(1),
         draftPosts: BigInt(2),
         publishedPosts: BigInt(8),
+        removedPosts: BigInt(0),
         writers: BigInt(3),
       },
     ])
@@ -204,6 +205,7 @@ describe("admin server pages", () => {
           archivedPosts: BigInt(0),
           draftPosts: BigInt(1),
           publishedPosts: BigInt(0),
+          removedPosts: BigInt(0),
           writers: BigInt(0),
         },
       ])
@@ -241,6 +243,7 @@ describe("admin server pages", () => {
           archivedPosts: BigInt(0),
           draftPosts: BigInt(0),
           publishedPosts: BigInt(0),
+          removedPosts: BigInt(0),
           writers: BigInt(0),
         },
       ])

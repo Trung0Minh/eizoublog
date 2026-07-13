@@ -66,18 +66,18 @@ describe("DashboardPage", () => {
 
     render(await DashboardPage())
 
-    expect(screen.getByRole("link", { name: "Xem Published post" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Xem bài viết" })).toHaveAttribute(
       "href",
       "/published-post",
     )
     expect(
-      screen.getByRole("link", { name: "Chỉnh sửa Published post" }),
+      screen.getByRole("link", { name: "Chỉnh sửa bài viết" }),
     ).toHaveAttribute("href", "/dashboard/edit/post-1")
     expect(
-      screen.getByRole("button", { name: "Rút bài Published post" }),
+      screen.getByRole("button", { name: "Rút bài" }),
     ).toBeVisible()
     expect(
-      screen.getByRole("button", { name: "Lưu trữ Published post" }),
+      screen.getByRole("button", { name: "Lưu trữ" }),
     ).toBeVisible()
     expect(screen.queryByText("Chỉnh sửa")).not.toBeInTheDocument()
     expect(screen.queryByText("Rút bài")).not.toBeInTheDocument()

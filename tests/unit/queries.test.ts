@@ -422,6 +422,7 @@ describe("cached Prisma query helpers", () => {
         archivedPosts: BigInt(1),
         draftPosts: BigInt(2),
         publishedPosts: BigInt(8),
+        removedPosts: BigInt(2),
         writers: BigInt(3),
       },
     ])
@@ -432,6 +433,7 @@ describe("cached Prisma query helpers", () => {
       archivedPosts: 1,
       draftPosts: 2,
       publishedPosts: 8,
+      removedPosts: 2,
       writers: 3,
     })
 

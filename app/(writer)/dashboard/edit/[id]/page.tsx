@@ -48,7 +48,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
     notFound()
   }
 
-  if (post.status === "ARCHIVED") {
+  if (post.status === "ARCHIVED" || post.status === "REMOVED") {
     notFound()
   }
 

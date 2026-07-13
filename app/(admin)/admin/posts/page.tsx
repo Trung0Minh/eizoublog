@@ -1,5 +1,5 @@
 import type { PostStatus } from "@prisma/client"
-import { Plus, Search } from "lucide-react"
+import { Plus } from "lucide-react"
 import Link from "next/link"
 
 import { AdminPageHeader } from "@/components/admin/AdminPrimitives"
@@ -24,6 +24,7 @@ const STATUS_FILTERS: Array<{ href: string; label: string; status?: PostStatus }
   { href: "/admin/posts?status=PUBLISHED", label: "Published", status: "PUBLISHED" },
   { href: "/admin/posts?status=DRAFT", label: "Drafts", status: "DRAFT" },
   { href: "/admin/posts?status=ARCHIVED", label: "Archived", status: "ARCHIVED" },
+  { href: "/admin/posts?status=REMOVED", label: "Removed", status: "REMOVED" },
 ]
 
 function parsePage(value?: string) {
@@ -33,7 +34,7 @@ function parsePage(value?: string) {
 }
 
 function parseStatus(value?: string): PostStatus | undefined {
-  return value === "PUBLISHED" || value === "DRAFT" || value === "ARCHIVED"
+  return value === "PUBLISHED" || value === "DRAFT" || value === "ARCHIVED" || value === "REMOVED"
     ? value
     : undefined
 }
@@ -51,12 +52,13 @@ export default async function AdminPostsPage({
     getCachedAdminPosts(page, status, PAGE_SIZE, sort, query),
     getCachedAdminDashboardStats(),
   ])
-  const allCount = counts.publishedPosts + counts.draftPosts + counts.archivedPosts
+  const allCount = counts.publishedPosts + counts.draftPosts + counts.archivedPosts + counts.removedPosts
   const filterLabels: Record<string, string> = {
     "/admin/posts": `All (${allCount})`,
     "/admin/posts?status=ARCHIVED": `Archived (${counts.archivedPosts})`,
     "/admin/posts?status=DRAFT": `Drafts (${counts.draftPosts})`,
     "/admin/posts?status=PUBLISHED": `Published (${counts.publishedPosts})`,
+    "/admin/posts?status=REMOVED": `Removed (${counts.removedPosts})`,
   }
   const tableStateKey = [
     page,
@@ -69,7 +71,7 @@ export default async function AdminPostsPage({
   return (
     <div>
       <AdminPageHeader
-        subtitle={`${counts.publishedPosts.toLocaleString()} published · ${counts.draftPosts.toLocaleString()} drafts · ${counts.archivedPosts.toLocaleString()} archived`}
+        subtitle={`${counts.publishedPosts.toLocaleString()} published · ${counts.draftPosts.toLocaleString()} drafts · ${counts.archivedPosts.toLocaleString()} archived · ${counts.removedPosts.toLocaleString()} removed`}
         title="Posts"
       />
 

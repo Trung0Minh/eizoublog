@@ -20,7 +20,7 @@ function unreadCommentWhere(user: NotificationUser) {
           },
         },
       ],
-      status: { not: "ARCHIVED" },
+      status: { notIn: ["ARCHIVED", "REMOVED"] },
     },
     status: "APPROVED",
   } satisfies Prisma.CommentWhereInput
@@ -61,6 +61,7 @@ export const notificationEventSelect = {
   createdAt: true,
   data: true,
   id: true,
+  readAt: true,
   type: true,
 } satisfies Prisma.NotificationSelect
 
@@ -125,7 +126,7 @@ export async function getNotificationCounts(user: NotificationUser) {
         WHERE c."authorEmail" <> ${user.email}
           AND c."isRead" = false
           AND c.status = 'APPROVED'
-          AND p.status <> 'ARCHIVED'
+          AND p.status NOT IN ('ARCHIVED', 'REMOVED')
           AND (
             p."authorId" = ${user.id}
             OR EXISTS (
@@ -143,7 +144,7 @@ export async function getNotificationCounts(user: NotificationUser) {
         JOIN posts p ON p.id = pa."postId"
         WHERE pa."userId" = ${user.id}
           AND pa.status = 'PENDING'
-          AND p.status <> 'ARCHIVED'
+          AND p.status NOT IN ('ARCHIVED', 'REMOVED')
       ) AS "pendingInvites",
       (
         SELECT COUNT(*)
@@ -187,7 +188,7 @@ export async function getNotifications(user: NotificationUser) {
             WHERE c."authorEmail" <> ${user.email}
               AND c."isRead" = false
               AND c.status = 'APPROVED'
-              AND p.status <> 'ARCHIVED'
+              AND p.status NOT IN ('ARCHIVED', 'REMOVED')
               AND (
                 p."authorId" = ${user.id}
                 OR EXISTS (
@@ -226,7 +227,7 @@ export async function getNotifications(user: NotificationUser) {
             JOIN users author ON author.id = p."authorId"
             WHERE pa."userId" = ${user.id}
               AND pa.status = 'PENDING'
-              AND p.status <> 'ARCHIVED'
+              AND p.status NOT IN ('ARCHIVED', 'REMOVED')
             ORDER BY p."updatedAt" DESC
           ) invites
         ),
@@ -240,13 +241,13 @@ export async function getNotifications(user: NotificationUser) {
               'createdAt', n."createdAt",
               'data', n.data,
               'id', n.id,
+              'readAt', n."readAt",
               'type', n.type::text
             ) AS item
             FROM notifications n
             WHERE n."userId" = ${user.id}
-              AND n."readAt" IS NULL
             ORDER BY n."createdAt" DESC
-            LIMIT 25
+            LIMIT 50
           ) events
         ),
         '[]'::json

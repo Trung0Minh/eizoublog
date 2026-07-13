@@ -186,6 +186,7 @@ export async function PATCH(
       const existing = await tx.post.findUnique({
         select: {
           authorId: true,
+          moderationLockedAt: true,
           status: true,
           id: true,
           slug: true,
@@ -220,6 +221,21 @@ export async function PATCH(
         activeSession.user.role !== "ADMIN"
       ) {
         throw new RouteError("Forbidden", 403)
+      }
+
+      if (
+        existing.status === "REMOVED" &&
+        activeSession.user.role !== "ADMIN"
+      ) {
+        throw new RouteError("Forbidden", 403)
+      }
+
+      if (
+        data.status === "PUBLISHED" &&
+        existing.moderationLockedAt &&
+        activeSession.user.role !== "ADMIN"
+      ) {
+        throw new RouteError("Post requires administrator review", 403)
       }
 
       if (data.status === "ARCHIVED" && !canUseOwnerActions) {

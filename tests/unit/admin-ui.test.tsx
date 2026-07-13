@@ -128,7 +128,7 @@ describe("admin client components", () => {
     })
   })
 
-  it("deletes posts through the shared posts API and removes the row locally", async () => {
+  it("soft-removes posts with a required reason and removes the row locally", async () => {
     const user = userEvent.setup()
     const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(okResponse()))
     vi.stubGlobal("fetch", fetchMock)
@@ -155,19 +155,21 @@ describe("admin client components", () => {
       "/published-post",
     )
 
-    await user.click(screen.getByRole("button", { name: /delete/i }))
-    expect(screen.getByRole("heading", { name: "Delete post?" })).toBeVisible()
-    await user.click(
-      within(screen.getByRole("heading", { name: "Delete post?" }).closest("div")!)
-        .getByRole("button", { name: "Delete post" }),
-    )
+    await user.click(screen.getByRole("button", { name: /remove post/i }))
+    expect(screen.getByRole("heading", { name: "Remove post?" })).toBeVisible()
+    const confirm = within(screen.getByRole("dialog", { name: "Remove post?" }))
+      .getByRole("button", { name: "Remove post" })
+    expect(confirm).toBeDisabled()
+    await user.type(screen.getByRole("textbox", { name: "Reason" }), "Policy violation")
+    await user.click(confirm)
 
-    expect(fetchMock).toHaveBeenCalledWith("/api/posts/post-1", {
-      method: "DELETE",
+    expect(fetchMock).toHaveBeenCalledWith("/api/admin/posts/post-1/moderation", {
+      body: JSON.stringify({ action: "REMOVE", reason: "Policy violation" }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
     })
-    await waitFor(() => {
-      expect(screen.queryByText("Published post")).toBeNull()
-    })
+    await waitFor(() => expect(screen.getByText("Removed")).toBeVisible())
+    expect(screen.getByRole("button", { name: "Restore removed post" })).toBeVisible()
     expect(routerMocks.refresh).not.toHaveBeenCalled()
   })
 
@@ -207,11 +209,14 @@ describe("admin client components", () => {
 
     await user.click(screen.getByRole("button", { name: /archive post/i }))
     expect(screen.getByRole("heading", { name: "Archive post?" })).toBeVisible()
+    await user.type(screen.getByRole("textbox", { name: "Reason" }), "Needs review")
     await user.click(
       within(screen.getByRole("heading", { name: "Archive post?" }).closest("div")!)
         .getByRole("button", { name: "Archive post" }),
     )
-    expect(fetchMock).toHaveBeenCalledWith("/api/posts/post-1/archive", {
+    expect(fetchMock).toHaveBeenCalledWith("/api/admin/posts/post-1/moderation", {
+      body: JSON.stringify({ action: "ARCHIVE", reason: "Needs review" }),
+      headers: { "Content-Type": "application/json" },
       method: "POST",
     })
     await waitFor(() => {
@@ -222,17 +227,111 @@ describe("admin client components", () => {
       screen.getAllByRole("button", { name: /restore post to draft/i })[0],
     )
     expect(screen.getByRole("heading", { name: "Restore post?" })).toBeVisible()
+    await user.type(screen.getByRole("textbox", { name: "Reason" }), "Review complete")
     await user.click(
       within(screen.getByRole("heading", { name: "Restore post?" }).closest("div")!)
         .getByRole("button", { name: "Restore post" }),
     )
-    expect(fetchMock).toHaveBeenCalledWith("/api/posts/post-1/archive", {
-      method: "DELETE",
+    expect(fetchMock).toHaveBeenCalledWith("/api/admin/posts/post-1/moderation", {
+      body: JSON.stringify({ action: "RESTORE_ARCHIVED", reason: "Review complete" }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
     })
     await waitFor(() => {
       expect(screen.getAllByText("Archived")).toHaveLength(1)
     })
     expect(routerMocks.refresh).not.toHaveBeenCalled()
+  })
+
+  it("unpublishes and republishes posts with moderation reasons", async () => {
+    const user = userEvent.setup()
+    const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(okResponse()))
+    vi.stubGlobal("fetch", fetchMock)
+
+    render(
+      <AdminPostsTable
+        posts={[
+          {
+            _count: { comments: 0 },
+            author: { name: "Mina", username: "mina" },
+            id: "post-1",
+            publishedAt: new Date("2026-01-01T00:00:00Z"),
+            slug: "published-post",
+            status: "PUBLISHED",
+            title: "Published post",
+            updatedAt: new Date("2026-01-02T00:00:00Z"),
+          },
+        ]}
+      />,
+    )
+
+    await user.click(screen.getByRole("button", { name: "Unpublish post" }))
+    await user.type(screen.getByRole("textbox", { name: "Reason" }), "Add citations")
+    await user.click(screen.getByRole("button", { name: "Unpublish" }))
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      "/api/admin/posts/post-1/moderation",
+      expect.objectContaining({
+        body: JSON.stringify({ action: "UNPUBLISH", reason: "Add citations" }),
+      }),
+    )
+
+    await waitFor(() => expect(screen.getByText("Draft")).toBeVisible())
+    await user.click(screen.getByRole("button", { name: "Publish post" }))
+    await user.type(screen.getByRole("textbox", { name: "Reason" }), "Citations verified")
+    await user.click(screen.getByRole("button", { name: "Publish" }))
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      "/api/admin/posts/post-1/moderation",
+      expect.objectContaining({
+        body: JSON.stringify({ action: "PUBLISH", reason: "Citations verified" }),
+      }),
+    )
+  })
+
+  it("sends bulk moderation as one atomic server request", async () => {
+    const user = userEvent.setup()
+    const fetchMock = vi.fn().mockResolvedValue(
+      okResponse({
+        data: { posts: [{ id: "post-1", status: "REMOVED" }] },
+      }),
+    )
+    vi.stubGlobal("fetch", fetchMock)
+
+    render(
+      <AdminPostsTable
+        posts={[
+          {
+            _count: { comments: 0 },
+            author: { name: "Mina", username: "mina" },
+            id: "post-1",
+            publishedAt: null,
+            slug: "draft-post",
+            status: "DRAFT",
+            title: "Draft post",
+            updatedAt: new Date("2026-01-02T00:00:00Z"),
+          },
+        ]}
+      />,
+    )
+
+    await user.click(screen.getAllByRole("checkbox")[1])
+    await user.click(screen.getByRole("button", { name: "Remove selected posts" }))
+    await user.type(screen.getByRole("textbox", { name: "Reason" }), "Bulk policy review")
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Remove selected posts?" }))
+        .getByRole("button", { name: "Remove posts" }),
+    )
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(fetchMock).toHaveBeenCalledWith("/api/posts/bulk", {
+      body: JSON.stringify({
+        action: "REMOVE",
+        postIds: ["post-1"],
+        reason: "Bulk policy review",
+      }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    })
+    await waitFor(() => expect(screen.getByText("Removed")).toBeVisible())
   })
 
   it("sends writer invites and resets the email on success", async () => {

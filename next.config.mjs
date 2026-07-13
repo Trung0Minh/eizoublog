@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  allowedDevOrigins: ["192.168.1.12"],
+  allowedDevOrigins: ["192.168.1.12", "192.168.1.14"],
   experimental: {
     // Supabase pooler URLs in this project are configured with a very small
     // connection limit. Keep static generation serial so prerendered post pages

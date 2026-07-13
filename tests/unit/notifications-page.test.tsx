@@ -80,7 +80,7 @@ describe("NotificationsPage", () => {
       unreadComments: [],
     })
 
-    render(await NotificationsPage())
+    render(await NotificationsPage({ searchParams: Promise.resolve({}) }))
 
     const responseLink = screen.getByRole("link", { name: "Draft only post" })
     const viewLink = screen.getByRole("link", { name: "Xem" })
@@ -89,6 +89,42 @@ describe("NotificationsPage", () => {
     expect(viewLink).toHaveAttribute("href", "/dashboard/edit/post-1")
     expect(screen.getByRole("button", { name: "Đánh dấu tất cả đã đọc" }))
       .toBeEnabled()
+    expect(screen.getByRole("link", { name: "Tất cả" })).toBeVisible()
+    expect(screen.getByRole("link", { name: "Kiểm duyệt" })).toBeVisible()
+    expect(screen.queryByRole("heading", { name: "Phản hồi lời mời" })).not.toBeInTheDocument()
+  })
+
+  it("shows moderation reasons in the unified tagged feed", async () => {
+    mocks.getNotifications.mockResolvedValue({
+      pendingInvites: [],
+      responseEvents: [
+        {
+          createdAt: new Date("2026-07-13T05:00:00Z"),
+          data: {
+            action: "UNPUBLISH",
+            actorName: "Admin",
+            fromStatus: "PUBLISHED",
+            postId: "post-1",
+            postTitle: "Essay",
+            reason: "Please add reliable sources.",
+            toStatus: "DRAFT",
+          },
+          id: "notification-1",
+          type: "POST_MODERATION",
+        },
+      ],
+      unreadComments: [],
+    })
+
+    render(await NotificationsPage({ searchParams: Promise.resolve({}) }))
+
+    expect(screen.getAllByText("Kiểm duyệt")).toHaveLength(2)
+    expect(screen.getByText("Bài viết đã bị rút khỏi xuất bản")).toBeVisible()
+    expect(screen.getByText("Please add reliable sources.")).toBeVisible()
+    expect(screen.getByRole("link", { name: "Chỉnh sửa bài viết" })).toHaveAttribute(
+      "href",
+      "/dashboard/edit/post-1",
+    )
   })
 
   it("disables the global read button when only pending invites remain", async () => {
@@ -109,7 +145,7 @@ describe("NotificationsPage", () => {
       unreadComments: [],
     })
 
-    render(await NotificationsPage())
+    render(await NotificationsPage({ searchParams: Promise.resolve({}) }))
 
     expect(screen.getByRole("button", { name: "Đánh dấu tất cả đã đọc" }))
       .toBeDisabled()

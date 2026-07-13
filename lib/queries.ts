@@ -363,6 +363,7 @@ interface AdminDashboardStatsRow {
   archivedPosts?: DbCount
   draftPosts: DbCount
   publishedPosts: DbCount
+  removedPosts?: DbCount
   writers: DbCount
 }
 
@@ -444,7 +445,12 @@ function countToNumber(value: DbCount) {
 }
 
 function parsePostStatus(value: string | null): PostStatus {
-  if (value === "DRAFT" || value === "PUBLISHED" || value === "ARCHIVED") {
+  if (
+    value === "DRAFT" ||
+    value === "PUBLISHED" ||
+    value === "ARCHIVED" ||
+    value === "REMOVED"
+  ) {
     return value
   }
 
@@ -920,7 +926,7 @@ export const getCachedWriterDashboardPosts = unstable_cache(
         FROM post_authors pa
         WHERE pa."postId" = p.id
       ) co_authors ON TRUE
-      WHERE p.status <> 'ARCHIVED'
+      WHERE p.status NOT IN ('ARCHIVED', 'REMOVED')
         AND (
           p."authorId" = ${userId}
           OR EXISTS (
@@ -984,6 +990,7 @@ export const getCachedAdminDashboardStats = unstable_cache(
         (SELECT COUNT(*) FROM posts WHERE status = 'PUBLISHED') AS "publishedPosts",
         (SELECT COUNT(*) FROM posts WHERE status = 'DRAFT') AS "draftPosts",
         (SELECT COUNT(*) FROM posts WHERE status = 'ARCHIVED') AS "archivedPosts",
+        (SELECT COUNT(*) FROM posts WHERE status = 'REMOVED') AS "removedPosts",
         (SELECT COUNT(*) FROM users WHERE role::text = 'WRITER') AS "writers",
         (SELECT COUNT(*) FROM comments WHERE status = 'APPROVED') AS "approvedComments",
         (SELECT COUNT(*) FROM newsletter_subscribers WHERE status = 'ACTIVE') AS "activeSubscribers"
@@ -995,6 +1002,7 @@ export const getCachedAdminDashboardStats = unstable_cache(
       archivedPosts: countToNumber(stats?.archivedPosts),
       draftPosts: countToNumber(stats?.draftPosts),
       publishedPosts: countToNumber(stats?.publishedPosts),
+      removedPosts: countToNumber(stats?.removedPosts),
       writers: countToNumber(stats?.writers),
     }
   },

@@ -823,7 +823,7 @@ describe("single post API", () => {
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/posts")
   })
 
-  it("archives posts through the admin-only archive route", async () => {
+  it("rejects legacy archive requests that omit a moderation reason", async () => {
     const { POST: ARCHIVE_POST } = await import(
       "@/app/api/posts/[id]/archive/route"
     )
@@ -845,21 +845,14 @@ describe("single post API", () => {
       routeContext("post-1"),
     )
 
-    expect(response.status).toBe(200)
+    expect(response.status).toBe(410)
     await expect(response.json()).resolves.toEqual({
-      data: { message: "Post archived" },
+      error: "A moderation reason is required. Use the admin moderation endpoint.",
     })
-    expect(mocks.prisma.post.update).toHaveBeenCalledWith({
-      data: { status: "ARCHIVED" },
-      select: { id: true, slug: true, status: true },
-      where: { id: "post-1" },
-    })
-    expect(mocks.revalidateTag).toHaveBeenCalledWith("posts", "max")
-    expect(mocks.revalidatePath).toHaveBeenCalledWith("/published-post")
-    expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/posts")
+    expect(mocks.prisma.post.update).not.toHaveBeenCalled()
   })
 
-  it("restores archived posts to draft through the archive route", async () => {
+  it("rejects legacy restore requests that omit a moderation reason", async () => {
     const { DELETE: RESTORE_POST } = await import(
       "@/app/api/posts/[id]/archive/route"
     )
@@ -881,18 +874,11 @@ describe("single post API", () => {
       routeContext("post-1"),
     )
 
-    expect(response.status).toBe(200)
+    expect(response.status).toBe(410)
     await expect(response.json()).resolves.toEqual({
-      data: { message: "Post restored to draft" },
+      error: "A moderation reason is required. Use the admin moderation endpoint.",
     })
-    expect(mocks.prisma.post.update).toHaveBeenCalledWith({
-      data: { status: "DRAFT" },
-      select: { id: true, slug: true, status: true },
-      where: { id: "post-1" },
-    })
-    expect(mocks.revalidateTag).toHaveBeenCalledWith("posts", "max")
-    expect(mocks.revalidatePath).toHaveBeenCalledWith("/published-post")
-    expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/posts")
+    expect(mocks.prisma.post.update).not.toHaveBeenCalled()
   })
 })
 
@@ -984,37 +970,24 @@ describe("bulk post API", () => {
     })
   })
 
-  it("invalidates affected post paths after bulk delete", async () => {
+  it("requires admin authentication for bulk moderation", async () => {
     const { POST: BULK_POST } = await import("@/app/api/posts/bulk/route")
-    mocks.prisma.post.findMany.mockResolvedValue([
-      { slug: "published-post" },
-      { slug: "another-post" },
-    ])
-    mocks.prisma.post.deleteMany.mockResolvedValue({ count: 2 })
+    mocks.auth.mockResolvedValue(null)
 
     const response = await BULK_POST(
       jsonRequest("https://example.test/api/posts/bulk", {
-        action: "DELETE",
+        action: "REMOVE",
         postIds: ["post-1", "post-2"],
+        reason: "Policy review required.",
       }),
     )
 
-    expect(response.status).toBe(200)
-    await expect(response.json()).resolves.toEqual({ success: true })
-    expect(mocks.prisma.post.findMany).toHaveBeenCalledWith({
-      select: { slug: true },
-      where: { id: { in: ["post-1", "post-2"] } },
-    })
-    expect(mocks.prisma.post.deleteMany).toHaveBeenCalledWith({
-      where: { id: { in: ["post-1", "post-2"] } },
-    })
-    expect(mocks.revalidateTag).toHaveBeenCalledWith("posts", "max")
-    expect(mocks.revalidatePath).toHaveBeenCalledWith("/published-post")
-    expect(mocks.revalidatePath).toHaveBeenCalledWith("/another-post")
-    expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/posts")
+    expect(response.status).toBe(401)
+    await expect(response.json()).resolves.toEqual({ error: "Unauthorized" })
+    expect(mocks.prisma.post.deleteMany).not.toHaveBeenCalled()
   })
 
-  it("rejects invalid bulk actions without invalidating caches", async () => {
+  it("rejects invalid bulk moderation actions", async () => {
     const { POST: BULK_POST } = await import("@/app/api/posts/bulk/route")
 
     const response = await BULK_POST(
@@ -1025,7 +998,7 @@ describe("bulk post API", () => {
     )
 
     expect(response.status).toBe(400)
-    await expect(response.json()).resolves.toEqual({ error: "Invalid action" })
+    await expect(response.json()).resolves.toEqual({ error: "Invalid request" })
     expect(mocks.prisma.post.findMany).not.toHaveBeenCalled()
     expect(mocks.revalidateTag).not.toHaveBeenCalled()
     expect(mocks.revalidatePath).not.toHaveBeenCalled()
