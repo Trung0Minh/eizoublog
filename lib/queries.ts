@@ -293,7 +293,7 @@ export const publishedPostDetailSelect = {
           },
           status: true,
           writer: {
-            select: { avatarUrl: true, name: true, username: true },
+            select: { avatarUrl: true, bio: true, name: true, username: true },
           },
           writerIntro: true,
         },

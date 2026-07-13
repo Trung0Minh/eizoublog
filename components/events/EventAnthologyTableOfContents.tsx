@@ -1,22 +1,61 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { ChevronDown } from "lucide-react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import type { PostHeading } from "@/lib/postHeadings"
 import { cn } from "@/lib/utils"
 
 export function EventAnthologyTableOfContents({
+  collapsible = false,
   headings,
 }: {
+  collapsible?: boolean
   headings: PostHeading[]
 }) {
   const [activeId, setActiveId] = useState("")
+  const groups = useMemo(() => {
+    const result: Array<{ children: PostHeading[]; writer: PostHeading }> = []
+
+    headings.forEach((heading) => {
+      if (heading.level === 1) {
+        result.push({ children: [], writer: heading })
+      } else {
+        result.at(-1)?.children.push(heading)
+      }
+    })
+
+    return result
+  }, [headings])
+  const [expandedWriterIds, setExpandedWriterIds] = useState<string[]>(
+    groups[0] ? [groups[0].writer.id] : [],
+  )
+  const linkRefs = useRef(new Map<string, HTMLAnchorElement>())
 
   useEffect(() => {
+    const writerIdByHeadingId = new Map<string, string>()
+    let writerId = ""
+
+    headings.forEach((heading) => {
+      if (heading.level === 1) writerId = heading.id
+      if (writerId) writerIdByHeadingId.set(heading.id, writerId)
+    })
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) setActiveId(entry.target.id)
+          if (!entry.isIntersecting) return
+
+          setActiveId(entry.target.id)
+
+          const activeWriterId = writerIdByHeadingId.get(entry.target.id)
+          if (activeWriterId) {
+            setExpandedWriterIds((current) =>
+              current.includes(activeWriterId)
+                ? current
+                : [...current, activeWriterId],
+            )
+          }
         })
       },
       { rootMargin: "-20% 0% -65% 0%" },
@@ -30,33 +69,129 @@ export function EventAnthologyTableOfContents({
     return () => observer.disconnect()
   }, [headings])
 
-  return (
+  useEffect(() => {
+    linkRefs.current.get(activeId)?.scrollIntoView({ block: "nearest" })
+  }, [activeId, expandedWriterIds])
+
+  const contents = (
     <nav aria-label="Event contents" className="font-sans">
-      <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.16em] text-text-tertiary">
-        Contributors
-      </p>
+      {!collapsible && (
+        <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.16em] text-text-tertiary">
+          Contributors
+        </p>
+      )}
       <ol className="border-l border-border-default">
-        {headings.map((heading) => (
-          <li key={heading.id}>
-            <a
-              className={cn(
-                "relative block py-1.5 text-[12px] leading-snug transition-colors",
-                heading.level === 1
-                  ? "mt-3 font-bold text-text-primary first:mt-0"
-                  : "text-text-secondary hover:text-text-primary",
-                activeId === heading.id && "text-accent",
+        {groups.map(({ children, writer }) => {
+          const isExpanded = expandedWriterIds.includes(writer.id)
+          const isWriterActive =
+            activeId === writer.id || children.some(({ id }) => id === activeId)
+
+          return (
+            <li className="mt-3 first:mt-0" key={writer.id}>
+              <div className="relative flex items-center gap-1">
+                {isWriterActive && (
+                  <span className="absolute -left-px inset-y-1 w-0.5 bg-accent" />
+                )}
+                <a
+                  className={cn(
+                    "min-w-0 flex-1 py-1.5 pl-3 text-[12px] font-bold leading-snug text-text-primary transition-colors hover:text-accent",
+                    isWriterActive && "text-accent",
+                  )}
+                  href={`#${writer.id}`}
+                  onClick={() =>
+                    setExpandedWriterIds((current) =>
+                      current.includes(writer.id)
+                        ? current
+                        : [...current, writer.id],
+                    )
+                  }
+                  ref={(element) => {
+                    if (element) linkRefs.current.set(writer.id, element)
+                    else linkRefs.current.delete(writer.id)
+                  }}
+                >
+                  {writer.text}
+                </a>
+                {children.length > 0 && (
+                  <button
+                    aria-expanded={isExpanded}
+                    aria-label={`Toggle ${writer.text} sections`}
+                    className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-subtle-bg hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                    onClick={() =>
+                      setExpandedWriterIds((current) =>
+                        current.includes(writer.id)
+                          ? current.filter((id) => id !== writer.id)
+                          : [...current, writer.id],
+                      )
+                    }
+                    type="button"
+                  >
+                    <ChevronDown
+                      aria-hidden="true"
+                      className={cn(
+                        "h-3.5 w-3.5 transition-transform duration-200",
+                        isExpanded && "rotate-180",
+                      )}
+                    />
+                  </button>
+                )}
+              </div>
+
+              {children.length > 0 && (
+                <div
+                  aria-hidden={!isExpanded}
+                  className={cn(
+                    "grid transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:transition-none",
+                    isExpanded
+                      ? "grid-rows-[1fr] opacity-100"
+                      : "grid-rows-[0fr] opacity-0",
+                  )}
+                >
+                  <ol className="min-h-0 overflow-hidden">
+                  {children.map((heading) => (
+                    <li key={heading.id}>
+                      <a
+                        className={cn(
+                          "relative block py-1.5 text-[12px] leading-snug text-text-secondary transition-colors hover:text-text-primary",
+                          activeId === heading.id && "text-accent",
+                        )}
+                        href={`#${heading.id}`}
+                        ref={(element) => {
+                          if (element) linkRefs.current.set(heading.id, element)
+                          else linkRefs.current.delete(heading.id)
+                        }}
+                        style={{
+                          paddingLeft: 24 + (heading.level - 2) * 10,
+                        }}
+                        tabIndex={isExpanded ? undefined : -1}
+                      >
+                        {activeId === heading.id && (
+                          <span className="absolute -left-px inset-y-1 w-0.5 bg-accent" />
+                        )}
+                        {heading.text}
+                      </a>
+                    </li>
+                  ))}
+                  </ol>
+                </div>
               )}
-              href={`#${heading.id}`}
-              style={{ paddingLeft: heading.level === 1 ? 12 : 24 + (heading.level - 2) * 10 }}
-            >
-              {activeId === heading.id && (
-                <span className="absolute -left-px inset-y-1 w-0.5 bg-accent" />
-              )}
-              {heading.text}
-            </a>
-          </li>
-        ))}
+            </li>
+          )
+        })}
       </ol>
     </nav>
+  )
+
+  if (!collapsible) return contents
+
+  return (
+    <details className="rounded-[18px] border border-border-default/80 bg-background/90 px-5 py-4 shadow-sm backdrop-blur-xl dark:bg-background/80">
+      <summary className="cursor-pointer font-sans text-sm font-bold text-text-primary marker:text-accent">
+        Contents
+      </summary>
+      <div className="mt-4 max-h-[60vh] overflow-y-auto overscroll-contain pr-2">
+        {contents}
+      </div>
+    </details>
   )
 }

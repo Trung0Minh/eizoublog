@@ -4,7 +4,7 @@ import { notFound } from "next/navigation"
 import type { JSONContent } from "@tiptap/react"
 
 import { CommentSection } from "@/components/comments/CommentSection"
-import { AuthorBio } from "@/components/posts/AuthorBio"
+import { AuthorCreditList } from "@/components/posts/AuthorCreditList"
 import { PostHero } from "@/components/posts/PostHero"
 import { PostBody } from "@/components/posts/PostBody"
 import { PostJsonLd } from "@/components/posts/PostJsonLd"
@@ -19,7 +19,6 @@ import {
   type PublishedPostDetail,
 } from "@/lib/queries"
 import { buildMetadata } from "@/lib/seo"
-import { cn } from "@/lib/utils"
 import { EventAnthologyView } from "@/components/events/EventAnthologyView"
 
 interface PostPageProps {
@@ -89,7 +88,6 @@ export default async function PostPage({ params }: PostPageProps) {
 
   const authors = [post.author.username, ...post.coAuthors.map(c => c.user.username)]
   const creditAuthors = [post.author, ...post.coAuthors.map(c => c.user)]
-  const authorCreditsOverflow = creditAuthors.length > 3
 
   const content = post.content as JSONContent
   const hasTableOfContents = extractHeadings(content).length > 0
@@ -101,6 +99,15 @@ export default async function PostPage({ params }: PostPageProps) {
     post.tags.length > 0 ? post.tags.map(({ tag }) => tag) : fallbackTags
 
   if (post.finalAwardEvent) {
+    const eventAuthorUsernames = Array.from(
+      new Set([
+        ...authors,
+        ...post.finalAwardEvent.rooms
+          .filter(({ selectedPost }) => selectedPost)
+          .map(({ writer }) => writer.username),
+      ]),
+    )
+
     return (
       <>
         <ReadingProgress />
@@ -115,13 +122,15 @@ export default async function PostPage({ params }: PostPageProps) {
         />
         <PostReadTracker slug={post.slug} title={post.title} />
         <EventAnthologyView event={post.finalAwardEvent} />
-        <div className="mx-auto w-full max-w-4xl px-4 pb-24 sm:px-6">
-          <CommentSection
-            initialComments={post.comments}
-            postId={post.id}
-            postSlug={post.slug}
-            postAuthorUsernames={authors}
-          />
+        <div className="mx-auto grid w-full max-w-[1360px] gap-12 px-4 pb-24 sm:px-6 lg:px-10 xl:grid-cols-[minmax(0,1000px)_220px] xl:justify-center">
+          <div className="min-w-0">
+            <CommentSection
+              initialComments={post.comments}
+              postId={post.id}
+              postSlug={post.slug}
+              postAuthorUsernames={eventAuthorUsernames}
+            />
+          </div>
         </div>
       </>
     )
@@ -181,56 +190,10 @@ export default async function PostPage({ params }: PostPageProps) {
           <div className="w-full mx-auto font-lora text-[16px] md:text-[17.5px]">
             <div className="font-sans text-text-primary">
               <ScrollReveal delay={0.3}>
-                <div className="relative mt-12 md:mt-16">
-                  <div
-                    aria-label="Tác giả bài viết"
-                    className={cn(
-                      "gap-4",
-                      creditAuthors.length === 1
-                        ? "block"
-                        : "flex overflow-x-auto pb-3 pr-12 [scroll-snap-type:x_mandatory] [scrollbar-width:thin]",
-                      !authorCreditsOverflow && creditAuthors.length > 1 &&
-                        "sm:grid sm:overflow-visible sm:pb-0 sm:pr-0",
-                      creditAuthors.length === 2 && "sm:grid-cols-2",
-                      creditAuthors.length === 3 && "sm:grid-cols-3",
-                    )}
-                    data-testid="author-credit-list"
-                  >
-                    {creditAuthors.map(author => (
-                      <AuthorBio
-                        className={cn(
-                          "min-w-0 shrink-0 basis-[82%] snap-start sm:basis-[46%]",
-                          authorCreditsOverflow
-                            ? "lg:basis-[31%]"
-                            : "sm:w-auto sm:shrink sm:basis-auto",
-                          creditAuthors.length === 1 && "w-full basis-full",
-                        )}
-                        key={author.username}
-                        author={author}
-                      />
-                    ))}
-                  </div>
-
-                  {creditAuthors.length > 1 && (
-                    <>
-                      <div
-                        aria-hidden="true"
-                        className={cn(
-                          "pointer-events-none absolute bottom-3 right-0 top-0 w-16 bg-gradient-to-l from-background via-background/75 to-transparent sm:hidden",
-                          authorCreditsOverflow && "sm:block",
-                        )}
-                      />
-                      <div
-                        className={cn(
-                          "mt-1 text-right text-[11px] font-medium text-text-tertiary sm:hidden",
-                          authorCreditsOverflow && "sm:block",
-                        )}
-                      >
-                        Kéo ngang để xem thêm →
-                      </div>
-                    </>
-                  )}
-                </div>
+                <AuthorCreditList
+                  authors={creditAuthors}
+                  className="mt-12 md:mt-16"
+                />
               </ScrollReveal>
               
               <ScrollReveal delay={0.4}>

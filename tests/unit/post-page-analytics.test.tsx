@@ -28,8 +28,16 @@ vi.mock("@/components/posts/PostBody", () => ({
   PostBody: () => <div>Post body</div>,
 }))
 vi.mock("@/components/comments/CommentSection", () => ({
-  CommentSection: ({ postSlug }: { postSlug: string }) => (
-    <div data-testid="comment-section">{postSlug}</div>
+  CommentSection: ({
+    postAuthorUsernames,
+    postSlug,
+  }: {
+    postAuthorUsernames: string[]
+    postSlug: string
+  }) => (
+    <div data-testid="comment-section">
+      {postSlug}:{postAuthorUsernames.join(",")}
+    </div>
   ),
 }))
 vi.mock("@/components/posts/TableOfContents", () => ({
@@ -93,6 +101,82 @@ describe("PostPage analytics", () => {
 
     await expect(generateStaticParams()).resolves.toEqual([])
     expect(mocks.postFindMany).not.toHaveBeenCalled()
+  })
+
+  it("treats included event contributors as post authors in comments", async () => {
+    mocks.getCachedPublishedPost.mockResolvedValue({
+      _count: { comments: 0 },
+      author: { avatarUrl: null, bio: null, name: "Admin", username: "admin" },
+      category: null,
+      coAuthors: [],
+      comments: [],
+      content: { content: [], type: "doc" },
+      coverAlt: null,
+      coverUrl: null,
+      excerpt: "A collected edition.",
+      finalAwardEvent: {
+        coverAlt: null,
+        coverUrl: null,
+        id: "event-1",
+        intro: { content: [], type: "doc" },
+        introText: null,
+        rooms: [
+          {
+            id: "room-a",
+            order: 0,
+            selectedPost: {
+              content: { content: [], type: "doc" },
+              id: "entry-a",
+              status: "DRAFT",
+              title: "Entry A",
+            },
+            status: "SUBMITTED",
+            writer: {
+              avatarUrl: null,
+              bio: null,
+              name: "Writer A",
+              username: "writer-a",
+            },
+            writerIntro: null,
+          },
+          {
+            id: "room-b",
+            order: 1,
+            selectedPost: {
+              content: { content: [], type: "doc" },
+              id: "entry-b",
+              status: "DRAFT",
+              title: "Entry B",
+            },
+            status: "SUBMITTED",
+            writer: {
+              avatarUrl: null,
+              bio: null,
+              name: "Writer B",
+              username: "writer-b",
+            },
+            writerIntro: null,
+          },
+        ],
+        title: "Collected perspectives",
+      },
+      id: "post-event",
+      publishedAt: new Date("2026-01-01T00:00:00Z"),
+      slug: "collected-perspectives",
+      tags: [],
+      title: "Collected perspectives",
+      updatedAt: new Date("2026-01-02T00:00:00Z"),
+    })
+
+    render(
+      await PostPage({
+        params: Promise.resolve({ slug: "collected-perspectives" }),
+      }),
+    )
+
+    expect(screen.getByTestId("comment-section")).toHaveTextContent(
+      "collected-perspectives:admin,writer-a,writer-b",
+    )
   })
 
   it("pre-renders the latest published post slugs in production", async () => {

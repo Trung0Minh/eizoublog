@@ -77,6 +77,7 @@ export const awardEventDetailSelect = {
       writer: {
         select: {
           avatarUrl: true,
+          bio: true,
           id: true,
           name: true,
           role: true,
