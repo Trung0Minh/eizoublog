@@ -5,6 +5,36 @@ import { describe, expect, it } from "vitest"
 import { StaticPostContent } from "@/components/posts/StaticPostContent"
 
 describe("StaticPostContent", () => {
+  it("makes inserted links visually identifiable", () => {
+    const content: JSONContent = {
+      content: [
+        {
+          content: [
+            {
+              marks: [{ attrs: { href: "https://example.com" }, type: "link" }],
+              text: "Visit the reference",
+              type: "text",
+            },
+          ],
+          type: "paragraph",
+        },
+      ],
+      type: "doc",
+    }
+
+    const { container } = render(<StaticPostContent content={content} />)
+    const link = screen.getByRole("link", { name: "Visit the reference" })
+
+    expect(container.querySelector(".ProseMirror")).toContainElement(link)
+    expect(link).toHaveClass(
+      "font-semibold",
+      "text-accent",
+      "underline",
+      "underline-offset-[3px]",
+      "hover:bg-accent/10",
+    )
+  })
+
   it("renders horizontal galleries as a scrollable media list", () => {
     const content: JSONContent = {
       content: [

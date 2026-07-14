@@ -99,9 +99,16 @@ function renderTextNode(node: JSONContent, key: string): ReactNode {
         break
       case "link": {
         const href = stringAttr(attrs, "href")
+
         if (href) {
           rendered = (
-            <a href={href} key={markKey} rel="noopener noreferrer" target="_blank">
+            <a
+              className="font-semibold text-accent underline decoration-accent/60 decoration-[1.5px] underline-offset-[3px] transition-colors duration-150 hover:bg-accent/10 hover:decoration-accent focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+              href={href}
+              key={markKey}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
               {rendered}
             </a>
           )
