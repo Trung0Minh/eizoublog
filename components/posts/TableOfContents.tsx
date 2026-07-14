@@ -19,11 +19,16 @@ export function TableOfContents({ content }: TableOfContentsProps) {
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveId(entry.target.id)
-          }
-        })
+        const topmostEntry = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort(
+            (first, second) =>
+              first.boundingClientRect.top - second.boundingClientRect.top,
+          )[0]
+
+        if (topmostEntry) {
+          setActiveId(topmostEntry.target.id)
+        }
       },
       { rootMargin: "-20% 0% -60% 0%" },
     )

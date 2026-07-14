@@ -220,8 +220,13 @@ describe("Pagination", () => {
 })
 
 describe("TableOfContents", () => {
+  let intersectionCallback: IntersectionObserverCallback
+
   beforeEach(() => {
     class MockIntersectionObserver {
+      constructor(callback: IntersectionObserverCallback) {
+        intersectionCallback = callback
+      }
       disconnect() {}
       observe() {}
       unobserve() {}
@@ -257,6 +262,60 @@ describe("TableOfContents", () => {
     expect(screen.getByRole("link", { name: "Đạo diễn tập" })).toHaveAttribute(
       "href",
       "#dao-dien-tap",
+    )
+  })
+
+  it("selects the topmost intersecting heading regardless of callback order", () => {
+    render(
+      <>
+        <h2 id="first-heading">First heading target</h2>
+        <h2 id="second-heading">Second heading target</h2>
+        <TableOfContents
+          content={{
+            content: [
+              {
+                attrs: { level: 2 },
+                content: [{ text: "First heading", type: "text" }],
+                type: "heading",
+              },
+              {
+                attrs: { level: 2 },
+                content: [{ text: "Second heading", type: "text" }],
+                type: "heading",
+              },
+            ],
+            type: "doc",
+          }}
+        />
+      </>,
+    )
+
+    const firstHeading = document.getElementById("first-heading")
+    const secondHeading = document.getElementById("second-heading")
+
+    expect(firstHeading).not.toBeNull()
+    expect(secondHeading).not.toBeNull()
+
+    act(() => {
+      intersectionCallback(
+        [
+          {
+            boundingClientRect: { top: 120 },
+            isIntersecting: true,
+            target: firstHeading!,
+          },
+          {
+            boundingClientRect: { top: 260 },
+            isIntersecting: true,
+            target: secondHeading!,
+          },
+        ] as unknown as IntersectionObserverEntry[],
+        {} as IntersectionObserver,
+      )
+    })
+
+    expect(screen.getByRole("link", { name: "First heading" })).toHaveClass(
+      "text-accent",
     )
   })
 })

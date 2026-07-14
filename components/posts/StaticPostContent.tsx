@@ -8,6 +8,7 @@ import {
 } from "@/components/editor/gallery"
 import { isNativeVideo, toVideoEmbedUrl } from "@/components/editor/video"
 import { SpoilerBlock } from "@/components/posts/SpoilerBlock"
+import { normalizePostHeadingIds } from "@/lib/postHeadings"
 import { generateSlug } from "@/lib/utils"
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -397,5 +398,9 @@ function renderNode(node: JSONContent, key: string): ReactNode {
 }
 
 export function StaticPostContent({ content }: { content: JSONContent }) {
-  return <div className="ProseMirror">{renderChildren(content)}</div>
+  return (
+    <div className="ProseMirror">
+      {renderChildren(normalizePostHeadingIds(content))}
+    </div>
+  )
 }

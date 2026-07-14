@@ -5,6 +5,39 @@ import { describe, expect, it } from "vitest"
 import { StaticPostContent } from "@/components/posts/StaticPostContent"
 
 describe("StaticPostContent", () => {
+  it("renders repeated headings with the same unique IDs used by the TOC", () => {
+    const content: JSONContent = {
+      content: [
+        {
+          attrs: { level: 3 },
+          content: [{ text: "ĐỀ CỬ DANH DỰ", type: "text" }],
+          type: "heading",
+        },
+        {
+          attrs: { level: 3 },
+          content: [{ text: "ĐỀ CỬ DANH DỰ", type: "text" }],
+          type: "heading",
+        },
+        {
+          attrs: { level: 3 },
+          content: [{ text: "ĐỀ CỬ DANH DỰ", type: "text" }],
+          type: "heading",
+        },
+      ],
+      type: "doc",
+    }
+
+    const { container } = render(<StaticPostContent content={content} />)
+
+    expect(
+      Array.from(container.querySelectorAll("h3"), (heading) => heading.id),
+    ).toEqual([
+      "de-cu-danh-du",
+      "de-cu-danh-du-2",
+      "de-cu-danh-du-3",
+    ])
+  })
+
   it("makes inserted links visually identifiable", () => {
     const content: JSONContent = {
       content: [
