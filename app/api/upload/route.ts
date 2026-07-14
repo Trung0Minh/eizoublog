@@ -11,8 +11,8 @@ const ALLOWED_MIME_TYPES = new Set([
   "video/mp4",
   "video/webm",
 ])
-const MAX_BYTES_IMAGE = 5 * 1024 * 1024
-const MAX_BYTES_GIF = 10 * 1024 * 1024
+const MAX_BYTES_IMAGE = 20 * 1024 * 1024
+const MAX_BYTES_GIF = 20 * 1024 * 1024
 const MIME_EXTENSION: Record<string, string> = {
   "image/gif": "gif",
   "image/jpeg": "jpg",
@@ -53,11 +53,11 @@ function validateFile(file: File) {
   }
 
   let maxBytes = MAX_BYTES_IMAGE
-  let limit = 5
+  let limit = 20
 
   if (file.type === "image/gif") {
     maxBytes = MAX_BYTES_GIF
-    limit = 10
+    limit = 20
   } else if (file.type.startsWith("video/")) {
     maxBytes = MAX_BYTES_VIDEO
     limit = 100

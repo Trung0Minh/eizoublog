@@ -22,17 +22,31 @@ function getApiError(value: unknown) {
   return "Lỗi tải lên ảnh bìa"
 }
 
-function getUploadUrl(value: unknown) {
+function getPresignedUpload(value: unknown) {
   if (
     typeof value === "object" &&
     value !== null &&
     "data" in value &&
     typeof value.data === "object" &&
     value.data !== null &&
-    "url" in value.data &&
-    typeof value.data.url === "string"
+    "files" in value.data &&
+    Array.isArray(value.data.files)
   ) {
-    return value.data.url
+    const upload = value.data.files[0]
+
+    if (
+      typeof upload === "object" &&
+      upload !== null &&
+      "publicUrl" in upload &&
+      typeof upload.publicUrl === "string" &&
+      "uploadUrl" in upload &&
+      typeof upload.uploadUrl === "string"
+    ) {
+      return {
+        publicUrl: upload.publicUrl,
+        uploadUrl: upload.uploadUrl,
+      }
+    }
   }
 
   return null
@@ -53,12 +67,12 @@ export function CoverImageUpload({
     setUploading(true)
 
     try {
-      const formData = new FormData()
-      formData.append("file", file)
-      formData.append("folder", "covers")
-
-      const response = await fetch("/api/upload", {
-        body: formData,
+      const response = await fetch("/api/upload/presigned", {
+        body: JSON.stringify({
+          files: [{ name: file.name, size: file.size, type: file.type }],
+          folder: "covers",
+        }),
+        headers: { "Content-Type": "application/json" },
         method: "POST",
       })
       const result: unknown = await response.json()
@@ -67,13 +81,23 @@ export function CoverImageUpload({
         throw new Error(getApiError(result))
       }
 
-      const url = getUploadUrl(result)
+      const upload = getPresignedUpload(result)
 
-      if (!url) {
-        throw new Error("Phản hồi tải lên không bao gồm URL")
+      if (!upload) {
+        throw new Error("Phản hồi tải lên không bao gồm URL hợp lệ")
       }
 
-      onChange(url)
+      const uploadResponse = await fetch(upload.uploadUrl, {
+        body: file,
+        headers: { "Content-Type": file.type },
+        method: "PUT",
+      })
+
+      if (!uploadResponse.ok) {
+        throw new Error("Không thể tải ảnh lên kho lưu trữ")
+      }
+
+      onChange(upload.publicUrl)
     } catch (uploadError) {
       setError(
         uploadError instanceof Error
@@ -163,7 +187,7 @@ export function CoverImageUpload({
             {uploading ? "Đang tải lên..." : "Thêm ảnh bìa"}
           </span>
           <span className="mt-1 text-[11px] text-text-tertiary">
-            JPG, PNG, GIF, WebP · Tối đa 10MB
+            JPG, PNG, GIF, WebP · Tối đa 20MB
           </span>
         </button>
       )}

@@ -266,14 +266,25 @@ describe("CoverImageUpload", () => {
     vi.clearAllMocks()
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
-        new Response(
-          JSON.stringify({
-            data: { url: "https://cdn.example.com/covers/cover.jpg" },
-          }),
-          { status: 201 },
-        ),
-      ),
+      vi.fn().mockImplementation((url: string | URL) => {
+        if (url === "/api/upload/presigned") {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                data: {
+                  files: [{
+                    publicUrl: "https://cdn.example.com/covers/cover.jpg",
+                    uploadUrl: "https://r2.example.com/covers/cover.jpg",
+                  }],
+                },
+              }),
+              { status: 201 },
+            ),
+          )
+        }
+
+        return Promise.resolve(new Response(null, { status: 200 }))
+      }),
     )
   })
 
@@ -292,9 +303,29 @@ describe("CoverImageUpload", () => {
         "https://cdn.example.com/covers/cover.jpg",
       )
     })
-    const formData = (fetch as ReturnType<typeof vi.fn>).mock.calls[0]?.[1]
-      ?.body as FormData
-    expect(formData.get("folder")).toBe("covers")
+    expect(fetch).toHaveBeenNthCalledWith(1, "/api/upload/presigned", {
+      body: JSON.stringify({
+        files: [{ name: "cover.jpg", size: 3, type: "image/jpeg" }],
+        folder: "covers",
+      }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    })
+    expect(fetch).toHaveBeenNthCalledWith(
+      2,
+      "https://r2.example.com/covers/cover.jpg",
+      {
+        body: expect.any(File),
+        headers: { "Content-Type": "image/jpeg" },
+        method: "PUT",
+      },
+    )
+  })
+
+  it("advertises the 20 MB cover limit", () => {
+    render(<CoverImageUpload onChange={vi.fn()} value="" />)
+
+    expect(screen.getByText(/Tối đa 20MB/)).toBeVisible()
   })
 
   it("matches the Figma dashed upload target and hover-replace cover state", () => {

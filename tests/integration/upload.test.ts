@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
+  getPresignedUploadUrl: vi.fn(),
   nanoid: vi.fn(() => "file-id"),
   userFindUnique: vi.fn(),
   uploadToR2: vi.fn(),
@@ -15,10 +16,14 @@ vi.mock("@/lib/prisma", () => ({
     },
   },
 }))
-vi.mock("@/lib/r2", () => ({ uploadToR2: mocks.uploadToR2 }))
+vi.mock("@/lib/r2", () => ({
+  getPresignedUploadUrl: mocks.getPresignedUploadUrl,
+  uploadToR2: mocks.uploadToR2,
+}))
 vi.mock("nanoid", () => ({ nanoid: mocks.nanoid }))
 
 import { POST as upload } from "@/app/api/upload/route"
+import { POST as presignUpload } from "@/app/api/upload/presigned/route"
 
 function uploadRequest(file?: File | File[], folder = "content-images") {
   const form = new FormData()
@@ -32,6 +37,15 @@ function uploadRequest(file?: File | File[], folder = "content-images") {
 
   return {
     formData: () => Promise.resolve(form),
+  } as Request
+}
+
+function presignRequest(name: string, type: string, size: number) {
+  return {
+    json: () => Promise.resolve({
+      files: [{ name, size, type }],
+      folder: "covers",
+    }),
   } as Request
 }
 
@@ -87,27 +101,27 @@ describe("POST /api/upload", () => {
     })
   })
 
-  it("rejects non-GIF images larger than 5 MB", async () => {
-    const bytes = new Uint8Array(5 * 1024 * 1024 + 1)
+  it("rejects non-GIF images larger than 20 MB", async () => {
+    const bytes = new Uint8Array(20 * 1024 * 1024 + 1)
     const response = await upload(
       uploadRequest(new File([bytes], "huge.webp", { type: "image/webp" })),
     )
 
     expect(response.status).toBe(400)
     await expect(response.json()).resolves.toEqual({
-      error: "File must be 5 MB or smaller",
+      error: "File must be 20 MB or smaller",
     })
   })
 
-  it("keeps the 10 MB limit for GIF uploads", async () => {
-    const bytes = new Uint8Array(10 * 1024 * 1024 + 1)
+  it("rejects GIF images larger than 20 MB", async () => {
+    const bytes = new Uint8Array(20 * 1024 * 1024 + 1)
     const response = await upload(
       uploadRequest(new File([bytes], "huge.gif", { type: "image/gif" })),
     )
 
     expect(response.status).toBe(400)
     await expect(response.json()).resolves.toEqual({
-      error: "File must be 10 MB or smaller",
+      error: "File must be 20 MB or smaller",
     })
   })
 
@@ -173,6 +187,55 @@ describe("POST /api/upload", () => {
       body: expect.any(Buffer),
       contentType: "image/png",
       key: "uploads/file-id.png",
+    })
+  })
+})
+
+describe("POST /api/upload/presigned", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.auth.mockResolvedValue({
+      user: { id: "writer-1", role: "WRITER" },
+    })
+    mocks.userFindUnique.mockResolvedValue({
+      avatarUrl: null,
+      email: "writer@example.com",
+      id: "writer-1",
+      name: "Writer",
+      role: "WRITER",
+      username: "writer",
+    })
+    mocks.nanoid.mockReturnValue("file-id")
+    mocks.getPresignedUploadUrl.mockResolvedValue({
+      publicUrl: "https://cdn.example.com/covers/file-id.webp",
+      uploadUrl: "https://r2.example.com/covers/file-id.webp",
+    })
+  })
+
+  it("presigns non-GIF images up to 20 MB", async () => {
+    const response = await presignUpload(
+      presignRequest("cover.webp", "image/webp", 20 * 1024 * 1024),
+    )
+
+    expect(response.status).toBe(201)
+    await expect(response.json()).resolves.toEqual({
+      data: {
+        files: [{
+          publicUrl: "https://cdn.example.com/covers/file-id.webp",
+          uploadUrl: "https://r2.example.com/covers/file-id.webp",
+        }],
+      },
+    })
+  })
+
+  it("rejects GIF images larger than 20 MB", async () => {
+    const response = await presignUpload(
+      presignRequest("cover.gif", "image/gif", 20 * 1024 * 1024 + 1),
+    )
+
+    expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toEqual({
+      error: "File must be 20 MB or smaller",
     })
   })
 })
