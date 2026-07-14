@@ -1,6 +1,8 @@
 "use client"
 
 import type { Editor } from "@tiptap/react"
+import type { EmojiClickData, PickerProps } from "emoji-picker-react"
+import { useTheme } from "next-themes"
 import {
   Bold,
   Code,
@@ -31,7 +33,7 @@ import {
   Underline,
   Undo2,
 } from "lucide-react"
-import { useRef, useState } from "react"
+import { lazy, Suspense, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 
 import { LinkEditModal } from "@/components/editor/LinkEditModal"
@@ -61,25 +63,14 @@ const TEXT_COLORS = [
   { color: "#db2777", label: "pink" },
 ]
 
-const EMOJIS = [
-  { label: "mỉm cười", value: "😊" },
-  { label: "cười", value: "😂" },
-  { label: "trái tim", value: "❤️" },
-  { label: "lấp lánh", value: "✨" },
-  { label: "lửa", value: "🔥" },
-  { label: "vỗ tay", value: "👏" },
-  { label: "suy nghĩ", value: "🤔" },
-  { label: "khóc", value: "😭" },
-  { label: "ngôi sao", value: "⭐" },
-  { label: "hoa anh đào", value: "🌸" },
-  { label: "mặt trăng", value: "🌙" },
-  { label: "ngón cái", value: "👍" },
-]
+const FullEmojiPicker = lazy(() =>
+  import("emoji-picker-react").then((module) => ({ default: module.default })),
+)
 
 interface ToolbarButtonProps {
   active?: boolean
   ariaExpanded?: boolean
-  ariaHasPopup?: "menu"
+  ariaHasPopup?: "dialog" | "menu"
   children: React.ReactNode
   disabled?: boolean
   onClick: () => void
@@ -134,16 +125,35 @@ function Divider() {
 }
 
 function EmojiButton({ editor }: { editor: Editor }) {
+  const { resolvedTheme } = useTheme()
   const [open, setOpen] = useState(false)
   const [position, setPosition] = useState({ left: 0, top: 0 })
   const buttonRef = useRef<HTMLDivElement>(null)
+  const pickerHeight = 420
+  const pickerWidth = 352
+
+  useEffect(() => {
+    if (!open) return
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false)
+    }
+
+    window.addEventListener("keydown", closeOnEscape)
+    return () => window.removeEventListener("keydown", closeOnEscape)
+  }, [open])
 
   function toggleMenu() {
     const rect = buttonRef.current?.getBoundingClientRect()
     if (rect) {
+      const below = rect.bottom + 6
+      const top = below + pickerHeight <= window.innerHeight
+        ? below
+        : Math.max(8, rect.top - pickerHeight - 6)
+
       setPosition({
-        left: Math.max(8, Math.min(rect.left, window.innerWidth - 196)),
-        top: rect.bottom + 6,
+        left: Math.max(8, Math.min(rect.left, window.innerWidth - pickerWidth - 8)),
+        top,
       })
     }
     setOpen((current) => !current)
@@ -154,7 +164,7 @@ function EmojiButton({ editor }: { editor: Editor }) {
       <div ref={buttonRef}>
         <ToolbarButton
           ariaExpanded={open}
-          ariaHasPopup="menu"
+          ariaHasPopup="dialog"
           onClick={toggleMenu}
           title="Chèn emoji"
           trigger="click"
@@ -165,27 +175,40 @@ function EmojiButton({ editor }: { editor: Editor }) {
       {open &&
         createPortal(
           <div
-            aria-label="Emoji"
-            className="fixed z-[120] grid w-[188px] grid-cols-4 gap-1.5 rounded-[10px] border border-border-default bg-background p-2.5 shadow-xl"
-            role="menu"
+            aria-label="Chọn emoji"
+            className="fixed z-[120] w-[min(352px,calc(100vw-16px))] overflow-hidden rounded-[12px] border border-border-default bg-background shadow-xl"
+            role="dialog"
             style={position}
           >
-            {EMOJIS.map((emoji) => (
-              <button
-                aria-label={`Chèn emoji ${emoji.label}`}
-                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-[7px] text-xl transition-colors hover:bg-subtle-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                key={emoji.label}
-                onMouseDown={(event) => {
-                  event.preventDefault()
-                  editor.chain().focus().insertContent(emoji.value).run()
+            <Suspense
+              fallback={
+                <div
+                  className="flex h-[420px] items-center justify-center text-sm text-text-secondary"
+                  role="status"
+                >
+                  Đang tải emoji...
+                </div>
+              }
+            >
+              <FullEmojiPicker
+                autoFocusSearch
+                emojiStyle={"native" as PickerProps["emojiStyle"]}
+                height={pickerHeight}
+                lazyLoadEmojis
+                onEmojiClick={(emojiData: EmojiClickData) => {
+                  editor.chain().focus().insertContent(emojiData.emoji).run()
                   setOpen(false)
                 }}
-                role="menuitem"
-                type="button"
-              >
-                {emoji.value}
-              </button>
-            ))}
+                previewConfig={{ showPreview: false }}
+                searchClearButtonLabel="Xóa tìm kiếm"
+                searchPlaceHolder="Tìm emoji..."
+                skinTonesDisabled={false}
+                theme={
+                  (resolvedTheme === "dark" ? "dark" : "light") as PickerProps["theme"]
+                }
+                width="100%"
+              />
+            </Suspense>
           </div>,
           document.body,
         )}

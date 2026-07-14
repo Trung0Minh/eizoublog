@@ -104,6 +104,25 @@ vi.mock("@tiptap/react", () => ({
     <div>{children}</div>
   ),
 }))
+vi.mock("emoji-picker-react", () => ({
+  default: ({
+    onEmojiClick,
+    searchPlaceHolder,
+  }: {
+    onEmojiClick: (emoji: { emoji: string }) => void
+    searchPlaceHolder: string
+  }) => (
+    <div data-search-placeholder={searchPlaceHolder} data-testid="full-emoji-picker">
+      <button
+        aria-label="Pick melting face"
+        onClick={() => onEmojiClick({ emoji: "🫠" })}
+        type="button"
+      >
+        Pick emoji
+      </button>
+    </div>
+  ),
+}))
 vi.mock("@/components/editor/TiptapEditor", () => ({
   TiptapEditor: ({
     editable,
@@ -578,7 +597,8 @@ describe("EditorToolbar", () => {
     expect(onToggleSpellcheck).toHaveBeenCalled()
   })
 
-  it("inserts an emoji at the current cursor position", () => {
+  it("opens a searchable full emoji picker and inserts at the cursor", async () => {
+    const user = userEvent.setup()
     const chain = {
       focus: vi.fn(() => chain),
       insertContent: vi.fn(() => chain),
@@ -592,12 +612,12 @@ describe("EditorToolbar", () => {
 
     render(<EditorToolbar editor={editor as never} />)
 
-    fireEvent.click(screen.getByRole("button", { name: "Chèn emoji" }))
-    fireEvent.mouseDown(
-      screen.getByRole("menuitem", { name: "Chèn emoji trái tim" }),
-    )
+    await user.click(screen.getByRole("button", { name: "Chèn emoji" }))
+    const picker = await screen.findByTestId("full-emoji-picker")
+    expect(picker).toHaveAttribute("data-search-placeholder", "Tìm emoji...")
+    await user.click(screen.getByRole("button", { name: "Pick melting face" }))
 
-    expect(chain.insertContent).toHaveBeenCalledWith("❤️")
+    expect(chain.insertContent).toHaveBeenCalledWith("🫠")
     expect(chain.run).toHaveBeenCalled()
   })
 })
