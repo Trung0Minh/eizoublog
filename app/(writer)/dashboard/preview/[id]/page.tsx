@@ -117,7 +117,7 @@ export default async function DashboardPostPreviewPage({
         </main>
 
         {hasTableOfContents && (
-          <aside className="hidden w-[200px] shrink-0 xl:block ml-10 mt-12">
+          <aside className="sticky top-24 hidden max-h-[calc(100vh-120px)] w-[200px] shrink-0 self-start overflow-y-auto overscroll-contain no-scrollbar xl:ml-10 xl:mt-12 xl:block [scrollbar-gutter:stable]">
             <TableOfContents content={content} />
           </aside>
         )}

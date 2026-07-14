@@ -221,7 +221,7 @@ export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
               initialComments={comments}
             />
           </article>
-          <aside className="hidden w-[200px] shrink-0 xl:block">
+          <aside className="sticky top-24 hidden max-h-[calc(100vh-120px)] w-[200px] shrink-0 self-start overflow-y-auto overscroll-contain no-scrollbar xl:block [scrollbar-gutter:stable]">
             <TableOfContents content={room.selectedPost.content as unknown as JSONContent} />
           </aside>
         </div>
