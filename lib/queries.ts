@@ -624,6 +624,7 @@ async function getPublishedPostListBySql(
             JOIN tags t ON t.id = pt."tagId"
             WHERE pt."postId" = p.id
           ) tags ON TRUE
+          ${orderBy}
         `
       : await prisma.$queryRaw<PublishedPostListRow[]>`
           WITH filtered_posts AS (
@@ -713,6 +714,7 @@ async function getPublishedPostListBySql(
             JOIN tags t ON t.id = pt."tagId"
             WHERE pt."postId" = p.id
           ) tags ON TRUE
+          ${orderBy}
         `
   const posts: PublishedPostListItem[] = rows
     .filter(

@@ -5,6 +5,16 @@ type CacheEntry = {
   options: { revalidate?: number; tags?: string[] }
 }
 
+function flattenSql(value: unknown): string {
+  if (typeof value === "string") return value
+  if (Array.isArray(value)) return value.map(flattenSql).join(" ")
+  if (typeof value !== "object" || value === null) return ""
+
+  return Object.values(value)
+    .map(flattenSql)
+    .join(" ")
+}
+
 const mocks = vi.hoisted(() => {
   const cacheEntries: CacheEntry[] = []
   const prisma = {
@@ -164,6 +174,25 @@ describe("cached Prisma query helpers", () => {
       keyParts: ["published-posts"],
       options: { revalidate: 300, tags: ["posts"] },
     })
+  })
+
+  it("preserves newest and oldest ordering after the final joined query", async () => {
+    mocks.prisma.$queryRaw
+      .mockResolvedValueOnce([rawPostRow])
+      .mockResolvedValueOnce([rawPostRow])
+
+    await getCachedPublishedPosts(1, 10, "latest")
+    await getCachedPublishedPosts(1, 10, "oldest")
+
+    const latestSql = flattenSql(mocks.prisma.$queryRaw.mock.calls[0])
+    const oldestSql = flattenSql(mocks.prisma.$queryRaw.mock.calls[1])
+
+    expect(
+      latestSql.match(/ORDER BY p\."publishedAt" DESC NULLS LAST/g),
+    ).toHaveLength(2)
+    expect(
+      oldestSql.match(/ORDER BY p\."publishedAt" ASC NULLS LAST/g),
+    ).toHaveLength(2)
   })
 
   it("filters published post lists by archive month", async () => {
