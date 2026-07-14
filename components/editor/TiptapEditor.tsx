@@ -50,7 +50,7 @@ interface TiptapEditorProps {
   onEditorReady?: (editor: Editor | null) => void
   placeholder?: string
   ariaLabel?: string
-  mode?: "default" | "profile"
+  mode?: "compact" | "default" | "profile"
 }
 
 export function TiptapEditor({
@@ -78,7 +78,9 @@ export function TiptapEditor({
     editorProps: {
       attributes: {
         class: editable
-          ? "prose-editor min-h-[420px] focus:outline-none"
+          ? mode === "compact"
+            ? "prose-editor min-h-[120px] focus:outline-none"
+            : "prose-editor min-h-[420px] focus:outline-none"
           : "prose prose-lg dark:prose-invert max-w-none focus:outline-none",
         ...(ariaLabel && { "aria-label": ariaLabel }),
         spellcheck: "false",
@@ -284,7 +286,7 @@ export function TiptapEditor({
         <div className="prose-editor min-h-[420px]" />
       )}
 
-      {isReady && editable && (
+      {isReady && editable && mode !== "compact" && (
         <div className="mt-2 flex items-center justify-end gap-3 text-xs text-text-tertiary">
           <span>{words.toLocaleString()} từ</span>
           <span>{editor!.storage.characterCount.characters().toLocaleString()} ký tự</span>

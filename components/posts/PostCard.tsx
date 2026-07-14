@@ -88,17 +88,13 @@ export function PostCard({ post }: PostCardProps) {
         </Link>
       )}
 
-      {post.category ? (
+      {post.category && (
         <Link
           className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.08em] text-accent transition-colors hover:text-accent/80"
           href={`/category/${post.category.slug}`}
         >
           {post.category.name}
         </Link>
-      ) : (
-        <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-accent">
-          Animation Analysis
-        </div>
       )}
 
       <Link className="group-hover:text-accent transition-colors block" href={`/${post.slug}`}>

@@ -10,7 +10,6 @@ import { toast } from "sonner"
 
 import { PostBody } from "@/components/posts/PostBody"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
 import { TextReveal } from "@/components/ui/TextReveal"
 import { ScrollReveal } from "@/components/ui/ScrollReveal"
 import { cn } from "@/lib/utils"
@@ -41,7 +40,7 @@ interface AboutPageContent {
   body: JSONContent
   publishingNotes: PublishingNote[]
   title: string
-  whyWeDoThis: string
+  whyWeDoThis: JSONContent | string
   coverUrl?: string
 }
 
@@ -88,6 +87,25 @@ const defaultPublishingNotes = [
     text: "Những bài viết ngắn hơn về các studio, nhân viên, mô-típ hình ảnh và những quyết định thực tế đằng sau những cảnh anime đáng nhớ.",
   },
 ]
+
+function toRichTextContent(value: JSONContent | string): JSONContent {
+  if (typeof value !== "string") return value
+
+  return {
+    content: [
+      {
+        content: value ? [{ text: value, type: "text" }] : undefined,
+        type: "paragraph",
+      },
+    ],
+    type: "doc",
+  }
+}
+
+function hasWhyContent(value: JSONContent | string) {
+  if (typeof value === "string") return value.trim().length > 0
+  return Boolean(value.content?.length)
+}
 
 function isAboutPageContent(value: unknown): value is AboutPageContent {
   return (
@@ -142,6 +160,7 @@ export function AboutClient({
   const dataRef = useRef(data)
   const contentTextRef = useRef(contentText)
   const aboutEditorRef = useRef<Editor | null>(null)
+  const whyWeDoThisEditorRef = useRef<Editor | null>(null)
 
   function updateData(updater: (currentData: AboutPageContent) => AboutPageContent) {
     const nextData = updater(dataRef.current)
@@ -158,11 +177,16 @@ export function AboutClient({
     aboutEditorRef.current = editor
   }, [])
 
+  const handleWhyWeDoThisEditorReady = useCallback((editor: Editor | null) => {
+    whyWeDoThisEditorRef.current = editor
+  }, [])
+
   async function handleSave() {
     setIsSaving(true)
     try {
       const latestBody = aboutEditorRef.current?.getJSON()
       const latestContentText = aboutEditorRef.current?.getText()
+      const latestWhyWeDoThis = whyWeDoThisEditorRef.current?.getJSON()
 
       if (latestBody) {
         dataRef.current = {
@@ -175,6 +199,14 @@ export function AboutClient({
       if (latestContentText !== undefined) {
         contentTextRef.current = latestContentText
         setContentText(latestContentText)
+      }
+
+      if (latestWhyWeDoThis) {
+        dataRef.current = {
+          ...dataRef.current,
+          whyWeDoThis: latestWhyWeDoThis,
+        }
+        setData(dataRef.current)
       }
 
       const response = await fetch("/api/admin/site-pages/about", {
@@ -327,24 +359,32 @@ export function AboutClient({
                   )}
                 </ScrollReveal>
 
-                {(isEditing || data.whyWeDoThis) && (
+                {(isEditing || hasWhyContent(data.whyWeDoThis)) && (
                   <ScrollReveal delay={0.2}>
                     <div className="bg-background/60 p-4 rounded-xl border border-border mt-6">
                       <h3 className="font-display font-bold text-text-primary flex items-center gap-2 text-[18px] mb-2">
                         <Heart className="w-5 h-5 text-accent" /> Tại sao chúng mình làm blog này
                       </h3>
                       {isEditing ? (
-                        <Textarea
-                          className="w-full text-[14px] resize-none bg-transparent shadow-none focus-visible:ring-1 focus-visible:ring-accent"
-                          value={data.whyWeDoThis}
-                          onChange={(e) => updateData((currentData) => ({ ...currentData, whyWeDoThis: e.target.value }))}
+                        <TiptapEditor
+                          ariaLabel="Lý do tạo blog"
+                          content={toRichTextContent(data.whyWeDoThis)}
+                          mode="compact"
+                          onChange={(json) =>
+                            updateData((currentData) => ({
+                              ...currentData,
+                              whyWeDoThis: json,
+                            }))
+                          }
+                          onEditorReady={handleWhyWeDoThisEditorReady}
                           placeholder="Nhập lý do..."
-                          rows={4}
                         />
+                      ) : typeof data.whyWeDoThis === "string" ? (
+                        <p className="text-[14px]">{data.whyWeDoThis}</p>
                       ) : (
-                        <p className="text-[14px]">
-                          {data.whyWeDoThis}
-                        </p>
+                        <div className="post-content text-[14px] [&_p]:my-2">
+                          <PostBody content={data.whyWeDoThis} />
+                        </div>
                       )}
                     </div>
                   </ScrollReveal>

@@ -181,6 +181,12 @@ describe("PostCard", () => {
       screen.queryByRole("link", { name: "Animation Analysis" }),
     ).not.toBeInTheDocument()
   })
+
+  it("does not render a fallback category when a post has no category", () => {
+    render(<PostCard post={{ ...post, category: null }} />)
+
+    expect(screen.queryByText("Animation Analysis")).not.toBeInTheDocument()
+  })
 })
 
 describe("Post detail responsive components", () => {

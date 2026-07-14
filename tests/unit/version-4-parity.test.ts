@@ -65,6 +65,14 @@ describe("anime-blog-4 appearance parity", () => {
     expect(about).not.toContain("setData({ ...data, body: json })")
   })
 
+  it("uses compact rich text for the About page reason field", () => {
+    const about = read("app/(public)/about/AboutClient.tsx")
+
+    expect(about).toContain('mode="compact"')
+    expect(about).toContain("whyWeDoThisEditorRef")
+    expect(about).not.toContain("<Textarea")
+  })
+
   it("keeps the Resources edit button hover scope and save draft current", () => {
     const resources = read("app/(public)/resources/ResourcesClient.tsx")
 

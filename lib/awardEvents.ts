@@ -88,7 +88,12 @@ export function getSubmittedAwardEventRooms<TRoom extends AwardEventPostRoom>(
   rooms: TRoom[],
 ) {
   return [...rooms]
-    .filter((room) => room.status === "SUBMITTED" && room.selectedPost)
+    .filter(
+      (room) =>
+        room.status === "SUBMITTED" &&
+        room.selectedPost &&
+        room.selectedPost.status !== "REMOVED",
+    )
     .sort((a, b) => a.order - b.order || a.writer.name.localeCompare(b.writer.name))
 }
 

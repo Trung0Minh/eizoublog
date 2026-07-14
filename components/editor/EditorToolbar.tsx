@@ -24,9 +24,12 @@ import {
   Minus,
   Palette,
   Quote,
+  Redo2,
+  Smile,
   SpellCheck,
   Strikethrough,
   Underline,
+  Undo2,
 } from "lucide-react"
 import { useRef, useState } from "react"
 import { createPortal } from "react-dom"
@@ -58,8 +61,25 @@ const TEXT_COLORS = [
   { color: "#db2777", label: "pink" },
 ]
 
+const EMOJIS = [
+  { label: "mỉm cười", value: "😊" },
+  { label: "cười", value: "😂" },
+  { label: "trái tim", value: "❤️" },
+  { label: "lấp lánh", value: "✨" },
+  { label: "lửa", value: "🔥" },
+  { label: "vỗ tay", value: "👏" },
+  { label: "suy nghĩ", value: "🤔" },
+  { label: "khóc", value: "😭" },
+  { label: "ngôi sao", value: "⭐" },
+  { label: "hoa anh đào", value: "🌸" },
+  { label: "mặt trăng", value: "🌙" },
+  { label: "ngón cái", value: "👍" },
+]
+
 interface ToolbarButtonProps {
   active?: boolean
+  ariaExpanded?: boolean
+  ariaHasPopup?: "menu"
   children: React.ReactNode
   disabled?: boolean
   onClick: () => void
@@ -69,6 +89,8 @@ interface ToolbarButtonProps {
 
 function ToolbarButton({
   active = false,
+  ariaExpanded,
+  ariaHasPopup,
   children,
   disabled = false,
   onClick,
@@ -77,6 +99,8 @@ function ToolbarButton({
 }: ToolbarButtonProps) {
   return (
     <button
+      aria-expanded={ariaExpanded}
+      aria-haspopup={ariaHasPopup}
       className={[
         "flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-[7px] transition-all duration-200",
         active
@@ -109,6 +133,66 @@ function Divider() {
   return <div className="mx-0.5 hidden h-4 w-px shrink-0 self-center bg-border-default sm:block" />
 }
 
+function EmojiButton({ editor }: { editor: Editor }) {
+  const [open, setOpen] = useState(false)
+  const [position, setPosition] = useState({ left: 0, top: 0 })
+  const buttonRef = useRef<HTMLDivElement>(null)
+
+  function toggleMenu() {
+    const rect = buttonRef.current?.getBoundingClientRect()
+    if (rect) {
+      setPosition({
+        left: Math.max(8, Math.min(rect.left, window.innerWidth - 196)),
+        top: rect.bottom + 6,
+      })
+    }
+    setOpen((current) => !current)
+  }
+
+  return (
+    <>
+      <div ref={buttonRef}>
+        <ToolbarButton
+          ariaExpanded={open}
+          ariaHasPopup="menu"
+          onClick={toggleMenu}
+          title="Chèn emoji"
+          trigger="click"
+        >
+          <Smile aria-hidden="true" className="h-[15px] w-[15px]" />
+        </ToolbarButton>
+      </div>
+      {open &&
+        createPortal(
+          <div
+            aria-label="Emoji"
+            className="fixed z-[120] grid w-[188px] grid-cols-4 gap-1.5 rounded-[10px] border border-border-default bg-background p-2.5 shadow-xl"
+            role="menu"
+            style={position}
+          >
+            {EMOJIS.map((emoji) => (
+              <button
+                aria-label={`Chèn emoji ${emoji.label}`}
+                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-[7px] text-xl transition-colors hover:bg-subtle-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                key={emoji.label}
+                onMouseDown={(event) => {
+                  event.preventDefault()
+                  editor.chain().focus().insertContent(emoji.value).run()
+                  setOpen(false)
+                }}
+                role="menuitem"
+                type="button"
+              >
+                {emoji.value}
+              </button>
+            ))}
+          </div>,
+          document.body,
+        )}
+    </>
+  )
+}
+
 export function EditorToolbar({
   editor,
   onToggleSpellcheck,
@@ -118,7 +202,7 @@ export function EditorToolbar({
   editor: Editor
   onToggleSpellcheck?: () => void
   spellcheckEnabled?: boolean
-  mode?: "default" | "profile"
+  mode?: "compact" | "default" | "profile"
 }) {
   const [showVideoModal, setShowVideoModal] = useState(false)
   const [showLinkModal, setShowLinkModal] = useState(false)
@@ -259,10 +343,17 @@ export function EditorToolbar({
       )
     : null
 
-  if (mode === "profile") {
+  if (mode === "profile" || mode === "compact") {
+    const isCompact = mode === "compact"
+
     return (
       <>
-        <div className="no-scrollbar sticky top-0 z-40 mb-4 flex w-full flex-nowrap justify-start gap-1 overflow-x-auto rounded-[16px] bg-background/80 backdrop-blur-xl px-3 py-2 border-[2px] border-border-default/50 shadow-sm transition-all duration-300">
+        <div
+          className={[
+            "no-scrollbar z-40 flex w-full flex-nowrap justify-start gap-1 overflow-x-auto rounded-[12px] bg-background/80 px-2.5 py-2 backdrop-blur-xl border border-border-default/60 shadow-sm",
+            isCompact ? "relative mb-2" : "sticky top-0 mb-4",
+          ].join(" ")}
+        >
           <ToolbarButton
             active={editor.isActive("bold")}
             onClick={() => editor.chain().focus().toggleBold().run()}
@@ -298,6 +389,41 @@ export function EditorToolbar({
           >
             <Link2 aria-hidden="true" className="h-[15px] w-[15px]" />
           </ToolbarButton>
+          <EmojiButton editor={editor} />
+          {isCompact && (
+            <>
+              <Divider />
+              <ToolbarButton
+                active={editor.isActive("bulletList")}
+                onClick={() => editor.chain().focus().toggleBulletList().run()}
+                title="Bullet list"
+              >
+                <List aria-hidden="true" className="h-[15px] w-[15px]" />
+              </ToolbarButton>
+              <ToolbarButton
+                active={editor.isActive("orderedList")}
+                onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                title="Ordered list"
+              >
+                <ListOrdered aria-hidden="true" className="h-[15px] w-[15px]" />
+              </ToolbarButton>
+              <Divider />
+              <ToolbarButton
+                disabled={!editor.can().undo()}
+                onClick={() => editor.chain().focus().undo().run()}
+                title="Undo"
+              >
+                <Undo2 aria-hidden="true" className="h-[15px] w-[15px]" />
+              </ToolbarButton>
+              <ToolbarButton
+                disabled={!editor.can().redo()}
+                onClick={() => editor.chain().focus().redo().run()}
+                title="Redo"
+              >
+                <Redo2 aria-hidden="true" className="h-[15px] w-[15px]" />
+              </ToolbarButton>
+            </>
+          )}
         </div>
 
         {showLinkModal && (
@@ -479,6 +605,7 @@ export function EditorToolbar({
         >
           <Link2 aria-hidden="true" className="h-[15px] w-[15px]" />
         </ToolbarButton>
+        <EmojiButton editor={editor} />
         <MediaUpload
           onInsertGallery={(images) =>
             editor

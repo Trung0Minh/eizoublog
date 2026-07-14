@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const mocks = vi.hoisted(() => ({
@@ -26,6 +26,7 @@ vi.mock("@/lib/seo", () => ({
 
 import ContributorsPage from "@/app/(public)/contributors/page"
 import { AuthorBio } from "@/components/posts/AuthorBio"
+import { ContributorBio } from "@/components/profile/ContributorBio"
 
 describe("public profile layouts", () => {
   beforeEach(() => {
@@ -89,5 +90,47 @@ describe("public profile layouts", () => {
     const metadata = screen.getByText("@mina").closest("div")?.parentElement
     expect(metadata).toHaveClass("w-full")
     expect(metadata?.parentElement).toHaveClass("w-full")
+  })
+
+  it("expands and collapses long contributor bios without an inner scrollbar", () => {
+    render(
+      <ContributorBio
+        bio="A long contributor biography that needs more than three lines on the contributor card and should remain readable without forcing people to scroll inside a small nested panel."
+      />,
+    )
+
+    const button = screen.getByRole("button", { name: "Xem thêm tiểu sử" })
+    expect(button).toHaveAttribute("aria-expanded", "false")
+    expect(screen.getByTestId("contributor-bio-content")).toHaveClass(
+      "line-clamp-3",
+    )
+
+    fireEvent.click(button)
+
+    expect(button).toHaveAttribute("aria-expanded", "true")
+    expect(screen.getByTestId("contributor-bio-content")).not.toHaveClass(
+      "line-clamp-3",
+    )
+    expect(screen.getByRole("button", { name: "Thu gọn tiểu sử" })).toBeVisible()
+  })
+
+  it("does not offer expansion for short formatted bios", () => {
+    render(
+      <ContributorBio
+        bio={JSON.stringify({
+          content: [
+            {
+              content: [{ text: "Short formatted bio.", type: "text" }],
+              type: "paragraph",
+            },
+          ],
+          type: "doc",
+        })}
+      />,
+    )
+
+    expect(
+      screen.queryByRole("button", { name: "Xem thêm tiểu sử" }),
+    ).not.toBeInTheDocument()
   })
 })

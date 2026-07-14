@@ -577,6 +577,29 @@ describe("EditorToolbar", () => {
 
     expect(onToggleSpellcheck).toHaveBeenCalled()
   })
+
+  it("inserts an emoji at the current cursor position", () => {
+    const chain = {
+      focus: vi.fn(() => chain),
+      insertContent: vi.fn(() => chain),
+      run: vi.fn(() => true),
+    }
+    const editor = {
+      chain: vi.fn(() => chain),
+      getAttributes: vi.fn(() => ({})),
+      isActive: vi.fn(() => false),
+    }
+
+    render(<EditorToolbar editor={editor as never} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Chèn emoji" }))
+    fireEvent.mouseDown(
+      screen.getByRole("menuitem", { name: "Chèn emoji trái tim" }),
+    )
+
+    expect(chain.insertContent).toHaveBeenCalledWith("❤️")
+    expect(chain.run).toHaveBeenCalled()
+  })
 })
 
 describe("VideoEmbedModal", () => {

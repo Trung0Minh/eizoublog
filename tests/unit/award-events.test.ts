@@ -111,6 +111,31 @@ describe("buildAwardEventPostContent", () => {
     expect(JSON.stringify(content)).toContain("No submitted entries yet.")
     expect(JSON.stringify(content)).not.toContain("Empty")
   })
+
+  it("ignores submitted rooms whose source post was removed", () => {
+    const content = buildAwardEventPostContent({
+      eventIntro: null,
+      rooms: [
+        {
+          id: "room-removed",
+          order: 1,
+          selectedPost: {
+            content: doc(paragraph("Removed body")),
+            id: "post-removed",
+            status: "REMOVED",
+            title: "Removed entry",
+          },
+          status: "SUBMITTED",
+          writer: { name: "Removed Writer", username: "removed-writer" },
+          writerIntro: "This author should not appear.",
+        },
+      ],
+    })
+
+    expect(JSON.stringify(content)).toContain("No submitted entries yet.")
+    expect(JSON.stringify(content)).not.toContain("Removed Writer")
+    expect(JSON.stringify(content)).not.toContain("Removed body")
+  })
 })
 
 describe("buildAwardEventOutline", () => {

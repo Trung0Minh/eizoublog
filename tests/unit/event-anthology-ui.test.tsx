@@ -102,6 +102,24 @@ describe("EventAnthologyView", () => {
               },
               writerIntro: null,
             },
+            {
+              id: "room-removed",
+              order: 3,
+              selectedPost: {
+                content: { content: [], type: "doc" },
+                id: "post-removed",
+                status: "REMOVED",
+                title: "Removed entry",
+              },
+              status: "SUBMITTED",
+              writer: {
+                avatarUrl: null,
+                bio: "Removed profile bio.",
+                name: "Removed Writer",
+                username: "removed-writer",
+              },
+              writerIntro: "This should not be published.",
+            },
           ],
           title: "Collected perspectives",
         }}
@@ -111,12 +129,14 @@ describe("EventAnthologyView", () => {
     const heroCredits = screen.getByLabelText("Event contributors")
     expect(within(heroCredits).getByText("Writer A & Writer B")).toBeInTheDocument()
     expect(within(heroCredits).queryByText("Draft Writer")).not.toBeInTheDocument()
+    expect(within(heroCredits).queryByText("Removed Writer")).not.toBeInTheDocument()
 
     const authorCredits = screen.getByLabelText("Tác giả bài viết")
     expect(within(authorCredits).getByText("Writer A")).toBeInTheDocument()
     expect(within(authorCredits).getByText("Writer B")).toBeInTheDocument()
     expect(within(authorCredits).getByText("Profile bio A.")).toBeInTheDocument()
     expect(within(authorCredits).queryByText("Draft Writer")).not.toBeInTheDocument()
+    expect(within(authorCredits).queryByText("Removed Writer")).not.toBeInTheDocument()
     expect(container.querySelector("header")).not.toHaveClass("border-b")
     expect(screen.getByTestId("event-hero-transition")).toHaveClass(
       "bg-gradient-to-b",

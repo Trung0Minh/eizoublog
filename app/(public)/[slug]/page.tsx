@@ -98,7 +98,10 @@ export default async function PostPage({ params }: PostPageProps) {
       new Set([
         ...authors,
         ...post.finalAwardEvent.rooms
-          .filter(({ selectedPost }) => selectedPost)
+          .filter(
+            ({ selectedPost }) =>
+              selectedPost && selectedPost.status !== "REMOVED",
+          )
           .map(({ writer }) => writer.username),
       ]),
     )

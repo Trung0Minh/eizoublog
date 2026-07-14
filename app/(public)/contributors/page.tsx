@@ -4,7 +4,7 @@ import { Sparkles } from "lucide-react"
 
 import { TextReveal } from "@/components/ui/TextReveal"
 import { ScrollReveal } from "@/components/ui/ScrollReveal"
-import { StaticPostContent } from "@/components/posts/StaticPostContent"
+import { ContributorBio } from "@/components/profile/ContributorBio"
 import { getCachedContributors } from "@/lib/queries"
 import { buildMetadata, getAppName } from "@/lib/seo"
 
@@ -129,21 +129,13 @@ export default async function ContributorsPage({ searchParams }: ContributorsPag
                     <span className="shrink-0 rounded-md bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700 tracking-wider">WRITER</span>
                   )}
                 </div>
-                <div className="text-[14px] text-text-secondary mb-4 line-clamp-3">
+                <div className="mb-4">
                   {contributor.bio ? (
-                    <div className="[&_.ProseMirror]:!ml-0 [&_.ProseMirror>p]:!ml-0">
-                      {(() => {
-                        if (contributor.bio.startsWith("{")) {
-                          try {
-                            const json = JSON.parse(contributor.bio)
-                            return <StaticPostContent content={json} />
-                          } catch {}
-                        }
-                        return <span>{contributor.bio}</span>
-                      })()}
-                    </div>
+                    <ContributorBio bio={contributor.bio} />
                   ) : (
-                    <span>Chưa có tiểu sử.</span>
+                    <span className="text-[14px] text-text-secondary">
+                      Chưa có tiểu sử.
+                    </span>
                   )}
                 </div>
                 <div className="w-full bg-background/50 rounded-lg p-3 text-[12px] flex items-center justify-between">

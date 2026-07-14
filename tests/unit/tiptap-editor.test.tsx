@@ -41,7 +41,9 @@ vi.mock("@tiptap/react", () => ({
   useEditor: useEditorMock.fn,
 }))
 vi.mock("@/components/editor/EditorToolbar", () => ({
-  EditorToolbar: () => <div data-testid="editor-toolbar" />,
+  EditorToolbar: ({ mode }: { mode?: string }) => (
+    <div data-mode={mode} data-testid="editor-toolbar" />
+  ),
 }))
 
 import { TiptapEditor } from "@/components/editor/TiptapEditor"
@@ -84,6 +86,17 @@ describe("TiptapEditor", () => {
     expect(getEditorClass()).toContain("prose prose-lg")
     expect(getEditorClass()).toContain("dark:prose-invert")
     expect(getEditorClass()).not.toContain("prose-editor")
+  })
+
+  it("uses a compact editor surface and toolbar for small rich-text fields", () => {
+    const { getByTestId } = render(<TiptapEditor editable mode="compact" />)
+
+    expect(getEditorClass()).toContain("min-h-[120px]")
+    expect(getEditorClass()).not.toContain("min-h-[420px]")
+    expect(getByTestId("editor-toolbar")).toHaveAttribute(
+      "data-mode",
+      "compact",
+    )
   })
 
   it("normalizes legacy image nodes before initializing Tiptap", () => {
