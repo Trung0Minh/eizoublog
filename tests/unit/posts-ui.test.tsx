@@ -172,6 +172,15 @@ describe("PostCard", () => {
     expect(source).toContain('viewport={{ once: true, margin: "-50px" }}')
     expect(source).toContain('transition={{ duration: 0.5, ease: "easeOut" }}')
   })
+
+  it("does not render fallback tags when a post has no tags", () => {
+    render(<PostCard post={{ ...post, tags: [] }} />)
+
+    expect(screen.queryByRole("link", { name: "Sakuga" })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("link", { name: "Animation Analysis" }),
+    ).not.toBeInTheDocument()
+  })
 })
 
 describe("Post detail responsive components", () => {

@@ -23,6 +23,11 @@ export function DynamicBackground({
 }) {
   const { theme, systemTheme } = useTheme()
   const [season, setSeason] = useState<AppearanceSeason>(initialSeason)
+  const [lastValidBackgrounds, setLastValidBackgrounds] = useState(
+    customBackgrounds,
+  )
+  const resolvedBackgrounds =
+    customBackgrounds === null ? lastValidBackgrounds : customBackgrounds
   // Use a CSS class toggle instead of Framer Motion animate prop for scroll transitions.
   // This lets the browser interpolate via CSS transition natively, which is smooth
   // during momentum scrolling rather than only firing after finger lift.
@@ -36,6 +41,16 @@ export function DynamicBackground({
   )
   const pathname = usePathname()
   const isHome = pathname === "/"
+
+  useEffect(() => {
+    if (customBackgrounds === null) return
+
+    const update = window.setTimeout(() => {
+      setLastValidBackgrounds(customBackgrounds)
+    }, 0)
+
+    return () => window.clearTimeout(update)
+  }, [customBackgrounds])
 
   useEffect(() => {
     if (!isHome) return
@@ -90,7 +105,7 @@ export function DynamicBackground({
       seasons.forEach((s) => {
         themes.forEach((t) => {
           const key = `${s}_${t}`
-          const url = customBackgrounds?.[key] || `/bg/${key}.jpg`
+          const url = resolvedBackgrounds?.[key] || `/bg/${key}.jpg`
           const img = new window.Image()
           img.src = url
         })
@@ -98,7 +113,7 @@ export function DynamicBackground({
     }
 
     preload()
-  }, [customBackgrounds])
+  }, [resolvedBackgrounds])
 
   const currentTheme = mounted
     ? theme === "system" ? systemTheme : theme
@@ -106,7 +121,7 @@ export function DynamicBackground({
   const isDark = currentTheme === "dark"
 
   const bgKey = `${season}_${isDark ? "dark" : "light"}`
-  const bgUrl = customBackgrounds?.[bgKey] || `/bg/${bgKey}.jpg`
+  const bgUrl = resolvedBackgrounds?.[bgKey] || `/bg/${bgKey}.jpg`
   const bgSrc = bgUrl.split("?")[0]
   const backgroundFilter = isHome
     ? "none"

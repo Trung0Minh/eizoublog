@@ -15,6 +15,7 @@ vi.mock("motion/react", async () => {
   const React = await import("react")
 
   return {
+    AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
     motion: {
       div: React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
         function MotionDiv(props, ref) {
@@ -28,8 +29,13 @@ vi.mock("motion/react", async () => {
   }
 })
 
+vi.mock("next-themes", () => ({
+  useTheme: () => ({ systemTheme: "light", theme: "light" }),
+}))
+
 import { AmbientBackground } from "@/components/ui/AmbientBackground"
 import { CustomCursor } from "@/components/ui/CustomCursor"
+import { DynamicBackground } from "@/components/ui/DynamicBackground"
 import { GlobalEffects } from "@/components/ui/GlobalEffects"
 import { NoiseOverlay } from "@/components/ui/NoiseOverlay"
 import { SeasonalEffects } from "@/components/ui/SakuraFalling"
@@ -195,5 +201,48 @@ describe("responsive visual effects", () => {
     expect(source).toMatch(/hidden[^"]*md:block/)
     expect(source).toContain("md:hidden")
     expect(source).toContain('data-testid="mobile-background-vignette"')
+  })
+
+  it("keeps the last valid custom background during a transient reload failure", async () => {
+    const { container, rerender } = render(
+      <DynamicBackground
+        customBackgrounds={{ summer_light: "https://cdn.example.com/summer.jpg" }}
+        initialSeason="summer"
+        initialTheme="light"
+      />,
+    )
+
+    await waitFor(() => {
+      expect(container.querySelector("img")).toHaveAttribute(
+        "src",
+        "https://cdn.example.com/summer.jpg",
+      )
+    })
+
+    rerender(
+      <DynamicBackground
+        customBackgrounds={null}
+        initialSeason="summer"
+        initialTheme="light"
+      />,
+    )
+
+    expect(container.querySelector("img")).toHaveAttribute(
+      "src",
+      "https://cdn.example.com/summer.jpg",
+    )
+
+    rerender(
+      <DynamicBackground
+        customBackgrounds={{}}
+        initialSeason="summer"
+        initialTheme="light"
+      />,
+    )
+
+    expect(container.querySelector("img")).toHaveAttribute(
+      "src",
+      "/bg/summer_light.jpg",
+    )
   })
 })

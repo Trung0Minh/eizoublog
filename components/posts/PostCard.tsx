@@ -62,12 +62,7 @@ function AuthorAvatar({
 
 export function PostCard({ post }: PostCardProps) {
   const authors = [post.author, ...post.coAuthors.map(({ user }) => user)]
-  const fallbackTags = [
-    { name: "Animation Analysis", slug: "animation-analysis" },
-    { name: "Sakuga", slug: "sakuga" },
-  ]
-  const tags =
-    post.tags.length > 0 ? post.tags.map(({ tag }) => tag) : fallbackTags
+  const tags = post.tags.map(({ tag }) => tag)
 
   return (
     <motion.article 

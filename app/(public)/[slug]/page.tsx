@@ -91,12 +91,7 @@ export default async function PostPage({ params }: PostPageProps) {
 
   const content = post.content as JSONContent
   const hasTableOfContents = extractHeadings(content).length > 0
-  const fallbackTags = [
-    { name: "Animation Analysis", slug: "animation-analysis" },
-    { name: "Sakuga", slug: "sakuga" },
-  ]
-  const tags =
-    post.tags.length > 0 ? post.tags.map(({ tag }) => tag) : fallbackTags
+  const tags = post.tags.map(({ tag }) => tag)
 
   if (post.finalAwardEvent) {
     const eventAuthorUsernames = Array.from(
