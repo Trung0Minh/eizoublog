@@ -234,15 +234,18 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
           )}
           {(richIntro || event.introText) && (
             <section className="rounded-[24px] border border-border-default/80 bg-background/90 p-5 shadow-[0_18px_60px_rgba(31,24,38,0.08)] backdrop-blur-xl dark:bg-background/80 sm:p-8 md:p-10">
-              {richIntro ? (
-                <div className="post-content font-lora text-[17px] leading-8 text-text-primary">
+              <div
+                className="post-content font-lora text-[17px] leading-8 text-text-primary sm:text-xl sm:leading-9"
+                data-testid="event-intro-content"
+              >
+                {richIntro ? (
                   <PostBody content={richIntro} />
-                </div>
-              ) : (
-                <p className="w-full max-w-none break-words font-lora text-xl leading-9 text-text-primary [overflow-wrap:anywhere]">
-                  {event.introText}
-                </p>
-              )}
+                ) : (
+                  <p className="w-full max-w-none break-words [overflow-wrap:anywhere]">
+                    {event.introText}
+                  </p>
+                )}
+              </div>
             </section>
           )}
 
@@ -259,7 +262,10 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
                   id={`event-room-${room.id}`}
                   key={room.id}
                 >
-                  <div className="mb-10 sm:mb-12">
+                  <div
+                    className="mb-6 sm:mb-8"
+                    data-testid="event-contributor-header"
+                  >
                     <div className="grid grid-cols-[6rem_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[8rem_minmax(0,1fr)] sm:gap-7">
                       {room.writer.avatarUrl ? (
                         <img

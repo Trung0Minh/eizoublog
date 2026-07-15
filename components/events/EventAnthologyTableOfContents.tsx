@@ -207,11 +207,11 @@ export function EventAnthologyTableOfContents({
   if (!collapsible) return contents
 
   return (
-    <div className="relative">
+    <div className="rounded-[18px] border border-border-default/80 bg-background/90 px-5 py-4 shadow-sm backdrop-blur-xl dark:bg-background/80">
       <button
         aria-expanded={mobileOpen}
         aria-label="Contents"
-        className="flex w-full cursor-pointer items-center justify-between rounded-[18px] border border-border-default/80 bg-background/90 px-5 py-4 text-left font-sans text-sm font-bold text-text-primary shadow-sm backdrop-blur-xl transition-colors hover:border-accent/50 dark:bg-background/80"
+        className="flex w-full cursor-pointer items-center justify-between text-left font-sans text-sm font-bold text-text-primary transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
         onClick={() => setMobileOpen((current) => !current)}
         type="button"
       >
@@ -224,11 +224,22 @@ export function EventAnthologyTableOfContents({
           )}
         />
       </button>
-      {mobileOpen && (
-        <div className="absolute inset-x-0 top-full z-30 mt-2 max-h-[60vh] overflow-y-auto overscroll-contain rounded-[18px] border border-border-default/80 bg-background/95 p-5 shadow-xl backdrop-blur-xl dark:bg-background/95">
-          {contents}
+      <div
+        aria-hidden={!mobileOpen}
+        className={cn(
+          "grid transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:transition-none",
+          mobileOpen
+            ? "grid-rows-[1fr] opacity-100"
+            : "grid-rows-[0fr] opacity-0",
+        )}
+        data-testid="mobile-event-toc-panel"
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div className="mt-4 max-h-[60vh] overflow-y-auto overscroll-contain pr-2">
+            {contents}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }

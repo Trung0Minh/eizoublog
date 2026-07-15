@@ -37,7 +37,7 @@ describe("EventAnthologyTableOfContents", () => {
     expect(screen.queryByRole("link", { name: "Opening B" })).not.toBeInTheDocument()
   })
 
-  it("uses a controlled mobile panel instead of native details flow", () => {
+  it("keeps the controlled mobile contents panel in normal document flow", () => {
     render(
       <EventAnthologyTableOfContents
         collapsible
@@ -53,6 +53,9 @@ describe("EventAnthologyTableOfContents", () => {
     expect(screen.getByRole("button", { name: "Contents" })).toHaveAttribute(
       "aria-expanded",
       "true",
+    )
+    expect(screen.getByTestId("mobile-event-toc-panel")).not.toHaveClass(
+      "absolute",
     )
 
     fireEvent.click(screen.getByRole("link", { name: "Writer A" }))
@@ -161,6 +164,54 @@ describe("EventAnthologyView", () => {
     expect(
       screen.getByText("The introduction readers saw on the homepage."),
     ).toBeVisible()
+    expect(screen.getByTestId("event-intro-content")).toHaveClass(
+      "text-[17px]",
+      "leading-8",
+      "sm:text-xl",
+      "sm:leading-9",
+    )
+  })
+
+  it("uses the same typography for rich and plain event introductions", () => {
+    const { rerender } = render(
+      <EventAnthologyView
+        event={{
+          coverAlt: null,
+          coverUrl: null,
+          intro: {
+            content: [
+              {
+                content: [{ text: "Rich introduction.", type: "text" }],
+                type: "paragraph",
+              },
+            ],
+            type: "doc",
+          },
+          introText: null,
+          rooms: [],
+          title: "Rich introduction event",
+        }}
+      />,
+    )
+
+    const richClasses = screen.getByTestId("event-intro-content").className
+
+    rerender(
+      <EventAnthologyView
+        event={{
+          coverAlt: null,
+          coverUrl: null,
+          intro: { content: [], type: "doc" },
+          introText: "Plain introduction.",
+          rooms: [],
+          title: "Plain introduction event",
+        }}
+      />,
+    )
+
+    expect(screen.getByTestId("event-intro-content").className).toBe(
+      richClasses,
+    )
   })
 
   it("attributes the event to included contributors in the hero and credits", () => {
@@ -280,6 +331,10 @@ describe("EventAnthologyView", () => {
       "w-24",
       "sm:h-32",
       "sm:w-32",
+    )
+    expect(screen.getAllByTestId("event-contributor-header")[0]).toHaveClass(
+      "mb-6",
+      "sm:mb-8",
     )
     expect(screen.getByTestId("event-cover-alt").nextElementSibling).toContainElement(
       screen.getByRole("button", { name: "Contents" }),
