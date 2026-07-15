@@ -111,7 +111,7 @@ export function CompactPostList({
                   </span>
                 </div>
                 {post.excerpt && (
-                  <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-text-secondary">
+                  <p className="mt-1 break-words text-xs leading-relaxed text-text-secondary [overflow-wrap:anywhere]">
                     {post.excerpt}
                   </p>
                 )}

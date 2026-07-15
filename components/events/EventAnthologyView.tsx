@@ -164,8 +164,11 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
             src={event.coverUrl}
           />
         )}
-        <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,hsl(var(--background))_8%,hsl(var(--background)/0.9)_42%,hsl(var(--background)/0.35)_100%)]" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-background via-background/20 to-transparent" />
+        <div
+          className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,hsl(var(--background)/0.78)_0%,hsl(var(--background)/0.48)_42%,hsl(var(--background)/0.12)_100%)]"
+          data-testid="event-cover-overlay"
+        />
+        <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_top,hsl(var(--background)/0.78)_0%,transparent_58%)]" />
         <div className="mx-auto flex min-h-[440px] w-full max-w-7xl items-end px-4 py-12 sm:min-h-[56vh] sm:px-6 md:py-20 lg:min-h-[64vh] lg:px-10">
           <div className="max-w-6xl">
             {(event.category || (event.tags?.length ?? 0) > 0) && (
@@ -208,7 +211,10 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
         />
       </div>
 
-      <div className="relative z-10 mx-auto grid w-full max-w-[1360px] gap-12 px-4 pt-12 sm:px-6 lg:px-10 xl:grid-cols-[minmax(0,1000px)_220px] xl:justify-center">
+      <div
+        className="relative z-10 mx-auto grid w-full max-w-[1600px] gap-12 px-4 pt-12 sm:px-6 lg:px-10 xl:grid-cols-[minmax(0,1fr)_260px]"
+        data-testid="event-content-grid"
+      >
         {headings.length > 0 && (
           <div className="xl:hidden">
             <EventAnthologyTableOfContents collapsible headings={headings} />
@@ -216,6 +222,14 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
         )}
 
         <div className="min-w-0 space-y-8 sm:space-y-10">
+          {event.coverAlt && (
+            <p
+              className="break-words pr-1 text-right text-[13px] font-medium italic text-text-tertiary [overflow-wrap:anywhere] md:text-[14px]"
+              data-testid="event-cover-alt"
+            >
+              {event.coverAlt}
+            </p>
+          )}
           {(richIntro || event.introText) && (
             <section className="rounded-[24px] border border-border-default/80 bg-background/90 p-5 shadow-[0_18px_60px_rgba(31,24,38,0.08)] backdrop-blur-xl dark:bg-background/80 sm:p-8 md:p-10">
               {richIntro ? (
@@ -223,7 +237,7 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
                   <PostBody content={richIntro} />
                 </div>
               ) : (
-                <p className="max-w-3xl font-lora text-xl leading-9 text-text-primary">
+                <p className="max-w-5xl break-words font-lora text-xl leading-9 text-text-primary [overflow-wrap:anywhere]">
                   {event.introText}
                 </p>
               )}
@@ -293,7 +307,7 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
       </div>
 
       {rooms.length > 0 && (
-        <div className="mx-auto grid w-full max-w-[1360px] gap-12 px-4 pt-12 sm:px-6 lg:px-10 xl:grid-cols-[minmax(0,1000px)_220px] xl:justify-center">
+        <div className="mx-auto grid w-full max-w-[1600px] gap-12 px-4 pt-12 sm:px-6 lg:px-10 xl:grid-cols-[minmax(0,1fr)_260px]">
           <div className="min-w-0 font-sans text-text-primary">
             <AuthorCreditList authors={rooms.map(({ writer }) => writer)} />
           </div>

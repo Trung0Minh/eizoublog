@@ -39,6 +39,32 @@ describe("EventAnthologyTableOfContents", () => {
 })
 
 describe("EventAnthologyView", () => {
+  it("uses the wider desktop shell and keeps the cover caption with the article column", () => {
+    render(
+      <EventAnthologyView
+        event={{
+          coverAlt: "A record of the event",
+          coverUrl: "https://cdn.example.com/event-cover.jpg",
+          intro: { content: [], type: "doc" },
+          introText: "The complete introduction.",
+          rooms: [],
+          title: "Collected perspectives",
+        }}
+      />,
+    )
+
+    expect(screen.getByTestId("event-cover-alt")).toHaveTextContent(
+      "A record of the event",
+    )
+    expect(screen.getByTestId("event-content-grid")).toHaveClass(
+      "max-w-[1600px]",
+      "xl:grid-cols-[minmax(0,1fr)_260px]",
+    )
+    expect(screen.getByTestId("event-cover-overlay").className).toContain(
+      "hsl(var(--background)/0.78)",
+    )
+  })
+
   it("shows only explicitly selected event categories and tags", () => {
     const { rerender } = render(
       <EventAnthologyView

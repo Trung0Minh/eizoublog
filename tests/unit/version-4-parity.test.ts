@@ -28,6 +28,12 @@ describe("anime-blog-4 appearance parity", () => {
     )
   })
 
+  it("does not clamp featured story excerpts", () => {
+    const hero = read("components/posts/HeroCarousel.tsx")
+
+    expect(hero).not.toContain("line-clamp-2 md:line-clamp-3")
+  })
+
   it("mounts the version-4 typing particle layer in the real post editor", () => {
     const particlePath = join(root, "components/editor/EditorParticles.tsx")
     const editor = read("components/posts/PostEditor.tsx")

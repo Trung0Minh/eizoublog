@@ -150,16 +150,29 @@ describe("PostCard", () => {
     expect(screen.getByText("2 bình luận")).toBeVisible()
   })
 
-  it("uses mobile-first title sizing and hides excerpts below small screens", () => {
+  it("shows the complete excerpt with safe wrapping at every breakpoint", () => {
     render(<PostCard post={post} />)
 
     expect(
       screen.getByRole("heading", { level: 2, name: "Frieren Animation" }),
     ).toHaveClass("text-[20px]")
-    expect(screen.getByText("A compact summary of the article.")).toHaveClass(
+    expect(screen.getByText("A compact summary of the article.")).not.toHaveClass(
       "hidden",
-      "md:block",
       "line-clamp-3",
+    )
+    expect(screen.getByText("A compact summary of the article.")).toHaveClass(
+      "break-words",
+    )
+  })
+
+  it("does not clamp compact list excerpts", () => {
+    const source = readFileSync(
+      join(process.cwd(), "components/posts/CompactPostList.tsx"),
+      "utf8",
+    )
+
+    expect(source).not.toContain(
+      "line-clamp-2 text-xs leading-relaxed text-text-secondary",
     )
   })
 

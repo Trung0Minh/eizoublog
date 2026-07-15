@@ -101,6 +101,7 @@ describe("updateAwardEventRoom", () => {
   })
 
   it("regenerates an already-published anthology when a writer submits later", async () => {
+    const longIntroduction = "Event introduction ".repeat(40).trim()
     mocks.prisma.awardEventRoom.findUnique.mockResolvedValue({
       event: { status: "PUBLISHED" },
       id: "room-1",
@@ -116,7 +117,7 @@ describe("updateAwardEventRoom", () => {
         finalPostId: "final-post-1",
         id: "event-1",
         intro: { content: [], type: "doc" },
-        introText: "Event introduction",
+        introText: longIntroduction,
         publishedAt: new Date("2026-06-01T00:00:00.000Z"),
         rooms: [
           {
@@ -157,6 +158,7 @@ describe("updateAwardEventRoom", () => {
     expect(mocks.prisma.post.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
+          excerpt: longIntroduction,
           status: "PUBLISHED",
           title: "Awards",
         }),

@@ -104,7 +104,7 @@ export function PostCard({ post }: PostCardProps) {
       </Link>
 
       <Link href={`/${post.slug}`} className="block">
-        <p className="mt-2 text-[14px] text-text-secondary leading-[1.65] line-clamp-3 hidden md:block">
+        <p className="mt-2 break-words text-[14px] leading-[1.65] text-text-secondary [overflow-wrap:anywhere]">
           {post.excerpt}
         </p>
       </Link>
