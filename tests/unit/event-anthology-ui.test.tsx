@@ -39,7 +39,7 @@ describe("EventAnthologyTableOfContents", () => {
 })
 
 describe("EventAnthologyView", () => {
-  it("uses the wider desktop shell and keeps the cover caption with the article column", () => {
+  it("keeps the original desktop shell while letting the intro fill its card", () => {
     render(
       <EventAnthologyView
         event={{
@@ -57,11 +57,18 @@ describe("EventAnthologyView", () => {
       "A record of the event",
     )
     expect(screen.getByTestId("event-content-grid")).toHaveClass(
-      "max-w-[1600px]",
-      "xl:grid-cols-[minmax(0,1fr)_260px]",
+      "max-w-[1360px]",
+      "xl:grid-cols-[minmax(0,1000px)_220px]",
     )
-    expect(screen.getByTestId("event-cover-overlay").className).toContain(
-      "hsl(var(--background)/0.78)",
+    expect(screen.getByText("The complete introduction.")).toHaveClass(
+      "w-full",
+      "max-w-none",
+    )
+    expect(screen.getByTestId("event-cover-bottom-fade")).toHaveClass(
+      "bg-gradient-to-t",
+      "from-background",
+      "via-background/60",
+      "to-transparent",
     )
   })
 

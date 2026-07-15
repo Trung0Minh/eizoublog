@@ -165,6 +165,10 @@ describe("cached Prisma query helpers", () => {
     )
     expect(latestSql).not.toContain("p.status::text = 'PUBLISHED'")
     expect(commentsSql).not.toContain("p.status::text = 'PUBLISHED'")
+    expect(latestSql).toContain("LEFT JOIN award_events final_event")
+    expect(commentsSql).toContain("LEFT JOIN award_events final_event")
+    expect(latestSql).toContain('final_event.intro AS "eventIntro"')
+    expect(commentsSql).toContain('final_event.intro AS "eventIntro"')
 
     expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(2)
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled()
@@ -173,6 +177,38 @@ describe("cached Prisma query helpers", () => {
     expect(mocks.cacheEntries).toContainEqual({
       keyParts: ["published-posts"],
       options: { revalidate: 300, tags: ["posts"] },
+    })
+  })
+
+  it("uses live event rich text as the homepage subtitle", async () => {
+    mocks.prisma.$queryRaw.mockResolvedValueOnce([
+      {
+        ...rawPostRow,
+        eventIntro: {
+          content: [
+            {
+              content: [{ text: "Complete first paragraph.", type: "text" }],
+              type: "paragraph",
+            },
+            {
+              content: [{ text: "Complete ending.", type: "text" }],
+              type: "paragraph",
+            },
+          ],
+          type: "doc",
+        },
+        eventIntroText: "Truncated event introduction",
+        excerpt: "Old generated excerpt",
+      },
+    ])
+
+    await expect(getCachedPublishedPosts(1, 10)).resolves.toMatchObject({
+      posts: [
+        {
+          excerpt: "Complete first paragraph. Complete ending.",
+          slug: "essay",
+        },
+      ],
     })
   })
 

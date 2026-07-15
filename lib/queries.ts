@@ -433,6 +433,8 @@ interface PublishedPostListRow {
   commentCount: DbCount
   coverAlt: string | null
   coverUrl: string | null
+  eventIntro: unknown
+  eventIntroText: string | null
   excerpt: string | null
   publishedAt: Date | null
   slug: string | null
@@ -529,6 +531,33 @@ function getPublishedPostOrderSql(sort: PostListSort) {
   return Prisma.sql`ORDER BY p."publishedAt" DESC NULLS LAST, p."updatedAt" DESC`
 }
 
+function getRichTextPlainText(value: unknown): string {
+  if (typeof value !== "object" || value === null) {
+    return ""
+  }
+
+  const node = value as Record<string, unknown>
+  const parts: string[] = []
+
+  if (typeof node.text === "string") {
+    parts.push(node.text)
+  }
+
+  if (Array.isArray(node.content)) {
+    parts.push(...node.content.map(getRichTextPlainText))
+  }
+
+  return parts.filter(Boolean).join(" ").replace(/\s+/g, " ").trim()
+}
+
+function resolvePublishedPostExcerpt(row: PublishedPostListRow) {
+  return (
+    getRichTextPlainText(row.eventIntro) ||
+    row.eventIntroText ||
+    row.excerpt
+  )
+}
+
 async function getPublishedPostListBySql(
   where: Prisma.Sql,
   page: number,
@@ -547,6 +576,8 @@ async function getPublishedPostListBySql(
               p."categoryId",
               p."coverAlt",
               p."coverUrl",
+              final_event.intro AS "eventIntro",
+              final_event."introText" AS "eventIntroText",
               p.excerpt,
               p."publishedAt",
               p.slug,
@@ -554,6 +585,8 @@ async function getPublishedPostListBySql(
               p."updatedAt",
               COALESCE(comment_counts.count, 0) AS "commentCount"
             FROM posts p
+            LEFT JOIN award_events final_event
+              ON final_event."finalPostId" = p.id
             LEFT JOIN LATERAL (
               SELECT COUNT(*)::int AS count
               FROM comments c
@@ -588,6 +621,8 @@ async function getPublishedPostListBySql(
             p."commentCount",
             p."coverAlt",
             p."coverUrl",
+            p."eventIntro",
+            p."eventIntroText",
             p.excerpt,
             p."publishedAt",
             p.slug,
@@ -638,12 +673,16 @@ async function getPublishedPostListBySql(
               p."categoryId",
               p."coverAlt",
               p."coverUrl",
+              final_event.intro AS "eventIntro",
+              final_event."introText" AS "eventIntroText",
               p.excerpt,
               p."publishedAt",
               p.slug,
               p.title,
               p."updatedAt"
             FROM posts p
+            LEFT JOIN award_events final_event
+              ON final_event."finalPostId" = p.id
             WHERE ${where}
           ),
           counted AS (
@@ -673,6 +712,8 @@ async function getPublishedPostListBySql(
             COALESCE(comment_counts.count, 0) AS "commentCount",
             p."coverAlt",
             p."coverUrl",
+            p."eventIntro",
+            p."eventIntroText",
             p.excerpt,
             p."publishedAt",
             p.slug,
@@ -735,7 +776,7 @@ async function getPublishedPostListBySql(
       coAuthors: row.coAuthors,
       coverAlt: row.coverAlt,
       coverUrl: row.coverUrl,
-      excerpt: row.excerpt,
+      excerpt: resolvePublishedPostExcerpt(row),
       publishedAt: row.publishedAt,
       slug: row.slug,
       tags: row.tags,
