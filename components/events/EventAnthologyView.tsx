@@ -218,12 +218,6 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
         className="relative z-10 mx-auto grid w-full max-w-[1360px] gap-12 px-4 pt-12 sm:px-6 lg:px-10 xl:grid-cols-[minmax(0,1000px)_220px] xl:justify-center"
         data-testid="event-content-grid"
       >
-        {headings.length > 0 && (
-          <div className="xl:hidden">
-            <EventAnthologyTableOfContents collapsible headings={headings} />
-          </div>
-        )}
-
         <div className="min-w-0 space-y-8 sm:space-y-10">
           {event.coverAlt && (
             <p
@@ -232,6 +226,11 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
             >
               {event.coverAlt}
             </p>
+          )}
+          {headings.length > 0 && (
+            <div className="xl:hidden">
+              <EventAnthologyTableOfContents collapsible headings={headings} />
+            </div>
           )}
           {(richIntro || event.introText) && (
             <section className="rounded-[24px] border border-border-default/80 bg-background/90 p-5 shadow-[0_18px_60px_rgba(31,24,38,0.08)] backdrop-blur-xl dark:bg-background/80 sm:p-8 md:p-10">
@@ -261,15 +260,15 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
                   key={room.id}
                 >
                   <div className="mb-10 sm:mb-12">
-                    <div className="grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-5 sm:grid-cols-[8rem_minmax(0,1fr)] sm:gap-7">
+                    <div className="grid grid-cols-[6rem_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[8rem_minmax(0,1fr)] sm:gap-7">
                       {room.writer.avatarUrl ? (
                         <img
                           alt={room.writer.name}
-                          className="h-36 w-36 rounded-full object-cover sm:h-32 sm:w-32"
+                          className="h-24 w-24 rounded-full object-cover sm:h-32 sm:w-32"
                           src={room.writer.avatarUrl}
                         />
                       ) : (
-                        <div className="flex h-36 w-36 items-center justify-center rounded-full border border-border-default bg-background font-display text-3xl font-bold sm:h-32 sm:w-32">
+                        <div className="flex h-24 w-24 items-center justify-center rounded-full border border-border-default bg-background font-display text-3xl font-bold sm:h-32 sm:w-32">
                           {room.writer.name.charAt(0)}
                         </div>
                       )}

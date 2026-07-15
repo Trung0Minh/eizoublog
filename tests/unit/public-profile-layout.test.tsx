@@ -101,8 +101,12 @@ describe("public profile layouts", () => {
 
     const button = screen.getByRole("button", { name: "Xem thêm tiểu sử" })
     expect(button).toHaveAttribute("aria-expanded", "false")
-    expect(screen.getByTestId("contributor-bio-content")).toHaveClass(
+    expect(screen.getByTestId("contributor-bio-content")).not.toHaveClass(
       "line-clamp-3",
+    )
+    expect(screen.getByTestId("contributor-bio-content")).toHaveAttribute(
+      "data-collapsible",
+      "true",
     )
 
     fireEvent.click(button)

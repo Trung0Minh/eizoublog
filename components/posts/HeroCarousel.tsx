@@ -62,7 +62,7 @@ export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
             <div className="flex-[0_0_100%] min-w-0 relative aspect-video" key={post.slug || post.id}>
               <Link href={`/${post.slug}`} className="block w-full h-full relative cursor-pointer group">
                 <img
-                  src={post.coverUrl || 'https://picsum.photos/seed/placeholder/1200/600'}
+                  src={post.coverUrl?.split('?')[0] || 'https://picsum.photos/seed/placeholder/1200/600'}
                   alt={post.coverAlt || post.title}
                   className="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
                   fetchPriority="high"
@@ -78,7 +78,7 @@ export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
                       </h3>
                       <div className="grid grid-rows-[1fr] md:grid-rows-[0fr] md:group-hover:grid-rows-[1fr] transition-all duration-700 ease-out opacity-100">
                         <div className="overflow-hidden md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-700 md:delay-200">
-                          <p className="mt-3 max-w-4xl break-words text-[14px] text-white/80 drop-shadow-sm [overflow-wrap:anywhere] md:mb-4 md:text-[16px]">
+                          <p className="mt-3 hidden max-w-4xl break-words text-[14px] text-white/80 drop-shadow-sm [overflow-wrap:anywhere] md:mb-4 md:block md:text-[16px]">
                             {post.excerpt}
                           </p>
                           <span className="text-white/60 text-[12px] md:text-[13px] font-medium">

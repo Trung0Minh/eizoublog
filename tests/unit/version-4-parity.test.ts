@@ -34,6 +34,17 @@ describe("anime-blog-4 appearance parity", () => {
     expect(hero).not.toContain("line-clamp-2 md:line-clamp-3")
   })
 
+  it("hides featured story subtitles below the desktop breakpoint", () => {
+    const hero = read("components/posts/HeroCarousel.tsx")
+    expect(hero).toContain('className="mt-3 hidden max-w-4xl')
+    expect(hero).toContain("md:block")
+  })
+
+  it("loads featured covers from the original asset URL", () => {
+    const hero = read("components/posts/HeroCarousel.tsx")
+    expect(hero).toContain("post.coverUrl?.split('?')[0]")
+  })
+
   it("mounts the version-4 typing particle layer in the real post editor", () => {
     const particlePath = join(root, "components/editor/EditorParticles.tsx")
     const editor = read("components/posts/PostEditor.tsx")

@@ -3,7 +3,7 @@
 import type { JSONContent } from "@tiptap/react"
 import { ChevronDown } from "lucide-react"
 import { motion } from "motion/react"
-import { useEffect, useId, useState } from "react"
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react"
 
 import { StaticPostContent } from "@/components/posts/StaticPostContent"
 import { cn } from "@/lib/utils"
@@ -32,6 +32,8 @@ export function ContributorBio({ bio }: { bio: string }) {
   const [expanded, setExpanded] = useState(false)
   const contentId = useId()
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+  const [fullHeight, setFullHeight] = useState<number | null>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
   const richBio = parseRichBio(bio)
   const visibleText = richBio ? getRichText(richBio) : bio
   const isCollapsible = visibleText.trim().length > 120
@@ -45,21 +47,33 @@ export function ContributorBio({ bio }: { bio: string }) {
     return () => mediaQuery.removeEventListener("change", updatePreference)
   }, [])
 
+  useLayoutEffect(() => {
+    const element = contentRef.current
+    if (!element) return
+
+    const measure = () => setFullHeight(element.scrollHeight)
+    measure()
+
+    const observer = new ResizeObserver(measure)
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [bio])
+
   return (
     <div className="text-[14px] text-text-secondary">
       <motion.div
         animate={{
-          height: expanded || !isCollapsible ? "auto" : "4.5rem",
+          height:
+            expanded || !isCollapsible ? fullHeight ?? "auto" : "4.5rem",
           opacity: expanded || !isCollapsible ? 1 : 0.94,
         }}
-        className={cn(
-          "overflow-hidden [&_.ProseMirror]:!ml-0 [&_.ProseMirror>p]:!ml-0",
-          !expanded && isCollapsible && "line-clamp-3",
-        )}
+        className="overflow-hidden [&_.ProseMirror]:!ml-0 [&_.ProseMirror>p]:!ml-0"
+        data-collapsible={isCollapsible}
         data-expanded={expanded}
         data-testid="contributor-bio-content"
         id={contentId}
         initial={false}
+        ref={contentRef}
         transition={{
           duration: prefersReducedMotion ? 0 : 0.3,
           ease: "easeInOut",

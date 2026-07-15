@@ -36,6 +36,32 @@ describe("EventAnthologyTableOfContents", () => {
     expect(screen.getByRole("link", { name: "Opening A" })).toBeInTheDocument()
     expect(screen.queryByRole("link", { name: "Opening B" })).not.toBeInTheDocument()
   })
+
+  it("uses a controlled mobile panel instead of native details flow", () => {
+    render(
+      <EventAnthologyTableOfContents
+        collapsible
+        headings={[{ id: "event-room-a", level: 1, text: "Writer A" }]}
+      />,
+    )
+
+    expect(screen.queryByText("Contents")).toBeInTheDocument()
+    expect(document.querySelector("details")).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: "Contents" }))
+
+    expect(screen.getByRole("button", { name: "Contents" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    )
+
+    fireEvent.click(screen.getByRole("link", { name: "Writer A" }))
+
+    expect(screen.getByRole("button", { name: "Contents" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    )
+  })
 })
 
 describe("EventAnthologyView", () => {
@@ -55,6 +81,9 @@ describe("EventAnthologyView", () => {
 
     expect(screen.getByTestId("event-cover-alt")).toHaveTextContent(
       "A record of the event",
+    )
+    expect(screen.getByTestId("event-cover-alt").parentElement?.firstElementChild).toBe(
+      screen.getByTestId("event-cover-alt"),
     )
     expect(screen.getByTestId("event-content-grid")).toHaveClass(
       "max-w-[1360px]",
@@ -138,7 +167,7 @@ describe("EventAnthologyView", () => {
     const { container } = render(
       <EventAnthologyView
         event={{
-          coverAlt: null,
+          coverAlt: "Contributor collection cover",
           coverUrl: null,
           intro: { content: [], type: "doc" },
           introText: null,
@@ -245,6 +274,15 @@ describe("EventAnthologyView", () => {
     expect(screen.getAllByTestId("event-contributor-block")[0]).toHaveClass(
       "rounded-[24px]",
       "border",
+    )
+    expect(screen.getAllByTestId("event-contributor-block")[0].querySelector("img")).toHaveClass(
+      "h-24",
+      "w-24",
+      "sm:h-32",
+      "sm:w-32",
+    )
+    expect(screen.getByTestId("event-cover-alt").nextElementSibling).toContainElement(
+      screen.getByRole("button", { name: "Contents" }),
     )
   })
 })

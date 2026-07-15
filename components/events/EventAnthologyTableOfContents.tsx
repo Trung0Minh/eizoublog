@@ -1,6 +1,7 @@
 "use client"
 
 import { ChevronDown } from "lucide-react"
+import type { MouseEvent } from "react"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import type { PostHeading } from "@/lib/postHeadings"
@@ -14,6 +15,7 @@ export function EventAnthologyTableOfContents({
   headings: PostHeading[]
 }) {
   const [activeId, setActiveId] = useState("")
+  const [mobileOpen, setMobileOpen] = useState(false)
   const groups = useMemo(() => {
     const result: Array<{ children: PostHeading[]; writer: PostHeading }> = []
 
@@ -31,6 +33,23 @@ export function EventAnthologyTableOfContents({
     groups[0] ? [groups[0].writer.id] : [],
   )
   const linkRefs = useRef(new Map<string, HTMLAnchorElement>())
+
+  function navigateToHeading(
+    event: MouseEvent<HTMLAnchorElement>,
+    id: string,
+  ) {
+    if (!collapsible) return
+
+    event.preventDefault()
+    setMobileOpen(false)
+    window.history.pushState(null, "", `#${id}`)
+    window.requestAnimationFrame(() => {
+      document.getElementById(id)?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      })
+    })
+  }
 
   useEffect(() => {
     const writerIdByHeadingId = new Map<string, string>()
@@ -70,8 +89,9 @@ export function EventAnthologyTableOfContents({
   }, [headings])
 
   useEffect(() => {
+    if (collapsible) return
     linkRefs.current.get(activeId)?.scrollIntoView({ block: "nearest" })
-  }, [activeId, expandedWriterIds])
+  }, [activeId, collapsible, expandedWriterIds])
 
   const contents = (
     <nav aria-label="Event contents" className="font-sans">
@@ -98,13 +118,14 @@ export function EventAnthologyTableOfContents({
                     isWriterActive && "text-accent",
                   )}
                   href={`#${writer.id}`}
-                  onClick={() =>
+                  onClick={(event) => {
                     setExpandedWriterIds((current) =>
                       current.includes(writer.id)
                         ? current
                         : [...current, writer.id],
                     )
-                  }
+                    navigateToHeading(event, writer.id)
+                  }}
                   ref={(element) => {
                     if (element) linkRefs.current.set(writer.id, element)
                     else linkRefs.current.delete(writer.id)
@@ -156,6 +177,7 @@ export function EventAnthologyTableOfContents({
                           activeId === heading.id && "text-accent",
                         )}
                         href={`#${heading.id}`}
+                        onClick={(event) => navigateToHeading(event, heading.id)}
                         ref={(element) => {
                           if (element) linkRefs.current.set(heading.id, element)
                           else linkRefs.current.delete(heading.id)
@@ -185,13 +207,28 @@ export function EventAnthologyTableOfContents({
   if (!collapsible) return contents
 
   return (
-    <details className="rounded-[18px] border border-border-default/80 bg-background/90 px-5 py-4 shadow-sm backdrop-blur-xl dark:bg-background/80">
-      <summary className="cursor-pointer font-sans text-sm font-bold text-text-primary marker:text-accent">
+    <div className="relative">
+      <button
+        aria-expanded={mobileOpen}
+        aria-label="Contents"
+        className="flex w-full cursor-pointer items-center justify-between rounded-[18px] border border-border-default/80 bg-background/90 px-5 py-4 text-left font-sans text-sm font-bold text-text-primary shadow-sm backdrop-blur-xl transition-colors hover:border-accent/50 dark:bg-background/80"
+        onClick={() => setMobileOpen((current) => !current)}
+        type="button"
+      >
         Contents
-      </summary>
-      <div className="mt-4 max-h-[60vh] overflow-y-auto overscroll-contain pr-2">
-        {contents}
-      </div>
-    </details>
+        <ChevronDown
+          aria-hidden="true"
+          className={cn(
+            "h-4 w-4 transition-transform duration-200",
+            mobileOpen && "rotate-180",
+          )}
+        />
+      </button>
+      {mobileOpen && (
+        <div className="absolute inset-x-0 top-full z-30 mt-2 max-h-[60vh] overflow-y-auto overscroll-contain rounded-[18px] border border-border-default/80 bg-background/95 p-5 shadow-xl backdrop-blur-xl dark:bg-background/95">
+          {contents}
+        </div>
+      )}
+    </div>
   )
 }
