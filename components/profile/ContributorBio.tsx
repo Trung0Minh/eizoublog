@@ -2,7 +2,8 @@
 
 import type { JSONContent } from "@tiptap/react"
 import { ChevronDown } from "lucide-react"
-import { useId, useState } from "react"
+import { motion } from "motion/react"
+import { useEffect, useId, useState } from "react"
 
 import { StaticPostContent } from "@/components/posts/StaticPostContent"
 import { cn } from "@/lib/utils"
@@ -30,22 +31,42 @@ function getRichText(value: JSONContent): string {
 export function ContributorBio({ bio }: { bio: string }) {
   const [expanded, setExpanded] = useState(false)
   const contentId = useId()
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const richBio = parseRichBio(bio)
   const visibleText = richBio ? getRichText(richBio) : bio
   const isCollapsible = visibleText.trim().length > 120
 
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)")
+    const updatePreference = () => setPrefersReducedMotion(mediaQuery.matches)
+
+    updatePreference()
+    mediaQuery.addEventListener("change", updatePreference)
+    return () => mediaQuery.removeEventListener("change", updatePreference)
+  }, [])
+
   return (
     <div className="text-[14px] text-text-secondary">
-      <div
+      <motion.div
+        animate={{
+          height: expanded || !isCollapsible ? "auto" : "4.5rem",
+          opacity: expanded || !isCollapsible ? 1 : 0.94,
+        }}
         className={cn(
-          "[&_.ProseMirror]:!ml-0 [&_.ProseMirror>p]:!ml-0",
+          "overflow-hidden [&_.ProseMirror]:!ml-0 [&_.ProseMirror>p]:!ml-0",
           !expanded && isCollapsible && "line-clamp-3",
         )}
+        data-expanded={expanded}
         data-testid="contributor-bio-content"
         id={contentId}
+        initial={false}
+        transition={{
+          duration: prefersReducedMotion ? 0 : 0.3,
+          ease: "easeInOut",
+        }}
       >
         {richBio ? <StaticPostContent content={richBio} /> : <span>{bio}</span>}
-      </div>
+      </motion.div>
 
       {isCollapsible && (
         <button

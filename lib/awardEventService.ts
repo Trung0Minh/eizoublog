@@ -38,6 +38,7 @@ export const awardEventListSelect = {
 } satisfies Prisma.AwardEventSelect
 
 export const awardEventDetailSelect = {
+  category: { select: { name: true, slug: true } },
   categoryId: true,
   closedAt: true,
   coverAlt: true,

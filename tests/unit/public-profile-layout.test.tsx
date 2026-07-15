@@ -108,6 +108,10 @@ describe("public profile layouts", () => {
     fireEvent.click(button)
 
     expect(button).toHaveAttribute("aria-expanded", "true")
+    expect(screen.getByTestId("contributor-bio-content")).toHaveAttribute(
+      "data-expanded",
+      "true",
+    )
     expect(screen.getByTestId("contributor-bio-content")).not.toHaveClass(
       "line-clamp-3",
     )

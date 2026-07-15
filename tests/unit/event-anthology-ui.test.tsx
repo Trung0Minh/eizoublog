@@ -39,6 +39,68 @@ describe("EventAnthologyTableOfContents", () => {
 })
 
 describe("EventAnthologyView", () => {
+  it("shows only explicitly selected event categories and tags", () => {
+    const { rerender } = render(
+      <EventAnthologyView
+        event={{
+          category: null,
+          coverAlt: null,
+          coverUrl: null,
+          intro: { content: [], type: "doc" },
+          introText: null,
+          rooms: [],
+          tags: [],
+          title: "No metadata event",
+        }}
+      />,
+    )
+
+    expect(screen.queryByText("Event anthology")).not.toBeInTheDocument()
+
+    rerender(
+      <EventAnthologyView
+        event={{
+          category: { name: "Reviews", slug: "reviews" },
+          coverAlt: null,
+          coverUrl: null,
+          intro: { content: [], type: "doc" },
+          introText: null,
+          rooms: [],
+          tags: [{ tag: { name: "Direction", slug: "direction" } }],
+          title: "Metadata event",
+        }}
+      />,
+    )
+
+    expect(screen.getByRole("link", { name: "Reviews" })).toHaveAttribute(
+      "href",
+      "/category/reviews",
+    )
+    expect(screen.getByRole("link", { name: "Direction" })).toHaveAttribute(
+      "href",
+      "/tag/direction",
+    )
+  })
+
+  it("falls back to the plain introduction when the rich-text intro is empty", () => {
+    render(
+      <EventAnthologyView
+        event={{
+          coverAlt: null,
+          coverUrl: null,
+          intro: { content: [], type: "doc" },
+          introText: "The introduction readers saw on the homepage.",
+          rooms: [],
+          title: "Collected perspectives",
+        }}
+      />,
+    )
+
+    expect(
+      screen.getByText("The introduction readers saw on the homepage."),
+    ).toBeVisible()
+  })
+
   it("attributes the event to included contributors in the hero and credits", () => {
     const { container } = render(
       <EventAnthologyView
@@ -142,6 +204,14 @@ describe("EventAnthologyView", () => {
       "bg-gradient-to-b",
       "from-background",
       "to-transparent",
+    )
+    expect(screen.getAllByTestId("event-contributor-block")).toHaveLength(2)
+    expect(screen.getAllByTestId("event-contributor-block")[0].querySelector("h2")).toHaveTextContent(
+      "Writer A",
+    )
+    expect(screen.getAllByTestId("event-contributor-block")[0]).toHaveClass(
+      "rounded-[24px]",
+      "border",
     )
   })
 })

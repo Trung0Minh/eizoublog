@@ -24,6 +24,22 @@ vi.mock("next/link", () => ({
 vi.mock("next/navigation", () => ({
   useRouter: () => routerMocks,
 }))
+vi.mock("@/components/posts/CoverImageUpload", () => ({
+  CoverImageUpload: ({
+    onChange,
+    value,
+  }: {
+    onChange: (url: string) => void
+    value: string
+  }) => (
+    <div>
+      <span>{value}</span>
+      <button onClick={() => onChange("https://cdn.example.com/event-cover.jpg")}>
+        Set event cover
+      </button>
+    </div>
+  ),
+}))
 
 import { AdminEventDetailManager } from "@/components/events/AdminEventDetailManager"
 
@@ -34,6 +50,62 @@ describe("AdminEventDetailManager", () => {
 
   afterEach(() => {
     vi.unstubAllGlobals()
+  })
+
+  it("saves optional category, tags, cover, and cover alt without defaults", async () => {
+    const user = userEvent.setup()
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ data: { id: "event-1" } }), { status: 200 }),
+    )
+    vi.stubGlobal("fetch", fetchMock)
+
+    render(
+      <AdminEventDetailManager
+        categories={[
+          { id: "category-1", name: "Animation analysis" },
+          { id: "category-2", name: "Reviews" },
+        ]}
+        event={{
+          categoryId: null,
+          coverAlt: null,
+          coverUrl: null,
+          finalPost: null,
+          id: "event-1",
+          introText: null,
+          rooms: [],
+          status: "OPEN",
+          tags: [],
+          title: "Awards",
+        }}
+        tags={[
+          { id: "tag-1", name: "Sakuga" },
+          { id: "tag-2", name: "Direction" },
+        ]}
+      />,
+    )
+
+    expect(screen.getByLabelText("Event category")).toHaveValue("")
+    expect(screen.getByRole("button", { name: "Sakuga" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    )
+
+    await user.selectOptions(screen.getByLabelText("Event category"), "category-2")
+    await user.click(screen.getByRole("button", { name: "Direction" }))
+    await user.click(screen.getByRole("button", { name: "Set event cover" }))
+    await user.type(screen.getByLabelText("Event cover alt text"), "Event key art")
+    await user.click(screen.getByRole("button", { name: "Save article details" }))
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/admin/events/event-1", {
+      body: JSON.stringify({
+        categoryId: "category-2",
+        coverAlt: "Event key art",
+        coverUrl: "https://cdn.example.com/event-cover.jpg",
+        tagIds: ["tag-2"],
+      }),
+      headers: { "Content-Type": "application/json" },
+      method: "PATCH",
+    })
   })
 
   it("shows selected post metadata for event submissions", () => {

@@ -1,4 +1,5 @@
 import type { JSONContent } from "@tiptap/react"
+import Link from "next/link"
 
 import { EventAnthologyTableOfContents } from "@/components/events/EventAnthologyTableOfContents"
 import { AuthorCreditList } from "@/components/posts/AuthorCreditList"
@@ -32,11 +33,13 @@ interface AnthologyRoom {
 
 interface EventAnthologyViewProps {
   event: {
+    category?: { name: string; slug: string } | null
     coverAlt: string | null
     coverUrl: string | null
     intro: unknown
     introText: string | null
     rooms: AnthologyRoom[]
+    tags?: Array<{ tag: { name: string; slug: string } }>
     title: string
   }
   preview?: boolean
@@ -44,6 +47,30 @@ interface EventAnthologyViewProps {
 
 function isJsonContent(value: unknown): value is JSONContent {
   return typeof value === "object" && value !== null && "type" in value
+}
+
+function hasMeaningfulContent(node: JSONContent): boolean {
+  if (node.type === "text") {
+    return Boolean(node.text?.trim())
+  }
+
+  if (node.content?.some(hasMeaningfulContent)) {
+    return true
+  }
+
+  return Boolean(
+    node.type &&
+      ![
+        "blockquote",
+        "bulletList",
+        "codeBlock",
+        "doc",
+        "heading",
+        "listItem",
+        "orderedList",
+        "paragraph",
+      ].includes(node.type),
+  )
 }
 
 function EventContributorAttribution({
@@ -109,6 +136,10 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
   }))
   const rooms = getSubmittedAwardEventRooms(normalizedRooms)
   const headings = buildAwardEventOutline(rooms)
+  const richIntro =
+    isJsonContent(event.intro) && hasMeaningfulContent(event.intro)
+      ? event.intro
+      : null
 
   return (
     <main className="w-full overflow-x-clip">
@@ -137,9 +168,27 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
         <div className="absolute inset-0 -z-10 bg-gradient-to-t from-background via-background/20 to-transparent" />
         <div className="mx-auto flex min-h-[440px] w-full max-w-7xl items-end px-4 py-12 sm:min-h-[56vh] sm:px-6 md:py-20 lg:min-h-[64vh] lg:px-10">
           <div className="max-w-6xl">
-            <p className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-accent">
-              Event anthology
-            </p>
+            {(event.category || (event.tags?.length ?? 0) > 0) && (
+              <div className="mb-4 flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-accent">
+                {event.category && (
+                  <Link
+                    className="rounded-full border border-accent/25 bg-background/80 px-3 py-1.5 transition-colors hover:border-accent hover:bg-accent/10"
+                    href={`/category/${event.category.slug}`}
+                  >
+                    {event.category.name}
+                  </Link>
+                )}
+                {event.tags?.map(({ tag }) => (
+                  <Link
+                    className="rounded-full border border-border-default bg-background/70 px-3 py-1.5 text-text-secondary transition-colors hover:border-accent/50 hover:text-accent"
+                    href={`/tag/${tag.slug}`}
+                    key={tag.slug}
+                  >
+                    {tag.name}
+                  </Link>
+                ))}
+              </div>
+            )}
             <h1 className="max-w-6xl font-display text-4xl font-bold leading-[0.98] tracking-[-0.04em] text-text-primary sm:text-6xl lg:text-7xl">
               {event.title}
             </h1>
@@ -166,12 +215,12 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
           </div>
         )}
 
-        <div className="min-w-0 rounded-[24px] border border-border-default/80 bg-background/90 p-5 shadow-[0_18px_60px_rgba(31,24,38,0.08)] backdrop-blur-xl dark:bg-background/80 sm:p-8 md:p-10">
-          {(isJsonContent(event.intro) || event.introText) && (
-            <section className="mb-8 sm:mb-12">
-              {isJsonContent(event.intro) ? (
+        <div className="min-w-0 space-y-8 sm:space-y-10">
+          {(richIntro || event.introText) && (
+            <section className="rounded-[24px] border border-border-default/80 bg-background/90 p-5 shadow-[0_18px_60px_rgba(31,24,38,0.08)] backdrop-blur-xl dark:bg-background/80 sm:p-8 md:p-10">
+              {richIntro ? (
                 <div className="post-content font-lora text-[17px] leading-8 text-text-primary">
-                  <PostBody content={event.intro} />
+                  <PostBody content={richIntro} />
                 </div>
               ) : (
                 <p className="max-w-3xl font-lora text-xl leading-9 text-text-primary">
@@ -182,18 +231,19 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
           )}
 
           {rooms.length === 0 ? (
-            <div className="border-y border-dashed border-border-default py-20 text-center text-text-secondary">
+            <div className="rounded-[24px] border border-dashed border-border-default bg-background/70 py-20 text-center text-text-secondary">
               No submitted entries are included yet.
             </div>
           ) : (
-            <div className="space-y-24 sm:space-y-32">
+            <div className="space-y-8 sm:space-y-10">
               {rooms.map((room) => (
                 <section
-                  className="scroll-mt-24"
+                  className="scroll-mt-24 rounded-[24px] border border-border-default/80 bg-background/90 p-5 shadow-[0_18px_60px_rgba(31,24,38,0.08)] backdrop-blur-xl dark:bg-background/80 sm:p-8 md:p-10"
+                  data-testid="event-contributor-block"
                   id={`event-room-${room.id}`}
                   key={room.id}
                 >
-                  <div className="mb-12 border-t border-border-default pt-10 sm:pt-12">
+                  <div className="mb-10 sm:mb-12">
                     <div className="grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-5 sm:grid-cols-[8rem_minmax(0,1fr)] sm:gap-7">
                       {room.writer.avatarUrl ? (
                         <img

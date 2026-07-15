@@ -11,6 +11,8 @@ import { useRouter } from "next/navigation"
 import { useMemo, useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { CoverImageUpload } from "@/components/posts/CoverImageUpload"
+import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 
@@ -32,12 +34,26 @@ interface AdminEventRoom {
 }
 
 interface AdminEventDetail {
+  categoryId?: string | null
+  coverAlt?: string | null
+  coverUrl?: string | null
   finalPost: { slug: string } | null
   id: string
   introText: string | null
   rooms: AdminEventRoom[]
   status: AwardEventStatus
+  tags?: Array<{ tag: { id: string; name: string } }>
   title: string
+}
+
+interface CategoryOption {
+  id: string
+  name: string
+}
+
+interface TagOption {
+  id: string
+  name: string
 }
 
 function getApiError(value: unknown) {
@@ -65,15 +81,25 @@ function statusTone(status: AwardEventStatus) {
 }
 
 export function AdminEventDetailManager({
+  categories = [],
   event,
+  tags = [],
 }: {
+  categories?: CategoryOption[]
   event: AdminEventDetail
+  tags?: TagOption[]
 }) {
   const router = useRouter()
+  const [categoryId, setCategoryId] = useState(event.categoryId ?? "")
+  const [coverAlt, setCoverAlt] = useState(event.coverAlt ?? "")
+  const [coverUrl, setCoverUrl] = useState(event.coverUrl ?? "")
   const [error, setError] = useState("")
   const [introText, setIntroText] = useState(event.introText ?? "")
   const [isPending, setIsPending] = useState(false)
   const [rooms, setRooms] = useState(event.rooms)
+  const [selectedTagIds, setSelectedTagIds] = useState(
+    event.tags?.map(({ tag }) => tag.id) ?? [],
+  )
 
   const submittedRooms = useMemo(
     () =>
@@ -178,6 +204,14 @@ export function AdminEventDetailManager({
     void patchEvent(
       { roomExclusion: { excluded, id: roomId } },
       { refreshOnSuccess: false, rollbackRooms: previousRooms },
+    )
+  }
+
+  function toggleTag(tagId: string) {
+    setSelectedTagIds((current) =>
+      current.includes(tagId)
+        ? current.filter((id) => id !== tagId)
+        : [...current, tagId],
     )
   }
 
@@ -291,6 +325,115 @@ export function AdminEventDetailManager({
           placeholder="Short editor intro shown before the entries list."
           value={introText}
         />
+      </section>
+
+      <section className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6 shadow-sm backdrop-blur-md">
+        <div className="mb-5 flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-[16px] font-bold text-text-primary">
+              Published article details
+            </h2>
+            <p className="mt-1 text-[13px] leading-5 text-text-secondary">
+              Optional metadata for the event article. Empty fields stay empty.
+            </p>
+          </div>
+          <Button
+            aria-label="Save article details"
+            className="h-9 w-9 shrink-0 rounded-full p-0 transition-colors hover:border-accent hover:bg-accent/10 hover:text-accent"
+            disabled={isPending}
+            onClick={() =>
+              void patchEvent({
+                categoryId: categoryId || null,
+                coverAlt: coverAlt.trim() || null,
+                coverUrl: coverUrl || null,
+                tagIds: selectedTagIds,
+              })
+            }
+            title="Save article details"
+            type="button"
+            variant="outline"
+          >
+            <Save aria-hidden="true" className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(260px,0.8fr)]">
+          <div className="rounded-[20px] border border-border-default/70 bg-background/70 p-4 shadow-sm">
+            <CoverImageUpload onChange={setCoverUrl} value={coverUrl} />
+            {coverUrl && (
+              <div className="mt-4 space-y-2">
+                <label
+                  className="text-[12px] font-semibold text-text-secondary"
+                  htmlFor="event-cover-alt"
+                >
+                  Event cover alt text
+                </label>
+                <Input
+                  id="event-cover-alt"
+                  maxLength={200}
+                  onChange={(changeEvent) => setCoverAlt(changeEvent.target.value)}
+                  placeholder="Describe the event cover"
+                  value={coverAlt}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-5 rounded-[20px] border border-border-default/70 bg-background/70 p-4 shadow-sm">
+            <div className="space-y-2">
+              <label
+                className="text-[12px] font-semibold text-text-secondary"
+                htmlFor="event-category"
+              >
+                Event category
+              </label>
+              <select
+                className="h-10 w-full cursor-pointer rounded-[8px] border border-border-default bg-background px-3 text-[13px] text-text-primary outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/20"
+                id="event-category"
+                onChange={(changeEvent) => setCategoryId(changeEvent.target.value)}
+                value={categoryId}
+              >
+                <option value="">No category</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-[12px] font-semibold text-text-secondary">Event tags</p>
+              <div className="flex max-h-40 flex-wrap gap-2 overflow-y-auto rounded-[12px] border border-border-default/60 bg-subtle-bg/20 p-3">
+                {tags.map((tag) => {
+                  const selected = selectedTagIds.includes(tag.id)
+
+                  return (
+                    <button
+                      aria-pressed={selected}
+                      className={cn(
+                        "cursor-pointer rounded-full border px-3 py-1.5 text-[12px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                        selected
+                          ? "border-accent bg-accent text-white"
+                          : "border-border-default/60 bg-background text-text-secondary hover:border-accent/40 hover:text-accent",
+                      )}
+                      key={tag.id}
+                      onClick={() => toggleTag(tag.id)}
+                      type="button"
+                    >
+                      {tag.name}
+                    </button>
+                  )
+                })}
+                {tags.length === 0 && (
+                  <p className="w-full py-1 text-center text-[12px] text-text-tertiary">
+                    No tags available.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section className="space-y-4">

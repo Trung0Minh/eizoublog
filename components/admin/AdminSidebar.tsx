@@ -9,7 +9,7 @@ import {
   MessageSquare,
   Trophy,
   Users,
-  Settings,
+  ImageIcon,
   ArrowLeft,
 } from "lucide-react"
 import { usePathname } from "next/navigation"
@@ -31,7 +31,7 @@ const ADMIN_LINKS = [
   { href: "/admin/comments", icon: MessageSquare, label: "Comments" },
   { href: "/admin/newsletter", icon: Mail, label: "Newsletter" },
   { href: "/admin/analytics", icon: BarChart3, label: "Analytics" },
-  { href: "/admin/settings/backgrounds", icon: Settings, label: "Settings" },
+  { href: "/admin/settings/backgrounds", icon: ImageIcon, label: "Backgrounds" },
 ]
 
 function isActivePath(pathname: string, href: string) {

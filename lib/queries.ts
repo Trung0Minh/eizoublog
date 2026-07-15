@@ -278,6 +278,7 @@ export const publishedPostDetailSelect = {
   excerpt: true,
   finalAwardEvent: {
     select: {
+      category: { select: { name: true, slug: true } },
       coverAlt: true,
       coverUrl: true,
       id: true,
@@ -298,6 +299,9 @@ export const publishedPostDetailSelect = {
           writerIntro: true,
         },
         where: { excludedAt: null, status: "SUBMITTED" },
+      },
+      tags: {
+        select: { tag: { select: { name: true, slug: true } } },
       },
       title: true,
     },
@@ -1363,6 +1367,25 @@ export const getCachedAdminEventsData = unstable_cache(
   },
   ["admin-events-data"],
   { revalidate: 60, tags: ["award-events", "categories", "tags"] },
+)
+
+export const getCachedAdminEventOptions = unstable_cache(
+  async () => {
+    const [categories, tags] = await Promise.all([
+      prisma.category.findMany({
+        orderBy: { name: "asc" },
+        select: adminAwardEventCategorySelect,
+      }),
+      prisma.tag.findMany({
+        orderBy: { name: "asc" },
+        select: adminAwardEventTagSelect,
+      }),
+    ])
+
+    return { categories, tags }
+  },
+  ["admin-event-options"],
+  { revalidate: 60, tags: ["categories", "tags"] },
 )
 
 export const getCachedWriterEvents = unstable_cache(

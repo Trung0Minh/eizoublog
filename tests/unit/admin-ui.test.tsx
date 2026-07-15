@@ -71,6 +71,11 @@ describe("admin client components", () => {
       "href",
       "/admin/content",
     )
+    expect(screen.getByRole("link", { name: /backgrounds/i })).toHaveAttribute(
+      "href",
+      "/admin/settings/backgrounds",
+    )
+    expect(screen.queryByRole("link", { name: /^settings$/i })).not.toBeInTheDocument()
     expect(screen.getByRole("link", { name: /posts/i })).toHaveAttribute(
       "aria-current",
       "page",

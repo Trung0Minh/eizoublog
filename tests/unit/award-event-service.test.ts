@@ -1,9 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const mocks = vi.hoisted(() => ({
+  revalidatePath: vi.fn(),
+  revalidateTag: vi.fn(),
   prisma: {
+    $transaction: vi.fn(),
     awardEvent: {
       findUnique: vi.fn(),
+      update: vi.fn(),
     },
     awardEventRoom: {
       findUnique: vi.fn(),
@@ -11,13 +15,14 @@ const mocks = vi.hoisted(() => ({
     },
     post: {
       findFirst: vi.fn(),
+      update: vi.fn(),
     },
   },
 }))
 
 vi.mock("next/cache", () => ({
-  revalidatePath: vi.fn(),
-  revalidateTag: vi.fn(),
+  revalidatePath: mocks.revalidatePath,
+  revalidateTag: mocks.revalidateTag,
 }))
 vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }))
 
@@ -53,6 +58,12 @@ describe("updateAwardEventRoom", () => {
       finalPostId: null,
       status: "OPEN",
     })
+    mocks.prisma.$transaction.mockImplementation(async (callback) =>
+      callback({
+        awardEvent: { update: mocks.prisma.awardEvent.update },
+        post: { update: mocks.prisma.post.update },
+      }),
+    )
   })
 
   it("rejects a selected post that is not an owned draft or published post", async () => {
@@ -87,6 +98,72 @@ describe("updateAwardEventRoom", () => {
         }),
       }),
     )
+  })
+
+  it("regenerates an already-published anthology when a writer submits later", async () => {
+    mocks.prisma.awardEventRoom.findUnique.mockResolvedValue({
+      event: { status: "PUBLISHED" },
+      id: "room-1",
+    })
+    mocks.prisma.post.findFirst.mockResolvedValue({ id: "post-1", status: "DRAFT" })
+    mocks.prisma.awardEvent.findUnique
+      .mockResolvedValueOnce({ finalPostId: "final-post-1", status: "PUBLISHED" })
+      .mockResolvedValueOnce({
+        categoryId: null,
+        coverAlt: null,
+        coverUrl: null,
+        createdById: "admin-1",
+        finalPostId: "final-post-1",
+        id: "event-1",
+        intro: { content: [], type: "doc" },
+        introText: "Event introduction",
+        publishedAt: new Date("2026-06-01T00:00:00.000Z"),
+        rooms: [
+          {
+            excludedAt: null,
+            id: "room-1",
+            order: 0,
+            selectedPost: {
+              content: {
+                content: [
+                  {
+                    content: [{ text: "Late submission", type: "text" }],
+                    type: "paragraph",
+                  },
+                ],
+                type: "doc",
+              },
+              id: "post-1",
+              status: "DRAFT",
+              title: "Late entry",
+            },
+            status: "SUBMITTED",
+            writer: { name: "Mai", username: "mai" },
+            writerIntro: "Writer intro",
+          },
+        ],
+        slug: "awards",
+        tags: [],
+        title: "Awards",
+      })
+    mocks.prisma.post.update.mockResolvedValue({
+      id: "final-post-1",
+      slug: "awards",
+      status: "PUBLISHED",
+    })
+
+    await updateAwardEventRoom(updateInput("post-1"))
+
+    expect(mocks.prisma.post.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: "PUBLISHED",
+          title: "Awards",
+        }),
+        where: { id: "final-post-1" },
+      }),
+    )
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/awards")
   })
 })
 

@@ -4,7 +4,10 @@ import { ChevronLeft } from "lucide-react"
 
 import { AdminPageHeader } from "@/components/admin/AdminPrimitives"
 import { AdminEventDetailManager } from "@/components/events/AdminEventDetailManager"
-import { getCachedAdminEventDetail } from "@/lib/queries"
+import {
+  getCachedAdminEventDetail,
+  getCachedAdminEventOptions,
+} from "@/lib/queries"
 
 interface AdminEventPageProps {
   params: Promise<{ id: string }>
@@ -12,7 +15,10 @@ interface AdminEventPageProps {
 
 export default async function AdminEventPage({ params }: AdminEventPageProps) {
   const { id } = await params
-  const event = await getCachedAdminEventDetail(id)
+  const [event, { categories, tags }] = await Promise.all([
+    getCachedAdminEventDetail(id),
+    getCachedAdminEventOptions(),
+  ])
 
   if (!event) {
     notFound()
@@ -33,7 +39,7 @@ export default async function AdminEventPage({ params }: AdminEventPageProps) {
         subtitle="Manage writer rooms, shuffle the final order, and publish the merged event post."
         title={event.title}
       />
-      <AdminEventDetailManager event={event} />
+      <AdminEventDetailManager categories={categories} event={event} tags={tags} />
     </div>
   )
 }
