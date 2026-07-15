@@ -5,9 +5,10 @@ import type {
   AwardEventStatus,
   PostStatus,
 } from "@prisma/client"
-import { ArrowDown, ArrowUp, ExternalLink, Eye, EyeOff, Save, Shuffle, Upload } from "lucide-react"
+import { ExternalLink, Eye, EyeOff, GripVertical, Save, Shuffle, Upload } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import type { DragEvent } from "react"
 import { useMemo, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -93,6 +94,7 @@ export function AdminEventDetailManager({
   const [categoryId, setCategoryId] = useState(event.categoryId ?? "")
   const [coverAlt, setCoverAlt] = useState(event.coverAlt ?? "")
   const [coverUrl, setCoverUrl] = useState(event.coverUrl ?? "")
+  const [draggingRoomId, setDraggingRoomId] = useState<string | null>(null)
   const [error, setError] = useState("")
   const [introText, setIntroText] = useState(event.introText ?? "")
   const [isPending, setIsPending] = useState(false)
@@ -164,19 +166,18 @@ export function AdminEventDetailManager({
     }
   }
 
-  function moveRoom(roomId: string, direction: -1 | 1) {
-    const index = rooms.findIndex((room) => room.id === roomId)
-    const nextIndex = index + direction
+  function reorderRoom(roomId: string, targetRoomId: string) {
+    const currentIndex = rooms.findIndex((room) => room.id === roomId)
+    const targetIndex = rooms.findIndex((room) => room.id === targetRoomId)
 
-    if (index < 0 || nextIndex < 0 || nextIndex >= rooms.length) {
+    if (currentIndex < 0 || targetIndex < 0 || currentIndex === targetIndex) {
       return
     }
 
     const nextRooms = [...rooms]
     const previousRooms = rooms
-    const current = nextRooms[index]
-    nextRooms[index] = nextRooms[nextIndex]
-    nextRooms[nextIndex] = current
+    const [draggedRoom] = nextRooms.splice(currentIndex, 1)
+    nextRooms.splice(targetIndex, 0, draggedRoom)
     const ordered = nextRooms.map((room, order) => ({ ...room, order }))
     setRooms(ordered)
     void patchEvent(
@@ -185,6 +186,16 @@ export function AdminEventDetailManager({
       },
       { refreshOnSuccess: false, rollbackRooms: previousRooms },
     )
+  }
+
+  function handleRoomDrop(dropEvent: DragEvent<HTMLElement>, targetRoomId: string) {
+    dropEvent.preventDefault()
+    const roomId = dropEvent.dataTransfer.getData("text/plain") || draggingRoomId
+
+    if (roomId) {
+      reorderRoom(roomId, targetRoomId)
+    }
+    setDraggingRoomId(null)
   }
 
   function toggleRoomExclusion(roomId: string) {
@@ -257,17 +268,6 @@ export function AdminEventDetailManager({
             >
               Close
             </Button>
-            <Button
-              disabled={isPending}
-              onClick={() => void action("shuffle")}
-              aria-label="Shuffle submissions"
-              className="h-10 w-10 rounded-full p-0 transition-all hover:scale-105"
-              title="Shuffle submissions"
-              type="button"
-              variant="outline"
-            >
-              <Shuffle aria-hidden="true" className="h-4 w-4" />
-            </Button>
             <Button asChild className="h-10 w-10 rounded-full p-0" variant="outline">
               <Link
                 aria-label="Preview final event"
@@ -302,8 +302,8 @@ export function AdminEventDetailManager({
         </div>
       </section>
 
-      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.75fr)]">
-        <div className="space-y-6" data-testid="event-article-settings-column">
+      <div className="grid items-stretch gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.75fr)]">
+        <div className="h-full space-y-6" data-testid="event-article-settings-column">
           <section className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6 shadow-sm backdrop-blur-md">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-[16px] font-bold text-text-primary">
@@ -441,13 +441,29 @@ export function AdminEventDetailManager({
         </div>
 
       <section
-        className="space-y-4 rounded-[24px] border border-border-default/70 bg-background/75 p-5 shadow-sm backdrop-blur-xl xl:sticky xl:top-0"
+        className="flex h-full min-h-0 flex-col overflow-hidden rounded-[24px] border border-border-default/70 bg-background/75 p-5 shadow-sm backdrop-blur-xl xl:sticky xl:top-0"
         data-testid="event-submissions-column"
       >
-        <div className="flex items-center text-[12px] font-bold uppercase tracking-[0.1em] text-text-tertiary">
-          Submissions
+        <div className="mb-4 flex shrink-0 items-center justify-between gap-3">
+          <div className="text-[12px] font-bold uppercase tracking-[0.1em] text-text-tertiary">
+            Submissions
+          </div>
+          <Button
+            aria-label="Shuffle submissions"
+            className="h-9 w-9 rounded-full p-0 transition-colors hover:border-accent hover:bg-accent/10 hover:text-accent"
+            disabled={isPending}
+            onClick={() => void action("shuffle")}
+            title="Shuffle submissions"
+            type="button"
+            variant="outline"
+          >
+            <Shuffle aria-hidden="true" className="h-4 w-4" />
+          </Button>
         </div>
-        <div className="flex flex-col gap-3">
+        <div
+          className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain pr-1"
+          data-testid="event-submissions-scroll"
+        >
           {rooms.length === 0 ? (
             <div className="rounded-[24px] border border-dashed border-border-default/50 bg-subtle-bg/20 p-12 text-center text-[14px] text-text-tertiary">
               No writers have joined yet.
@@ -456,45 +472,114 @@ export function AdminEventDetailManager({
             rooms.map((room, index) => (
               <article
                 className={cn(
-                  "group flex flex-col gap-4 rounded-[20px] border border-border-default/70 bg-background/80 p-5 shadow-sm transition-all duration-300 hover:border-accent/30 hover:bg-background hover:shadow-md animate-in fade-in slide-in-from-bottom-2",
+                  "group relative rounded-[18px] border border-transparent bg-subtle-bg/40 p-4 transition-all duration-200 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10 animate-in fade-in slide-in-from-bottom-2",
                   room.excludedAt && "opacity-60",
+                  draggingRoomId === room.id && "border-accent/40 opacity-50",
                 )}
+                data-testid={`event-submission-${room.id}`}
+                onDragOver={(dragEvent) => {
+                  dragEvent.preventDefault()
+                  dragEvent.dataTransfer.dropEffect = "move"
+                }}
+                onDrop={(dropEvent) => handleRoomDrop(dropEvent, room.id)}
                 style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
                 key={room.id}
               >
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <h3 className="text-[16px] font-bold text-text-primary">
-                      {room.writer.name}
-                    </h3>
-                    <span className="rounded-full border border-border-default/60 bg-background/50 px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase text-text-secondary shadow-sm">
-                      {room.status}
-                    </span>
-                    <span className="rounded-full border border-border-default/60 bg-background/50 px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase text-text-secondary shadow-sm">
-                      {room.visibility === "PARTICIPANTS" ? "Shared" : "Private"}
-                    </span>
-                    {room.writer.role === "REVOKED" && (
-                      <span className="rounded-full border border-destructive/30 bg-destructive/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-destructive">
-                        Access removed
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-[15px] font-bold text-text-primary">
+                        {room.writer.name}
+                      </h3>
+                      <span className="rounded-full border border-border-default/60 bg-background/50 px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase text-text-secondary shadow-sm">
+                        {room.status}
                       </span>
-                    )}
-                    {room.excludedAt && (
-                      <span className="rounded-full border border-border-default bg-muted px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-text-tertiary">
-                        Excluded
+                      <span className="rounded-full border border-border-default/60 bg-background/50 px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase text-text-secondary shadow-sm">
+                        {room.visibility === "PARTICIPANTS" ? "Shared" : "Private"}
                       </span>
+                      {room.writer.role === "REVOKED" && (
+                        <span className="rounded-full border border-destructive/30 bg-destructive/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-destructive">
+                          Access removed
+                        </span>
+                      )}
+                      {room.excludedAt && (
+                        <span className="rounded-full border border-border-default bg-muted px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-text-tertiary">
+                          Excluded
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-[12px] font-medium text-text-secondary">
+                      <span className="text-accent">@{room.writer.username}</span>
+                      <span className="mx-2 text-text-tertiary">·</span>
+                      {room._count.comments} feedback comments
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1 rounded-[12px] border border-border-default/50 bg-background/80 p-1 shadow-sm backdrop-blur-sm">
+                    <button
+                      aria-label={`Drag ${room.writer.name} to reorder`}
+                      className="flex h-8 w-8 cursor-grab items-center justify-center rounded-[8px] text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary active:cursor-grabbing"
+                      draggable={!isPending}
+                      onDragEnd={() => setDraggingRoomId(null)}
+                      onDragStart={(dragEvent) => {
+                        setDraggingRoomId(room.id)
+                        dragEvent.dataTransfer.effectAllowed = "move"
+                        dragEvent.dataTransfer.setData("text/plain", room.id)
+                      }}
+                      title="Drag to reorder"
+                      type="button"
+                    >
+                      <GripVertical aria-hidden="true" className="h-4 w-4" />
+                    </button>
+                    <Button
+                      aria-label={
+                        room.excludedAt ? "Include in final event" : "Exclude from final event"
+                      }
+                      className="h-8 w-8 rounded-[8px] text-text-secondary hover:bg-subtle-bg hover:text-text-primary"
+                      disabled={isPending || room.status !== "SUBMITTED" || !room.selectedPost}
+                      onClick={() => toggleRoomExclusion(room.id)}
+                      size="icon"
+                      title={
+                        room.excludedAt ? "Include in final event" : "Exclude from final event"
+                      }
+                      type="button"
+                      variant="ghost"
+                    >
+                      {room.excludedAt ? (
+                        <Eye aria-hidden="true" className="h-4 w-4" />
+                      ) : (
+                        <EyeOff aria-hidden="true" className="h-4 w-4" />
+                      )}
+                    </Button>
+                    {room.selectedPost ? (
+                      <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-[8px] text-text-secondary hover:bg-accent/10 hover:text-accent">
+                        <Link
+                          href={`/dashboard/preview/${room.selectedPost.id}`}
+                          title="Preview selected post"
+                        >
+                          <Eye aria-hidden="true" className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                    ) : (
+                      <Button
+                        disabled
+                        size="icon"
+                        title="No selected post to preview"
+                        type="button"
+                        variant="ghost"
+                        className="h-8 w-8 rounded-[8px]"
+                      >
+                        <Eye aria-hidden="true" className="h-4 w-4" />
+                      </Button>
                     )}
                   </div>
-                  <p className="mt-1.5 text-[13px] font-medium text-text-secondary">
-                    <span className="text-accent">@{room.writer.username}</span>
-                    <span className="mx-2 text-text-tertiary">·</span>
-                    {room._count.comments} feedback comments
-                  </p>
+                </div>
+                <div className="min-w-0">
                   {room.selectedPost ? (
-                    <div className="mt-3 flex items-center gap-2 rounded-[12px] border border-accent/20 bg-accent/5 p-3">
-                      <p className="text-[14px] font-semibold text-text-primary truncate">
+                    <div className="mt-3 flex items-center gap-2 rounded-[10px] border border-accent/20 bg-accent/5 px-3 py-2.5">
+                      <p className="truncate text-[13px] font-semibold text-text-primary">
                         {room.selectedPost.title}
                       </p>
-                      <span className="shrink-0 rounded-full bg-background/80 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-text-secondary shadow-sm">
+                      <span className="shrink-0 rounded-full bg-background/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-text-secondary shadow-sm">
                         {room.selectedPost.status} source post
                       </span>
                     </div>
@@ -502,72 +587,6 @@ export function AdminEventDetailManager({
                     <p className="mt-3 text-[13px] font-medium italic text-text-tertiary">
                       No source post selected yet.
                     </p>
-                  )}
-                </div>
-                <div className="flex shrink-0 items-center gap-1.5 rounded-[16px] border border-border-default/50 bg-background/50 p-1.5 shadow-sm backdrop-blur-sm transition-all group-hover:border-accent/30 group-hover:bg-background/80">
-                  <Button
-                    disabled={index === 0 || isPending}
-                    onClick={() => moveRoom(room.id, -1)}
-                    className="h-9 w-9 rounded-[12px] text-text-secondary hover:bg-subtle-bg hover:text-text-primary"
-                    title="Move up"
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                  >
-                    <ArrowUp aria-hidden="true" className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    disabled={index === rooms.length - 1 || isPending}
-                    onClick={() => moveRoom(room.id, 1)}
-                    className="h-9 w-9 rounded-[12px] text-text-secondary hover:bg-subtle-bg hover:text-text-primary"
-                    title="Move down"
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                  >
-                    <ArrowDown aria-hidden="true" className="h-4 w-4" />
-                  </Button>
-                  <div className="h-5 w-px bg-border-default/50 mx-1"></div>
-                  <Button
-                    aria-label={
-                      room.excludedAt ? "Include in final event" : "Exclude from final event"
-                    }
-                    className="h-9 w-9 rounded-[12px] text-text-secondary hover:bg-subtle-bg hover:text-text-primary"
-                    disabled={isPending || room.status !== "SUBMITTED" || !room.selectedPost}
-                    onClick={() => toggleRoomExclusion(room.id)}
-                    size="icon"
-                    title={
-                      room.excludedAt ? "Include in final event" : "Exclude from final event"
-                    }
-                    type="button"
-                    variant="ghost"
-                  >
-                    {room.excludedAt ? (
-                      <Eye aria-hidden="true" className="h-4 w-4" />
-                    ) : (
-                      <EyeOff aria-hidden="true" className="h-4 w-4" />
-                    )}
-                  </Button>
-                  {room.selectedPost ? (
-                    <Button asChild variant="ghost" size="icon" className="h-9 w-9 rounded-[12px] text-text-secondary hover:bg-accent/10 hover:text-accent">
-                      <Link
-                        href={`/dashboard/preview/${room.selectedPost.id}`}
-                        title="Preview selected post"
-                      >
-                        <Eye aria-hidden="true" className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  ) : (
-                    <Button
-                      disabled
-                      size="icon"
-                      title="No selected post to preview"
-                      type="button"
-                      variant="ghost"
-                      className="h-9 w-9 rounded-[12px]"
-                    >
-                      <Eye aria-hidden="true" className="h-4 w-4" />
-                    </Button>
                   )}
                 </div>
               </article>

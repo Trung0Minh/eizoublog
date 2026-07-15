@@ -433,8 +433,8 @@ export function AdminContentManager({
         </div>
       )}
 
-      <div className="space-y-8">
-        <section className="rounded-[24px] border border-border-default/70 bg-background/75 p-4 shadow-sm backdrop-blur-xl sm:p-6">
+      <div className="grid items-stretch gap-8 lg:grid-cols-2">
+        <section className="flex min-h-0 flex-col rounded-[24px] border border-border-default/70 bg-background/75 p-4 shadow-sm backdrop-blur-xl sm:p-6">
           <div className="mb-4 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <FolderTree aria-hidden="true" className="h-4 w-4 text-accent" />
@@ -451,7 +451,7 @@ export function AdminContentManager({
             </Button>
           </div>
           <div
-            className="w-full overflow-x-auto pb-4"
+            className="min-h-0 w-full flex-1 overflow-x-auto pb-4"
             data-testid="category-management-scroll"
           >
             <div className="min-w-[680px] flex flex-col gap-2">
@@ -465,8 +465,8 @@ export function AdminContentManager({
                 {categoryRows.map(({ category, depth }, index) => (
                   <div
                     className={cn(
-                      "group relative flex items-center rounded-[20px] border border-border-default/70 bg-background/80 p-4 shadow-sm transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 hover:border-accent/30 hover:bg-background hover:shadow-md",
-                      depth === 1 && "ml-6 border-l-2 border-l-accent/25"
+                      "group relative flex items-center rounded-[20px] border border-transparent bg-subtle-bg/40 p-4 transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10",
+                      depth === 1 && "ml-6 border-l-2 border-l-border-default/30"
                     )}
                     style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
                     key={category.id}
@@ -487,7 +487,7 @@ export function AdminContentManager({
                     </div>
                     <div className="w-[140px] shrink-0" />
 
-                    <div className="absolute right-4 flex items-center justify-end gap-1 bg-background/95 p-1.5 opacity-100 shadow-sm backdrop-blur-md transition-all duration-300 rounded-[12px] border border-border-default/50 md:translate-x-4 md:opacity-0 md:group-hover:translate-x-0 md:group-hover:opacity-100">
+                    <div className="absolute right-4 flex items-center justify-end gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100 bg-background/95 backdrop-blur-md rounded-[12px] shadow-sm border border-border-default/50 p-1.5 translate-x-4 group-hover:translate-x-0">
                       {depth === 0 && (
                         <Button
                           aria-label={`Add child to ${category.name}`}
@@ -546,7 +546,7 @@ export function AdminContentManager({
           </div>
         </section>
 
-        <section className="rounded-[24px] border border-border-default/70 bg-background/75 p-4 shadow-sm backdrop-blur-xl sm:p-6">
+        <section className="flex min-h-0 flex-col rounded-[24px] border border-border-default/70 bg-background/75 p-4 shadow-sm backdrop-blur-xl sm:p-6">
           <div className="mb-4 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Tags aria-hidden="true" className="h-4 w-4 text-accent" />
@@ -563,7 +563,7 @@ export function AdminContentManager({
             </Button>
           </div>
           <div
-            className="w-full overflow-x-auto pb-4"
+            className="min-h-0 w-full flex-1 overflow-x-auto pb-4"
             data-testid="tag-management-scroll"
           >
             <div className="min-w-[520px] flex flex-col gap-2">
@@ -575,7 +575,7 @@ export function AdminContentManager({
               <div className="flex flex-col gap-3">
                 {tags.map((tag, index) => (
                   <div
-                    className="group relative flex items-center rounded-[20px] border border-border-default/70 bg-background/80 p-4 shadow-sm transition-all duration-300 hover:border-accent/30 hover:bg-background hover:shadow-md animate-in fade-in slide-in-from-bottom-2"
+                    className="group relative flex items-center rounded-[20px] border border-transparent bg-subtle-bg/40 p-4 transition-all duration-300 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10 animate-in fade-in slide-in-from-bottom-2"
                     style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
                     key={tag.id}
                   >
@@ -592,7 +592,7 @@ export function AdminContentManager({
                     </div>
                     <div className="w-[140px] shrink-0" />
 
-                    <div className="absolute right-4 flex items-center justify-end gap-1 bg-background/95 p-1.5 opacity-100 shadow-sm backdrop-blur-md transition-all duration-300 rounded-[12px] border border-border-default/50 md:translate-x-4 md:opacity-0 md:group-hover:translate-x-0 md:group-hover:opacity-100">
+                    <div className="absolute right-4 flex items-center justify-end gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100 bg-background/95 backdrop-blur-md rounded-[12px] shadow-sm border border-border-default/50 p-1.5 translate-x-4 group-hover:translate-x-0">
                       <Button
                         aria-label={`Edit tag ${tag.name}`}
                         onClick={() => {

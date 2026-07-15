@@ -337,26 +337,6 @@
 
 @layer components {
 
-  /* Admin surfaces stay legible over the seasonal background at rest. */
-  .admin-card-surface {
-    background-color: hsl(var(--background) / 0.78);
-    border-color: var(--border-default);
-    box-shadow: 0 8px 28px rgba(31, 24, 38, 0.06);
-  }
-
-  [data-admin-dashboard] [class~="border-transparent"][class*="bg-subtle-bg/"] {
-    background-color: hsl(var(--background) / 0.78);
-    border-color: var(--border-default);
-    box-shadow: 0 6px 22px rgba(31, 24, 38, 0.05);
-  }
-
-  [data-admin-dashboard] :is(section, article)[class*="bg-subtle-bg/"],
-  [data-admin-dashboard] [class*="rounded-"][class*="bg-background/30"],
-  [data-admin-dashboard] [class*="rounded-"][class*="bg-background/40"] {
-    background-color: hsl(var(--background) / 0.78);
-    border-color: var(--border-default);
-  }
-
   /* THE GLASS SYSTEM (Permanent Default) */
   .glass-navbar {
     background-color: hsl(var(--background) / 0.5);

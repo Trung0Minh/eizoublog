@@ -144,6 +144,9 @@ describe("admin client components", () => {
     expect(screen.getByTestId("tag-management-scroll")).toHaveClass(
       "overflow-x-auto",
     )
+    expect(
+      screen.getByTestId("category-management-scroll").parentElement?.parentElement,
+    ).toHaveClass("lg:grid-cols-2")
     expect(screen.queryByRole("button", { name: /^Categories$/ })).not.toBeInTheDocument()
   })
 

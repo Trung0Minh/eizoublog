@@ -261,7 +261,7 @@ export function AdminEventsManager({
         ) : (
           events.map((event, index) => (
             <article
-              className="group relative flex flex-col gap-4 rounded-[24px] border border-border-default/70 bg-background/75 p-5 shadow-sm backdrop-blur-xl transition-all duration-300 hover:border-accent/30 hover:bg-background/90 hover:shadow-md animate-in fade-in slide-in-from-bottom-2"
+              className="group relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-[24px] border border-transparent bg-subtle-bg/30 p-5 transition-all duration-300 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10 animate-in fade-in slide-in-from-bottom-2"
               style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
               key={event.id}
             >

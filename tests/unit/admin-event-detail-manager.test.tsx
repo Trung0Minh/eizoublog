@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -213,7 +213,17 @@ describe("AdminEventDetailManager", () => {
       />,
     )
 
-    await user.click(screen.getAllByTitle("Move down")[0])
+    const firstHandle = screen.getByRole("button", { name: "Drag Mai to reorder" })
+    const secondCard = screen.getByTestId("event-submission-room-2")
+    const dataTransfer = {
+      dropEffect: "none",
+      effectAllowed: "none",
+      getData: vi.fn(() => "room-1"),
+      setData: vi.fn(),
+    }
+    fireEvent.dragStart(firstHandle, { dataTransfer })
+    fireEvent.dragOver(secondCard, { dataTransfer })
+    fireEvent.drop(secondCard, { dataTransfer })
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith("/api/admin/events/event-1", {
@@ -228,6 +238,8 @@ describe("AdminEventDetailManager", () => {
       })
     })
     expect(routerMocks.refresh).not.toHaveBeenCalled()
+    expect(screen.queryByTitle("Move up")).not.toBeInTheDocument()
+    expect(screen.queryByTitle("Move down")).not.toBeInTheDocument()
   })
 
   it("lets the admin exclude a submission from the final anthology", async () => {
