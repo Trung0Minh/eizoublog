@@ -707,6 +707,39 @@ describe("SpoilerView", () => {
 })
 
 describe("PostBody", () => {
+  it("strips only empty paragraphs from the top and bottom of rendered posts", () => {
+    const { container } = render(
+      <PostBody
+        content={{
+          content: [
+            { type: "paragraph" },
+            {
+              content: [{ text: "   ", type: "text" }],
+              type: "paragraph",
+            },
+            {
+              content: [{ text: "First paragraph", type: "text" }],
+              type: "paragraph",
+            },
+            { type: "paragraph" },
+            {
+              content: [{ text: "Middle paragraph", type: "text" }],
+              type: "paragraph",
+            },
+            { type: "paragraph" },
+          ],
+          type: "doc",
+        }}
+      />,
+    )
+
+    const paragraphs = Array.from(container.querySelectorAll("p"))
+    expect(paragraphs).toHaveLength(3)
+    expect(paragraphs[0]).toHaveTextContent("First paragraph")
+    expect(paragraphs[1]).toHaveTextContent("")
+    expect(paragraphs[2]).toHaveTextContent("Middle paragraph")
+  })
+
   it("renders static Tiptap JSON without mounting the editor", () => {
     const content = {
       content: [

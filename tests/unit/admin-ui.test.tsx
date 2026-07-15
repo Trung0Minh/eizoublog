@@ -28,12 +28,14 @@ vi.mock("next-auth/react", () => ({
 }))
 
 import { AdminCommentsTable } from "@/components/admin/AdminCommentsTable"
+import { AdminContentManager } from "@/components/admin/AdminContentManager"
 import { AdminNav } from "@/components/admin/AdminNav"
 import { AdminPostsTable } from "@/components/admin/AdminPostsTable"
 import { InviteWriterForm } from "@/components/admin/InviteWriterForm"
 import { NewsletterBroadcastForm } from "@/components/admin/NewsletterBroadcastForm"
 import { PendingInvitesTable } from "@/components/admin/PendingInvitesTable"
 import { WritersTable } from "@/components/admin/WritersTable"
+import { AdminEventsManager } from "@/components/events/AdminEventsManager"
 import { clearSessionUserCache } from "@/lib/clientSession"
 
 function okResponse(body: unknown = { data: { message: "OK" } }) {
@@ -107,6 +109,69 @@ describe("admin client components", () => {
       "rounded-full",
       "border",
     )
+  })
+
+  it("shows categories and tags as separate independently scrollable sections", () => {
+    render(
+      <AdminContentManager
+        categories={[
+          {
+            _count: { children: 0, posts: 1 },
+            children: [],
+            description: null,
+            id: "category-1",
+            name: "Analysis",
+            parentId: null,
+            slug: "analysis",
+          },
+        ]}
+        tags={[
+          {
+            _count: { posts: 1 },
+            id: "tag-1",
+            name: "Sakuga",
+            slug: "sakuga",
+          },
+        ]}
+      />,
+    )
+
+    expect(screen.getByRole("heading", { name: "Categories" })).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Tags" })).toBeVisible()
+    expect(screen.getByTestId("category-management-scroll")).toHaveClass(
+      "overflow-x-auto",
+    )
+    expect(screen.getByTestId("tag-management-scroll")).toHaveClass(
+      "overflow-x-auto",
+    )
+    expect(screen.queryByRole("button", { name: /^Categories$/ })).not.toBeInTheDocument()
+  })
+
+  it("opens event management from the event name without a settings button", () => {
+    render(
+      <AdminEventsManager
+        categories={[]}
+        events={[
+          {
+            _count: { rooms: 2 },
+            createdAt: new Date("2026-01-01T00:00:00Z"),
+            id: "event-1",
+            publishedAt: null,
+            slug: "awards-2026",
+            status: "OPEN",
+            title: "Awards 2026",
+            updatedAt: new Date("2026-01-02T00:00:00Z"),
+          },
+        ]}
+        tags={[]}
+      />,
+    )
+
+    expect(screen.getByRole("link", { name: "Awards 2026" })).toHaveAttribute(
+      "href",
+      "/admin/events/event-1",
+    )
+    expect(screen.queryByRole("link", { name: /Manage Awards 2026/i })).not.toBeInTheDocument()
   })
 
   it("uses the server-provided admin user without fetching the session again", () => {

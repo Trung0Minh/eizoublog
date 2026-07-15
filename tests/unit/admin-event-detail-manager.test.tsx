@@ -150,6 +150,12 @@ describe("AdminEventDetailManager", () => {
       "href",
       "/admin/events/event-1/preview",
     )
+    expect(screen.getByTestId("event-article-settings-column")).toContainElement(
+      screen.getByRole("heading", { name: "Event introduction" }),
+    )
+    expect(screen.getByTestId("event-submissions-column")).toContainElement(
+      screen.getByText("Draft event pick"),
+    )
   })
 
   it("reorders rooms optimistically without a full refresh on success", async () => {

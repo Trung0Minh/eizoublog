@@ -1,7 +1,7 @@
 "use client"
 
 import type { AwardEventStatus } from "@prisma/client"
-import { CalendarPlus, Settings2, Plus, X } from "lucide-react"
+import { CalendarPlus, Plus, X } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -256,19 +256,25 @@ export function AdminEventsManager({
       <div className="flex flex-col gap-3">
         {events.length === 0 ? (
           <div className="rounded-[24px] border border-dashed border-border-default/50 bg-subtle-bg/20 p-12 text-center text-[14px] text-text-tertiary">
-            No writing events yet. Click "Add Event" to start one!
+            No writing events yet. Click &quot;Add Event&quot; to start one!
           </div>
         ) : (
           events.map((event, index) => (
             <article
-              className="group relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-[24px] border border-transparent bg-subtle-bg/30 p-5 transition-all duration-300 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10 animate-in fade-in slide-in-from-bottom-2"
+              className="group relative flex flex-col gap-4 rounded-[24px] border border-border-default/70 bg-background/75 p-5 shadow-sm backdrop-blur-xl transition-all duration-300 hover:border-accent/30 hover:bg-background/90 hover:shadow-md animate-in fade-in slide-in-from-bottom-2"
               style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
               key={event.id}
             >
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-3">
-                  <h2 className="truncate text-[16px] font-bold text-text-primary">
-                    {event.title}
+                  <h2 className="min-w-0 truncate text-[16px] font-bold">
+                    <Link
+                      className="rounded-sm text-text-primary transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                      href={`/admin/events/${event.id}`}
+                      prefetch={false}
+                    >
+                      {event.title}
+                    </Link>
                   </h2>
                   <span
                     className={cn(
@@ -288,19 +294,6 @@ export function AdminEventsManager({
                   <span className="font-mono text-[11.5px] text-text-tertiary">/{event.slug}</span>
                 </p>
               </div>
-              <Button
-                asChild
-                className="h-10 w-10 rounded-full bg-background/80 p-0 font-semibold text-text-secondary border border-border-default/50 shadow-sm transition-all hover:bg-accent hover:text-white hover:border-accent hover:shadow-accent/20 group-hover:scale-105"
-              >
-                <Link
-                  aria-label={`Manage ${event.title}`}
-                  href={`/admin/events/${event.id}`}
-                  prefetch={false}
-                  title={`Manage ${event.title}`}
-                >
-                  <Settings2 aria-hidden="true" className="h-4 w-4" />
-                </Link>
-              </Button>
             </article>
           ))
         )}

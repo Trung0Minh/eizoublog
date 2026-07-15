@@ -114,8 +114,9 @@ export function AdminContentManager({
     setError("")
   }
 
-  function openAddModal() {
-    if (activeTab === "categories") {
+  function openAddModal(tab: Tab) {
+    setActiveTab(tab)
+    if (tab === "categories") {
       setCategoryForm({ description: "", name: "", parentId: "" })
       setEditingCategoryId(null)
     } else {
@@ -259,7 +260,7 @@ export function AdminContentManager({
               Delete {deleteConfirmation.type === "category" ? "Category" : "Tag"}
             </h2>
             <p className="text-[14px] text-text-secondary mb-4">
-              Are you sure you want to delete <span className="font-bold text-text-primary">"{deleteConfirmation.item.name}"</span>?
+              Are you sure you want to delete <span className="font-bold text-text-primary">&quot;{deleteConfirmation.item.name}&quot;</span>?
             </p>
             {deleteConfirmation.impact && (
               <div className="mb-6 rounded-[12px] border border-destructive/30 bg-destructive/5 px-4 py-3 text-[13px] text-destructive shadow-sm">
@@ -432,50 +433,27 @@ export function AdminContentManager({
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div className="inline-flex w-fit gap-1 rounded-full border border-border-default/50 bg-background/50 backdrop-blur-xl p-1.5 shadow-sm">
-          {[
-            { icon: FolderTree, id: "categories" as const, label: "Categories" },
-            { icon: Tags, id: "tags" as const, label: "Tags" },
-          ].map(({ icon: Icon, id, label }) => {
-            const active = activeTab === id
-
-            return (
-              <button
-                aria-pressed={active}
-                className={cn(
-                  "inline-flex items-center gap-2 rounded-full px-5 py-2 text-[13px] font-semibold transition-all duration-300",
-                  active
-                    ? "bg-accent text-white shadow-md shadow-accent/20 scale-105"
-                    : "text-text-secondary hover:text-text-primary hover:bg-subtle-bg/50",
-                )}
-                key={id}
-                onClick={() => {
-                  setActiveTab(id)
-                  setError("")
-                }}
-                type="button"
-              >
-                <Icon aria-hidden="true" className="h-4 w-4" />
-                {label}
-              </button>
-            )
-          })}
-        </div>
-
-        <Button
-          aria-label={`Add ${activeTab === "categories" ? "category" : "tag"}`}
-          onClick={openAddModal}
-          className="h-10 w-10 rounded-full bg-accent p-0 font-bold text-white shadow-md shadow-accent/20 transition-all hover:scale-105 hover:shadow-accent/40"
-          title={`Add ${activeTab === "categories" ? "category" : "tag"}`}
-          type="button"
-        >
-          <Plus aria-hidden="true" className="h-4 w-4" />
-        </Button>
-      </div>
-
-        {activeTab === "categories" ? (
-          <div className="w-full overflow-x-auto pb-4 px-2">
+      <div className="space-y-8">
+        <section className="rounded-[24px] border border-border-default/70 bg-background/75 p-4 shadow-sm backdrop-blur-xl sm:p-6">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <FolderTree aria-hidden="true" className="h-4 w-4 text-accent" />
+              <h2 className="text-[16px] font-bold text-text-primary">Categories</h2>
+            </div>
+            <Button
+              aria-label="Add category"
+              className="h-10 w-10 rounded-full bg-accent p-0 font-bold text-white shadow-md shadow-accent/20 transition-all hover:scale-105 hover:shadow-accent/40"
+              onClick={() => openAddModal("categories")}
+              title="Add category"
+              type="button"
+            >
+              <Plus aria-hidden="true" className="h-4 w-4" />
+            </Button>
+          </div>
+          <div
+            className="w-full overflow-x-auto pb-4"
+            data-testid="category-management-scroll"
+          >
             <div className="min-w-[680px] flex flex-col gap-2">
               <div className="flex h-10 items-center px-6 text-[11px] font-bold uppercase tracking-[0.1em] text-text-tertiary">
                 <div className="min-w-0 flex-1 pr-4">Category</div>
@@ -487,8 +465,8 @@ export function AdminContentManager({
                 {categoryRows.map(({ category, depth }, index) => (
                   <div
                     className={cn(
-                      "group relative flex items-center rounded-[20px] border border-transparent p-4 transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10",
-                      depth === 0 ? "bg-subtle-bg/40" : "bg-subtle-bg/10 ml-6 border-l-2 border-l-border-default/30"
+                      "group relative flex items-center rounded-[20px] border border-border-default/70 bg-background/80 p-4 shadow-sm transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 hover:border-accent/30 hover:bg-background hover:shadow-md",
+                      depth === 1 && "ml-6 border-l-2 border-l-accent/25"
                     )}
                     style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
                     key={category.id}
@@ -509,7 +487,7 @@ export function AdminContentManager({
                     </div>
                     <div className="w-[140px] shrink-0" />
 
-                    <div className="absolute right-4 flex items-center justify-end gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100 bg-background/95 backdrop-blur-md rounded-[12px] shadow-sm border border-border-default/50 p-1.5 translate-x-4 group-hover:translate-x-0">
+                    <div className="absolute right-4 flex items-center justify-end gap-1 bg-background/95 p-1.5 opacity-100 shadow-sm backdrop-blur-md transition-all duration-300 rounded-[12px] border border-border-default/50 md:translate-x-4 md:opacity-0 md:group-hover:translate-x-0 md:group-hover:opacity-100">
                       {depth === 0 && (
                         <Button
                           aria-label={`Add child to ${category.name}`}
@@ -566,8 +544,28 @@ export function AdminContentManager({
               </div>
             </div>
           </div>
-        ) : (
-          <div className="w-full overflow-x-auto pb-4 px-2">
+        </section>
+
+        <section className="rounded-[24px] border border-border-default/70 bg-background/75 p-4 shadow-sm backdrop-blur-xl sm:p-6">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Tags aria-hidden="true" className="h-4 w-4 text-accent" />
+              <h2 className="text-[16px] font-bold text-text-primary">Tags</h2>
+            </div>
+            <Button
+              aria-label="Add tag"
+              className="h-10 w-10 rounded-full bg-accent p-0 font-bold text-white shadow-md shadow-accent/20 transition-all hover:scale-105 hover:shadow-accent/40"
+              onClick={() => openAddModal("tags")}
+              title="Add tag"
+              type="button"
+            >
+              <Plus aria-hidden="true" className="h-4 w-4" />
+            </Button>
+          </div>
+          <div
+            className="w-full overflow-x-auto pb-4"
+            data-testid="tag-management-scroll"
+          >
             <div className="min-w-[520px] flex flex-col gap-2">
               <div className="flex h-10 items-center px-6 text-[11px] font-bold uppercase tracking-[0.1em] text-text-tertiary">
                 <div className="min-w-0 flex-1 pr-4">Tag</div>
@@ -577,7 +575,7 @@ export function AdminContentManager({
               <div className="flex flex-col gap-3">
                 {tags.map((tag, index) => (
                   <div
-                    className="group relative flex items-center rounded-[20px] border border-transparent bg-subtle-bg/40 p-4 transition-all duration-300 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10 animate-in fade-in slide-in-from-bottom-2"
+                    className="group relative flex items-center rounded-[20px] border border-border-default/70 bg-background/80 p-4 shadow-sm transition-all duration-300 hover:border-accent/30 hover:bg-background hover:shadow-md animate-in fade-in slide-in-from-bottom-2"
                     style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
                     key={tag.id}
                   >
@@ -594,7 +592,7 @@ export function AdminContentManager({
                     </div>
                     <div className="w-[140px] shrink-0" />
 
-                    <div className="absolute right-4 flex items-center justify-end gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100 bg-background/95 backdrop-blur-md rounded-[12px] shadow-sm border border-border-default/50 p-1.5 translate-x-4 group-hover:translate-x-0">
+                    <div className="absolute right-4 flex items-center justify-end gap-1 bg-background/95 p-1.5 opacity-100 shadow-sm backdrop-blur-md transition-all duration-300 rounded-[12px] border border-border-default/50 md:translate-x-4 md:opacity-0 md:group-hover:translate-x-0 md:group-hover:opacity-100">
                       <Button
                         aria-label={`Edit tag ${tag.name}`}
                         onClick={() => {
@@ -635,7 +633,8 @@ export function AdminContentManager({
               </div>
             </div>
           </div>
-        )}
+        </section>
+      </div>
     </div>
   )
 }

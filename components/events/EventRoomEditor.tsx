@@ -71,8 +71,6 @@ export function EventRoomEditor({
   const [writerIntro, setWriterIntro] = useState(room.writerIntro ?? "")
 
   const controlsDisabled = event.status === "CLOSED" || event.status === "ARCHIVED"
-  const selectedPost = eligiblePosts.find((post) => post.id === postId) ?? room.selectedPost
-
   async function submit() {
     setError("")
     setIsPending(true)
@@ -163,28 +161,51 @@ export function EventRoomEditor({
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-7 p-5 sm:p-7 lg:grid-cols-12">
-          <label className="block lg:col-span-12" htmlFor="submission-post">
-            <span className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-text-tertiary">
-              <FileText aria-hidden="true" className="h-3.5 w-3.5 text-accent" />
-              Bài viết được chọn
-            </span>
-            <select
-              className="h-12 w-full rounded-[14px] border border-border-default bg-background px-4 text-sm font-semibold text-text-primary outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/15"
-              disabled={controlsDisabled || isPending}
-              id="submission-post"
-              onChange={(changeEvent) => setPostId(changeEvent.target.value)}
-              value={postId}
-            >
-              <option value="">Chọn một bài viết nháp hoặc đã xuất bản</option>
-              {eligiblePosts.map((post) => (
-                <option key={post.id} value={post.id}>
-                  {post.title} ({post.status})
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block lg:col-span-8">
+        <div className="space-y-7 p-5 sm:p-7">
+          <div
+            className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.38fr)]"
+            data-testid="submission-primary-row"
+          >
+            <label className="block" htmlFor="submission-post">
+              <span className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-text-tertiary">
+                <FileText aria-hidden="true" className="h-3.5 w-3.5 text-accent" />
+                Bài viết được chọn
+              </span>
+              <select
+                className="h-12 w-full rounded-[14px] border border-border-default bg-background px-4 text-sm font-semibold text-text-primary outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/15"
+                disabled={controlsDisabled || isPending}
+                id="submission-post"
+                onChange={(changeEvent) => setPostId(changeEvent.target.value)}
+                value={postId}
+              >
+                <option value="">Chọn một bài viết nháp hoặc đã xuất bản</option>
+                {eligiblePosts.map((post) => (
+                  <option key={post.id} value={post.id}>
+                    {post.title} ({post.status})
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block" htmlFor="submission-visibility">
+              <span className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-text-tertiary">
+                <Users aria-hidden="true" className="h-3.5 w-3.5 text-accent" />
+                Ai có thể xem
+              </span>
+              <select
+                className="h-12 w-full rounded-[14px] border border-border-default bg-background px-4 text-sm font-semibold text-text-primary outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/15"
+                disabled={controlsDisabled || isPending}
+                id="submission-visibility"
+                onChange={(changeEvent) =>
+                  setVisibility(changeEvent.target.value as AwardEventRoomVisibility)
+                }
+                value={visibility}
+              >
+                <option value="PRIVATE">Chỉ tôi và quản trị viên</option>
+                <option value="PARTICIPANTS">Tất cả người tham gia</option>
+              </select>
+            </label>
+          </div>
+          <label className="block" data-testid="submission-writer-intro">
             <span className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-text-tertiary">
               Giới thiệu người viết
             </span>
@@ -197,48 +218,6 @@ export function EventRoomEditor({
               value={writerIntro}
             />
           </label>
-          <div className="space-y-6 lg:col-span-4">
-            <label className="block">
-              <span className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-text-tertiary">
-                <Users aria-hidden="true" className="h-3.5 w-3.5 text-accent" />
-                Ai có thể xem
-              </span>
-              <select
-                className="h-12 w-full rounded-[14px] border border-border-default bg-background px-4 text-sm font-semibold text-text-primary outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/15"
-                disabled={controlsDisabled || isPending}
-                onChange={(changeEvent) =>
-                  setVisibility(changeEvent.target.value as AwardEventRoomVisibility)
-                }
-                value={visibility}
-              >
-                <option value="PRIVATE">Chỉ tôi và quản trị viên</option>
-                <option value="PARTICIPANTS">Tất cả người tham gia</option>
-              </select>
-            </label>
-
-            <div className="border-t border-border-default pt-5">
-              {selectedPost ? (
-                <>
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-text-tertiary">
-                    Sẽ gửi
-                  </p>
-                  <p className="mt-2 text-base font-bold leading-snug text-text-primary">
-                    {selectedPost.title}
-                  </p>
-                  <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-accent">
-                    {selectedPost.status}
-                  </p>
-                  <p className="mt-4 text-xs leading-5 text-text-secondary">
-                    Nội dung luôn lấy từ bài viết gốc mới nhất khi quản trị viên xuất bản sự kiện.
-                  </p>
-                </>
-              ) : (
-                <p className="text-sm leading-6 text-text-secondary">
-                  Chưa có bài viết nào được chọn. Tạo hoặc lưu một bản nháp trước, rồi quay lại đây.
-                </p>
-              )}
-            </div>
-          </div>
         </div>
       </section>
     </div>

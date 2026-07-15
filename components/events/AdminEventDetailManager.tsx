@@ -302,32 +302,34 @@ export function AdminEventDetailManager({
         </div>
       </section>
 
-      <section className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 backdrop-blur-md p-6 shadow-sm">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-[16px] font-bold text-text-primary">
-            Event introduction
-          </h2>
-          <Button
-            disabled={isPending}
-            onClick={() => void patchEvent({ introText })}
-            aria-label="Save event introduction"
-            className="h-9 w-9 rounded-full p-0 font-semibold hover:bg-accent/10 hover:text-accent hover:border-accent transition-colors"
-            title="Save event introduction"
-            type="button"
-            variant="outline"
-          >
-            <Save aria-hidden="true" className="h-4 w-4" />
-          </Button>
-        </div>
-        <Textarea
-          className="min-h-32 rounded-[16px] border-border-default/60 bg-background/50 p-5 focus:border-accent focus:bg-background focus:ring-2 focus:ring-accent/20 transition-all text-[14px] resize-y"
-          onChange={(changeEvent) => setIntroText(changeEvent.target.value)}
-          placeholder="Short editor intro shown before the entries list."
-          value={introText}
-        />
-      </section>
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.75fr)]">
+        <div className="space-y-6" data-testid="event-article-settings-column">
+          <section className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6 shadow-sm backdrop-blur-md">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-[16px] font-bold text-text-primary">
+                Event introduction
+              </h2>
+              <Button
+                disabled={isPending}
+                onClick={() => void patchEvent({ introText })}
+                aria-label="Save event introduction"
+                className="h-9 w-9 rounded-full p-0 font-semibold transition-colors hover:border-accent hover:bg-accent/10 hover:text-accent"
+                title="Save event introduction"
+                type="button"
+                variant="outline"
+              >
+                <Save aria-hidden="true" className="h-4 w-4" />
+              </Button>
+            </div>
+            <Textarea
+              className="min-h-32 resize-y rounded-[16px] border-border-default/60 bg-background/50 p-5 text-[14px] transition-all focus:border-accent focus:bg-background focus:ring-2 focus:ring-accent/20"
+              onChange={(changeEvent) => setIntroText(changeEvent.target.value)}
+              placeholder="Short editor intro shown before the entries list."
+              value={introText}
+            />
+          </section>
 
-      <section className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6 shadow-sm backdrop-blur-md">
+          <section className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6 shadow-sm backdrop-blur-md">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
             <h2 className="text-[16px] font-bold text-text-primary">
@@ -434,10 +436,15 @@ export function AdminEventDetailManager({
             </div>
           </div>
         </div>
-      </section>
+          </section>
 
-      <section className="space-y-4">
-        <div className="flex items-center px-2 text-[12px] font-bold uppercase tracking-[0.1em] text-text-tertiary">
+        </div>
+
+      <section
+        className="space-y-4 rounded-[24px] border border-border-default/70 bg-background/75 p-5 shadow-sm backdrop-blur-xl xl:sticky xl:top-0"
+        data-testid="event-submissions-column"
+      >
+        <div className="flex items-center text-[12px] font-bold uppercase tracking-[0.1em] text-text-tertiary">
           Submissions
         </div>
         <div className="flex flex-col gap-3">
@@ -449,7 +456,7 @@ export function AdminEventDetailManager({
             rooms.map((room, index) => (
               <article
                 className={cn(
-                  "group flex flex-col gap-4 rounded-[20px] border border-transparent bg-subtle-bg/40 p-5 transition-all duration-300 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10 sm:flex-row sm:items-center sm:justify-between animate-in fade-in slide-in-from-bottom-2",
+                  "group flex flex-col gap-4 rounded-[20px] border border-border-default/70 bg-background/80 p-5 shadow-sm transition-all duration-300 hover:border-accent/30 hover:bg-background hover:shadow-md animate-in fade-in slide-in-from-bottom-2",
                   room.excludedAt && "opacity-60",
                 )}
                 style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
@@ -568,6 +575,7 @@ export function AdminEventDetailManager({
           )}
         </div>
       </section>
+      </div>
     </div>
   )
 }

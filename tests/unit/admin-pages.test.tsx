@@ -116,12 +116,15 @@ describe("admin layout", () => {
   })
 
   it("renders admin navigation for admins", async () => {
-    renderAsync(await AdminLayout({ children: <p>Secret admin content</p> }))
+    const { container } = render(
+      <>{await AdminLayout({ children: <p>Secret admin content</p> })}</>,
+    )
 
     expect(
       screen.getByRole("navigation", { name: "Admin navigation" }),
     ).toBeVisible()
     expect(screen.getByText("Secret admin content")).toBeVisible()
+    expect(container.querySelector("[data-admin-dashboard]")).toBeInTheDocument()
   })
 })
 

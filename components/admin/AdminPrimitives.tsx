@@ -50,7 +50,7 @@ export function AdminMetricCard({
   return (
     <div
       className={cn(
-        "group relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-[24px] border border-border-default/40 bg-background/30 p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.02)] backdrop-blur-3xl transition-all duration-300 hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_8px_32px_rgba(0,0,0,0.04)] hover:border-border-default/60 md:p-6",
+        "admin-card-surface group relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-[24px] border border-border-default/70 bg-background/75 p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_4px_24px_rgba(0,0,0,0.02)] backdrop-blur-3xl transition-all duration-300 hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_8px_32px_rgba(0,0,0,0.04)] hover:border-border-default md:p-6",
         className,
       )}
     >
