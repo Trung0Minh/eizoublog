@@ -2,11 +2,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const awsMocks = vi.hoisted(() => ({
   clientOptions: undefined as unknown,
+  deleteObjectsInput: undefined as unknown,
   putObjectInput: undefined as unknown,
   send: vi.fn(),
 }))
 
 vi.mock("@aws-sdk/client-s3", () => ({
+  DeleteObjectsCommand: vi.fn(function DeleteObjectsCommand(input: unknown) {
+    awsMocks.deleteObjectsInput = input
+    return { input }
+  }),
   PutObjectCommand: vi.fn(function PutObjectCommand(input: unknown) {
     awsMocks.putObjectInput = input
     return { input }
@@ -26,6 +31,7 @@ describe("uploadToR2", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     awsMocks.clientOptions = undefined
+    awsMocks.deleteObjectsInput = undefined
     awsMocks.putObjectInput = undefined
     process.env.R2_ACCOUNT_ID = "account-id"
     process.env.R2_ACCESS_KEY_ID = "access-key"
@@ -75,5 +81,46 @@ describe("uploadToR2", () => {
         contentType: "image/gif",
       }),
     ).rejects.toThrow("Cloudflare R2 environment variables are not configured")
+  })
+
+  it("deletes only objects hosted by the configured R2 public URL", async () => {
+    const { deleteR2Objects } = await importR2()
+
+    await deleteR2Objects([
+      "https://cdn.example.com/covers/cover.webp?crop=wide",
+      "https://cdn.example.com/content-images/frame.jpg",
+      "https://cdn.example.com/content-images/frame.jpg",
+      "https://images.example.org/external.jpg",
+    ])
+
+    expect(awsMocks.deleteObjectsInput).toEqual({
+      Bucket: "animeblog",
+      Delete: {
+        Objects: [
+          { Key: "covers/cover.webp" },
+          { Key: "content-images/frame.jpg" },
+        ],
+        Quiet: true,
+      },
+    })
+  })
+
+  it("does not contact R2 when no configured objects are present", async () => {
+    const { deleteR2Objects } = await importR2()
+
+    await deleteR2Objects(["https://images.example.org/external.jpg"])
+
+    expect(awsMocks.send).not.toHaveBeenCalled()
+  })
+
+  it("fails when R2 reports an object-level deletion error", async () => {
+    const { deleteR2Objects } = await importR2()
+    awsMocks.send.mockResolvedValueOnce({
+      Errors: [{ Code: "AccessDenied", Key: "covers/cover.webp" }],
+    })
+
+    await expect(
+      deleteR2Objects(["https://cdn.example.com/covers/cover.webp"]),
+    ).rejects.toThrow("Cloudflare R2 failed to delete one or more objects")
   })
 })

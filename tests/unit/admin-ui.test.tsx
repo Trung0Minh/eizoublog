@@ -228,10 +228,10 @@ describe("admin client components", () => {
       "/published-post",
     )
 
-    await user.click(screen.getByRole("button", { name: /remove post/i }))
-    expect(screen.getByRole("heading", { name: "Remove post?" })).toBeVisible()
-    const confirm = within(screen.getByRole("dialog", { name: "Remove post?" }))
-      .getByRole("button", { name: "Remove post" })
+    await user.click(screen.getByRole("button", { name: /take down post/i }))
+    expect(screen.getByRole("heading", { name: "Take down post?" })).toBeVisible()
+    const confirm = within(screen.getByRole("dialog", { name: "Take down post?" }))
+      .getByRole("button", { name: "Take down post" })
     expect(confirm).toBeDisabled()
     await user.type(screen.getByRole("textbox", { name: "Reason" }), "Policy violation")
     await user.click(confirm)
@@ -387,11 +387,11 @@ describe("admin client components", () => {
     )
 
     await user.click(screen.getAllByRole("checkbox")[1])
-    await user.click(screen.getByRole("button", { name: "Remove selected posts" }))
+    await user.click(screen.getByRole("button", { name: "Take down selected posts" }))
     await user.type(screen.getByRole("textbox", { name: "Reason" }), "Bulk policy review")
     await user.click(
-      within(screen.getByRole("dialog", { name: "Remove selected posts?" }))
-        .getByRole("button", { name: "Remove posts" }),
+      within(screen.getByRole("dialog", { name: "Take down selected posts?" }))
+        .getByRole("button", { name: "Take down posts" }),
     )
 
     expect(fetchMock).toHaveBeenCalledTimes(1)

@@ -1,4 +1,8 @@
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
+import {
+  DeleteObjectsCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 
 interface UploadToR2Options {
@@ -40,6 +44,60 @@ function createR2Client(config: R2Config) {
     endpoint: `https://${config.accountId}.r2.cloudflarestorage.com`,
     region: "auto",
   })
+}
+
+function getR2ObjectKey(publicUrl: string, configuredPublicUrl: string) {
+  try {
+    const base = new URL(`${configuredPublicUrl.replace(/\/$/, "")}/`)
+    const candidate = new URL(publicUrl)
+
+    if (
+      candidate.origin !== base.origin ||
+      !candidate.pathname.startsWith(base.pathname)
+    ) {
+      return null
+    }
+
+    const key = decodeURIComponent(candidate.pathname.slice(base.pathname.length))
+    return key || null
+  } catch {
+    return null
+  }
+}
+
+export async function deleteR2Objects(publicUrls: readonly string[]) {
+  if (publicUrls.length === 0) return
+
+  const config = getR2Config()
+  const keys = Array.from(
+    new Set(
+      publicUrls.flatMap((publicUrl) => {
+        const key = getR2ObjectKey(publicUrl, config.publicUrl)
+        return key ? [key] : []
+      }),
+    ),
+  )
+
+  if (keys.length === 0) return
+
+  const client = createR2Client(config)
+
+  for (let index = 0; index < keys.length; index += 1000) {
+    const batch = keys.slice(index, index + 1000)
+    const result = await client.send(
+      new DeleteObjectsCommand({
+        Bucket: config.bucketName,
+        Delete: {
+          Objects: batch.map((Key) => ({ Key })),
+          Quiet: true,
+        },
+      }),
+    )
+
+    if (result.Errors?.length) {
+      throw new Error("Cloudflare R2 failed to delete one or more objects")
+    }
+  }
 }
 
 export async function uploadToR2({

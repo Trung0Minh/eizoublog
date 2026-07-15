@@ -756,7 +756,7 @@ describe("single post API", () => {
     expect(mocks.revalidateTag).not.toHaveBeenCalledWith("posts", "max")
   })
 
-  it("forbids deleting another writer's post", async () => {
+  it("forbids writers from permanently deleting posts", async () => {
     mocks.auth.mockResolvedValue({
       user: { id: "writer-2", role: "WRITER" },
     })
@@ -770,12 +770,12 @@ describe("single post API", () => {
       routeContext("post-1"),
     )
 
-    expect(response.status).toBe(403)
-    await expect(response.json()).resolves.toEqual({ error: "Forbidden" })
+    expect(response.status).toBe(401)
+    await expect(response.json()).resolves.toEqual({ error: "Unauthorized" })
     expect(mocks.prisma.post.delete).not.toHaveBeenCalled()
   })
 
-  it("forbids accepted co-authors from deleting posts", async () => {
+  it("forbids accepted co-authors from permanently deleting posts", async () => {
     mocks.auth.mockResolvedValue({
       user: { id: "writer-2", role: "WRITER" },
     })
@@ -789,38 +789,25 @@ describe("single post API", () => {
       routeContext("post-1"),
     )
 
-    expect(response.status).toBe(403)
-    await expect(response.json()).resolves.toEqual({ error: "Forbidden" })
+    expect(response.status).toBe(401)
+    await expect(response.json()).resolves.toEqual({ error: "Unauthorized" })
     expect(mocks.prisma.post.delete).not.toHaveBeenCalled()
   })
 
-  it("allows admins to delete another writer's post", async () => {
+  it("requires admins to provide a permanent deletion confirmation", async () => {
     mocks.auth.mockResolvedValue({
       user: { id: "admin-1", role: "ADMIN" },
     })
-    mocks.prisma.post.findUnique.mockResolvedValue({
-      authorId: "writer-1",
-      slug: "published-post",
-    })
-    mocks.prisma.post.delete.mockResolvedValue({ id: "post-1" })
-
     const response = await DELETE(
       new Request("https://example.test/api/posts/post-1"),
       routeContext("post-1"),
     )
 
-    expect(response.status).toBe(200)
+    expect(response.status).toBe(400)
     await expect(response.json()).resolves.toEqual({
-      data: { message: "Post deleted" },
+      error: "Type the post title to confirm deletion",
     })
-    expect(mocks.prisma.post.delete).toHaveBeenCalledWith({
-      select: { id: true },
-      where: { id: "post-1" },
-    })
-    expect(mocks.revalidateTag).toHaveBeenCalledWith("posts", "max")
-    expect(mocks.revalidatePath).toHaveBeenCalledWith("/published-post")
-    expect(mocks.revalidatePath).toHaveBeenCalledWith("/dashboard")
-    expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/posts")
+    expect(mocks.prisma.post.delete).not.toHaveBeenCalled()
   })
 
   it("rejects legacy archive requests that omit a moderation reason", async () => {

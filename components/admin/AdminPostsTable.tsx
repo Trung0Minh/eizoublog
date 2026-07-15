@@ -1,6 +1,15 @@
 "use client"
 
-import { Archive, ArchiveRestore, ExternalLink, RotateCcw, Send, Trash2, Undo2 } from "lucide-react"
+import {
+  Archive,
+  ArchiveRestore,
+  ExternalLink,
+  RotateCcw,
+  Send,
+  ShieldX,
+  Trash2,
+  Undo2,
+} from "lucide-react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { useState } from "react"
@@ -100,6 +109,9 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
   const [isBulkActioning, setIsBulkActioning] = useState(false)
   const [bulkAction, setBulkAction] = useState<"ARCHIVE" | "REMOVE" | "RESTORE" | null>(null)
   const [bulkReason, setBulkReason] = useState("")
+  const [deleteTarget, setDeleteTarget] = useState<AdminPost | null>(null)
+  const [deleteConfirmation, setDeleteConfirmation] = useState("")
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const keepStatusInCurrentFilter = (
     status: AdminPost["status"],
@@ -177,6 +189,48 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
   ) {
     setModerationReason("")
     setModerationTarget({ action, post })
+  }
+
+  function openPermanentDelete(post: AdminPost) {
+    setDeleteConfirmation("")
+    setDeleteTarget(post)
+  }
+
+  async function handlePermanentDelete() {
+    if (!deleteTarget || deleteConfirmation !== deleteTarget.title) return
+
+    setDeletingId(deleteTarget.id)
+    try {
+      const response = await fetch(`/api/posts/${deleteTarget.id}`, {
+        body: JSON.stringify({ confirmation: deleteConfirmation }),
+        headers: { "Content-Type": "application/json" },
+        method: "DELETE",
+      })
+      const result: unknown = await response.json()
+
+      if (!response.ok) throw new Error(getApiError(result))
+
+      setVisiblePosts((current) =>
+        current.filter((post) => post.id !== deleteTarget.id),
+      )
+      setSelectedIds((current) => {
+        const next = new Set(current)
+        next.delete(deleteTarget.id)
+        return next
+      })
+      toast.success("Post permanently deleted", {
+        description: deleteTarget.title,
+      })
+      setDeleteTarget(null)
+      setDeleteConfirmation("")
+    } catch (error) {
+      toast.error("Permanent deletion failed", {
+        description:
+          error instanceof Error ? error.message : deleteTarget.title,
+      })
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   async function handleModeration() {
@@ -274,9 +328,9 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
               <Archive aria-hidden="true" className="h-4 w-4" />
             </Button>
             <Button
-              aria-label="Remove selected posts"
+              aria-label="Take down selected posts"
               size="icon"
-              title="Remove selected posts"
+              title="Take down selected posts"
               variant="destructive"
               disabled={isBulkActioning}
               onClick={() => {
@@ -284,7 +338,7 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
                 setBulkAction("REMOVE")
               }}
             >
-              <Trash2 aria-hidden="true" className="h-4 w-4" />
+              <ShieldX aria-hidden="true" className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -420,17 +474,31 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
                       </Button>
                     )}
                     {post.status === "REMOVED" ? (
-                      <Button
-                        aria-label="Restore removed post"
-                        className="h-8 w-8 rounded-[8px] p-0 text-text-secondary transition-colors hover:bg-accent/10 hover:text-accent"
-                        disabled={moderatingId === post.id}
-                        onClick={() => openModeration(post, "RESTORE_REMOVED")}
-                        size="sm"
-                        type="button"
-                        variant="ghost"
-                      >
-                        <Undo2 aria-hidden="true" className="h-4 w-4" />
-                      </Button>
+                      <>
+                        <Button
+                          aria-label="Restore removed post"
+                          className="h-8 w-8 rounded-[8px] p-0 text-text-secondary transition-colors hover:bg-accent/10 hover:text-accent"
+                          disabled={moderatingId === post.id || deletingId === post.id}
+                          onClick={() => openModeration(post, "RESTORE_REMOVED")}
+                          size="sm"
+                          type="button"
+                          variant="ghost"
+                        >
+                          <Undo2 aria-hidden="true" className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          aria-label="Permanently delete post"
+                          className="h-8 w-8 rounded-[8px] p-0 text-destructive transition-colors hover:bg-destructive/10 hover:text-destructive"
+                          disabled={deletingId === post.id || moderatingId === post.id}
+                          onClick={() => openPermanentDelete(post)}
+                          size="sm"
+                          title="Permanently delete post"
+                          type="button"
+                          variant="ghost"
+                        >
+                          <Trash2 aria-hidden="true" className="h-4 w-4" />
+                        </Button>
+                      </>
                     ) : (
                     <Button
                       aria-label={
@@ -461,7 +529,7 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
                     )}
                     {post.status !== "REMOVED" && (
                     <Button
-                      aria-label="Remove post"
+                      aria-label="Take down post"
                       className="h-8 w-8 rounded-[8px] p-0 hover:bg-accent/10 text-text-secondary hover:text-accent transition-colors"
                       disabled={moderatingId === post.id}
                       onClick={() => openModeration(post, "REMOVE")}
@@ -469,7 +537,7 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
                       type="button"
                       variant="ghost"
                     >
-                      <Trash2 aria-hidden="true" className="h-4 w-4" />
+                      <ShieldX aria-hidden="true" className="h-4 w-4" />
                     </Button>
                     )}
                   </div>
@@ -500,12 +568,12 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
                 : moderationTarget.action === "ARCHIVE"
                   ? "Archive post"
                   : moderationTarget.action === "REMOVE"
-                    ? "Remove post"
+                    ? "Take down post"
                     : "Restore post"
           }
           icon={
             moderationTarget.action === "REMOVE" ? (
-              <Trash2 aria-hidden="true" className="h-6 w-6 text-accent" />
+              <ShieldX aria-hidden="true" className="h-6 w-6 text-accent" />
             ) : (
               <Archive aria-hidden="true" className="h-6 w-6 text-orange-600 dark:text-orange-400" />
             )
@@ -525,10 +593,52 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
                 : moderationTarget.action === "ARCHIVE"
                   ? "Archive post?"
                   : moderationTarget.action === "REMOVE"
-                    ? "Remove post?"
+                    ? "Take down post?"
                     : "Restore post?"
           }
           tone={moderationTarget.action === "REMOVE" ? "delete" : "archive"}
+        />
+      )}
+      {deleteTarget && (
+        <AdminConfirmModal
+          body={
+            <div className="space-y-5">
+              <p>
+                This permanently deletes the post, its comments, post-specific
+                records, and uploaded media. Shared authors, categories, tags,
+                and media used by another post are preserved.
+              </p>
+              <label className="block text-[12px] font-semibold text-text-primary">
+                Type the post title to confirm
+                <span className="mt-1.5 block break-words rounded-[10px] border border-destructive/20 bg-destructive/5 px-3 py-2 font-mono text-[12px] font-medium text-destructive">
+                  {deleteTarget.title}
+                </span>
+                <input
+                  aria-label="Type the post title to confirm"
+                  autoComplete="off"
+                  autoFocus
+                  className="mt-2 h-10 w-full rounded-[12px] border border-border-strong bg-subtle-bg px-3 text-[13px] font-normal text-text-primary outline-none transition-colors placeholder:text-text-tertiary focus:border-destructive focus:ring-2 focus:ring-destructive/20"
+                  onChange={(event) => setDeleteConfirmation(event.target.value)}
+                  placeholder="Enter the exact title"
+                  spellCheck={false}
+                  value={deleteConfirmation}
+                />
+              </label>
+            </div>
+          }
+          confirmDisabled={
+            deleteConfirmation !== deleteTarget.title || deletingId !== null
+          }
+          confirmLabel={deletingId ? "Deleting…" : "Permanently delete"}
+          icon={<Trash2 aria-hidden="true" className="h-6 w-6 text-destructive" />}
+          onCancel={() => {
+            if (deletingId) return
+            setDeleteTarget(null)
+            setDeleteConfirmation("")
+          }}
+          onConfirm={() => void handlePermanentDelete()}
+          title="Permanently delete this post?"
+          tone="delete"
         />
       )}
       {bulkAction && (
@@ -543,8 +653,8 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
             </>
           }
           confirmDisabled={bulkReason.trim().length < 3 || isBulkActioning}
-          confirmLabel={isBulkActioning ? "Updating…" : `${bulkAction === "RESTORE" ? "Restore" : bulkAction === "REMOVE" ? "Remove" : "Archive"} posts`}
-          icon={bulkAction === "REMOVE" ? <Trash2 aria-hidden="true" className="h-6 w-6 text-accent" /> : <Archive aria-hidden="true" className="h-6 w-6 text-orange-600 dark:text-orange-400" />}
+          confirmLabel={isBulkActioning ? "Updating…" : `${bulkAction === "RESTORE" ? "Restore" : bulkAction === "REMOVE" ? "Take down" : "Archive"} posts`}
+          icon={bulkAction === "REMOVE" ? <ShieldX aria-hidden="true" className="h-6 w-6 text-accent" /> : <Archive aria-hidden="true" className="h-6 w-6 text-orange-600 dark:text-orange-400" />}
           onCancel={() => {
             setBulkAction(null)
             setBulkReason("")
@@ -552,7 +662,7 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
           onConfirm={() => void handleBulkAction()}
           onReasonChange={setBulkReason}
           reason={bulkReason}
-          title={`${bulkAction === "RESTORE" ? "Restore" : bulkAction === "REMOVE" ? "Remove" : "Archive"} selected posts?`}
+          title={`${bulkAction === "RESTORE" ? "Restore" : bulkAction === "REMOVE" ? "Take down" : "Archive"} selected posts?`}
           tone={bulkAction === "REMOVE" ? "delete" : "archive"}
         />
       )}

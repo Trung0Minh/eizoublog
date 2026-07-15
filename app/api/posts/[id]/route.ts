@@ -6,6 +6,7 @@ import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
 import { canViewPost } from "@/lib/postAccess"
 import { revalidatePostMutationPaths } from "@/lib/postRevalidation"
 import { prisma } from "@/lib/prisma"
+import { deleteR2Objects } from "@/lib/r2"
 import { ensureUniqueSlug, generateSlug } from "@/lib/utils"
 
 class RouteError extends Error {
@@ -29,6 +30,10 @@ const updateSchema = z.object({
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional(),
   tagIds: z.array(z.string().min(1)).optional(),
   title: z.string().trim().min(1).max(200).optional(),
+})
+
+const permanentDeleteSchema = z.object({
+  confirmation: z.string().min(1).max(200),
 })
 
 const postDetailSelect = {
@@ -112,6 +117,31 @@ function canPerformOwnerAction({
 
 function uniqueIds(ids: string[]) {
   return Array.from(new Set(ids))
+}
+
+function collectMediaUrls(value: unknown, urls = new Set<string>()) {
+  if (typeof value === "string") {
+    if (/^https?:\/\//i.test(value)) urls.add(value)
+    return urls
+  }
+
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectMediaUrls(item, urls))
+    return urls
+  }
+
+  if (typeof value === "object" && value !== null) {
+    Object.values(value).forEach((item) => collectMediaUrls(item, urls))
+  }
+
+  return urls
+}
+
+function getPostMediaUrls(post: { content: unknown; coverUrl: string | null }) {
+  const urls = new Set<string>()
+  if (post.coverUrl) urls.add(post.coverUrl)
+  collectMediaUrls(post.content, urls)
+  return urls
 }
 
 export async function GET(
@@ -414,10 +444,10 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const activeSession = await getActiveSession(["ADMIN", "WRITER"])
+  const activeSession = await getActiveSession(["ADMIN"])
 
   if (!activeSession) {
     return unauthorizedResponse()
@@ -425,40 +455,83 @@ export async function DELETE(
 
   try {
     const { id } = await params
-    let existingSlug: string | null = null
+    const parsed = permanentDeleteSchema.safeParse(
+      await request.json().catch(() => null),
+    )
+
+    if (!parsed.success) {
+      throw new RouteError("Type the post title to confirm deletion", 400)
+    }
+
+    const existing = await prisma.post.findUnique({
+      select: {
+        content: true,
+        coverUrl: true,
+        id: true,
+        slug: true,
+        status: true,
+        title: true,
+      },
+      where: { id },
+    })
+
+    if (!existing) {
+      throw new RouteError("Post not found", 404)
+    }
+
+    if (existing.status !== "REMOVED") {
+      throw new RouteError("Remove the post before permanently deleting it", 409)
+    }
+
+    if (parsed.data.confirmation !== existing.title) {
+      throw new RouteError("Post title does not match", 400)
+    }
+
+    const mediaUrls = getPostMediaUrls(existing)
+    const otherPosts =
+      mediaUrls.size > 0
+        ? await prisma.post.findMany({
+            select: { content: true, coverUrl: true },
+            where: { id: { not: id } },
+          })
+        : []
+    const sharedMediaUrls = new Set(
+      otherPosts.flatMap((post) => Array.from(getPostMediaUrls(post))),
+    )
+    const ownedMediaUrls = Array.from(mediaUrls).filter(
+      (url) => !sharedMediaUrls.has(url),
+    )
+
+    // Storage cleanup happens first so a successful response guarantees no media is orphaned.
+    await deleteR2Objects(ownedMediaUrls)
 
     await prisma.$transaction(async (tx) => {
-      const existing = await tx.post.findUnique({
-        select: {
-          authorId: true,
-          slug: true,
-          coAuthors: { select: { userId: true, status: true } },
-        },
-        where: { id },
+      await tx.awardEvent.updateMany({
+        data: { finalPostId: null },
+        where: { finalPostId: id },
       })
-
-      if (!existing) {
-        throw new RouteError("Post not found", 404)
-      }
-
-      if (!canPerformOwnerAction({
-        authorId: existing.authorId,
-        user: activeSession.user,
-      })) {
-        throw new RouteError("Forbidden", 403)
-      }
-
-      existingSlug = existing.slug
-
+      await tx.awardEventRoom.updateMany({
+        data: { postId: null },
+        where: { postId: id },
+      })
+      await tx.notification.deleteMany({
+        where: { data: { equals: id, path: ["postId"] } },
+      })
+      await tx.analyticsEvent.deleteMany({
+        where: { postSlug: existing.slug },
+      })
+      await tx.analyticsDailyPage.deleteMany({
+        where: { postSlug: existing.slug },
+      })
       await tx.post.delete({
         select: { id: true },
         where: { id },
       })
     })
 
-    revalidatePostMutationPaths([existingSlug])
+    revalidatePostMutationPaths([existing.slug])
 
-    return Response.json({ data: { message: "Post deleted" } })
+    return Response.json({ data: { message: "Post permanently deleted" } })
   } catch (error) {
     if (error instanceof RouteError) {
       return Response.json({ error: error.message }, { status: error.status })
