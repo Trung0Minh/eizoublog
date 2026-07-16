@@ -17,6 +17,9 @@ model User {
   bio               String?   @db.Text
   avatarUrl         String?
   avatarOriginalUrl String?
+  displayRoleName   String?
+  displayRoleColor  String?
+  displayRoleLocked Boolean   @default(false)
   emailVerified     DateTime?
   image             String?
   role              Role      @default(WRITER)

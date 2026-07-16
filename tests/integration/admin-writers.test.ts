@@ -32,7 +32,7 @@ vi.mock("next/cache", () => ({
       fn(...args),
 }))
 
-import { DELETE } from "@/app/api/admin/writers/[id]/route"
+import { DELETE, PATCH } from "@/app/api/admin/writers/[id]/route"
 
 const activeAdminUser = {
   avatarUrl: null,
@@ -91,6 +91,93 @@ function deleteRequest(id: string) {
     method: "DELETE",
   })
 }
+
+function patchRequest(id: string, body: unknown) {
+  return new Request(`https://example.test/api/admin/writers/${id}`, {
+    body: JSON.stringify(body),
+    headers: { "Content-Type": "application/json" },
+    method: "PATCH",
+  })
+}
+
+describe("PATCH /api/admin/writers/[id]", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.auth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } })
+    mockWriterUserLookup({ id: "writer-1", role: "WRITER" })
+    mocks.prisma.user.update.mockResolvedValue({
+      displayRoleColor: "#475569",
+      displayRoleLocked: true,
+      displayRoleName: "Archive Curator",
+      id: "writer-1",
+    })
+  })
+
+  it("lets admins edit and lock a writer's display role", async () => {
+    const response = await PATCH(
+      patchRequest("writer-1", {
+        displayRoleColor: "#475569",
+        displayRoleLocked: true,
+        displayRoleName: "Archive Curator",
+      }),
+      routeContext("writer-1"),
+    )
+
+    expect(response.status).toBe(200)
+    expect(mocks.prisma.user.update).toHaveBeenCalledWith({
+      data: {
+        displayRoleColor: "#475569",
+        displayRoleLocked: true,
+        displayRoleName: "Archive Curator",
+      },
+      select: {
+        displayRoleColor: true,
+        displayRoleLocked: true,
+        displayRoleName: true,
+        id: true,
+      },
+      where: { id: "writer-1" },
+    })
+    expect(mocks.revalidateTag).toHaveBeenCalledWith("users", "max")
+  })
+
+  it("lets admins reset a writer to the default badge", async () => {
+    await PATCH(
+      patchRequest("writer-1", {
+        displayRoleColor: null,
+        displayRoleLocked: false,
+        displayRoleName: null,
+      }),
+      routeContext("writer-1"),
+    )
+
+    expect(mocks.prisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: {
+          displayRoleColor: null,
+          displayRoleLocked: false,
+          displayRoleName: null,
+        },
+      }),
+    )
+  })
+
+  it("does not assign cosmetic writer roles to admin accounts", async () => {
+    mockWriterUserLookup({ id: "admin-2", role: "ADMIN" })
+
+    const response = await PATCH(
+      patchRequest("admin-2", {
+        displayRoleColor: "#475569",
+        displayRoleLocked: true,
+        displayRoleName: "Archive Curator",
+      }),
+      routeContext("admin-2"),
+    )
+
+    expect(response.status).toBe(400)
+    expect(mocks.prisma.user.update).not.toHaveBeenCalled()
+  })
+})
 
 describe("DELETE /api/admin/writers/[id]", () => {
   beforeEach(() => {

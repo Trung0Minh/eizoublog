@@ -30,6 +30,13 @@ describe("Prisma Auth.js adapter schema", () => {
     expect(userModel).toMatch(/image\s+String\?/)
   })
 
+  it("stores cosmetic writer roles separately from authorization roles", () => {
+    expect(userModel).toMatch(/displayRoleName\s+String\?/)
+    expect(userModel).toMatch(/displayRoleColor\s+String\?/)
+    expect(userModel).toMatch(/displayRoleLocked\s+Boolean\s+@default\(false\)/)
+    expect(userModel).toMatch(/role\s+Role\s+@default\(WRITER\)/)
+  })
+
   it("includes archived posts as a first-class post status", () => {
     expect(postStatusEnum).toContain("ARCHIVED")
   })
