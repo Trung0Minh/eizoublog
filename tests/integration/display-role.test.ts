@@ -34,6 +34,51 @@ function patchRequest(body: unknown) {
   })
 }
 
+function mockAdminUserLookup({
+  displayRoleColor = "#475569",
+  displayRoleName = "Editor-in-Chief",
+}: {
+  displayRoleColor?: string | null
+  displayRoleName?: string | null
+} = {}) {
+  mocks.userFindUnique.mockImplementation(async (query: unknown) => {
+    const select =
+      typeof query === "object" && query !== null && "select" in query
+        ? query.select
+        : null
+
+    if (
+      typeof select === "object" &&
+      select !== null &&
+      "displayRoleColor" in select
+    ) {
+      return {
+        displayRoleColor,
+        displayRoleLocked: false,
+        displayRoleName,
+        id: "admin-1",
+      }
+    }
+
+    if (
+      typeof select === "object" &&
+      select !== null &&
+      "displayRoleLocked" in select
+    ) {
+      return { displayRoleLocked: false, role: "ADMIN" }
+    }
+
+    return {
+      avatarUrl: null,
+      email: "admin@example.com",
+      id: "admin-1",
+      name: "Admin",
+      role: "ADMIN",
+      username: "admin",
+    }
+  })
+}
+
 describe("PATCH /api/profile/display-role", () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -62,7 +107,7 @@ describe("PATCH /api/profile/display-role", () => {
         select !== null &&
         "displayRoleLocked" in select
       ) {
-        return { displayRoleLocked: false }
+        return { displayRoleLocked: false, role: "WRITER" }
       }
 
       return {
@@ -117,7 +162,7 @@ describe("PATCH /api/profile/display-role", () => {
         role: "WRITER",
         username: "mina",
       })
-      .mockResolvedValueOnce({ displayRoleLocked: true })
+      .mockResolvedValueOnce({ displayRoleLocked: true, role: "WRITER" })
     mocks.userUpdateMany.mockResolvedValue({ count: 0 })
 
     const response = await PATCH(
@@ -152,25 +197,48 @@ describe("PATCH /api/profile/display-role", () => {
     )
   })
 
-  it("rejects non-writer accounts", async () => {
+  it("lets admins update a cosmetic title without changing their authority role", async () => {
     mocks.auth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } })
-    mocks.userFindUnique.mockResolvedValueOnce({
-      avatarUrl: null,
-      email: "admin@example.com",
-      id: "admin-1",
-      name: "Admin",
-      role: "ADMIN",
-      username: "admin",
-    })
+    mockAdminUserLookup()
 
     const response = await PATCH(
       patchRequest({
-        displayRoleColor: "#0D9488",
-        displayRoleName: "Film Critic",
+        displayRoleColor: "#475569",
+        displayRoleName: "Editor-in-Chief",
       }),
     )
 
-    expect(response.status).toBe(401)
+    expect(response.status).toBe(200)
+    expect(mocks.userUpdateMany).toHaveBeenCalledWith({
+      data: {
+        displayRoleColor: "#475569",
+        displayRoleName: "Editor-in-Chief",
+      },
+      where: { id: "admin-1", role: "ADMIN" },
+    })
+  })
+
+  it("lets admins remove their optional custom title", async () => {
+    mocks.auth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } })
+    mockAdminUserLookup({ displayRoleColor: null, displayRoleName: null })
+
+    const response = await PATCH(
+      patchRequest({ displayRoleColor: null, displayRoleName: null }),
+    )
+
+    expect(response.status).toBe(200)
+    expect(mocks.userUpdateMany).toHaveBeenCalledWith({
+      data: { displayRoleColor: null, displayRoleName: null },
+      where: { id: "admin-1", role: "ADMIN" },
+    })
+  })
+
+  it("does not let writers remove the required Writer badge", async () => {
+    const response = await PATCH(
+      patchRequest({ displayRoleColor: null, displayRoleName: null }),
+    )
+
+    expect(response.status).toBe(400)
     expect(mocks.userUpdateMany).not.toHaveBeenCalled()
   })
 

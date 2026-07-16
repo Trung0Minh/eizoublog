@@ -3,8 +3,9 @@
 import { useState } from "react"
 import { LockKeyhole, RotateCcw } from "lucide-react"
 import { useRouter } from "next/navigation"
+import type { Role } from "@prisma/client"
 
-import { DisplayRoleBadge } from "@/components/profile/DisplayRoleBadge"
+import { RoleBadges } from "@/components/profile/RoleBadges"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -17,6 +18,7 @@ interface DisplayRoleSettingsProps {
   displayRoleColor: string | null
   displayRoleLocked: boolean
   displayRoleName: string | null
+  role: Role
 }
 
 function getApiError(value: unknown) {
@@ -36,8 +38,11 @@ export function DisplayRoleSettings({
   displayRoleColor,
   displayRoleLocked,
   displayRoleName,
+  role,
 }: DisplayRoleSettingsProps) {
   const router = useRouter()
+  const isAdmin = role === "ADMIN"
+  const isLocked = role === "WRITER" && displayRoleLocked
   const [color, setColor] = useState(
     displayRoleColor ?? DEFAULT_DISPLAY_ROLE_COLOR,
   )
@@ -46,12 +51,54 @@ export function DisplayRoleSettings({
     type: "error" | "success"
   } | null>(null)
   const [name, setName] = useState(
-    displayRoleName ?? DEFAULT_DISPLAY_ROLE_NAME,
+    displayRoleName ?? (isAdmin ? "" : DEFAULT_DISPLAY_ROLE_NAME),
   )
   const [saving, setSaving] = useState(false)
 
+  async function persistDisplayRole(
+    data: {
+      displayRoleColor: string | null
+      displayRoleName: string | null
+    },
+    successMessage: string,
+  ) {
+    setSaving(true)
+    try {
+      const response = await fetch("/api/profile/display-role", {
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+        method: "PATCH",
+      })
+      const result: unknown = await response.json()
+
+      if (!response.ok) {
+        throw new Error(getApiError(result))
+      }
+
+      setColor(data.displayRoleColor ?? DEFAULT_DISPLAY_ROLE_COLOR)
+      setName(data.displayRoleName ?? "")
+      setMessage({ text: successMessage, type: "success" })
+      router.refresh()
+    } catch (error) {
+      setMessage({
+        text: error instanceof Error ? error.message : "Không thể lưu vai trò hiển thị",
+        type: "error",
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
+
   async function saveDisplayRole() {
     setMessage(null)
+
+    if (isAdmin && !name.trim()) {
+      await persistDisplayRole(
+        { displayRoleColor: null, displayRoleName: null },
+        "Đã xóa vai trò tùy chỉnh.",
+      )
+      return
+    }
 
     const parsed = displayRoleSchema.safeParse({
       displayRoleColor: color,
@@ -66,34 +113,19 @@ export function DisplayRoleSettings({
       return
     }
 
-    setSaving(true)
-    try {
-      const response = await fetch("/api/profile/display-role", {
-        body: JSON.stringify(parsed.data),
-        headers: { "Content-Type": "application/json" },
-        method: "PATCH",
-      })
-      const result: unknown = await response.json()
-
-      if (!response.ok) {
-        throw new Error(getApiError(result))
-      }
-
-      setColor(parsed.data.displayRoleColor)
-      setName(parsed.data.displayRoleName)
-      setMessage({ text: "Đã lưu vai trò hiển thị.", type: "success" })
-      router.refresh()
-    } catch (error) {
-      setMessage({
-        text: error instanceof Error ? error.message : "Không thể lưu vai trò hiển thị",
-        type: "error",
-      })
-    } finally {
-      setSaving(false)
-    }
+    await persistDisplayRole(parsed.data, "Đã lưu vai trò hiển thị.")
   }
 
-  function resetDraft() {
+  async function resetRole() {
+    if (isAdmin) {
+      setMessage(null)
+      await persistDisplayRole(
+        { displayRoleColor: null, displayRoleName: null },
+        "Đã xóa vai trò tùy chỉnh.",
+      )
+      return
+    }
+
     setColor(DEFAULT_DISPLAY_ROLE_COLOR)
     setName(DEFAULT_DISPLAY_ROLE_NAME)
     setMessage(null)
@@ -107,17 +139,21 @@ export function DisplayRoleSettings({
             Vai trò hiển thị
           </h2>
           <p className="mt-1 max-w-xl text-xs leading-relaxed text-muted-foreground">
-            Đây là huy hiệu công khai, không thay đổi quyền truy cập của bạn.
+            {isAdmin
+              ? "Huy hiệu ADMIN luôn được giữ nguyên; tiêu đề này chỉ bổ sung danh tính công khai."
+              : "Đây là huy hiệu công khai, không thay đổi quyền truy cập của bạn."}
           </p>
         </div>
-        <DisplayRoleBadge
-          className="self-start px-3 py-1 text-[11px]"
+        <RoleBadges
+          badgeClassName="px-3 py-1 text-[11px]"
+          className="self-start"
           displayRoleColor={color}
-          displayRoleName={name}
+          displayRoleName={name || null}
+          role={role}
         />
       </div>
 
-      <fieldset className="mt-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_116px]" disabled={displayRoleLocked || saving}>
+      <fieldset className="mt-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_116px]" disabled={isLocked || saving}>
         <div className="space-y-2">
           <label className="text-sm font-medium" htmlFor="display-role-name">
             Vai trò hiển thị
@@ -158,7 +194,7 @@ export function DisplayRoleSettings({
         </div>
       </fieldset>
 
-      {displayRoleLocked && (
+      {isLocked && (
         <p className="mt-4 flex items-center gap-2 text-xs font-medium text-amber-700 dark:text-amber-300">
           <LockKeyhole aria-hidden="true" className="h-3.5 w-3.5" />
           Vai trò này đã được khóa bởi quản trị viên.
@@ -180,16 +216,16 @@ export function DisplayRoleSettings({
 
       <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button
-          disabled={displayRoleLocked || saving}
-          onClick={resetDraft}
+          disabled={isLocked || saving}
+          onClick={() => void resetRole()}
           type="button"
           variant="outline"
         >
           <RotateCcw aria-hidden="true" className="h-4 w-4" />
-          Đặt lại Writer
+          {isAdmin ? "Bỏ tiêu đề tùy chỉnh" : "Đặt lại Writer"}
         </Button>
         <Button
-          disabled={displayRoleLocked || saving}
+          disabled={isLocked || saving}
           onClick={() => void saveDisplayRole()}
           type="button"
         >

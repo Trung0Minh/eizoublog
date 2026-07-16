@@ -172,12 +172,13 @@ export function ProfileForm({ user }: ProfileFormProps) {
         </div>
       </ScrollReveal>
 
-      {user.role === "WRITER" && (
+      {(user.role === "ADMIN" || user.role === "WRITER") && (
         <ScrollReveal delay={0.3}>
           <DisplayRoleSettings
             displayRoleColor={user.displayRoleColor}
             displayRoleLocked={user.displayRoleLocked}
             displayRoleName={user.displayRoleName}
+            role={user.role}
           />
         </ScrollReveal>
       )}

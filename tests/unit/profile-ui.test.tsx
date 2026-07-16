@@ -225,6 +225,112 @@ describe("ProfileForm", () => {
     expect(await screen.findByText("Đã lưu vai trò hiển thị.")).toBeVisible()
   })
 
+  it("lets admins add an optional title while keeping the ADMIN badge", async () => {
+    const user = userEvent.setup()
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: {
+            displayRoleColor: "#475569",
+            displayRoleLocked: false,
+            displayRoleName: "Editor-in-Chief",
+            id: "admin-1",
+          },
+        }),
+        { status: 200 },
+      ),
+    )
+    vi.stubGlobal("fetch", fetchMock)
+
+    render(
+      <ProfileForm
+        user={{
+          avatarOriginalUrl: null,
+          avatarUrl: null,
+          bio: null,
+          displayRoleColor: null,
+          displayRoleLocked: false,
+          displayRoleName: null,
+          email: "admin@example.com",
+          name: "Admin",
+          role: "ADMIN",
+          username: "admin",
+        }}
+      />,
+    )
+
+    expect(screen.getByText("ADMIN")).toBeVisible()
+    const roleInput = screen.getByRole("textbox", { name: "Vai trò hiển thị" })
+    expect(roleInput).toHaveValue("")
+    await user.type(roleInput, "Editor-in-Chief")
+    fireEvent.change(screen.getByLabelText("Màu vai trò"), {
+      target: { value: "#475569" },
+    })
+    await user.click(screen.getByRole("button", { name: "Lưu vai trò" }))
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith("/api/profile/display-role", {
+        body: JSON.stringify({
+          displayRoleColor: "#475569",
+          displayRoleName: "Editor-in-Chief",
+        }),
+        headers: { "Content-Type": "application/json" },
+        method: "PATCH",
+      })
+    })
+  })
+
+  it("lets admins remove their optional title without hiding ADMIN", async () => {
+    const user = userEvent.setup()
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: {
+            displayRoleColor: null,
+            displayRoleLocked: false,
+            displayRoleName: null,
+            id: "admin-1",
+          },
+        }),
+        { status: 200 },
+      ),
+    )
+    vi.stubGlobal("fetch", fetchMock)
+
+    render(
+      <ProfileForm
+        user={{
+          avatarOriginalUrl: null,
+          avatarUrl: null,
+          bio: null,
+          displayRoleColor: "#475569",
+          displayRoleLocked: false,
+          displayRoleName: "Editor-in-Chief",
+          email: "admin@example.com",
+          name: "Admin",
+          role: "ADMIN",
+          username: "admin",
+        }}
+      />,
+    )
+
+    await user.click(
+      screen.getByRole("button", { name: "Bỏ tiêu đề tùy chỉnh" }),
+    )
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith("/api/profile/display-role", {
+        body: JSON.stringify({
+          displayRoleColor: null,
+          displayRoleName: null,
+        }),
+        headers: { "Content-Type": "application/json" },
+        method: "PATCH",
+      })
+    })
+    expect(screen.getByText("ADMIN")).toBeVisible()
+  })
+
   it("shows when an admin has locked the display role", () => {
     render(
       <ProfileForm

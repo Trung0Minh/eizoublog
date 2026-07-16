@@ -66,10 +66,10 @@ describe("public profile layouts", () => {
         _count: { posts: 1 },
         avatarUrl: null,
         bio: "Writer bio",
-        displayRoleColor: null,
-        displayRoleName: null,
+        displayRoleColor: "#475569",
+        displayRoleName: "Editor-in-Chief",
         name: "Mina",
-        role: "WRITER",
+        role: "ADMIN",
         username: "mina",
       },
     ])
@@ -79,10 +79,11 @@ describe("public profile layouts", () => {
     )
 
     const heading = screen.getByRole("heading", { name: "Mina" })
-    const badge = screen.getByText("Writer")
+    const badge = screen.getByText("Editor-in-Chief")
     const row = heading.closest("div")
 
     expect(row).toContainElement(badge)
+    expect(screen.getByText("ADMIN")).toBeVisible()
     expect(row).toHaveClass(
       "items-center",
       "justify-center",

@@ -51,6 +51,8 @@ describe("AuthorPage", () => {
     mocks.getCachedAuthorByUsername.mockResolvedValue({
       avatarUrl: null,
       bio: "trùm sò",
+      displayRoleColor: "#475569",
+      displayRoleName: "Editor-in-Chief",
       id: "admin-1",
       name: "nun",
       role: "ADMIN",
@@ -65,6 +67,7 @@ describe("AuthorPage", () => {
     )
 
     expect(screen.getByText("ADMIN")).toBeVisible()
+    expect(screen.getByText("Editor-in-Chief")).toBeVisible()
     expect(screen.queryByText("Admin")).not.toBeInTheDocument()
     expect(screen.queryByText("Writer")).not.toBeInTheDocument()
   })

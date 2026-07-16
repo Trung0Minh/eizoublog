@@ -171,6 +171,19 @@ describe("CommentSection", () => {
             id: "comment-guest",
             replies: [],
           },
+          {
+            ...topComment,
+            author: {
+              avatarUrl: null,
+              displayRoleColor: "#475569",
+              displayRoleName: "Editor-in-Chief",
+              role: "ADMIN",
+              username: "admin",
+            },
+            authorName: "Admin",
+            id: "comment-admin",
+            replies: [],
+          },
         ]}
         postId="post-1"
         postSlug="frieren-memory"
@@ -182,6 +195,8 @@ describe("CommentSection", () => {
       "https://cdn.example.com/avatars/mina.png",
     )
     expect(screen.getByText("Archive Curator")).toBeVisible()
+    expect(screen.getByText("Editor-in-Chief")).toBeVisible()
+    expect(screen.getByText("ADMIN")).toBeVisible()
     expect(screen.getByText("G")).toBeVisible()
   })
 
