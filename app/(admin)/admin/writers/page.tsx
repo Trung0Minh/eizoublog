@@ -1,7 +1,4 @@
-import { Plus, Search } from "lucide-react"
-
 import { AdminPageHeader } from "@/components/admin/AdminPrimitives"
-import { InviteWriterForm } from "@/components/admin/InviteWriterForm"
 import { PendingInvitesTable } from "@/components/admin/PendingInvitesTable"
 import { WritersTable } from "@/components/admin/WritersTable"
 import { getCachedAdminWritersData } from "@/lib/queries"

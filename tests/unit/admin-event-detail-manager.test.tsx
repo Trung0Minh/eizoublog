@@ -159,7 +159,6 @@ describe("AdminEventDetailManager", () => {
   })
 
   it("reorders rooms optimistically without a full refresh on success", async () => {
-    const user = userEvent.setup()
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ data: { id: "event-1" } }), {
         status: 200,

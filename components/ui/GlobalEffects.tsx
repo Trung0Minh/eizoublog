@@ -4,7 +4,6 @@ import { usePathname } from "next/navigation"
 
 import { AmbientBackground } from "@/components/ui/AmbientBackground"
 import { CustomCursor } from "@/components/ui/CustomCursor"
-import { NoiseOverlay } from "@/components/ui/NoiseOverlay"
 import { SeasonalEffects } from "@/components/ui/SakuraFalling"
 
 export function GlobalEffects() {
@@ -17,7 +16,6 @@ export function GlobalEffects() {
 
   return (
     <>
-      <NoiseOverlay />
       <AmbientBackground />
       <SeasonalEffects />
       <CustomCursor />

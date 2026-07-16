@@ -4,7 +4,7 @@ import Link from "next/link"
 import { motion } from "motion/react"
 
 import { RelativeTime } from "@/components/ui/RelativeTime"
-import { getCoverStyle } from "@/lib/cover-style"
+import { getCoverObjectPositionStyle } from "@/lib/cover-style"
 
 export interface PostCardPost {
   _count: { comments: number }
@@ -79,7 +79,7 @@ export function PostCard({ post }: PostCardProps) {
             <img
               alt={post.coverAlt ?? post.title}
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05] group-hover:-rotate-1"
-              style={getCoverStyle(post.coverUrl)}
+              style={getCoverObjectPositionStyle(post.coverUrl)}
               decoding="async"
               loading="lazy"
               src={(post.coverUrl || "").split("?")[0]}

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest"
 
-import { getCoverStyle } from "@/lib/cover-style"
+import {
+  getCoverObjectPositionStyle,
+  getCoverStyle,
+} from "@/lib/cover-style"
 
 describe("getCoverStyle", () => {
   const croppedUrl =
@@ -20,6 +23,22 @@ describe("getCoverStyle", () => {
 
     expect(getCoverStyle(desktopOnly, "mobile")).toEqual(
       getCoverStyle(desktopOnly, "desktop"),
+    )
+  })
+
+  it("maps a fixed-ratio crop to object position without transforms", () => {
+    expect(getCoverObjectPositionStyle(croppedUrl)).toEqual({
+      objectFit: "cover",
+      objectPosition: "25% 66.6667%",
+    })
+  })
+
+  it("keeps legacy crop metadata on the existing transform path", () => {
+    const legacyUrl =
+      "https://cdn.example.com/background.jpg?zoom=1.2&tx=4&ty=-3"
+
+    expect(getCoverObjectPositionStyle(legacyUrl)).toEqual(
+      getCoverStyle(legacyUrl),
     )
   })
 })

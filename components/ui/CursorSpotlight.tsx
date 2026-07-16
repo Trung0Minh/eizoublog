@@ -43,7 +43,7 @@ export function CursorSpotlight() {
       document.removeEventListener("mouseleave", handleMouseLeave)
       document.removeEventListener("mouseenter", handleMouseEnter)
     }
-  }, [cursorX, cursorY])
+  }, [cursorX, cursorY, shouldReduce])
 
   const background = useMotionTemplate`radial-gradient(600px circle at ${cursorX}px ${cursorY}px, rgba(255,255,255,0.06), transparent 40%)`
 

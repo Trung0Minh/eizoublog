@@ -37,7 +37,6 @@ import { AmbientBackground } from "@/components/ui/AmbientBackground"
 import { CustomCursor } from "@/components/ui/CustomCursor"
 import { DynamicBackground } from "@/components/ui/DynamicBackground"
 import { GlobalEffects } from "@/components/ui/GlobalEffects"
-import { NoiseOverlay } from "@/components/ui/NoiseOverlay"
 import { SeasonalEffects } from "@/components/ui/SakuraFalling"
 
 function setMedia({ coarse = false, reduced = false } = {}) {
@@ -128,10 +127,21 @@ describe("responsive visual effects", () => {
     })
   })
 
-  it("does not paint the noise overlay below the desktop breakpoint", () => {
-    render(<NoiseOverlay />)
+  it("keeps full-screen grain off public foreground content", () => {
+    render(<GlobalEffects />)
 
-    expect(screen.getByTestId("noise-overlay")).toHaveClass("hidden", "md:block")
+    expect(screen.queryByTestId("noise-overlay")).not.toBeInTheDocument()
+  })
+
+  it("keeps glass surfaces free of fractal noise textures", () => {
+    const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8")
+    const glassRules = ["glass-navbar", "glass-card"].map((className) =>
+      css.match(new RegExp(`\\.${className}\\s*\\{([\\s\\S]*?)\\n\\s*\\}`))?.[1] ?? "",
+    )
+
+    glassRules.forEach((rule) => {
+      expect(rule).not.toMatch(/fractalNoise|background-image/)
+    })
   })
 
   it("keeps the shared subtle background utility cheap to paint", () => {

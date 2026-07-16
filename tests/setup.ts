@@ -112,6 +112,12 @@ Object.defineProperty(globalThis, "ResizeObserver", {
   value: MockResizeObserver,
 })
 
+Object.defineProperty(Element.prototype, "scrollIntoView", {
+  configurable: true,
+  value: vi.fn(),
+  writable: true,
+})
+
 Object.defineProperty(globalThis, "matchMedia", {
   writable: true,
   configurable: true,

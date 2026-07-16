@@ -31,10 +31,12 @@ describe("published post width contract", () => {
 
   it("uses a horizontally discoverable author strip when cards overflow", () => {
     const page = read("app/(public)/[slug]/page.tsx")
+    const authorCredits = read("components/posts/AuthorCreditList.tsx")
 
-    expect(page).toContain('data-testid="author-credit-list"')
-    expect(page).toContain("overflow-x-auto")
-    expect(page).toContain("scroll-snap-type")
-    expect(page).toContain("Kéo ngang để xem thêm")
+    expect(page).toContain("<AuthorCreditList")
+    expect(authorCredits).toContain('data-testid="author-credit-list"')
+    expect(authorCredits).toContain("overflow-x-auto")
+    expect(authorCredits).toContain("scroll-snap-type")
+    expect(authorCredits).toContain("Kéo ngang để xem thêm")
   })
 })

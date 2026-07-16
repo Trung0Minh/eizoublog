@@ -45,13 +45,12 @@ describe("anime-blog-4 appearance parity", () => {
     expect(hero).toContain("post.coverUrl?.split('?')[0]")
   })
 
-  it("mounts the version-4 typing particle layer in the real post editor", () => {
-    const particlePath = join(root, "components/editor/EditorParticles.tsx")
+  it("avoids mounting duplicate particle layers inside the post editor", () => {
     const editor = read("components/posts/PostEditor.tsx")
 
-    expect(existsSync(particlePath)).toBe(true)
-    expect(editor).toContain('import { EditorParticles } from "@/components/editor/EditorParticles"')
-    expect(editor).toContain("<EditorParticles />")
+    expect(editor).not.toContain('import { EditorParticles } from "@/components/editor/EditorParticles"')
+    expect(editor).not.toContain("<EditorParticles />")
+    expect(editor).not.toContain("<SeasonalEffects />")
   })
 
   it("provides adapted root error and missing-page states", () => {

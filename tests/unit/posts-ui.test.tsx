@@ -131,14 +131,12 @@ describe("PostCard", () => {
       "data-prefetch",
       "undefined",
     )
-    expect(screen.getByRole("link", { name: /Mina/ })).toHaveAttribute(
-      "href",
-      "/authors/mina",
-    )
-    expect(screen.getByRole("link", { name: /Mina/ })).toHaveAttribute(
-      "data-prefetch",
-      "undefined",
-    )
+    const minaLinks = screen.getAllByRole("link", { name: "Mina" })
+    expect(minaLinks).toHaveLength(2)
+    minaLinks.forEach((link) => {
+      expect(link).toHaveAttribute("href", "/authors/mina")
+      expect(link).toHaveAttribute("data-prefetch", "undefined")
+    })
     expect(screen.getByRole("link", { name: "Sakuga" })).toHaveAttribute(
       "href",
       "/tag/sakuga",

@@ -2,22 +2,23 @@
 
 import { Search } from "lucide-react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useTransition, useState, useEffect } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { useDebounce } from "@/hooks/useDebounce"
 
 export function AdminPostSearch() {
+  const searchParams = useSearchParams()
+  const initialQuery = searchParams.get("q") ?? ""
+
+  return <AdminPostSearchInput initialQuery={initialQuery} key={initialQuery} />
+}
+
+function AdminPostSearchInput({ initialQuery }: { initialQuery: string }) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
-  
-  const initialQuery = searchParams.get("q") ?? ""
   const [query, setQuery] = useState(initialQuery)
   const debouncedQuery = useDebounce(query, 300)
-
-  useEffect(() => {
-    setQuery(searchParams.get("q") ?? "")
-  }, [searchParams])
 
   useEffect(() => {
     if (debouncedQuery === (searchParams.get("q") ?? "")) return

@@ -261,7 +261,9 @@ describe("NextAuth configuration", () => {
   it("stores stable user claims in the JWT at sign-in", async () => {
     mocks.userFindUnique.mockResolvedValue({
       avatarUrl: "https://example.com/avatar.png",
+      email: "writer@example.com",
       id: "writer-1",
+      name: "Writer",
       role: "WRITER",
       username: "writer",
     })
@@ -295,14 +297,24 @@ describe("NextAuth configuration", () => {
       where: { id: "writer-1" },
       select: {
         avatarUrl: true,
+        email: true,
         id: true,
+        name: true,
         role: true,
         username: true,
       },
     })
   })
 
-  it("reuses complete JWT claims during navigation without a database lookup", async () => {
+  it("refreshes JWT profile claims during navigation", async () => {
+    mocks.userFindUnique.mockResolvedValue({
+      avatarUrl: "https://example.com/new-avatar.png",
+      email: "writer@example.com",
+      id: "writer-1",
+      name: "Writer",
+      role: "WRITER",
+      username: "writer",
+    })
     const jwtCallback = config.callbacks?.jwt as unknown as (options: {
       token: {
         avatarUrl?: string | null
@@ -327,12 +339,22 @@ describe("NextAuth configuration", () => {
     })
 
     expect(result).toMatchObject({
-      avatarUrl: "https://example.com/avatar.png",
+      avatarUrl: "https://example.com/new-avatar.png",
       role: "WRITER",
       sub: "writer-1",
       username: "writer",
     })
-    expect(mocks.userFindUnique).not.toHaveBeenCalled()
+    expect(mocks.userFindUnique).toHaveBeenCalledWith({
+      where: { id: "writer-1" },
+      select: {
+        avatarUrl: true,
+        email: true,
+        id: true,
+        name: true,
+        role: true,
+        username: true,
+      },
+    })
   })
 
   it("uses JWT fields in sessions without an extra lookup", async () => {

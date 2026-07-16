@@ -65,6 +65,9 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/",
   useRouter: () => ({ push: vi.fn() }),
 }))
+vi.mock("next/headers", () => ({
+  cookies: vi.fn().mockResolvedValue({ get: vi.fn() }),
+}))
 
 import RootLayout from "@/app/layout"
 import { trackEvent } from "@/lib/analytics"

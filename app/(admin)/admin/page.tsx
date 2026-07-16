@@ -91,7 +91,7 @@ export default async function AdminDashboardPage() {
             Welcome back to your workspace
           </h2>
           <p className="mt-2 text-[14px] md:text-[15px] text-text-secondary max-w-xl">
-            Here's what's happening with your blog today. You have <span className="font-semibold text-text-primary">{stats.draftPosts}</span> drafts waiting to be published and <span className="font-semibold text-text-primary">{recentComments.length}</span> new comments.
+            Here&apos;s what&apos;s happening with your blog today. You have <span className="font-semibold text-text-primary">{stats.draftPosts}</span> drafts waiting to be published and <span className="font-semibold text-text-primary">{recentComments.length}</span> new comments.
           </p>
         </div>
       </div>

@@ -6,6 +6,8 @@ import Autoplay from 'embla-carousel-autoplay';
 import Link from 'next/link';
 import { Sparkles } from 'lucide-react';
 
+import { getCoverObjectPositionStyle } from '@/lib/cover-style';
+
 interface HeroCarouselPost {
   category: { name: string } | null
   coverAlt: string | null
@@ -66,6 +68,7 @@ export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
                   alt={post.coverAlt || post.title}
                   className="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
                   fetchPriority="high"
+                  style={getCoverObjectPositionStyle(post.coverUrl)}
                 />
                 <div className="absolute inset-x-0 bottom-0 top-1/3 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-6 md:p-12">
                   <div>
