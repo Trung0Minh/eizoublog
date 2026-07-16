@@ -5,7 +5,7 @@ import {
   DEFAULT_DISPLAY_ROLE_NAME,
   displayRoleSchema,
   getDisplayRoleForeground,
-  getDisplayRoleTextColor,
+  getDisplayRolePalette,
 } from "@/lib/displayRole"
 
 describe("display roles", () => {
@@ -71,8 +71,15 @@ describe("display roles", () => {
     expect(getDisplayRoleForeground("#18181B")).toBe("#FFFFFF")
   })
 
-  it("darkens text for very light tinted badge colors", () => {
-    expect(getDisplayRoleTextColor("#F4F4F5")).toBe("#18181B")
-    expect(getDisplayRoleTextColor("#C2410C")).toBe("#C2410C")
+  it("builds readable light and dark tinted badge palettes", () => {
+    expect(getDisplayRolePalette("#0D9488")).toEqual({
+      darkBackground: "#0D948833",
+      darkForeground: "#31A49A",
+      lightBackground: "#0D948829",
+      lightForeground: "#0A766D",
+    })
+    expect(getDisplayRolePalette("#F4F4F5").lightForeground).not.toBe(
+      "#F4F4F5",
+    )
   })
 })

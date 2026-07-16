@@ -30,10 +30,10 @@ describe("DisplayRoleBadge", () => {
       />,
     )
 
-    expect(screen.getByText("Seasonal Analyst")).toHaveStyle({
-      backgroundColor: "#F4F4F51A",
-      color: "#18181B",
-    })
+    expect(screen.getByText("Seasonal Analyst")).toHaveAttribute("style")
+    expect(screen.getByText("Seasonal Analyst").getAttribute("style")).toContain(
+      "--display-role-bg: #F4F4F529",
+    )
     expect(screen.getByText("Seasonal Analyst")).toHaveClass(
       "rounded-[4px]",
       "px-1.5",

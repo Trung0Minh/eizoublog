@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+.display-role-badge {
+  background-color: var(--display-role-bg);
+  color: var(--display-role-fg);
+}
+
+.dark .display-role-badge {
+  background-color: var(--display-role-bg-dark);
+  color: var(--display-role-fg-dark);
+}
+
 
 @layer base {
   :root {

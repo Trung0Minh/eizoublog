@@ -1,8 +1,10 @@
+import type { CSSProperties } from "react"
+
 import { cn } from "@/lib/utils"
 import {
   DEFAULT_DISPLAY_ROLE_COLOR,
   DEFAULT_DISPLAY_ROLE_NAME,
-  getDisplayRoleTextColor,
+  getDisplayRolePalette,
 } from "@/lib/displayRole"
 
 interface DisplayRoleBadgeProps {
@@ -26,17 +28,22 @@ export function DisplayRoleBadge({
   const name = hasCustomRole
     ? displayRoleName ?? DEFAULT_DISPLAY_ROLE_NAME
     : DEFAULT_DISPLAY_ROLE_NAME
+  const palette = getDisplayRolePalette(color)
+  const style = {
+    "--display-role-bg": palette.lightBackground,
+    "--display-role-bg-dark": palette.darkBackground,
+    "--display-role-fg": palette.lightForeground,
+    "--display-role-fg-dark": palette.darkForeground,
+  } as CSSProperties
 
   return (
     <span
       className={cn(
         ROLE_BADGE_CLASS_NAME,
+        "display-role-badge",
         className,
       )}
-      style={{
-        backgroundColor: `${color}1A`,
-        color: getDisplayRoleTextColor(color),
-      }}
+      style={style}
       title={`Display role: ${name}`}
     >
       {name}

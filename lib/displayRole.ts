@@ -68,9 +68,29 @@ export const displayRoleSchema = z.object({
   displayRoleName: roleNameSchema,
 })
 
-function relativeLuminance(color: string) {
-  const channels = [1, 3, 5].map((offset) =>
-    Number.parseInt(color.slice(offset, offset + 2), 16) / 255,
+type Rgb = [number, number, number]
+
+function hexToRgb(color: string): Rgb {
+  return [1, 3, 5].map((offset) =>
+    Number.parseInt(color.slice(offset, offset + 2), 16),
+  ) as Rgb
+}
+
+function rgbToHex([red, green, blue]: Rgb) {
+  return `#${[red, green, blue]
+    .map((channel) => Math.round(channel).toString(16).padStart(2, "0"))
+    .join("")}`.toUpperCase()
+}
+
+function blendRgb(foreground: Rgb, background: Rgb, amount: number): Rgb {
+  return foreground.map((channel, index) =>
+    Math.round(channel * (1 - amount) + background[index] * amount),
+  ) as Rgb
+}
+
+function relativeLuminance(color: string | Rgb) {
+  const channels = (typeof color === "string" ? hexToRgb(color) : color).map(
+    (channel) => channel / 255,
   )
   const [red, green, blue] = channels.map((channel) =>
     channel <= 0.03928
@@ -97,8 +117,33 @@ export function getDisplayRoleForeground(color: string) {
     : "#FFFFFF"
 }
 
-// Tinted badges need a dark label for very light custom colors; using the raw
-// color there would make the text disappear against its pale background.
-export function getDisplayRoleTextColor(color: string) {
-  return relativeLuminance(color) > 0.55 ? "#18181B" : color
+function adjustForContrast(color: Rgb, background: Rgb, target: Rgb) {
+  for (let step = 0; step <= 100; step += 1) {
+    const candidate = blendRgb(color, target, step / 100)
+    if (
+      contrastRatio(
+        relativeLuminance(candidate),
+        relativeLuminance(background),
+      ) >= 4.5
+    ) {
+      return rgbToHex(candidate)
+    }
+  }
+
+  return rgbToHex(target)
+}
+
+export function getDisplayRolePalette(color: string) {
+  const selected = hexToRgb(color)
+  const lightSurface: Rgb = [255, 255, 255]
+  const darkSurface: Rgb = [24, 24, 27]
+  const lightBackground = blendRgb(selected, lightSurface, 0.84)
+  const darkBackground = blendRgb(selected, darkSurface, 0.8)
+
+  return {
+    darkBackground: `${color}33`,
+    darkForeground: adjustForContrast(selected, darkBackground, lightSurface),
+    lightBackground: `${color}29`,
+    lightForeground: adjustForContrast(selected, lightBackground, [0, 0, 0]),
+  }
 }
