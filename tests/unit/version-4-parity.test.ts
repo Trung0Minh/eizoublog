@@ -99,6 +99,13 @@ describe("anime-blog-4 appearance parity", () => {
     expect(resources).toContain("isEditing")
   })
 
+  it("keeps resource card reveals quick while preserving their entrance motion", () => {
+    const resources = read("app/(public)/resources/ResourcesClient.tsx")
+
+    expect(resources).toContain("delay: Math.min(index * 0.04, 0.12)")
+    expect(resources).toContain("duration: 0.35")
+  })
+
   it("aligns home sort tabs with the post column", () => {
     const homePostList = read("app/(public)/HomePostList.tsx")
 

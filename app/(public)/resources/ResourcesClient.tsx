@@ -665,7 +665,14 @@ export function ResourcesClient({
 
                     if (isLink && !isEditing) {
                       return (
-                        <ScrollReveal key={index} delay={index * 0.1}>
+                        <ScrollReveal
+                          key={index}
+                          transition={{
+                            delay: Math.min(index * 0.04, 0.12),
+                            duration: 0.35,
+                            ease: [0.2, 0.65, 0.3, 0.9],
+                          }}
+                        >
                           <a
                             href={resource.url}
                             target="_blank"
@@ -679,7 +686,14 @@ export function ResourcesClient({
                     }
 
                     return (
-                      <ScrollReveal key={index} delay={index * 0.1}>
+                      <ScrollReveal
+                        key={index}
+                        transition={{
+                          delay: Math.min(index * 0.04, 0.12),
+                          duration: 0.35,
+                          ease: [0.2, 0.65, 0.3, 0.9],
+                        }}
+                      >
                         <div
                           className={commonClasses}
                           data-testid={`resource-editor-card-${resource.domain}`}
