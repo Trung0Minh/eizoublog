@@ -79,6 +79,8 @@ const contributorSelect = {
   },
   avatarUrl: true,
   bio: true,
+  displayRoleColor: true,
+  displayRoleName: true,
   name: true,
   username: true,
   role: true,
@@ -101,6 +103,8 @@ const publicAuthorSelect = {
   avatarUrl: true,
   bio: true,
   createdAt: true,
+  displayRoleColor: true,
+  displayRoleName: true,
   id: true,
   name: true,
   username: true,
@@ -127,14 +131,21 @@ const profileUserSelect = {
   avatarOriginalUrl: true,
   avatarUrl: true,
   bio: true,
+  displayRoleColor: true,
+  displayRoleLocked: true,
+  displayRoleName: true,
   email: true,
   name: true,
+  role: true,
   username: true,
 } satisfies Prisma.UserSelect
 
 const adminWriterSelect = {
   _count: { select: { posts: true } },
   createdAt: true,
+  displayRoleColor: true,
+  displayRoleLocked: true,
+  displayRoleName: true,
   email: true,
   id: true,
   name: true,
@@ -238,6 +249,8 @@ export const publishedPostDetailSelect = {
       author: {
         select: {
           avatarUrl: true,
+          displayRoleColor: true,
+          displayRoleName: true,
           role: true,
           username: true,
         },
@@ -254,6 +267,8 @@ export const publishedPostDetailSelect = {
           author: {
             select: {
               avatarUrl: true,
+              displayRoleColor: true,
+              displayRoleName: true,
               role: true,
               username: true,
             },

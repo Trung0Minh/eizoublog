@@ -66,6 +66,8 @@ describe("public profile layouts", () => {
         _count: { posts: 1 },
         avatarUrl: null,
         bio: "Writer bio",
+        displayRoleColor: null,
+        displayRoleName: null,
         name: "Mina",
         role: "WRITER",
         username: "mina",
@@ -77,7 +79,7 @@ describe("public profile layouts", () => {
     )
 
     const heading = screen.getByRole("heading", { name: "Mina" })
-    const badge = screen.getByText("WRITER")
+    const badge = screen.getByText("Writer")
     const row = heading.closest("div")
 
     expect(row).toContainElement(badge)

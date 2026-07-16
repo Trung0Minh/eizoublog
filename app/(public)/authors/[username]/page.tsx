@@ -7,6 +7,7 @@ import { ScrollReveal } from "@/components/ui/ScrollReveal"
 import { CompactPostList } from "@/components/posts/CompactPostList"
 import { PostSortTabs } from "@/components/posts/PostSortTabs"
 import { StaticPostContent } from "@/components/posts/StaticPostContent"
+import { DisplayRoleBadge } from "@/components/profile/DisplayRoleBadge"
 import {
   getCachedAuthorByUsername,
   getCachedAuthorPosts,
@@ -112,7 +113,11 @@ export default async function AuthorPage({
                 <span className="rounded-md bg-red-100 px-1.5 py-0.5 text-[11px] font-bold text-red-700 tracking-wider">ADMIN</span>
               )}
               {author.role === "WRITER" && (
-                <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-[11px] font-bold text-emerald-700 tracking-wider">WRITER</span>
+                <DisplayRoleBadge
+                  className="text-[11px]"
+                  displayRoleColor={author.displayRoleColor}
+                  displayRoleName={author.displayRoleName}
+                />
               )}
             </div>
           </div>

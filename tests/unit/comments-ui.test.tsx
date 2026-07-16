@@ -158,6 +158,8 @@ describe("CommentSection", () => {
             ...topComment,
             author: {
               avatarUrl: "https://cdn.example.com/avatars/mina.png",
+              displayRoleColor: "#475569",
+              displayRoleName: "Archive Curator",
               role: "WRITER",
               username: "mina",
             },
@@ -179,6 +181,7 @@ describe("CommentSection", () => {
       "src",
       "https://cdn.example.com/avatars/mina.png",
     )
+    expect(screen.getByText("Archive Curator")).toBeVisible()
     expect(screen.getByText("G")).toBeVisible()
   })
 

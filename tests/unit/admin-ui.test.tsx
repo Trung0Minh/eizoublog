@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type { AnchorHTMLAttributes } from "react"
@@ -469,6 +469,9 @@ describe("admin client components", () => {
           {
             _count: { posts: 3 },
             createdAt: new Date("2026-01-01T00:00:00Z"),
+            displayRoleColor: null,
+            displayRoleLocked: false,
+            displayRoleName: null,
             email: "writer@example.com",
             id: "writer-1",
             name: "Mina",
@@ -502,6 +505,9 @@ describe("admin client components", () => {
           {
             _count: { posts: 1 },
             createdAt: new Date("2026-01-01T00:00:00Z"),
+            displayRoleColor: null,
+            displayRoleLocked: false,
+            displayRoleName: null,
             email: "admin@example.com",
             id: "admin-1",
             name: "Admin",
@@ -511,6 +517,9 @@ describe("admin client components", () => {
           {
             _count: { posts: 0 },
             createdAt: new Date("2026-01-02T00:00:00Z"),
+            displayRoleColor: null,
+            displayRoleLocked: false,
+            displayRoleName: null,
             email: "writer@example.com",
             id: "writer-1",
             name: "Writer",
@@ -524,6 +533,64 @@ describe("admin client components", () => {
     expect(screen.getAllByText("Admin")).toHaveLength(2)
     expect(screen.getAllByText("Writer")).toHaveLength(2)
     expect(screen.queryByText("Editor")).not.toBeInTheDocument()
+  })
+
+  it("lets admins edit and lock a writer display role", async () => {
+    const user = userEvent.setup()
+    const fetchMock = vi.fn().mockResolvedValue(okResponse())
+    vi.stubGlobal("fetch", fetchMock)
+
+    render(
+      <WritersTable
+        writers={[
+          {
+            _count: { posts: 1 },
+            createdAt: new Date("2026-01-01T00:00:00Z"),
+            displayRoleColor: null,
+            displayRoleLocked: false,
+            displayRoleName: null,
+            email: "writer@example.com",
+            id: "writer-1",
+            name: "Mina",
+            role: "WRITER",
+            username: "mina",
+          },
+        ]}
+      />,
+    )
+
+    await user.click(
+      screen.getByRole("button", { name: "Manage display role for Mina" }),
+    )
+    const dialog = screen.getByRole("dialog", { name: "Manage display role" })
+    const roleName = within(dialog).getByRole("textbox", {
+      name: "Display role for Mina",
+    })
+    await user.clear(roleName)
+    await user.type(roleName, "Archive Curator")
+    fireEvent.change(
+      within(dialog).getByLabelText("Role color for Mina"),
+      { target: { value: "#475569" } },
+    )
+    await user.click(within(dialog).getByRole("checkbox", { name: /lock/i }))
+    await user.click(within(dialog).getByRole("button", { name: "Save role" }))
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/admin/writers/writer-1", {
+      body: expect.any(String),
+      headers: { "Content-Type": "application/json" },
+      method: "PATCH",
+    })
+    const requestBody = JSON.parse(
+      String((fetchMock.mock.calls[0]?.[1] as RequestInit | undefined)?.body),
+    ) as Record<string, unknown>
+    expect(requestBody).toEqual({
+      displayRoleColor: "#475569",
+      displayRoleLocked: true,
+      displayRoleName: "Archive Curator",
+    })
+    await waitFor(() => {
+      expect(routerMocks.refresh).toHaveBeenCalled()
+    })
   })
 
   it("renders pending invites with creator and expiry dates", () => {

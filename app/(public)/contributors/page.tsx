@@ -5,6 +5,7 @@ import { Sparkles } from "lucide-react"
 import { TextReveal } from "@/components/ui/TextReveal"
 import { ScrollReveal } from "@/components/ui/ScrollReveal"
 import { ContributorBio } from "@/components/profile/ContributorBio"
+import { DisplayRoleBadge } from "@/components/profile/DisplayRoleBadge"
 import { getCachedContributors } from "@/lib/queries"
 import { buildMetadata, getAppName } from "@/lib/seo"
 
@@ -126,7 +127,11 @@ export default async function ContributorsPage({ searchParams }: ContributorsPag
                     <span className="shrink-0 rounded-md bg-red-100 px-2 py-0.5 text-[11px] font-bold text-red-700 tracking-wider">ADMIN</span>
                   )}
                   {contributor.role === "WRITER" && (
-                    <span className="shrink-0 rounded-md bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700 tracking-wider">WRITER</span>
+                    <DisplayRoleBadge
+                      className="text-[11px]"
+                      displayRoleColor={contributor.displayRoleColor}
+                      displayRoleName={contributor.displayRoleName}
+                    />
                   )}
                 </div>
                 <div className="mb-4">

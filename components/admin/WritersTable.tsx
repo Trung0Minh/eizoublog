@@ -1,12 +1,14 @@
 "use client"
 
 import type { Role } from "@prisma/client"
-import { Mail, MoreHorizontal, ShieldOff, Search, Plus, X } from "lucide-react"
+import { Mail, MoreHorizontal, Palette, ShieldOff, Search, Plus, X } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState, useMemo } from "react"
 import { toast } from "sonner"
 
 import { InviteWriterForm } from "@/components/admin/InviteWriterForm"
+import { AdminDisplayRoleDialog } from "@/components/admin/AdminDisplayRoleDialog"
+import { DisplayRoleBadge } from "@/components/profile/DisplayRoleBadge"
 
 import { Button } from "@/components/ui/button"
 import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog"
@@ -20,6 +22,9 @@ import {
 interface Writer {
   _count: { posts: number }
   createdAt: Date
+  displayRoleColor: string | null
+  displayRoleLocked: boolean
+  displayRoleName: string | null
   email: string
   id: string
   name: string
@@ -46,6 +51,7 @@ export function WritersTable({ writers }: { writers: Writer[] }) {
   const [searchTerm, setSearchTerm] = useState("")
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
   const [removeTarget, setRemoveTarget] = useState<Writer | null>(null)
+  const [roleTarget, setRoleTarget] = useState<Writer | null>(null)
 
   const filteredWriters = useMemo(() => {
     if (!searchTerm) return writers
@@ -136,9 +142,16 @@ export function WritersTable({ writers }: { writers: Writer[] }) {
                       <h3 className="truncate text-[16px] font-bold text-text-primary">
                         {writer.name}
                       </h3>
-                      <span className="rounded-full border border-border-default/60 bg-background/50 px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase text-text-secondary shadow-sm">
-                        {role}
-                      </span>
+                      {writer.role === "WRITER" ? (
+                        <DisplayRoleBadge
+                          displayRoleColor={writer.displayRoleColor}
+                          displayRoleName={writer.displayRoleName}
+                        />
+                      ) : (
+                        <span className="rounded-full border border-border-default/60 bg-background/50 px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase text-text-secondary shadow-sm">
+                          {role}
+                        </span>
+                      )}
                       {writer.role !== "REVOKED" && (
                         <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase text-emerald-600 dark:text-emerald-400">
                           Active
@@ -164,6 +177,17 @@ export function WritersTable({ writers }: { writers: Writer[] }) {
                     <a href={`mailto:${writer.email}`}>
                       <Mail aria-hidden="true" className="h-4 w-4" />
                     </a>
+                  </Button>
+                  <Button
+                    aria-label={`Manage display role for ${writer.name}`}
+                    className="h-9 w-9 rounded-[12px] text-text-secondary hover:bg-subtle-bg hover:text-text-primary"
+                    onClick={() => setRoleTarget(writer)}
+                    size="icon"
+                    title="Manage display role"
+                    type="button"
+                    variant="ghost"
+                  >
+                    <Palette aria-hidden="true" className="h-4 w-4" />
                   </Button>
                   <Button
                     aria-label={`Remove writer access for ${writer.name}`}
@@ -252,6 +276,16 @@ export function WritersTable({ writers }: { writers: Writer[] }) {
         title="Remove writer access?"
         tone="destructive"
       />
+      {roleTarget && (
+        <AdminDisplayRoleDialog
+          onClose={() => setRoleTarget(null)}
+          onSaved={() => {
+            setRoleTarget(null)
+            router.refresh()
+          }}
+          writer={roleTarget}
+        />
+      )}
     </div>
   )
 }

@@ -121,6 +121,8 @@ describe("comments API", () => {
       author: {
         select: {
           avatarUrl: true,
+          displayRoleColor: true,
+          displayRoleName: true,
         },
       },
     })

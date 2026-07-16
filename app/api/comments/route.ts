@@ -28,6 +28,8 @@ const publicCommentSelect = {
   author: {
     select: {
       avatarUrl: true,
+      displayRoleColor: true,
+      displayRoleName: true,
       role: true,
       username: true,
     },

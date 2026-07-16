@@ -5,6 +5,7 @@ import { Reply } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 
 import { CommentForm } from "@/components/comments/CommentForm"
+import { DisplayRoleBadge } from "@/components/profile/DisplayRoleBadge"
 import { Button } from "@/components/ui/button"
 import { RelativeTime } from "@/components/ui/RelativeTime"
 import type { CommentWithReplies, PublicComment } from "@/types"
@@ -75,9 +76,10 @@ function CommentBubble({
             </span>
           )}
           {role === "WRITER" && (
-            <span className="rounded-[4px] bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-              WRITER
-            </span>
+            <DisplayRoleBadge
+              displayRoleColor={comment.author?.displayRoleColor ?? null}
+              displayRoleName={comment.author?.displayRoleName ?? null}
+            />
           )}
           <RelativeTime
             className="text-[12px] text-text-tertiary"

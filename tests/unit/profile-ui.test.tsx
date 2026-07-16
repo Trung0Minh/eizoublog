@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { render, screen, waitFor } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -109,8 +109,12 @@ describe("ProfileForm", () => {
           avatarOriginalUrl: null,
           avatarUrl: null,
           bio: "Initial bio",
+          displayRoleColor: null,
+          displayRoleLocked: false,
+          displayRoleName: null,
           email: "mina@example.com",
           name: "Mina",
+          role: "WRITER",
           username: "mina",
         }}
       />,
@@ -161,6 +165,87 @@ describe("ProfileForm", () => {
       await screen.findByText("Cập nhật hồ sơ thành công."),
     ).toBeInTheDocument()
     expect(navigationMocks.refresh).toHaveBeenCalledTimes(1)
+  })
+
+  it("saves a writer's custom display role independently", async () => {
+    const user = userEvent.setup()
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            data: {
+              displayRoleColor: "#C2410C",
+              displayRoleLocked: false,
+              displayRoleName: "Seasonal Analyst",
+              id: "writer-1",
+            },
+          }),
+          { status: 200 },
+        ),
+      )
+    vi.stubGlobal("fetch", fetchMock)
+
+    render(
+      <ProfileForm
+        user={{
+          avatarOriginalUrl: null,
+          avatarUrl: null,
+          bio: null,
+          displayRoleColor: null,
+          displayRoleLocked: false,
+          displayRoleName: null,
+          email: "mina@example.com",
+          name: "Mina",
+          role: "WRITER",
+          username: "mina",
+        }}
+      />,
+    )
+
+    await user.clear(screen.getByRole("textbox", { name: "Vai trò hiển thị" }))
+    await user.type(
+      screen.getByRole("textbox", { name: "Vai trò hiển thị" }),
+      "Seasonal Analyst",
+    )
+    fireEvent.change(screen.getByLabelText("Màu vai trò"), {
+      target: { value: "#c2410c" },
+    })
+    await user.click(screen.getByRole("button", { name: "Lưu vai trò" }))
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith("/api/profile/display-role", {
+        body: JSON.stringify({
+          displayRoleColor: "#C2410C",
+          displayRoleName: "Seasonal Analyst",
+        }),
+        headers: { "Content-Type": "application/json" },
+        method: "PATCH",
+      })
+    })
+    expect(await screen.findByText("Đã lưu vai trò hiển thị.")).toBeVisible()
+  })
+
+  it("shows when an admin has locked the display role", () => {
+    render(
+      <ProfileForm
+        user={{
+          avatarOriginalUrl: null,
+          avatarUrl: null,
+          bio: null,
+          displayRoleColor: "#475569",
+          displayRoleLocked: true,
+          displayRoleName: "Archive Curator",
+          email: "mina@example.com",
+          name: "Mina",
+          role: "WRITER",
+          username: "mina",
+        }}
+      />,
+    )
+
+    expect(screen.getByText("Vai trò này đã được khóa bởi quản trị viên.")).toBeVisible()
+    expect(screen.getByRole("textbox", { name: "Vai trò hiển thị" })).toBeDisabled()
+    expect(screen.getByRole("button", { name: "Lưu vai trò" })).toBeDisabled()
   })
 })
 

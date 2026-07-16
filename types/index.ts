@@ -12,6 +12,8 @@ export type PublicComment = Pick<
 > & {
   author: {
     avatarUrl: string | null
+    displayRoleColor: string | null
+    displayRoleName: string | null
     role: string
     username: string | null
   } | null

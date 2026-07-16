@@ -8,15 +8,21 @@ import { Input } from "@/components/ui/input"
 import { ScrollReveal } from "@/components/ui/ScrollReveal"
 import { TiptapEditor } from "@/components/editor/TiptapEditor"
 import type { JSONContent } from "@tiptap/react"
+import type { Role } from "@prisma/client"
 import { clearSessionUserCache } from "@/lib/clientSession"
+import { DisplayRoleSettings } from "@/components/profile/DisplayRoleSettings"
 
 interface ProfileFormProps {
   user: {
     avatarOriginalUrl: string | null
     avatarUrl: string | null
     bio: string | null
+    displayRoleColor: string | null
+    displayRoleLocked: boolean
+    displayRoleName: string | null
     email: string
     name: string
+    role: Role
     username: string
   }
 }
@@ -166,7 +172,17 @@ export function ProfileForm({ user }: ProfileFormProps) {
         </div>
       </ScrollReveal>
 
-      <ScrollReveal delay={0.3}>
+      {user.role === "WRITER" && (
+        <ScrollReveal delay={0.3}>
+          <DisplayRoleSettings
+            displayRoleColor={user.displayRoleColor}
+            displayRoleLocked={user.displayRoleLocked}
+            displayRoleName={user.displayRoleName}
+          />
+        </ScrollReveal>
+      )}
+
+      <ScrollReveal delay={0.4}>
         <div className="grid gap-5 rounded-[24px] border-[2px] border-border-default bg-background/80 backdrop-blur-md p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow">
           <div className="space-y-2">
             <label className="text-sm font-medium" htmlFor="profile-name">
