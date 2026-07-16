@@ -1,13 +1,16 @@
 "use client"
 
-import { useRef, useState, useEffect, useCallback } from "react"
+import { useRef, useState, useEffect, useCallback, type ReactNode } from "react"
 import { Camera, Crop, Loader2, Trash2, Upload, X } from "lucide-react"
 import { createPortal } from "react-dom"
 import Cropper from "react-easy-crop"
 
+import { ContributorBio } from "@/components/profile/ContributorBio"
 import { Button } from "@/components/ui/button"
 
 interface AvatarUploadProps {
+  badge?: ReactNode
+  bio?: string
   name: string
   onChange: (url: string) => void
   onOriginalChange: (url: string) => void
@@ -214,6 +217,8 @@ function AvatarCropperModal({
 // ─── AvatarUpload ────────────────────────────────────────────────────────────
 
 export function AvatarUpload({
+  badge,
+  bio = "",
   name,
   onChange,
   onOriginalChange,
@@ -345,46 +350,50 @@ export function AvatarUpload({
   }
 
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border bg-muted">
-        {value ? (
-          <img
-            alt={`${name} avatar`}
-            className="h-full w-full object-cover"
-            src={value}
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-xl font-semibold">
-            {getInitials(name)}
-          </div>
-        )}
-        <button
-          aria-label={value ? "Căn chỉnh ảnh đại diện" : "Thay đổi ảnh đại diện"}
-          className="absolute inset-0 flex items-center justify-center bg-background/70 opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          disabled={uploading}
-          onClick={() => {
-            if (value) {
-              setCropSource(
-                originalSourceRef.current || originalValue || value,
-              )
-            } else {
-              inputRef.current?.click()
-            }
-          }}
-          type="button"
-        >
-          {uploading ? (
-            <Loader2 aria-hidden="true" className="h-5 w-5 animate-spin" />
-          ) : value ? (
-            <Crop aria-hidden="true" className="h-5 w-5" />
+    <div className="flex items-start gap-5">
+      <div className="flex shrink-0 flex-col items-center gap-2">
+        <div className="relative h-20 w-20 overflow-hidden rounded-full border bg-muted">
+          {value ? (
+            <img
+              alt={`${name} avatar`}
+              className="h-full w-full object-cover"
+              src={value}
+            />
           ) : (
-            <Camera aria-hidden="true" className="h-5 w-5" />
+            <div className="flex h-full w-full items-center justify-center text-xl font-semibold">
+              {getInitials(name)}
+            </div>
           )}
-        </button>
-      </div>
+          <button
+            aria-label={value ? "Căn chỉnh ảnh đại diện" : "Thay đổi ảnh đại diện"}
+            className="absolute inset-0 flex items-center justify-center bg-background/70 opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            disabled={uploading}
+            onClick={() => {
+              if (value) {
+                setCropSource(
+                  originalSourceRef.current || originalValue || value,
+                )
+              } else {
+                inputRef.current?.click()
+              }
+            }}
+            type="button"
+          >
+            {uploading ? (
+              <Loader2 aria-hidden="true" className="h-5 w-5 animate-spin" />
+            ) : value ? (
+              <Crop aria-hidden="true" className="h-5 w-5" />
+            ) : (
+              <Camera aria-hidden="true" className="h-5 w-5" />
+            )}
+          </button>
+        </div>
 
-      <div className="space-y-2">
-        <div className="flex flex-wrap gap-2">
+        <div
+          aria-label="Điều khiển ảnh đại diện"
+          className="flex gap-1"
+          role="group"
+        >
           <Button
             aria-label={uploading ? "Đang tải ảnh đại diện lên" : "Tải ảnh đại diện mới"}
             disabled={uploading}
@@ -417,9 +426,20 @@ export function AvatarUpload({
             </Button>
           )}
         </div>
-        <p className="text-xs text-muted-foreground">
-          JPEG, PNG, GIF hoặc WebP. Kéo và cuộn để cắt vùng ảnh mong muốn.
-        </p>
+      </div>
+
+      <div className="min-w-0 flex-1 space-y-3 pt-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="font-display text-[20px] font-bold leading-tight text-text-primary">
+            {name}
+          </h3>
+          {badge}
+        </div>
+        {bio ? (
+          <ContributorBio bio={bio} />
+        ) : (
+          <p className="text-[14px] text-text-secondary">Chưa có tiểu sử.</p>
+        )}
         <input
           accept="image/jpeg,image/png,image/gif,image/webp"
           aria-label="Tải ảnh đại diện lên"

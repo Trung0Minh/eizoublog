@@ -530,8 +530,8 @@ describe("AvatarUpload", () => {
     )
   })
 
-  it("stacks avatar controls on mobile and aligns them on wider screens", () => {
-    const { container } = render(
+  it("places avatar controls below the image", () => {
+    render(
       <AvatarUpload
         name="Mina Writer"
         onChange={vi.fn()}
@@ -541,9 +541,29 @@ describe("AvatarUpload", () => {
       />,
     )
 
-    expect(container.firstElementChild).toHaveClass(
-      "flex-col",
-      "sm:flex-row",
+    expect(
+      screen.getByRole("group", { name: "Điều khiển ảnh đại diện" }),
+    ).toHaveClass("flex", "gap-1")
+  })
+
+  it("shows a live display name and intro beside the avatar", () => {
+    render(
+      <AvatarUpload
+        bio="Production notes and layout analysis."
+        name="Mina Writer"
+        onChange={vi.fn()}
+        onOriginalChange={vi.fn()}
+        originalValue=""
+        value=""
+      />,
     )
+
+    expect(screen.getByText("Mina Writer")).toBeVisible()
+    expect(
+      screen.getByText("Production notes and layout analysis."),
+    ).toBeVisible()
+    expect(
+      screen.queryByText(/JPEG, PNG, GIF hoặc WebP/),
+    ).not.toBeInTheDocument()
   })
 })

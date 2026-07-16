@@ -96,3 +96,9 @@ export function getDisplayRoleForeground(color: string) {
     ? "#18181B"
     : "#FFFFFF"
 }
+
+// Tinted badges need a dark label for very light custom colors; using the raw
+// color there would make the text disappear against its pale background.
+export function getDisplayRoleTextColor(color: string) {
+  return relativeLuminance(color) > 0.55 ? "#18181B" : color
+}

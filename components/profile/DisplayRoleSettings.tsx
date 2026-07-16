@@ -5,7 +5,6 @@ import { LockKeyhole, RotateCcw } from "lucide-react"
 import { useRouter } from "next/navigation"
 import type { Role } from "@prisma/client"
 
-import { RoleBadges } from "@/components/profile/RoleBadges"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -18,6 +17,7 @@ interface DisplayRoleSettingsProps {
   displayRoleColor: string | null
   displayRoleLocked: boolean
   displayRoleName: string | null
+  onPreviewChange?: (preview: { color: string | null; name: string | null }) => void
   role: Role
 }
 
@@ -38,6 +38,7 @@ export function DisplayRoleSettings({
   displayRoleColor,
   displayRoleLocked,
   displayRoleName,
+  onPreviewChange,
   role,
 }: DisplayRoleSettingsProps) {
   const router = useRouter()
@@ -77,6 +78,10 @@ export function DisplayRoleSettings({
 
       setColor(data.displayRoleColor ?? DEFAULT_DISPLAY_ROLE_COLOR)
       setName(data.displayRoleName ?? "")
+      onPreviewChange?.({
+        color: data.displayRoleColor,
+        name: data.displayRoleName,
+      })
       setMessage({ text: successMessage, type: "success" })
       router.refresh()
     } catch (error) {
@@ -128,12 +133,16 @@ export function DisplayRoleSettings({
 
     setColor(DEFAULT_DISPLAY_ROLE_COLOR)
     setName(DEFAULT_DISPLAY_ROLE_NAME)
+    onPreviewChange?.({
+      color: DEFAULT_DISPLAY_ROLE_COLOR,
+      name: DEFAULT_DISPLAY_ROLE_NAME,
+    })
     setMessage(null)
   }
 
   return (
     <section className="rounded-[24px] border-[2px] border-border-default bg-background/80 p-6 shadow-sm backdrop-blur-md transition-shadow hover:shadow-md sm:p-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div>
         <div>
           <h2 className="text-sm font-semibold text-text-primary">
             Vai trò hiển thị
@@ -144,13 +153,6 @@ export function DisplayRoleSettings({
               : "Đây là huy hiệu công khai, không thay đổi quyền truy cập của bạn."}
           </p>
         </div>
-        <RoleBadges
-          badgeClassName="px-3 py-1 text-[11px]"
-          className="self-start"
-          displayRoleColor={color}
-          displayRoleName={name || null}
-          role={role}
-        />
       </div>
 
       <fieldset className="mt-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_116px]" disabled={isLocked || saving}>
@@ -162,7 +164,11 @@ export function DisplayRoleSettings({
             id="display-role-name"
             maxLength={24}
             minLength={2}
-            onChange={(event) => setName(event.target.value)}
+            onChange={(event) => {
+              const nextName = event.target.value
+              setName(nextName)
+              onPreviewChange?.({ color, name: nextName || null })
+            }}
             onKeyDown={(event) => {
               if (event.key === "Enter") {
                 event.preventDefault()
@@ -185,7 +191,11 @@ export function DisplayRoleSettings({
               aria-label="Màu vai trò"
               className="h-7 w-9 cursor-pointer rounded border-0 bg-transparent p-0 disabled:cursor-not-allowed"
               id="display-role-color"
-              onChange={(event) => setColor(event.target.value.toUpperCase())}
+              onChange={(event) => {
+                const nextColor = event.target.value.toUpperCase()
+                setColor(nextColor)
+                onPreviewChange?.({ color: nextColor, name: name || null })
+              }}
               type="color"
               value={color}
             />

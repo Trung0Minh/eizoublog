@@ -124,7 +124,7 @@ export default async function ContributorsPage({ searchParams }: ContributorsPag
                     </h2>
                   </Link>
                   <RoleBadges
-                    badgeClassName="text-[11px]"
+                    badgeClassName="rounded-md px-2 text-[11px]"
                     displayRoleColor={contributor.displayRoleColor}
                     displayRoleName={contributor.displayRoleName}
                     role={contributor.role}

@@ -1,4 +1,7 @@
-import { DisplayRoleBadge } from "@/components/profile/DisplayRoleBadge"
+import {
+  DisplayRoleBadge,
+  ROLE_BADGE_CLASS_NAME,
+} from "@/components/profile/DisplayRoleBadge"
 import { cn } from "@/lib/utils"
 
 interface RoleBadgesProps {
@@ -25,7 +28,8 @@ export function RoleBadges({
       {role === "ADMIN" && (
         <span
           className={cn(
-            "rounded-[4px] bg-red-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-600 dark:text-red-400",
+            ROLE_BADGE_CLASS_NAME,
+            "bg-red-500/10 text-red-600 dark:text-red-400",
             badgeClassName,
           )}
           title="System role: Admin"

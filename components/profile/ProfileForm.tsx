@@ -11,6 +11,7 @@ import type { JSONContent } from "@tiptap/react"
 import type { Role } from "@prisma/client"
 import { clearSessionUserCache } from "@/lib/clientSession"
 import { DisplayRoleSettings } from "@/components/profile/DisplayRoleSettings"
+import { RoleBadges } from "@/components/profile/RoleBadges"
 
 interface ProfileFormProps {
   user: {
@@ -54,6 +55,10 @@ export function ProfileForm({ user }: ProfileFormProps) {
   const [name, setName] = useState(user.name)
   const [username, setUsername] = useState(user.username)
   const [saving, setSaving] = useState(false)
+  const [displayRolePreview, setDisplayRolePreview] = useState({
+    color: user.displayRoleColor,
+    name: user.displayRoleName,
+  })
 
   const initialBioContent = useMemo(() => {
     if (user.bio?.startsWith("{")) {
@@ -130,6 +135,17 @@ export function ProfileForm({ user }: ProfileFormProps) {
         <section className="rounded-[24px] border-[2px] border-border-default bg-background/80 backdrop-blur-md p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow">
           <label className="mb-3 block text-sm font-medium">Ảnh đại diện</label>
           <AvatarUpload
+            badge={
+              user.role === "ADMIN" || user.role === "WRITER" ? (
+                <RoleBadges
+                  badgeClassName="rounded-md px-2 text-[11px]"
+                  displayRoleColor={displayRolePreview.color}
+                  displayRoleName={displayRolePreview.name}
+                  role={user.role}
+                />
+              ) : undefined
+            }
+            bio={bio}
             name={name}
             onChange={setAvatarUrl}
             onOriginalChange={setAvatarOriginalUrl}
@@ -178,6 +194,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
             displayRoleColor={user.displayRoleColor}
             displayRoleLocked={user.displayRoleLocked}
             displayRoleName={user.displayRoleName}
+            onPreviewChange={setDisplayRolePreview}
             role={user.role}
           />
         </ScrollReveal>

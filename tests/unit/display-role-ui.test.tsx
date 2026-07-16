@@ -10,10 +10,19 @@ describe("DisplayRoleBadge", () => {
       <DisplayRoleBadge displayRoleColor={null} displayRoleName={null} />,
     )
 
-    expect(screen.getByText("Writer")).toBeVisible()
+    expect(screen.getByText("Writer")).toHaveClass(
+      "rounded-[4px]",
+      "px-1.5",
+      "text-[10px]",
+      "uppercase",
+    )
+    expect(screen.getByText("Writer")).not.toHaveClass(
+      "rounded-full",
+      "shadow-sm",
+    )
   })
 
-  it("renders the custom name and accessible colors", () => {
+  it("renders the custom name with the original tinted badge treatment", () => {
     render(
       <DisplayRoleBadge
         displayRoleColor="#F4F4F5"
@@ -22,9 +31,15 @@ describe("DisplayRoleBadge", () => {
     )
 
     expect(screen.getByText("Seasonal Analyst")).toHaveStyle({
-      backgroundColor: "#F4F4F5",
+      backgroundColor: "#F4F4F51A",
       color: "#18181B",
     })
+    expect(screen.getByText("Seasonal Analyst")).toHaveClass(
+      "rounded-[4px]",
+      "px-1.5",
+      "text-[10px]",
+      "uppercase",
+    )
   })
 })
 
@@ -40,6 +55,11 @@ describe("RoleBadges", () => {
 
     expect(screen.getByText("ADMIN")).toBeVisible()
     expect(screen.getByText("Editor-in-Chief")).toBeVisible()
+    expect(screen.getByText("ADMIN")).toHaveClass("rounded-[4px]", "px-1.5")
+    expect(screen.getByText("Editor-in-Chief")).toHaveClass(
+      "rounded-[4px]",
+      "px-1.5",
+    )
   })
 
   it("does not render an empty custom badge for admins", () => {

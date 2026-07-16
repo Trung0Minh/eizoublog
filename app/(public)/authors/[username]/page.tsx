@@ -109,7 +109,7 @@ export default async function AuthorPage({
               <TextReveal text={author.name} />
             </h1>
             <RoleBadges
-              badgeClassName="text-[11px]"
+              badgeClassName="rounded-md text-[11px]"
               displayRoleColor={author.displayRoleColor}
               displayRoleName={author.displayRoleName}
               role={author.role}

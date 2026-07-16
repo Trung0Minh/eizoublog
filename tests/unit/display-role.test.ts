@@ -5,6 +5,7 @@ import {
   DEFAULT_DISPLAY_ROLE_NAME,
   displayRoleSchema,
   getDisplayRoleForeground,
+  getDisplayRoleTextColor,
 } from "@/lib/displayRole"
 
 describe("display roles", () => {
@@ -68,5 +69,10 @@ describe("display roles", () => {
   it("chooses readable text for light and dark badge colors", () => {
     expect(getDisplayRoleForeground("#F4F4F5")).toBe("#18181B")
     expect(getDisplayRoleForeground("#18181B")).toBe("#FFFFFF")
+  })
+
+  it("darkens text for very light tinted badge colors", () => {
+    expect(getDisplayRoleTextColor("#F4F4F5")).toBe("#18181B")
+    expect(getDisplayRoleTextColor("#C2410C")).toBe("#C2410C")
   })
 })
