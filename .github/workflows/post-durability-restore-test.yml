@@ -47,9 +47,9 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p backup-out
-          key="$(aws s3api list-objects-v2 --bucket "$BACKUP_BUCKET" --prefix monthly/ --endpoint-url "$R2_ENDPOINT" --query 'sort_by(Contents[?ends_with(Key, `.dump.age`)],&LastModified)[-1].Key' --output text)"
-          if [ "$key" = "None" ]; then
-            key="$(aws s3api list-objects-v2 --bucket "$BACKUP_BUCKET" --prefix six-hourly/ --endpoint-url "$R2_ENDPOINT" --query 'sort_by(Contents[?ends_with(Key, `.dump.age`)],&LastModified)[-1].Key' --output text)"
+          key="$(aws s3api list-objects-v2 --bucket "$BACKUP_BUCKET" --prefix monthly/ --endpoint-url "$R2_ENDPOINT" --query 'Contents[].Key' --output text | tr '\t' '\n' | awk '/\.dump\.age$/ { latest=$0 } END { if (latest) print latest }')"
+          if [ -z "$key" ] || [ "$key" = "None" ]; then
+            key="$(aws s3api list-objects-v2 --bucket "$BACKUP_BUCKET" --prefix six-hourly/ --endpoint-url "$R2_ENDPOINT" --query 'Contents[].Key' --output text | tr '\t' '\n' | awk '/\.dump\.age$/ { latest=$0 } END { if (latest) print latest }')"
           fi
           test "$key" != "None"
 
