@@ -57,7 +57,7 @@ jobs:
       - name: Copy production media without propagating deletions
         run: |
           set -euo pipefail
-          aws s3 cp "s3://${PRODUCTION_BUCKET}/" "s3://${BACKUP_BUCKET}/media/" --recursive --no-progress --endpoint-url "$R2_ENDPOINT"
+          aws s3 cp "s3://${PRODUCTION_BUCKET}/" "s3://${BACKUP_BUCKET}/media/" --recursive --no-progress --copy-props none --endpoint-url "$R2_ENDPOINT"
 
       - name: Publish verified backup manifest
         run: |
