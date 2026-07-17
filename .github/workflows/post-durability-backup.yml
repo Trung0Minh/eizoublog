@@ -37,7 +37,7 @@ jobs:
           set -euo pipefail
           timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
           mkdir -p backup-out
-          docker run --rm postgres:17 pg_dump --format=custom --no-owner --no-acl "$DATABASE_URL" > "backup-out/posts-${timestamp}.dump"
+          docker run --rm postgres:17 pg_dump --format=custom --no-owner --no-acl --exclude-schema=vault "$DATABASE_URL" > "backup-out/posts-${timestamp}.dump"
           sha256sum "backup-out/posts-${timestamp}.dump" > "backup-out/posts-${timestamp}.sha256"
           age --recipient "$BACKUP_AGE_RECIPIENT" --output "backup-out/posts-${timestamp}.dump.age" "backup-out/posts-${timestamp}.dump"
           aws s3 cp "backup-out/posts-${timestamp}.dump.age" "s3://${BACKUP_BUCKET}/six-hourly/" --endpoint-url "$R2_ENDPOINT"

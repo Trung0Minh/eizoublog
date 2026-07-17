@@ -66,6 +66,7 @@ jobs:
           age --decrypt --identity age-identity.txt --output "backup-out/${dump_name}" "backup-out/${encrypted_name}"
           sha256sum -c "backup-out/${checksum_name}"
           docker run --rm --volume "$PWD/backup-out:/backup:ro" postgres:17 pg_restore --list "/backup/${dump_name}" > restore-contents.txt
+          grep -vE 'supabase_vault|vault[[:space:]]+secrets' restore-contents.txt > backup-out/restore-list.txt
           grep -q "TABLE DATA public posts" restore-contents.txt
 
       - name: Restore and verify post data
@@ -76,7 +77,8 @@ jobs:
           container_id="$(docker ps --filter ancestor=postgres:17 --format '{{.ID}}' | head -n 1)"
           test -n "$container_id"
           docker cp "$dump_path" "${container_id}:/tmp/recovery.dump"
-          docker exec --env PGPASSWORD=recovery "$container_id" pg_restore --no-owner --no-acl --dbname postgresql://recovery:recovery@localhost:5432/recovery_test /tmp/recovery.dump
+          docker cp backup-out/restore-list.txt "${container_id}:/tmp/restore-list.txt"
+          docker exec --env PGPASSWORD=recovery "$container_id" pg_restore --use-list=/tmp/restore-list.txt --no-owner --no-acl --dbname postgresql://recovery:recovery@localhost:5432/recovery_test /tmp/recovery.dump
           docker exec --env PGPASSWORD=recovery "$container_id" psql postgresql://recovery:recovery@localhost:5432/recovery_test -v ON_ERROR_STOP=1 -c 'SELECT COUNT(*) AS post_count FROM posts;'
           docker exec --env PGPASSWORD=recovery "$container_id" psql postgresql://recovery:recovery@localhost:5432/recovery_test -v ON_ERROR_STOP=1 -c 'SELECT COUNT(*) AS revision_count FROM post_revisions;'
 
