@@ -1,0 +1,83 @@
+name: Post durability restore test
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "37 4 2 * *"
+
+jobs:
+  restore-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: recovery_test
+          POSTGRES_PASSWORD: recovery
+          POSTGRES_USER: recovery
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_BACKUP_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_BACKUP_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      BACKUP_BUCKET: ${{ secrets.R2_BACKUP_BUCKET_NAME }}
+      R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+      PGPASSWORD: recovery
+    steps:
+      - name: Install restore tools
+        run: sudo apt-get update && sudo apt-get install -y age awscli
+
+      - name: Download and decrypt the newest monthly backup
+        env:
+          BACKUP_AGE_IDENTITY: ${{ secrets.BACKUP_AGE_IDENTITY }}
+        run: |
+          set -euo pipefail
+          mkdir -p backup-out
+          key="$(aws s3api list-objects-v2 --bucket "$BACKUP_BUCKET" --prefix monthly/ --endpoint-url "$R2_ENDPOINT" --query 'sort_by(Contents[?ends_with(Key, `.dump.age`)],&LastModified)[-1].Key' --output text)"
+          if [ "$key" = "None" ]; then
+            key="$(aws s3api list-objects-v2 --bucket "$BACKUP_BUCKET" --prefix six-hourly/ --endpoint-url "$R2_ENDPOINT" --query 'sort_by(Contents[?ends_with(Key, `.dump.age`)],&LastModified)[-1].Key' --output text)"
+          fi
+          test "$key" != "None"
+
+          encrypted_name="$(basename "$key")"
+          dump_name="${encrypted_name%.age}"
+          checksum_name="${dump_name%.dump}.sha256"
+          prefix="${key%/*}"
+
+          aws s3 cp "s3://${BACKUP_BUCKET}/${key}" "backup-out/${encrypted_name}" --endpoint-url "$R2_ENDPOINT"
+          aws s3 cp "s3://${BACKUP_BUCKET}/${prefix}/${checksum_name}" "backup-out/${checksum_name}" --endpoint-url "$R2_ENDPOINT"
+          printf '%s\n' "$BACKUP_AGE_IDENTITY" > age-identity.txt
+          chmod 600 age-identity.txt
+          trap 'rm -f age-identity.txt' EXIT
+          age --decrypt --identity age-identity.txt --output "backup-out/${dump_name}" "backup-out/${encrypted_name}"
+          sha256sum -c "backup-out/${checksum_name}"
+          docker run --rm --volume "$PWD/backup-out:/backup:ro" postgres:17 pg_restore --list "/backup/${dump_name}" > restore-contents.txt
+          grep -q "TABLE DATA public posts" restore-contents.txt
+
+      - name: Restore and verify post data
+        run: |
+          set -euo pipefail
+          dump_path="$(find backup-out -maxdepth 1 -type f -name '*.dump' -print -quit)"
+          test -n "$dump_path"
+          container_id="$(docker ps --filter ancestor=postgres:17 --format '{{.ID}}' | head -n 1)"
+          test -n "$container_id"
+          docker cp "$dump_path" "${container_id}:/tmp/recovery.dump"
+          docker exec --env PGPASSWORD=recovery "$container_id" pg_restore --no-owner --no-acl --dbname postgresql://recovery:recovery@localhost:5432/recovery_test /tmp/recovery.dump
+          docker exec --env PGPASSWORD=recovery "$container_id" psql postgresql://recovery:recovery@localhost:5432/recovery_test -v ON_ERROR_STOP=1 -c 'SELECT COUNT(*) AS post_count FROM posts;'
+          docker exec --env PGPASSWORD=recovery "$container_id" psql postgresql://recovery:recovery@localhost:5432/recovery_test -v ON_ERROR_STOP=1 -c 'SELECT COUNT(*) AS revision_count FROM post_revisions;'
+
+      - name: Verify backed-up media is readable
+        run: |
+          set -euo pipefail
+          key="$(aws s3api list-objects-v2 --bucket "$BACKUP_BUCKET" --prefix media/ --max-items 1 --endpoint-url "$R2_ENDPOINT" --query 'Contents[0].Key' --output text)"
+          if [ "$key" != "None" ]; then
+            aws s3api head-object --bucket "$BACKUP_BUCKET" --key "$key" --endpoint-url "$R2_ENDPOINT" > /dev/null
+          fi

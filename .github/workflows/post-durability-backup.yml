@@ -1,0 +1,61 @@
+name: Post durability backup
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "7 */6 * * *"
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_BACKUP_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_BACKUP_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+      DATABASE_URL: ${{ secrets.DIRECT_URL }}
+      BACKUP_BUCKET: ${{ secrets.R2_BACKUP_BUCKET_NAME }}
+      PRODUCTION_BUCKET: ${{ secrets.R2_BUCKET_NAME }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install backup tools
+        run: sudo apt-get update && sudo apt-get install -y age awscli
+
+      - name: Create, encrypt, and upload database backup
+        env:
+          BACKUP_AGE_RECIPIENT: ${{ secrets.BACKUP_AGE_RECIPIENT }}
+        run: |
+          set -euo pipefail
+          timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
+          mkdir -p backup-out
+          docker run --rm postgres:17 pg_dump --format=custom --no-owner --no-acl "$DATABASE_URL" > "backup-out/posts-${timestamp}.dump"
+          sha256sum "backup-out/posts-${timestamp}.dump" > "backup-out/posts-${timestamp}.sha256"
+          age --recipient "$BACKUP_AGE_RECIPIENT" --output "backup-out/posts-${timestamp}.dump.age" "backup-out/posts-${timestamp}.dump"
+          aws s3 cp "backup-out/posts-${timestamp}.dump.age" "s3://${BACKUP_BUCKET}/six-hourly/" --endpoint-url "$R2_ENDPOINT"
+          aws s3 cp "backup-out/posts-${timestamp}.sha256" "s3://${BACKUP_BUCKET}/six-hourly/" --endpoint-url "$R2_ENDPOINT"
+
+          hour="$(date -u +%H)"
+          day="$(date -u +%d)"
+          if [ "$hour" = "00" ]; then
+            aws s3 cp "backup-out/posts-${timestamp}.dump.age" "s3://${BACKUP_BUCKET}/daily/" --endpoint-url "$R2_ENDPOINT"
+            aws s3 cp "backup-out/posts-${timestamp}.sha256" "s3://${BACKUP_BUCKET}/daily/" --endpoint-url "$R2_ENDPOINT"
+          fi
+          if [ "$day" = "01" ] && [ "$hour" = "00" ]; then
+            aws s3 cp "backup-out/posts-${timestamp}.dump.age" "s3://${BACKUP_BUCKET}/monthly/" --endpoint-url "$R2_ENDPOINT"
+            aws s3 cp "backup-out/posts-${timestamp}.sha256" "s3://${BACKUP_BUCKET}/monthly/" --endpoint-url "$R2_ENDPOINT"
+          fi
+
+      - name: Copy production media without propagating deletions
+        run: |
+          set -euo pipefail
+          aws s3 cp "s3://${PRODUCTION_BUCKET}/" "s3://${BACKUP_BUCKET}/media/" --recursive --no-progress --endpoint-url "$R2_ENDPOINT"
+
+      - name: Publish verified backup manifest
+        run: |
+          set -euo pipefail
+          timestamp="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          printf '{"backupAt":"%s","mediaBackupAt":"%s","status":"healthy"}\n' "$timestamp" "$timestamp" > backup-out/latest.json
+          aws s3 cp backup-out/latest.json "s3://${BACKUP_BUCKET}/manifests/latest.json" --endpoint-url "$R2_ENDPOINT" --content-type application/json
