@@ -38,6 +38,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
           },
         },
         title: true,
+        version: true,
       },
       where: { id },
     }),
@@ -62,6 +63,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
 
   return (
     <PostEditor
+      canRestoreRevisions={session.user.role === "ADMIN" || session.user.id === post.authorId}
       categories={referenceData.categories}
       currentUserId={session.user.id}
       initialData={{
@@ -78,6 +80,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
         status: post.status,
         tags: post.tags.map(({ tag }) => tag),
         title: post.title,
+        version: post.version,
       }}
       writers={referenceData.writers}
     />

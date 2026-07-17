@@ -6,6 +6,7 @@ import {
   within,
 } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
+import { useEffect } from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 interface MockPostImage {
@@ -177,19 +178,23 @@ describe("toVideoEmbedUrl", () => {
 })
 
 function AutosaveHarness({
-  isDirty,
+  initiallyDirty = false,
   onSave,
 }: {
-  isDirty: boolean
+  initiallyDirty?: boolean
   onSave: () => Promise<void>
 }) {
-  const { save } = useAutosave({ isDirty, onSave, postId: "post-1" })
+  const { isDirty, markDirty, save } = useAutosave({ onSave, postId: "post-1" })
 
-  return (
-    <button onClick={() => void save()} type="button">
-      save
-    </button>
-  )
+  useEffect(() => {
+    if (initiallyDirty) markDirty()
+  }, [initiallyDirty, markDirty])
+
+  return <>
+    <span data-testid="dirty-state">{isDirty ? "dirty" : "clean"}</span>
+    <button onClick={markDirty} type="button">change</button>
+    <button onClick={() => void save()} type="button">save</button>
+  </>
 }
 
 describe("useAutosave", () => {
@@ -197,10 +202,32 @@ describe("useAutosave", () => {
     const user = userEvent.setup()
     const onSave = vi.fn().mockResolvedValue(undefined)
 
-    render(<AutosaveHarness isDirty={false} onSave={onSave} />)
+    render(<AutosaveHarness onSave={onSave} />)
     await user.click(screen.getByRole("button", { name: "save" }))
 
     expect(onSave).not.toHaveBeenCalled()
+  })
+
+  it("keeps newer edits dirty and saves them after an in-flight save", async () => {
+    const user = userEvent.setup()
+    let finishFirstSave: (() => void) | undefined
+    const firstSave = new Promise<void>((resolve) => {
+      finishFirstSave = resolve
+    })
+    const onSave = vi
+      .fn<() => Promise<void>>()
+      .mockReturnValueOnce(firstSave)
+      .mockResolvedValueOnce(undefined)
+
+    render(<AutosaveHarness initiallyDirty onSave={onSave} />)
+    await waitFor(() => expect(screen.getByTestId("dirty-state")).toHaveTextContent("dirty"))
+
+    await user.click(screen.getByRole("button", { name: "save" }))
+    await user.click(screen.getByRole("button", { name: "change" }))
+    finishFirstSave?.()
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(screen.getByTestId("dirty-state")).toHaveTextContent("clean"))
   })
 })
 

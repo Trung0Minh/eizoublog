@@ -1,12 +1,16 @@
-import type { Prisma, Role } from "@prisma/client"
+import { Prisma, type Role } from "@prisma/client"
 import { ZodError, z } from "zod"
 
 import { auth } from "@/lib/auth"
 import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
 import { canViewPost } from "@/lib/postAccess"
+import {
+  getPostSnapshotChecksum,
+  type PostRecoverySnapshot,
+  validatePostContentSize,
+} from "@/lib/postDurability"
 import { revalidatePostMutationPaths } from "@/lib/postRevalidation"
 import { prisma } from "@/lib/prisma"
-import { deleteR2Objects } from "@/lib/r2"
 import { ensureUniqueSlug, generateSlug } from "@/lib/utils"
 
 class RouteError extends Error {
@@ -19,6 +23,7 @@ class RouteError extends Error {
 }
 
 const updateSchema = z.object({
+  baseVersion: z.number().int().positive().optional(),
   categoryId: z.string().min(1).nullable().optional(),
   coAuthorIds: z.array(z.string().min(1)).optional(),
   content: z.record(z.string(), z.unknown()).optional(),
@@ -27,6 +32,7 @@ const updateSchema = z.object({
   coverUrl: z.string().url().nullable().optional(),
   draftVisibility: z.enum(["PRIVATE", "CO_AUTHORS"]).optional(),
   excerpt: z.string().trim().max(500).optional(),
+  saveKind: z.enum(["AUTO", "MANUAL"]).optional(),
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional(),
   tagIds: z.array(z.string().min(1)).optional(),
   title: z.string().trim().min(1).max(200).optional(),
@@ -35,6 +41,7 @@ const updateSchema = z.object({
 const permanentDeleteSchema = z.object({
   confirmation: z.string().min(1).max(200),
 })
+const HARD_DELETE_RETENTION_MS = 90 * 24 * 60 * 60 * 1000
 
 const postDetailSelect = {
   _count: { select: { comments: true } },
@@ -209,6 +216,27 @@ export async function PATCH(
   try {
     const { id } = await params
     const data = updateSchema.parse(await request.json())
+    const sizeError = validatePostContentSize(data)
+    if (sizeError) {
+      return Response.json({ error: sizeError }, { status: 413 })
+    }
+    const changesEditableState =
+      data.categoryId !== undefined ||
+      data.coAuthorIds !== undefined ||
+      data.content !== undefined ||
+      data.contentText !== undefined ||
+      data.coverAlt !== undefined ||
+      data.coverUrl !== undefined ||
+      data.draftVisibility !== undefined ||
+      data.excerpt !== undefined ||
+      data.tagIds !== undefined ||
+      data.title !== undefined
+    if (changesEditableState && data.baseVersion === undefined) {
+      return Response.json(
+        { error: "Post version is required before saving editable content" },
+        { status: 428 },
+      )
+    }
     let shouldRevalidatePosts = false
     let existingSlug: string | null = null
 
@@ -216,19 +244,40 @@ export async function PATCH(
       const existing = await tx.post.findUnique({
         select: {
           authorId: true,
+          categoryId: true,
+          content: true,
           moderationLockedAt: true,
+          publishedAt: true,
+          removedAt: true,
+          removedFromStatus: true,
           status: true,
           id: true,
           slug: true,
           title: true,
           contentText: true,
+          coverAlt: true,
+          coverUrl: true,
+          draftVisibility: true,
+          excerpt: true,
+          version: true,
           coAuthors: { select: { userId: true, status: true } },
+          tags: { select: { tagId: true } },
         },
         where: { id },
       })
 
       if (!existing) {
         throw new RouteError("Post not found", 404)
+      }
+
+      if (
+        data.baseVersion !== undefined &&
+        data.baseVersion !== existing.version
+      ) {
+        throw new RouteError(
+          "Post changed in another session. Your local copy was preserved.",
+          409,
+        )
       }
 
       if (
@@ -386,7 +435,7 @@ export async function PATCH(
         }
       }
 
-      return tx.post.update({
+      const updated = await tx.post.update({
         data: {
           ...(data.categoryId !== undefined && {
             category: data.categoryId
@@ -412,6 +461,7 @@ export async function PATCH(
           ...(data.status && { status: data.status }),
           ...(data.title && { title: data.title }),
           ...(newSlug && { slug: newSlug }),
+          version: { increment: 1 },
         },
         select: {
           id: true,
@@ -419,9 +469,75 @@ export async function PATCH(
           slug: true,
           status: true,
           updatedAt: true,
+          version: true,
         },
-        where: { id },
+        where:
+          data.baseVersion === undefined
+            ? { id }
+            : { id, version: data.baseVersion },
       })
+
+      if (data.saveKind === "MANUAL" || data.status === "PUBLISHED") {
+        const nextStatus = data.status ?? existing.status
+        const snapshot: PostRecoverySnapshot = {
+          authorId: existing.authorId,
+          categoryId:
+            data.categoryId !== undefined ? data.categoryId : existing.categoryId,
+          coAuthorIds:
+            data.coAuthorIds ??
+            (existing.coAuthors ?? []).map(({ userId }) => userId),
+          content: (data.content ?? existing.content) as Prisma.JsonValue,
+          contentText:
+            data.contentText !== undefined
+              ? data.contentText.trim() || null
+              : existing.contentText,
+          coverAlt:
+            data.coverAlt !== undefined
+              ? data.coverAlt.trim() || null
+              : existing.coverAlt,
+          coverUrl:
+            data.coverUrl !== undefined ? data.coverUrl : existing.coverUrl,
+          draftVisibility: data.draftVisibility ?? existing.draftVisibility,
+          excerpt:
+            data.excerpt !== undefined ? data.excerpt || null : existing.excerpt,
+          publishedAt:
+            publishedAt !== undefined
+              ? publishedAt?.toISOString() ?? null
+              : existing.publishedAt?.toISOString() ?? null,
+          removedAt: existing.removedAt?.toISOString() ?? null,
+          removedFromStatus: existing.removedFromStatus,
+          slug: newSlug ?? existing.slug,
+          status: nextStatus,
+          tagIds: data.tagIds ?? (existing.tags ?? []).map(({ tagId }) => tagId),
+          title: data.title ?? existing.title,
+          version: updated.version,
+        }
+        const kind = data.status === "PUBLISHED" ? "PUBLISH" : "MANUAL_SAVE"
+
+        await tx.postRevision.create({
+          data: {
+            actorId: activeSession.user.id,
+            checksum: getPostSnapshotChecksum(snapshot),
+            kind,
+            postId: existing.id,
+            snapshot: snapshot as unknown as Prisma.InputJsonObject,
+            sourceVersion: updated.version,
+          },
+          select: { id: true },
+        })
+        await tx.postAuditEvent.create({
+          data: {
+            action: "SAVE",
+            actorId: activeSession.user.id,
+            metadata: { kind },
+            postId: existing.id,
+            sourceVersion: updated.version,
+          },
+          select: { id: true },
+        })
+      }
+
+      return updated
     })
 
     if (shouldRevalidatePosts) {
@@ -436,6 +552,16 @@ export async function PATCH(
 
     if (error instanceof RouteError) {
       return Response.json({ error: error.message }, { status: error.status })
+    }
+
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      return Response.json(
+        { error: "Post changed in another session. Your local copy was preserved." },
+        { status: 409 },
+      )
     }
 
     console.error("[PATCH /api/posts/[id]]", error)
@@ -468,6 +594,7 @@ export async function DELETE(
         content: true,
         coverUrl: true,
         id: true,
+        removedAt: true,
         slug: true,
         status: true,
         title: true,
@@ -481,6 +608,39 @@ export async function DELETE(
 
     if (existing.status !== "REMOVED") {
       throw new RouteError("Remove the post before permanently deleting it", 409)
+    }
+
+    if (
+      !existing.removedAt ||
+      Date.now() - existing.removedAt.getTime() < HARD_DELETE_RETENTION_MS
+    ) {
+      throw new RouteError(
+        "Removed posts must remain recoverable for 90 days",
+        409,
+      )
+    }
+
+    if (
+      process.env.NODE_ENV !== "test" &&
+      process.env.POST_HARD_DELETE_ENABLED !== "true"
+    ) {
+      throw new RouteError("Permanent post deletion is not enabled", 503)
+    }
+
+    const durability = await prisma.durabilityStatus.findUnique({
+      select: { latestBackupAt: true, severity: true },
+      where: { id: "primary" },
+    })
+    if (
+      !durability ||
+      durability.severity !== "HEALTHY" ||
+      !durability.latestBackupAt ||
+      durability.latestBackupAt <= existing.removedAt
+    ) {
+      throw new RouteError(
+        "A verified backup created after removal is required",
+        409,
+      )
     }
 
     if (parsed.data.confirmation !== existing.title) {
@@ -502,10 +662,22 @@ export async function DELETE(
       (url) => !sharedMediaUrls.has(url),
     )
 
-    // Storage cleanup happens first so a successful response guarantees no media is orphaned.
-    await deleteR2Objects(ownedMediaUrls)
-
     await prisma.$transaction(async (tx) => {
+      await tx.postAuditEvent.create({
+        data: {
+          action: "PURGE",
+          actorId: activeSession.user.id,
+          metadata: { slug: existing.slug, title: existing.title },
+          postId: existing.id,
+        },
+        select: { id: true },
+      })
+      if (ownedMediaUrls.length > 0) {
+        await tx.mediaCleanupJob.create({
+          data: { objectKeys: ownedMediaUrls },
+          select: { id: true },
+        })
+      }
       await tx.awardEvent.updateMany({
         data: { finalPostId: null },
         where: { finalPostId: id },
@@ -527,6 +699,7 @@ export async function DELETE(
         select: { id: true },
         where: { id },
       })
+      await tx.postRevision.deleteMany({ where: { postId: id } })
     })
 
     revalidatePostMutationPaths([existing.slug])

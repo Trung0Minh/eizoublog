@@ -27,6 +27,14 @@ export function SaveStatusIndicator({ status }: { status: SaveStatus }) {
           <span className="text-destructive">Lưu thất bại, đang thử lại...</span>
         </>
       )}
+      {status === "conflict" && (
+        <>
+          <AlertCircle aria-hidden="true" className="h-3 w-3 text-amber-600" />
+          <span className="text-amber-700 dark:text-amber-300">
+            Có phiên bản mới hơn, cần kiểm tra lại
+          </span>
+        </>
+      )}
     </div>
   )
 }

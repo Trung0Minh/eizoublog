@@ -365,6 +365,7 @@ export interface AdminPostListItem {
   author: { name: string; username: string }
   id: string
   publishedAt: Date | null
+  removedAt: Date | null
   slug: string
   status: PostStatus
   title: string
@@ -418,6 +419,7 @@ interface AdminPostRow {
   commentCount: DbCount
   id: string | null
   publishedAt: Date | null
+  removedAt: Date | null
   slug: string | null
   status: string | null
   title: string | null
@@ -1135,6 +1137,7 @@ export const getCachedAdminPosts = unstable_cache(
           p.slug,
           p.status::text AS status,
           p."publishedAt",
+          p."removedAt",
           p."updatedAt",
           u.name AS "authorName",
           u.username AS "authorUsername",
@@ -1166,6 +1169,7 @@ export const getCachedAdminPosts = unstable_cache(
           p.slug,
           p.status::text AS status,
           p."publishedAt",
+          p."removedAt",
           p."updatedAt",
           u.name AS "authorName",
           u.username AS "authorUsername"
@@ -1214,6 +1218,7 @@ export const getCachedAdminPosts = unstable_cache(
         author: { name: row.authorName, username: row.authorUsername },
         id: row.id,
         publishedAt: row.publishedAt,
+        removedAt: row.removedAt,
         slug: row.slug,
         status: parsePostStatus(row.status),
         title: row.title,

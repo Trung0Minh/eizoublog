@@ -231,3 +231,33 @@ export async function sendPostCommentEmail({
     throw new Error(`Resend error: ${error.message}`)
   }
 }
+
+export async function sendDurabilityAlertEmail({
+  issues,
+  severity,
+  to,
+}: {
+  issues: string[]
+  severity: string
+  to: string[]
+}) {
+  const from = process.env.RESEND_FROM_EMAIL
+  if (!from || to.length === 0) return
+
+  const { error } = await resend.emails.send(
+    {
+      from,
+      subject: `Anime Blog post protection: ${severity.toLowerCase()}`,
+      text: [
+        `Post durability status changed to ${severity}.`,
+        "",
+        ...issues.map((issue) => `- ${issue}`),
+        "",
+        "Open the admin dashboard for the current status and recovery guidance.",
+      ].join("\n"),
+      to,
+    },
+    { idempotencyKey: `durability-${severity}-${new Date().toISOString().slice(0, 13)}` },
+  )
+  if (error) throw new Error(`Resend error: ${error.message}`)
+}

@@ -27,6 +27,7 @@ interface AdminPost {
   author: { name: string; username: string }
   id: string
   publishedAt: Date | null
+  removedAt?: Date | null
   slug: string
   status: "ARCHIVED" | "DRAFT" | "PUBLISHED" | "REMOVED"
   title: string
@@ -112,6 +113,7 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
   const [deleteTarget, setDeleteTarget] = useState<AdminPost | null>(null)
   const [deleteConfirmation, setDeleteConfirmation] = useState("")
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [currentTime] = useState(() => Date.now())
 
   const keepStatusInCurrentFilter = (
     status: AdminPost["status"],
@@ -194,6 +196,13 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
   function openPermanentDelete(post: AdminPost) {
     setDeleteConfirmation("")
     setDeleteTarget(post)
+  }
+
+  function canPurgeByAge(post: AdminPost) {
+    return Boolean(
+      post.removedAt &&
+      currentTime - new Date(post.removedAt).getTime() >= 90 * 24 * 60 * 60 * 1000,
+    )
   }
 
   async function handlePermanentDelete() {
@@ -489,10 +498,18 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
                         <Button
                           aria-label="Permanently delete post"
                           className="h-8 w-8 rounded-[8px] p-0 text-destructive transition-colors hover:bg-destructive/10 hover:text-destructive"
-                          disabled={deletingId === post.id || moderatingId === post.id}
+                          disabled={
+                            deletingId === post.id ||
+                            moderatingId === post.id ||
+                            !canPurgeByAge(post)
+                          }
                           onClick={() => openPermanentDelete(post)}
                           size="sm"
-                          title="Permanently delete post"
+                          title={
+                            canPurgeByAge(post)
+                              ? "Permanently delete post"
+                              : "Available 90 days after removal"
+                          }
                           type="button"
                           variant="ghost"
                         >
@@ -604,10 +621,16 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
           body={
             <div className="space-y-5">
               <p>
-                This permanently deletes the post, its comments, post-specific
-                records, and uploaded media. Shared authors, categories, tags,
-                and media used by another post are preserved.
+                This permanently deletes the post after its 90-day recovery
+                window. The action remains blocked unless a verified backup was
+                created after removal. Media cleanup runs safely after the
+                database transaction.
               </p>
+              {deleteTarget.removedAt && (
+                <p className="text-[12px] text-text-secondary">
+                  Removed {formatDate(deleteTarget.removedAt)}.
+                </p>
+              )}
               <label className="block text-[12px] font-semibold text-text-primary">
                 Type the post title to confirm
                 <span className="mt-1.5 block break-words rounded-[10px] border border-destructive/20 bg-destructive/5 px-3 py-2 font-mono text-[12px] font-medium text-destructive">

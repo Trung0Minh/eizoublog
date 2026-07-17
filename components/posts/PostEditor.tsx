@@ -1,7 +1,7 @@
 "use client"
 
 import { X, ChevronLeft } from "lucide-react"
-import { useCallback, useEffect, useRef, useState, useTransition } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
 import { EditorTopBar } from "@/components/editor/EditorTopBar"
@@ -20,10 +20,14 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { Button } from "@/components/ui/button"
 import { CoverImageUpload } from "@/components/posts/CoverImageUpload"
 import { TagInput, type TagOption } from "@/components/posts/TagInput"
 import { SaveStatusIndicator } from "@/components/editor/SaveStatusIndicator"
-import { useAutosave } from "@/hooks/useAutosave"
+import { PostHistoryPanel } from "@/components/posts/PostHistoryPanel"
+import { DurabilityBanner } from "@/components/durability/DurabilityBanner"
+import { AutosaveConflictError, useAutosave } from "@/hooks/useAutosave"
+import { usePostRecoveryDraft } from "@/hooks/usePostRecoveryDraft"
 import { useWarnUnsaved } from "@/hooks/useWarnUnsaved"
 import { cn } from "@/lib/utils"
 
@@ -62,9 +66,11 @@ interface InitialPostData {
   status: "DRAFT" | "PUBLISHED"
   tags: TagOption[]
   title: string
+  version?: number
 }
 
 interface PostEditorProps {
+  canRestoreRevisions?: boolean
   categories: CategoryOption[]
   currentUserId: string
   initialData?: InitialPostData
@@ -75,6 +81,19 @@ interface PostEditorProps {
 interface PostMutationResponse {
   id: string
   slug: string
+  version: number | null
+}
+
+interface RecoveryDraftPayload {
+  categoryId: string
+  coAuthorIds: string[]
+  content: JSONContent
+  contentText: string
+  coverAlt: string
+  coverUrl: string
+  excerpt: string
+  tags: TagOption[]
+  title: string
 }
 
 function getApiError(value: unknown) {
@@ -102,7 +121,14 @@ function getPostResponse(value: unknown): PostMutationResponse | null {
     typeof value.data.id === "string" &&
     typeof value.data.slug === "string"
   ) {
-    return { id: value.data.id, slug: value.data.slug }
+    return {
+      id: value.data.id,
+      slug: value.data.slug,
+      version:
+        "version" in value.data && typeof value.data.version === "number"
+          ? value.data.version
+          : null,
+    }
   }
 
   return null
@@ -114,6 +140,7 @@ const emptyDoc: JSONContent = {
 }
 
 export function PostEditor({
+  canRestoreRevisions = false,
   categories,
   currentUserId,
   initialData,
@@ -143,10 +170,12 @@ export function PostEditor({
       textarea.style.height = `${textarea.scrollHeight}px`
     }
   }, [excerpt])
-  const [isDirty, setIsDirty] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(true)
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false)
   const [savingAction, setSavingAction] = useState<"draft" | "publish" | null>(null)
   const [postId, setPostId] = useState<string | null>(initialData?.id ?? null)
+  const [postVersion, setPostVersion] = useState(initialData?.version ?? 1)
+  const postVersionRef = useRef(initialData?.version ?? 1)
   const [selectedTags, setSelectedTags] = useState<TagOption[]>(
     initialData?.tags ?? initialTags,
   )
@@ -191,6 +220,7 @@ export function PostEditor({
     const draft = autosaveDraftRef.current
     const response = await fetch(`/api/posts/${postId}`, {
       body: JSON.stringify({
+        baseVersion: postVersionRef.current,
         categoryId: draft.categoryId || undefined,
         coAuthorIds: draft.coAuthorIds,
         content: draft.content,
@@ -200,6 +230,7 @@ export function PostEditor({
         draftVisibility:
           draft.coAuthorIds.length > 0 ? "CO_AUTHORS" : "PRIVATE",
         excerpt: draft.excerpt,
+        saveKind: "AUTO",
         tagIds: draft.tagIds,
         title: draft.title,
       }),
@@ -209,27 +240,102 @@ export function PostEditor({
     const result: unknown = await response.json()
 
     if (!response.ok) {
+      if (response.status === 409) throw new AutosaveConflictError()
       throw new Error(getApiError(result))
     }
 
-    setIsDirty(false)
+    const savedPost = getPostResponse(result)
+    if (savedPost?.version !== null && savedPost?.version !== undefined) {
+      postVersionRef.current = savedPost.version
+      setPostVersion(savedPost.version)
+    }
+
   }, [postId])
 
   const {
+    getGeneration,
+    isDirty,
+    markDirty,
+    markSavedThrough,
     scheduleDebounce,
     status: saveStatus,
   } = useAutosave({
-    isDirty,
     onSave: performAutosave,
     postId,
+  })
+
+  const recoveryPayload = useMemo<RecoveryDraftPayload>(() => ({
+    categoryId,
+    coAuthorIds,
+    content,
+    contentText,
+    coverAlt,
+    coverUrl,
+    excerpt,
+    tags: selectedTags,
+    title,
+  }), [categoryId, coAuthorIds, content, contentText, coverAlt, coverUrl, excerpt, selectedTags, title])
+  const recovery = usePostRecoveryDraft({
+    isDirty,
+    key: postId ? `post:${postId}` : `new:${currentUserId}`,
+    payload: recoveryPayload,
   })
 
   useWarnUnsaved(isDirty)
 
   const markDirtyAndAutosave = useCallback(() => {
-    setIsDirty(true)
+    markDirty()
     scheduleDebounce()
-  }, [scheduleDebounce])
+  }, [markDirty, scheduleDebounce])
+
+  const recoverLocalDraft = useCallback(() => {
+    const draft = recovery.accept()
+    if (!draft) return
+    setCategoryId(draft.categoryId)
+    setCoAuthorIds(draft.coAuthorIds)
+    setContent(draft.content)
+    setContentText(draft.contentText)
+    setCoverAlt(draft.coverAlt)
+    setCoverUrl(draft.coverUrl)
+    setExcerpt(draft.excerpt)
+    setSelectedTags(draft.tags)
+    setTitle(draft.title)
+    markDirtyAndAutosave()
+  }, [markDirtyAndAutosave, recovery])
+
+  const downloadRecoveryCopy = useCallback(async () => {
+    try {
+      let recoveryData: unknown = {
+        data: {
+          exportedAt: new Date().toISOString(),
+          formatVersion: 1,
+          media: [coverUrl].filter(Boolean),
+          post: recoveryPayload,
+        },
+      }
+      if (postId) {
+        const response = await fetch(`/api/posts/${postId}/export`)
+        recoveryData = await response.json()
+        if (!response.ok) throw new Error(getApiError(recoveryData))
+      }
+
+      const blob = new Blob([JSON.stringify(recoveryData, null, 2)], {
+        type: "application/json",
+      })
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement("a")
+      anchor.href = url
+      anchor.download = `${title.trim() || "untitled-post"}.post-backup.json`
+      anchor.click()
+      URL.revokeObjectURL(url)
+    } catch (downloadError) {
+      setError(
+        downloadError instanceof Error
+          ? downloadError.message
+          : "Could not download a recovery copy",
+      )
+    }
+  }, [coverUrl, postId, recoveryPayload, title])
 
   async function savePost(status: "DRAFT" | "PUBLISHED") {
     if (status === "PUBLISHED") {
@@ -242,6 +348,7 @@ export function PostEditor({
     setSavingAction(status === "PUBLISHED" ? "publish" : "draft")
     setError("")
     let isNavigatingAway = false
+    const savingGeneration = getGeneration()
 
     const payload = {
       categoryId: categoryId || undefined,
@@ -255,6 +362,8 @@ export function PostEditor({
       status,
       tagIds: selectedTags.map((tag) => tag.id),
       title,
+      ...(postId && { baseVersion: postVersion }),
+      saveKind: "MANUAL" as const,
     }
 
     try {
@@ -278,15 +387,22 @@ export function PostEditor({
         throw new Error("Phản hồi bài viết không bao gồm slug")
       }
 
+      if (post.version !== null) {
+        postVersionRef.current = post.version
+        setPostVersion(post.version)
+      }
+
       if (status === "PUBLISHED") {
-        setIsDirty(false)
+        markSavedThrough(savingGeneration)
+        recovery.discard()
         isNavigatingAway = true
         router.push(`/${post.slug}`)
         return
       }
 
       setPostId(post.id)
-      setIsDirty(false)
+      markSavedThrough(savingGeneration)
+      recovery.discard()
 
       if (!postId) {
         router.push(`/dashboard/edit/${post.id}`)
@@ -364,6 +480,8 @@ export function PostEditor({
         isPublished={initialData?.status === "PUBLISHED"}
         onPublish={() => startTransition(() => void savePost("PUBLISHED"))}
         onSaveDraft={() => startTransition(() => void savePost("DRAFT"))}
+        onExport={() => void downloadRecoveryCopy()}
+        onHistory={postId ? () => setIsHistoryOpen(true) : undefined}
         pendingAction={savingAction}
         previewHref={postId ? `/dashboard/preview/${postId}` : null}
         onToggleSettings={() => setIsSettingsOpen((current) => !current)}
@@ -597,12 +715,37 @@ export function PostEditor({
             <div
               className="mx-auto flex w-full max-w-[1200px] flex-col px-4 pb-[120px] pt-6 md:px-6 md:pt-8"
             >
+              <DurabilityBanner scope="writer" />
               {error && (
                 <div
                   className="mb-4 rounded-[5px] border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
                   role="alert"
                 >
                   {error}
+                </div>
+              )}
+
+              {recovery.candidate && (
+                <div
+                  className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[8px] border border-accent/30 bg-accent/5 p-3 text-sm text-text-primary"
+                  role="alert"
+                >
+                  <span>
+                    A newer local copy of this post was found on this device.
+                  </span>
+                  <span className="flex gap-2">
+                    <Button onClick={recoverLocalDraft} size="sm" type="button">
+                      Recover local copy
+                    </Button>
+                    <Button
+                      onClick={recovery.discard}
+                      size="sm"
+                      type="button"
+                      variant="outline"
+                    >
+                      Discard
+                    </Button>
+                  </span>
                 </div>
               )}
 
@@ -663,6 +806,13 @@ export function PostEditor({
           </div>
         </div>
       </main>
+      <PostHistoryPanel
+        canRestore={canRestoreRevisions}
+        currentVersion={postVersion}
+        onOpenChange={setIsHistoryOpen}
+        open={isHistoryOpen}
+        postId={postId}
+      />
     </div>
   )
 }

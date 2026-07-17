@@ -2,6 +2,10 @@
   "regions": ["syd1"],
   "crons": [
     {
+      "path": "/api/cron/durability",
+      "schedule": "17 * * * *"
+    },
+    {
       "path": "/api/cron/newsletter",
       "schedule": "0 3 * * *"
     }

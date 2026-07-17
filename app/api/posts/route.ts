@@ -5,6 +5,11 @@ import { ZodError, z } from "zod"
 import { auth } from "@/lib/auth"
 import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
 import { revalidatePostMutationPaths } from "@/lib/postRevalidation"
+import {
+  getPostSnapshotChecksum,
+  type PostRecoverySnapshot,
+  validatePostContentSize,
+} from "@/lib/postDurability"
 import { prisma } from "@/lib/prisma"
 import { ensureUniqueSlug, generateSlug } from "@/lib/utils"
 
@@ -176,6 +181,10 @@ export async function POST(request: Request) {
 
   try {
     const data = createSchema.parse(await request.json())
+    const sizeError = validatePostContentSize(data)
+    if (sizeError) {
+      return Response.json({ error: sizeError }, { status: 413 })
+    }
     if (data.status === "PUBLISHED" && (!data.contentText || !data.contentText.trim())) {
       return Response.json({ error: "Nội dung bài viết không được để trống khi đăng." }, { status: 400 })
     }
@@ -183,7 +192,7 @@ export async function POST(request: Request) {
       const baseSlug = generateSlug(data.title) || "post"
       const slug = await ensureUniqueSlug(baseSlug, tx)
 
-      return tx.post.create({
+      const created = await tx.post.create({
         data: {
           author: { connect: { id: activeSession.user.id } },
           content: data.content as Prisma.InputJsonObject,
@@ -211,8 +220,53 @@ export async function POST(request: Request) {
             })),
           },
         },
-        select: { id: true, slug: true, status: true },
+        select: { id: true, lastSavedAt: true, slug: true, status: true, version: true },
       })
+
+      const snapshot: PostRecoverySnapshot = {
+        authorId: activeSession.user.id,
+        categoryId: data.categoryId ?? null,
+        coAuthorIds: uniqueIds(data.coAuthorIds),
+        content: data.content as unknown as Prisma.JsonValue,
+        contentText: data.contentText?.trim() || null,
+        coverAlt: data.coverAlt?.trim() || null,
+        coverUrl: data.coverUrl ?? null,
+        draftVisibility: data.draftVisibility,
+        excerpt: data.excerpt || null,
+        publishedAt: data.status === "PUBLISHED" ? new Date().toISOString() : null,
+        removedAt: null,
+        removedFromStatus: null,
+        slug: created.slug,
+        status: data.status,
+        tagIds: uniqueIds(data.tagIds),
+        title: data.title,
+        version: created.version ?? 1,
+      }
+
+      await tx.postRevision.create({
+        data: {
+          actorId: activeSession.user.id,
+          checksum: getPostSnapshotChecksum(snapshot),
+          kind: "BASELINE",
+          postId: created.id,
+          snapshot: snapshot as unknown as Prisma.InputJsonObject,
+          sourceVersion: snapshot.version,
+        },
+        select: { id: true },
+      })
+
+      await tx.postAuditEvent.create({
+        data: {
+          action: "SAVE",
+          actorId: activeSession.user.id,
+          metadata: { kind: "CREATE" },
+          postId: created.id,
+          sourceVersion: snapshot.version,
+        },
+        select: { id: true },
+      })
+
+      return created
     })
 
     revalidatePostMutationPaths([post.slug])

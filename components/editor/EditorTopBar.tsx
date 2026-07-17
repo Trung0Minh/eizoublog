@@ -3,6 +3,8 @@
 import {
   ArrowLeft,
   Eye,
+  Download,
+  History,
   RefreshCw,
   Save,
   Send,
@@ -36,6 +38,8 @@ interface EditorTopBarProps {
   pendingAction?: PendingAction
   previewHref?: string | null
   onToggleSettings?: () => void
+  onExport?: () => void
+  onHistory?: () => void
   onPublish: () => void
   onSaveDraft: () => void
 }
@@ -52,6 +56,8 @@ export function EditorTopBar({
   pendingAction = null,
   previewHref,
   onToggleSettings,
+  onExport,
+  onHistory,
   onPublish,
   onSaveDraft,
 }: EditorTopBarProps) {
@@ -115,6 +121,16 @@ export function EditorTopBar({
           variant={isSettingsOpen ? "default" : "ghost"}
         >
           <Settings2 aria-hidden="true" className="h-4 w-4" />
+        </Button>
+      )}
+      {onHistory && (
+        <Button aria-label="Post history" className={railButtonClass} onClick={onHistory} size="icon" title="Post history" type="button" variant="ghost">
+          <History aria-hidden="true" className="h-4 w-4" />
+        </Button>
+      )}
+      {onExport && (
+        <Button aria-label="Download recovery copy" className={railButtonClass} onClick={onExport} size="icon" title="Download recovery copy" type="button" variant="ghost">
+          <Download aria-hidden="true" className="h-4 w-4" />
         </Button>
       )}
 

@@ -8,6 +8,10 @@ const mocks = vi.hoisted(() => {
     awardEvent: { updateMany: vi.fn() },
     awardEventRoom: { updateMany: vi.fn() },
     notification: { deleteMany: vi.fn() },
+    durabilityStatus: { findUnique: vi.fn() },
+    mediaCleanupJob: { create: vi.fn() },
+    postAuditEvent: { create: vi.fn() },
+    postRevision: { deleteMany: vi.fn() },
     post: {
       delete: vi.fn(),
       findMany: vi.fn(),
@@ -17,7 +21,6 @@ const mocks = vi.hoisted(() => {
 
   return {
     auth: vi.fn(),
-    deleteR2Objects: vi.fn(),
     getActiveSession: vi.fn(),
     prisma,
     revalidatePath: vi.fn(),
@@ -32,7 +35,6 @@ vi.mock("@/lib/authz", () => ({
     Response.json({ error: "Unauthorized" }, { status: 401 }),
 }))
 vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }))
-vi.mock("@/lib/r2", () => ({ deleteR2Objects: mocks.deleteR2Objects }))
 vi.mock("next/cache", () => ({
   revalidatePath: mocks.revalidatePath,
   revalidateTag: mocks.revalidateTag,
@@ -57,6 +59,10 @@ describe("permanent post deletion", () => {
       user: { id: "admin-1", name: "Admin", role: "ADMIN" },
     })
     mocks.prisma.post.findMany.mockResolvedValue([])
+    mocks.prisma.durabilityStatus.findUnique.mockResolvedValue({
+      latestBackupAt: new Date("2026-07-01T00:00:00Z"),
+      severity: "HEALTHY",
+    })
     mocks.prisma.$transaction.mockImplementation(async (callback) =>
       callback(mocks.prisma),
     )
@@ -77,6 +83,7 @@ describe("permanent post deletion", () => {
       },
       coverUrl: "https://cdn.example.com/covers/frieren.webp?crop=wide",
       id: "post-1",
+      removedAt: new Date("2026-01-01T00:00:00Z"),
       slug: "frieren-animation",
       status: "REMOVED",
       title: "Frieren Animation",
@@ -92,10 +99,15 @@ describe("permanent post deletion", () => {
     await expect(response.json()).resolves.toEqual({
       data: { message: "Post permanently deleted" },
     })
-    expect(mocks.deleteR2Objects).toHaveBeenCalledWith([
-      "https://cdn.example.com/covers/frieren.webp?crop=wide",
-      "https://cdn.example.com/content-images/frame.webp",
-    ])
+    expect(mocks.prisma.mediaCleanupJob.create).toHaveBeenCalledWith({
+      data: {
+        objectKeys: [
+          "https://cdn.example.com/covers/frieren.webp?crop=wide",
+          "https://cdn.example.com/content-images/frame.webp",
+        ],
+      },
+      select: { id: true },
+    })
     expect(mocks.prisma.awardEvent.updateMany).toHaveBeenCalledWith({
       data: { finalPostId: null },
       where: { finalPostId: "post-1" },
@@ -124,6 +136,7 @@ describe("permanent post deletion", () => {
       content: { content: [], type: "doc" },
       coverUrl: null,
       id: "post-1",
+      removedAt: new Date("2026-01-01T00:00:00Z"),
       slug: "frieren-animation",
       status: "ARCHIVED",
       title: "Frieren Animation",
@@ -141,6 +154,7 @@ describe("permanent post deletion", () => {
       content: { content: [], type: "doc" },
       coverUrl: null,
       id: "post-1",
+      removedAt: new Date("2026-01-01T00:00:00Z"),
       slug: "frieren-animation",
       status: "REMOVED",
       title: "Frieren Animation",
@@ -161,6 +175,7 @@ describe("permanent post deletion", () => {
       content: { content: [{ attrs: { src: sharedUrl }, type: "image" }] },
       coverUrl: "https://cdn.example.com/covers/unique.webp",
       id: "post-1",
+      removedAt: new Date("2026-01-01T00:00:00Z"),
       slug: "frieren-animation",
       status: "REMOVED",
       title: "Frieren Animation",
@@ -171,8 +186,9 @@ describe("permanent post deletion", () => {
 
     await DELETE(deleteRequest("Frieren Animation"), routeContext)
 
-    expect(mocks.deleteR2Objects).toHaveBeenCalledWith([
-      "https://cdn.example.com/covers/unique.webp",
-    ])
+    expect(mocks.prisma.mediaCleanupJob.create).toHaveBeenCalledWith({
+      data: { objectKeys: ["https://cdn.example.com/covers/unique.webp"] },
+      select: { id: true },
+    })
   })
 })

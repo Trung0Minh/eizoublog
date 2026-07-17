@@ -15,6 +15,14 @@ const mocks = vi.hoisted(() => {
       update: vi.fn(),
       updateMany: vi.fn(),
     },
+    postAuditEvent: { create: vi.fn() },
+    postRevision: {
+      create: vi.fn(),
+      deleteMany: vi.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+    },
+    mediaCleanupJob: { create: vi.fn() },
     tag: {
       findMany: vi.fn(),
       upsert: vi.fn(),
@@ -251,7 +259,13 @@ describe("posts API", () => {
             create: [{ tag: { connect: { id: "tag-1" } } }],
           },
         }),
-        select: { id: true, slug: true, status: true },
+        select: {
+          id: true,
+          lastSavedAt: true,
+          slug: true,
+          status: true,
+          version: true,
+        },
       }),
     )
     expect(mocks.revalidateTag).toHaveBeenCalledWith("posts", "max")
@@ -523,6 +537,7 @@ describe("single post API", () => {
       authorId: "writer-1",
       status: "DRAFT",
       contentText: "Nội dung bài viết",
+      version: 1,
     })
     mocks.prisma.postTag.findMany.mockResolvedValue([
       { tagId: "tag-1", postId: "post-1" },
@@ -532,12 +547,14 @@ describe("single post API", () => {
       slug: "draft-title",
       status: "PUBLISHED",
       updatedAt: new Date("2024-04-01T00:00:00Z"),
+      version: 2,
     })
 
     const response = await PATCH(
       jsonRequest(
         "https://example.test/api/posts/post-1",
         {
+          baseVersion: 1,
           status: "PUBLISHED",
           tagIds: ["tag-2"],
         },
@@ -553,7 +570,7 @@ describe("single post API", () => {
           publishedAt: expect.any(Date),
           status: "PUBLISHED",
         }),
-        where: { id: "post-1" },
+        where: { id: "post-1", version: 1 },
       }),
     )
     expect(mocks.prisma.postTag.deleteMany).toHaveBeenCalledWith({
@@ -581,6 +598,7 @@ describe("single post API", () => {
       id: "post-1",
       authorId: "writer-1",
       status: "DRAFT",
+      version: 1,
       contentText: "",
     })
 
@@ -720,18 +738,21 @@ describe("single post API", () => {
     mocks.prisma.post.findUnique.mockResolvedValue({
       authorId: "writer-1",
       status: "DRAFT",
+      version: 1,
     })
     mocks.prisma.post.update.mockResolvedValue({
       id: "post-1",
       slug: "draft-title",
       status: "DRAFT",
       updatedAt: new Date("2024-04-01T00:00:00Z"),
+      version: 2,
     })
 
     const response = await PATCH(
       jsonRequest(
         "https://example.test/api/posts/post-1",
         {
+          baseVersion: 1,
           content: { content: [], type: "doc" },
           contentText: "Autosaved body",
           draftVisibility: "CO_AUTHORS",
@@ -750,10 +771,47 @@ describe("single post API", () => {
           draftVisibility: "CO_AUTHORS",
           lastSavedAt: expect.any(Date),
         }),
-        where: { id: "post-1" },
+        where: { id: "post-1", version: 1 },
       }),
     )
     expect(mocks.revalidateTag).not.toHaveBeenCalledWith("posts", "max")
+  })
+
+  it("rejects a stale post version without overwriting newer content", async () => {
+    mocks.auth.mockResolvedValue({
+      user: { id: "writer-1", role: "WRITER" },
+    })
+    mocks.prisma.post.findUnique.mockResolvedValue({
+      authorId: "writer-1",
+      coAuthors: [],
+      contentText: "Newer server content",
+      id: "post-1",
+      moderationLockedAt: null,
+      slug: "draft-title",
+      status: "DRAFT",
+      title: "Draft title",
+      version: 4,
+    })
+
+    const response = await PATCH(
+      jsonRequest(
+        "https://example.test/api/posts/post-1",
+        {
+          baseVersion: 3,
+          content: { content: [], type: "doc" },
+          contentText: "Stale local content",
+          title: "Draft title",
+        },
+        "PATCH",
+      ),
+      routeContext("post-1"),
+    )
+
+    expect(response.status).toBe(409)
+    await expect(response.json()).resolves.toEqual({
+      error: "Post changed in another session. Your local copy was preserved.",
+    })
+    expect(mocks.prisma.post.update).not.toHaveBeenCalled()
   })
 
   it("forbids writers from permanently deleting posts", async () => {

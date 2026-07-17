@@ -82,6 +82,7 @@ export async function POST(request: Request) {
             data: {
               moderationLockedAt: transition.moderationLockedAt,
               publishedAt: transition.publishedAt,
+              ...(transition.removedAt !== undefined && { removedAt: transition.removedAt }),
               removedFromStatus: transition.removedFromStatus,
               status: transition.toStatus,
             },

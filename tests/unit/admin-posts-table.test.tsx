@@ -18,6 +18,7 @@ const removedPost = {
   author: { name: "Mina", username: "mina" },
   id: "post-1",
   publishedAt: null,
+  removedAt: new Date("2026-01-01T00:00:00.000Z"),
   slug: "frieren-animation",
   status: "REMOVED" as const,
   title: "Frieren Animation",
@@ -69,5 +70,17 @@ describe("AdminPostsTable permanent deletion", () => {
     expect(
       screen.queryByRole("button", { name: "Permanently delete post" }),
     ).not.toBeInTheDocument()
+  })
+
+  it("keeps permanent deletion disabled during the 90-day recovery window", () => {
+    render(
+      <AdminPostsTable
+        posts={[{ ...removedPost, removedAt: new Date(), updatedAt: new Date() }]}
+      />,
+    )
+
+    expect(
+      screen.getByRole("button", { name: "Permanently delete post" }),
+    ).toBeDisabled()
   })
 })

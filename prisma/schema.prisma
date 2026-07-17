@@ -145,6 +145,8 @@ model Post {
   publishedAt     DateTime?
   moderationLockedAt DateTime?
   removedFromStatus  PostStatus?
+  removedAt          DateTime?
+  version            Int                    @default(1)
   lastSavedAt     DateTime?
   createdAt       DateTime                 @default(now())
   updatedAt       DateTime                 @updatedAt
@@ -394,7 +396,96 @@ model Notification {
 enum NotificationType {
   COAUTHOR_ACCEPTED
   COAUTHOR_DECLINED
+  DURABILITY_ALERT
   POST_MODERATION
+}
+
+enum PostRevisionKind {
+  AUTO_CHECKPOINT
+  BASELINE
+  DELETE_GUARD
+  MANUAL_SAVE
+  PUBLISH
+  RESTORE
+}
+
+model PostRevision {
+  id            String           @id @default(cuid())
+  postId        String
+  sourceVersion Int
+  kind          PostRevisionKind
+  snapshot      Json
+  checksum      String
+  actorId       String?
+  createdAt     DateTime         @default(now())
+  expiresAt     DateTime?
+
+  @@index([postId, createdAt(sort: Desc)])
+  @@index([expiresAt])
+  @@map("post_revisions")
+}
+
+enum PostAuditAction {
+  CONFLICT
+  DELETE
+  MODERATION
+  PURGE
+  RESTORE
+  SAVE
+}
+
+model PostAuditEvent {
+  id            String          @id @default(cuid())
+  postId        String
+  actorId       String?
+  action        PostAuditAction
+  sourceVersion Int?
+  metadata      Json
+  createdAt     DateTime        @default(now())
+
+  @@index([postId, createdAt(sort: Desc)])
+  @@index([action, createdAt(sort: Desc)])
+  @@map("post_audit_events")
+}
+
+enum DurabilitySeverity {
+  CRITICAL
+  HEALTHY
+  UNKNOWN
+  WARNING
+}
+
+model DurabilityStatus {
+  id                 String             @id @default("primary")
+  severity           DurabilitySeverity @default(UNKNOWN)
+  databaseBytes      BigInt?
+  capacityBytes      BigInt?
+  latestBackupAt     DateTime?
+  latestMediaBackupAt DateTime?
+  checkedAt          DateTime           @default(now())
+  issues             Json
+
+  @@map("durability_status")
+}
+
+enum MediaCleanupStatus {
+  COMPLETE
+  FAILED
+  PENDING
+}
+
+model MediaCleanupJob {
+  id            String             @id @default(cuid())
+  objectKeys    Json
+  status        MediaCleanupStatus @default(PENDING)
+  attempts      Int                @default(0)
+  nextAttemptAt DateTime           @default(now())
+  lastError     String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@index([status, nextAttemptAt])
+  @@map("media_cleanup_jobs")
 }
 
 model NewsletterSubscriber {

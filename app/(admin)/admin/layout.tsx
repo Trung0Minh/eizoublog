@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import { AdminSidebar } from "@/components/admin/AdminSidebar"
 import { AdminHeader } from "@/components/admin/AdminHeader"
 import { getCurrentSession } from "@/lib/session"
+import { DurabilityBanner } from "@/components/durability/DurabilityBanner"
 
 export const metadata: Metadata = {
   robots: { follow: false, index: false },
@@ -42,6 +43,7 @@ export default async function AdminLayout({
         <main className="w-full h-full flex-1 rounded-[32px] border border-border-default/50 bg-background/40 shadow-[0_8px_32px_rgba(0,0,0,0.04)] backdrop-blur-3xl overflow-hidden relative">
           <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
           <div className="h-full overflow-y-auto px-6 py-16 md:px-10 md:py-12 scrollbar-none relative z-10">
+            <DurabilityBanner scope="admin" />
             {children}
           </div>
         </main>

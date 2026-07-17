@@ -11,6 +11,7 @@ export type PostModerationAction =
 export interface PostModerationTransition {
   moderationLockedAt: Date | null
   publishedAt: Date | null
+  removedAt: Date | null | undefined
   removedFromStatus: PostStatus | null
   toStatus: PostStatus
 }
@@ -30,6 +31,7 @@ export function getPostModerationTransition(
     return {
       moderationLockedAt: now,
       publishedAt: null,
+      removedAt: undefined,
       removedFromStatus: null,
       toStatus: "DRAFT",
     }
@@ -39,6 +41,7 @@ export function getPostModerationTransition(
     return {
       moderationLockedAt: null,
       publishedAt: now,
+      removedAt: undefined,
       removedFromStatus: null,
       toStatus: "PUBLISHED",
     }
@@ -51,6 +54,7 @@ export function getPostModerationTransition(
     return {
       moderationLockedAt: now,
       publishedAt: null,
+      removedAt: undefined,
       removedFromStatus: null,
       toStatus: "ARCHIVED",
     }
@@ -60,6 +64,7 @@ export function getPostModerationTransition(
     return {
       moderationLockedAt: null,
       publishedAt: null,
+      removedAt: undefined,
       removedFromStatus: null,
       toStatus: "DRAFT",
     }
@@ -69,6 +74,7 @@ export function getPostModerationTransition(
     return {
       moderationLockedAt: now,
       publishedAt: null,
+      removedAt: now,
       removedFromStatus: post.status,
       toStatus: "REMOVED",
     }
@@ -79,6 +85,7 @@ export function getPostModerationTransition(
     return {
       moderationLockedAt: restoredStatus === "ARCHIVED" ? now : null,
       publishedAt: restoredStatus === "PUBLISHED" ? now : null,
+      removedAt: null,
       removedFromStatus: null,
       toStatus: restoredStatus,
     }

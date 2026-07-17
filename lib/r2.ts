@@ -1,5 +1,6 @@
 import {
   DeleteObjectsCommand,
+  GetObjectCommand,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3"
@@ -9,6 +10,12 @@ interface UploadToR2Options {
   body: Buffer
   contentType: string
   key: string
+}
+
+export interface BackupManifest {
+  backupAt: string
+  mediaBackupAt: string
+  status: "healthy" | "failed"
 }
 
 interface R2Config {
@@ -136,4 +143,44 @@ export async function getPresignedUploadUrl({
   const publicUrl = `${config.publicUrl.replace(/\/$/, "")}/${key}`
 
   return { uploadUrl, publicUrl }
+}
+
+export async function getBackupManifest(): Promise<BackupManifest | null> {
+  const accountId = process.env.R2_ACCOUNT_ID
+  const accessKeyId = process.env.R2_BACKUP_ACCESS_KEY_ID
+  const secretAccessKey = process.env.R2_BACKUP_SECRET_ACCESS_KEY
+  const bucketName = process.env.R2_BACKUP_BUCKET_NAME
+  const key = process.env.R2_BACKUP_MANIFEST_KEY ?? "manifests/latest.json"
+  if (!accountId || !accessKeyId || !secretAccessKey || !bucketName) return null
+
+  const client = createR2Client({
+    accessKeyId,
+    accountId,
+    bucketName,
+    publicUrl: "https://backup.invalid",
+    secretAccessKey,
+  })
+  const result = await client.send(new GetObjectCommand({ Bucket: bucketName, Key: key }))
+  const raw = await result.Body?.transformToString()
+  if (!raw) return null
+
+  const value: unknown = JSON.parse(raw)
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    !("backupAt" in value) ||
+    !("mediaBackupAt" in value) ||
+    !("status" in value) ||
+    typeof value.backupAt !== "string" ||
+    typeof value.mediaBackupAt !== "string" ||
+    (value.status !== "healthy" && value.status !== "failed")
+  ) {
+    throw new Error("Backup manifest has an invalid shape")
+  }
+
+  return {
+    backupAt: value.backupAt,
+    mediaBackupAt: value.mediaBackupAt,
+    status: value.status,
+  }
 }

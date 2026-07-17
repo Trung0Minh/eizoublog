@@ -13,7 +13,7 @@ import { getActiveSession } from "@/lib/authz"
 import { getNotifications } from "@/lib/notifications"
 import { cn } from "@/lib/utils"
 
-type NotificationCategory = "collaboration" | "comments" | "moderation"
+type NotificationCategory = "collaboration" | "comments" | "moderation" | "system"
 
 interface NotificationsPageProps {
   searchParams: Promise<{ type?: string }>
@@ -71,6 +71,11 @@ const categoryMeta = {
     label: "Kiểm duyệt",
     tone: "border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-300",
   },
+  system: {
+    icon: ShieldAlert,
+    label: "Hệ thống",
+    tone: "border-destructive/25 bg-destructive/10 text-destructive",
+  },
 } satisfies Record<NotificationCategory, { icon: typeof Bell; label: string; tone: string }>
 
 export default async function NotificationsPage({
@@ -86,6 +91,7 @@ export default async function NotificationsPage({
     await Promise.all([getNotifications(activeSession.user), searchParams])
   const selectedCategory: NotificationCategory | "all" | "unread" =
     params.type === "moderation" ||
+    params.type === "system" ||
     params.type === "collaboration" ||
     params.type === "comments"
       ? params.type
@@ -104,7 +110,9 @@ export default async function NotificationsPage({
     ...responseEvents.map((event) => ({
       category: event.type === "POST_MODERATION"
         ? "moderation" as const
-        : "collaboration" as const,
+        : event.type === "DURABILITY_ALERT"
+          ? "system" as const
+          : "collaboration" as const,
       createdAt: event.createdAt,
       id: event.id,
       kind: "event" as const,
@@ -132,6 +140,7 @@ export default async function NotificationsPage({
     { category: "all", href: "/dashboard/notifications", label: "Tất cả" },
     { category: "unread", href: "/dashboard/notifications?type=unread", label: "Chưa đọc" },
     { category: "moderation", href: "/dashboard/notifications?type=moderation", label: "Kiểm duyệt" },
+    { category: "system", href: "/dashboard/notifications?type=system", label: "Hệ thống" },
     { category: "collaboration", href: "/dashboard/notifications?type=collaboration", label: "Cộng tác" },
     { category: "comments", href: "/dashboard/notifications?type=comments", label: "Bình luận" },
   ]
@@ -242,6 +251,27 @@ export default async function NotificationsPage({
                         )
                       }
 
+                      if (item.value.type === "DURABILITY_ALERT") {
+                        const severity = stringValue(data.severity) || "WARNING"
+                        const issues = Array.isArray(data.issues)
+                          ? data.issues.flatMap((issue) =>
+                              isRecord(issue) && typeof issue.message === "string"
+                                ? [issue.message]
+                                : [],
+                            )
+                          : []
+                        return (
+                          <>
+                            <p className="font-medium text-text-primary">
+                              Post protection status: {severity.toLowerCase()}
+                            </p>
+                            {issues.map((issue) => (
+                              <p className="mt-1 text-sm leading-6 text-text-secondary" key={issue}>{issue}</p>
+                            ))}
+                          </>
+                        )
+                      }
+
                       const accepted = item.value.type === "COAUTHOR_ACCEPTED"
                       const actorName = stringValue(data.actorName) || "Một đồng tác giả"
                       return (
@@ -263,7 +293,7 @@ export default async function NotificationsPage({
                         <ViewLink commentId={item.value.id} href={`/${item.value.post.slug}#comment-${item.value.id}`}>Xem</ViewLink>
                       </Button>
                     )}
-                    {item.kind === "event" && item.value.type !== "POST_MODERATION" && isRecord(item.value.data) && stringValue(item.value.data.postId) && (
+                    {item.kind === "event" && item.value.type !== "POST_MODERATION" && item.value.type !== "DURABILITY_ALERT" && isRecord(item.value.data) && stringValue(item.value.data.postId) && (
                       <Button asChild size="sm" variant="outline">
                         <ViewLink href={`/dashboard/edit/${stringValue(item.value.data.postId)}`} notificationId={item.value.id}>Xem</ViewLink>
                       </Button>
