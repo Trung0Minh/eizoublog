@@ -85,7 +85,7 @@ jobs:
       - name: Verify backed-up media is readable
         run: |
           set -euo pipefail
-          key="$(aws s3api list-objects-v2 --bucket "$BACKUP_BUCKET" --prefix media/ --max-items 1 --endpoint-url "$R2_ENDPOINT" --query 'Contents[0].Key' --output text)"
+          key="$(aws s3api list-objects-v2 --bucket "$BACKUP_BUCKET" --prefix media/ --max-keys 1 --endpoint-url "$R2_ENDPOINT" --query 'Contents[0].Key' --output text)"
           if [ "$key" != "None" ]; then
             aws s3api head-object --bucket "$BACKUP_BUCKET" --key "$key" --endpoint-url "$R2_ENDPOINT" > /dev/null
           fi
