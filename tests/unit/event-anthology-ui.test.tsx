@@ -68,49 +68,6 @@ describe("EventAnthologyTableOfContents", () => {
 })
 
 describe("EventAnthologyView", () => {
-  it("renders the saved merged article instead of rebuilding contributor blocks", () => {
-    render(
-      <EventAnthologyView
-        editorialContent={{
-          content: [
-            {
-              attrs: { id: "edited-section", level: 2 },
-              content: [{ text: "Edited section", type: "text" }],
-              type: "heading",
-            },
-          ],
-          type: "doc",
-        }}
-        event={{
-          coverAlt: null,
-          coverUrl: null,
-          intro: { content: [], type: "doc" },
-          introText: "Generated introduction",
-          rooms: [
-            {
-              id: "room-a",
-              order: 0,
-              selectedPost: {
-                content: { content: [], type: "doc" },
-                id: "post-a",
-                status: "DRAFT",
-                title: "Source submission",
-              },
-              status: "SUBMITTED",
-              writer: { name: "Writer A", username: "writer-a" },
-              writerIntro: null,
-            },
-          ],
-          title: "Edited anthology",
-        }}
-      />,
-    )
-
-    expect(screen.getByTestId("event-editorial-content")).toBeInTheDocument()
-    expect(screen.queryByTestId("event-contributor-block")).not.toBeInTheDocument()
-    expect(screen.queryByText("Generated introduction")).not.toBeInTheDocument()
-  })
-
   it("keeps the original desktop shell while letting the intro fill its card", () => {
     render(
       <EventAnthologyView

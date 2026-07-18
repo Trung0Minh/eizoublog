@@ -1,5 +1,4 @@
 import { Prisma, type Role } from "@prisma/client"
-import { revalidateTag } from "next/cache"
 import { ZodError, z } from "zod"
 
 import { auth } from "@/lib/auth"
@@ -240,7 +239,6 @@ export async function PATCH(
       )
     }
     let shouldRevalidatePosts = false
-    let editedFinalAwardEventId: string | null = null
     let existingSlug: string | null = null
 
     const post = await prisma.$transaction(async (tx) => {
@@ -262,7 +260,6 @@ export async function PATCH(
           coverUrl: true,
           draftVisibility: true,
           excerpt: true,
-          finalAwardEvent: { select: { id: true } },
           version: true,
           coAuthors: { select: { userId: true, status: true } },
           tags: { select: { tagId: true } },
@@ -541,27 +538,11 @@ export async function PATCH(
         })
       }
 
-      if (
-        changesEditableState &&
-        data.saveKind === "MANUAL" &&
-        activeSession.user.role === "ADMIN" &&
-        existing.finalAwardEvent
-      ) {
-        editedFinalAwardEventId = existing.finalAwardEvent.id
-        await tx.awardEvent.update({
-          data: { editorialContentEditedAt: new Date() },
-          where: { id: existing.finalAwardEvent.id },
-        })
-      }
-
       return updated
     })
 
     if (shouldRevalidatePosts) {
       revalidatePostMutationPaths([existingSlug, post.slug])
-    }
-    if (editedFinalAwardEventId) {
-      revalidateTag("award-events", "max")
     }
 
     return Response.json({ data: post })

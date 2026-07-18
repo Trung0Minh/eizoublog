@@ -46,7 +46,6 @@ export const awardEventDetailSelect = {
   coverUrl: true,
   createdAt: true,
   createdById: true,
-  editorialContentEditedAt: true,
   finalPost: {
     select: { id: true, slug: true, status: true },
   },
@@ -100,16 +99,6 @@ export const awardEventDetailSelect = {
 
 export const adminAwardEventDetailSelect = {
   ...awardEventDetailSelect,
-  finalPost: {
-    select: {
-      content: true,
-      contentText: true,
-      id: true,
-      slug: true,
-      status: true,
-      version: true,
-    },
-  },
   rooms: {
     ...awardEventDetailSelect.rooms,
     select: {
@@ -186,7 +175,7 @@ export async function regenerateAwardEventPost(eventId: string) {
 
   const post = await prisma.$transaction(async (tx) => {
     if (event.finalPostId) {
-      const updated = await tx.post.update({
+      return tx.post.update({
         data: {
           category: event.categoryId
             ? { connect: { id: event.categoryId } }
@@ -210,13 +199,6 @@ export async function regenerateAwardEventPost(eventId: string) {
         select: { id: true, slug: true, status: true },
         where: { id: event.finalPostId },
       })
-
-      await tx.awardEvent.update({
-        data: { editorialContentEditedAt: null },
-        where: { id: event.id },
-      })
-
-      return updated
     }
 
     const baseSlug = generateSlug(event.slug || event.title) || "event"
@@ -246,7 +228,6 @@ export async function regenerateAwardEventPost(eventId: string) {
         finalPostId: createdPost.id,
         publishedAt: new Date(),
         status: "PUBLISHED",
-        editorialContentEditedAt: null,
       },
       where: { id: event.id },
     })
@@ -262,19 +243,11 @@ export async function regenerateAwardEventPost(eventId: string) {
 
 export async function regeneratePublishedEventIfNeeded(eventId: string) {
   const event = await prisma.awardEvent.findUnique({
-    select: {
-      editorialContentEditedAt: true,
-      finalPostId: true,
-      status: true,
-    },
+    select: { finalPostId: true, status: true },
     where: { id: eventId },
   })
 
-  if (
-    event?.status === "PUBLISHED" &&
-    event.finalPostId &&
-    !event.editorialContentEditedAt
-  ) {
+  if (event?.status === "PUBLISHED" && event.finalPostId) {
     await regenerateAwardEventPost(eventId)
   }
 }
