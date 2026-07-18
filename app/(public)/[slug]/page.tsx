@@ -150,9 +150,11 @@ export default async function PostPage({ params }: PostPageProps) {
 
       <PostHero post={post} authorUsernames={authors} />
 
-      <div className="relative w-full z-0 pointer-events-none h-0">
-        <div className="absolute top-0 left-0 right-0 h-32 md:h-48 lg:h-64 bg-gradient-to-b from-background to-transparent" />
-      </div>
+      {post.coverUrl && (
+        <div className="relative z-0 h-0 w-full pointer-events-none">
+          <div className="absolute left-0 right-0 top-0 h-32 bg-gradient-to-b from-background to-transparent md:h-48 lg:h-64" />
+        </div>
+      )}
 
       <div className="flex-1 w-full max-w-[1440px] mx-auto xl:px-12 flex justify-center pt-0 pb-20 relative z-10">
         <main className="w-full max-w-[1000px] px-4 md:px-5 xl:px-0">

@@ -216,6 +216,21 @@ describe("Post detail responsive components", () => {
     expect(cover).toHaveAttribute("decoding", "async")
   })
 
+  it("uses a compact editorial hero when a post has no cover", () => {
+    render(<PostHero post={{ ...post, coverAlt: null, coverUrl: null }} />)
+
+    expect(screen.queryByRole("img")).not.toBeInTheDocument()
+    expect(screen.queryByText("Bài viết chữ")).not.toBeInTheDocument()
+    expect(screen.getByTestId("post-hero-no-cover")).not.toHaveClass(
+      "min-h-[360px]",
+      "bg-subtle-bg/35",
+    )
+    expect(screen.getByTestId("post-hero-content")).not.toHaveClass(
+      "bg-gradient-to-t",
+      "absolute",
+    )
+  })
+
   it("centers the post body in a wider article lane", () => {
     const { container } = render(
       <PostBody content={{ content: [], type: "doc" }} />,
@@ -617,10 +632,13 @@ describe("PostEditor", () => {
     const actionRail = screen.getByTestId("editor-action-rail")
     expect(actionRail).toHaveClass(
       "fixed",
-      "left-4",
-      "top-1/2",
+      "bottom-3",
+      "left-1/2",
       "z-[100]",
-      "flex-col",
+      "flex-row",
+      "lg:left-4",
+      "lg:top-1/2",
+      "lg:flex-col",
     )
     expect(screen.getByRole("link", { name: /Bảng điều khiển/ })).toHaveAttribute(
       "href",

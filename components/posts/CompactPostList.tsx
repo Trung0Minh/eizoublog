@@ -1,13 +1,14 @@
 'use client'
 
 import Link from "next/link"
-import { MessageSquare } from "lucide-react"
+import { FileText, MessageSquare } from "lucide-react"
 import { motion } from "motion/react"
 
 import { getCoverStyle } from "@/lib/cover-style"
 import { Pagination } from "@/components/ui/Pagination"
 import { RelativeTime } from "@/components/ui/RelativeTime"
 import type { PostCardPost } from "@/components/posts/PostCard"
+import { cn } from "@/lib/utils"
 
 interface CompactPostListProps {
   emptyMessage?: string
@@ -59,18 +60,23 @@ export function CompactPostList({
                 show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
               }}
               whileHover={{ y: -4 }}
-              className="glass-card grid grid-cols-[24px_80px_minmax(0,1fr)] gap-3 p-4 transition-colors hover:bg-subtle-bg/60 sm:grid-cols-[32px_140px_minmax(0,1fr)] sm:gap-5 sm:p-5"
+              className={cn(
+                "glass-card grid gap-3 p-4 transition-colors hover:bg-subtle-bg/60 sm:gap-5 sm:p-5",
+                post.coverUrl
+                  ? "grid-cols-[24px_80px_minmax(0,1fr)] sm:grid-cols-[32px_140px_minmax(0,1fr)]"
+                  : "grid-cols-[24px_minmax(0,1fr)] sm:grid-cols-[32px_minmax(0,1fr)]",
+              )}
               key={post.slug}
             >
               <div className="pt-1.5 text-center text-sm font-semibold text-text-tertiary">
                 {index + 1}
               </div>
-              <Link
-                aria-label={post.title}
-                className="block relative overflow-hidden rounded-[8px] border border-border-default bg-subtle-bg w-[80px] sm:w-[140px] aspect-[16/9]"
-                href={`/${post.slug}`}
-              >
-                {post.coverUrl ? (
+              {post.coverUrl && (
+                <Link
+                  aria-label={post.title}
+                  className="relative block aspect-[16/9] w-[80px] overflow-hidden rounded-[8px] border border-border-default bg-subtle-bg sm:w-[140px]"
+                  href={`/${post.slug}`}
+                >
                   <img
                     alt={post.coverAlt ?? post.title}
                     className="w-full h-full object-cover"
@@ -79,14 +85,15 @@ export function CompactPostList({
                     src={(post.coverUrl || "").split("?")[0]}
                     style={getCoverStyle(post.coverUrl)}
                   />
-                ) : (
-                  <div className="flex w-full h-full items-center justify-center text-[10px] uppercase tracking-[0.08em] text-text-tertiary">
-                    Post
-                  </div>
-                )}
-              </Link>
+                </Link>
+              )}
               <div className="min-w-0 py-0.5">
                 <div className="flex flex-wrap items-center gap-1.5">
+                  {!post.coverUrl && (
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-accent/20 bg-accent/10 text-accent" title="Bài viết không có ảnh bìa">
+                      <FileText aria-hidden="true" className="h-3.5 w-3.5" />
+                    </span>
+                  )}
                   <Link
                     className="line-clamp-2 text-[15px] font-semibold leading-snug text-text-primary hover:text-accent sm:text-[17px]"
                     href={`/${post.slug}`}

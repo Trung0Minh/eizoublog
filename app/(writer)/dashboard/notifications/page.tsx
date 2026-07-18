@@ -200,11 +200,15 @@ export default async function NotificationsPage({
               const Icon = meta.icon
 
               return (
-                <article className="relative grid gap-4 p-5 sm:grid-cols-[auto_1fr_auto] sm:items-start sm:p-6" key={`${item.kind}-${item.id}`}>
+                <article
+                  className="relative grid grid-cols-[auto_minmax(0,1fr)] items-start gap-4 p-5 sm:grid-cols-[auto_1fr_auto] sm:p-6"
+                  data-testid={`notification-${item.id}`}
+                  key={`${item.kind}-${item.id}`}
+                >
                   {(item.kind !== "event" || !item.value.readAt) && (
                     <span aria-hidden="true" className="absolute left-3 top-3 h-2 w-2 rounded-full bg-accent shadow-[0_0_8px_var(--accent)]" />
                   )}
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border-default bg-background/70 text-accent">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border-default bg-background/70 text-accent">
                     <Icon aria-hidden="true" className="h-4 w-4" />
                   </div>
                   <div className="min-w-0">
@@ -286,7 +290,7 @@ export default async function NotificationsPage({
                     })()}
                   </div>
 
-                  <div className="sm:pt-1">
+                  <div className="col-start-2 sm:col-auto sm:pt-1">
                     {item.kind === "invite" && <CoAuthorInviteActions postId={item.value.postId} />}
                     {item.kind === "comment" && (
                       <Button asChild size="sm" variant="outline">

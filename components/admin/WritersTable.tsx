@@ -1,7 +1,7 @@
 "use client"
 
 import type { Role } from "@prisma/client"
-import { Mail, MoreHorizontal, Palette, ShieldOff, Search, Plus, X } from "lucide-react"
+import { ExternalLink, Mail, Palette, ShieldOff, Search, X } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState, useMemo } from "react"
 import { toast } from "sonner"
@@ -12,12 +12,6 @@ import { DisplayRoleBadge } from "@/components/profile/DisplayRoleBadge"
 
 import { Button } from "@/components/ui/button"
 import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 
 interface Writer {
   _count: { posts: number }
@@ -106,7 +100,6 @@ export function WritersTable({ writers }: { writers: Writer[] }) {
           onClick={() => setIsInviteModalOpen(true)}
           className="h-10 rounded-full bg-accent px-5 font-semibold text-white shadow-md shadow-accent/20 transition-all hover:scale-105 hover:shadow-accent/40"
         >
-          <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
           Invite Writer
         </Button>
       </div>
@@ -166,7 +159,7 @@ export function WritersTable({ writers }: { writers: Writer[] }) {
                   </div>
                 </div>
 
-                <div className="flex shrink-0 items-center gap-1.5 rounded-[16px] border border-border-default/50 bg-background/50 p-1.5 shadow-sm backdrop-blur-sm transition-all group-hover:border-accent/30 group-hover:bg-background/80">
+                <div className="flex w-fit shrink-0 self-start items-center gap-1.5 rounded-[16px] border border-border-default/50 bg-background/50 p-1.5 shadow-sm backdrop-blur-sm transition-all group-hover:border-accent/30 group-hover:bg-background/80 sm:self-auto">
                   <Button
                     asChild
                     className="h-9 w-9 rounded-[12px] text-text-secondary hover:bg-subtle-bg hover:text-text-primary"
@@ -202,27 +195,18 @@ export function WritersTable({ writers }: { writers: Writer[] }) {
                     <ShieldOff aria-hidden="true" className="h-4 w-4" />
                   </Button>
                   <div className="h-5 w-px bg-border-default/50 mx-1"></div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        aria-label="More options"
-                        className="h-9 w-9 rounded-[12px] text-text-secondary hover:bg-subtle-bg hover:text-text-primary"
-                        size="icon"
-                        title="More options"
-                        type="button"
-                        variant="ghost"
-                      >
-                        <MoreHorizontal aria-hidden="true" className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="rounded-[12px]">
-                      <DropdownMenuItem asChild className="rounded-[8px] cursor-pointer">
-                        <a href={`/authors/${writer.username}`} target="_blank" rel="noopener noreferrer">
-                          Xem hồ sơ
-                        </a>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <Button
+                    asChild
+                    aria-label={`View public profile for ${writer.name}`}
+                    className="h-9 w-9 rounded-[12px] text-text-secondary hover:bg-subtle-bg hover:text-text-primary"
+                    size="icon"
+                    title="View public profile"
+                    variant="ghost"
+                  >
+                    <a href={`/authors/${writer.username}`} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink aria-hidden="true" className="h-4 w-4" />
+                    </a>
+                  </Button>
                 </div>
               </article>
             )

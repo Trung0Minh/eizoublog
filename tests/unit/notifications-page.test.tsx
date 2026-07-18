@@ -91,6 +91,9 @@ describe("NotificationsPage", () => {
       .toBeEnabled()
     expect(screen.getByRole("link", { name: "Tất cả" })).toBeVisible()
     expect(screen.getByRole("link", { name: "Kiểm duyệt" })).toBeVisible()
+    expect(screen.getByTestId("notification-notification-1")).toHaveClass(
+      "grid-cols-[auto_minmax(0,1fr)]",
+    )
     expect(screen.queryByRole("heading", { name: "Phản hồi lời mời" })).not.toBeInTheDocument()
   })
 

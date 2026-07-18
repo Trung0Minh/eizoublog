@@ -399,6 +399,20 @@
       box-shadow: none;
       transition-property: background-color, border-color, color;
     }
+
+  }
+
+  /* Keep seasonal artwork atmospheric while making reading surfaces solid on phones. */
+  @media (max-width: 767px) {
+    .admin-workspace,
+    .admin-workspace [class*="bg-background/"],
+    .admin-workspace [class*="bg-subtle-bg/"],
+    body [data-editor-surface="true"],
+    body [data-mobile-surface="true"] {
+      background-color: hsl(var(--background) / 0.94) !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
   }
 
   .cover-zoom img {

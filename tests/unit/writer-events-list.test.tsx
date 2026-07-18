@@ -53,6 +53,8 @@ describe("WriterEventsList", () => {
     expect(screen.queryByRole("link", { name: /Edit room/i })).not.toBeInTheDocument()
     // Check that "Join" button is NOT rendered
     expect(screen.queryByRole("button", { name: /Join/i })).not.toBeInTheDocument()
+    expect(screen.getByText("Sự kiện: Đang mở")).toHaveClass("text-emerald-700")
+    expect(screen.getByText("Bài gửi: Bản nháp")).toHaveClass("text-amber-700")
   })
 
   it("renders the title as a plain header and shows the Join button when not joined", () => {

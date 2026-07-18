@@ -69,7 +69,7 @@ export function EditorTopBar({
   return (
     <aside
       aria-label="Thao tác bài viết"
-      className="fixed left-4 top-1/2 z-[100] flex -translate-y-1/2 flex-col items-center gap-2 rounded-full border border-border-default/60 bg-background/80 p-2 shadow-glass backdrop-blur-xl"
+      className="no-scrollbar fixed bottom-3 left-1/2 z-[100] flex w-max max-w-[calc(100vw-24px)] -translate-x-1/2 flex-row items-center gap-2 overflow-x-auto rounded-[22px] border border-border-default/60 bg-background/90 p-2 shadow-glass backdrop-blur-xl lg:bottom-auto lg:left-4 lg:top-1/2 lg:max-w-none lg:-translate-x-0 lg:-translate-y-1/2 lg:flex-col lg:overflow-visible lg:rounded-full"
       data-testid="editor-action-rail"
     >
       <Link
@@ -81,7 +81,7 @@ export function EditorTopBar({
         <ArrowLeft aria-hidden="true" className="h-4 w-4" />
       </Link>
 
-      <div className="h-px w-5 bg-border-default" />
+      <div className="h-5 w-px shrink-0 bg-border-default lg:h-px lg:w-5" />
 
       {previewHref ? (
         <Link
@@ -134,7 +134,7 @@ export function EditorTopBar({
         </Button>
       )}
 
-      <div className="h-px w-5 bg-border-default" />
+      <div className="h-5 w-px shrink-0 bg-border-default lg:h-px lg:w-5" />
 
       <Button
         aria-label="Lưu nháp"

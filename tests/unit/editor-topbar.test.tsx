@@ -15,7 +15,7 @@ vi.mock("next/link", () => ({
 import { EditorTopBar } from "@/components/editor/EditorTopBar"
 
 describe("EditorTopBar", () => {
-  it("renders a persistent left action rail with dashboard, preview, and save actions", async () => {
+  it("uses a compact mobile action dock and restores the left rail on larger screens", async () => {
     const user = userEvent.setup()
     const onPublish = vi.fn()
     const onSaveDraft = vi.fn()
@@ -40,9 +40,12 @@ describe("EditorTopBar", () => {
       "/dashboard/preview/post-1",
     )
     expect(screen.getByTestId("editor-action-rail")).toHaveClass(
-      "left-4",
-      "top-1/2",
-      "flex-col",
+      "bottom-3",
+      "left-1/2",
+      "flex-row",
+      "lg:left-4",
+      "lg:top-1/2",
+      "lg:flex-col",
     )
     expect(screen.queryByText("✨")).not.toBeInTheDocument()
 

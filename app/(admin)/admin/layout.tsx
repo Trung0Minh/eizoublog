@@ -34,15 +34,15 @@ export default async function AdminLayout({
     : null
 
   return (
-    <div className="flex h-screen overflow-hidden bg-transparent font-sans text-text-primary p-4 md:p-6 lg:p-8 gap-6 relative">
+    <div className="relative flex h-screen gap-6 overflow-hidden bg-transparent p-2 font-sans text-text-primary sm:p-4 md:p-6 lg:p-8">
       <AdminSidebar user={menuUser} />
       <div className="flex-1 flex flex-col min-w-0 relative">
         <div className="absolute top-0 right-0 z-50">
           <AdminHeader user={menuUser} />
         </div>
-        <main className="w-full h-full flex-1 rounded-[32px] border border-border-default/50 bg-background/40 shadow-[0_8px_32px_rgba(0,0,0,0.04)] backdrop-blur-3xl overflow-hidden relative">
+        <main className="admin-workspace w-full h-full flex-1 rounded-[32px] border border-border-default/50 bg-background/40 shadow-[0_8px_32px_rgba(0,0,0,0.04)] backdrop-blur-3xl overflow-hidden relative">
           <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
-          <div className="h-full overflow-y-auto px-6 py-16 md:px-10 md:py-12 scrollbar-none relative z-10">
+          <div className="scrollbar-none relative z-10 h-full overflow-y-auto px-3 pb-8 pt-16 sm:px-6 md:px-10 md:py-12">
             <DurabilityBanner scope="admin" />
             {children}
           </div>

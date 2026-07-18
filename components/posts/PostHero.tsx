@@ -7,6 +7,7 @@ import { RelativeTime } from "@/components/ui/RelativeTime"
 import { TextReveal } from "@/components/ui/TextReveal"
 import { ScrollReveal } from "@/components/ui/ScrollReveal"
 import { getCoverStyle } from "@/lib/cover-style"
+import { cn } from "@/lib/utils"
 import { PostEditLink } from "./PostEditLink"
 import type { PostHeroPost } from "@/types/posts"
 
@@ -22,7 +23,15 @@ export function PostHero({ post, authorUsernames }: PostHeroProps) {
   const y = useTransform(scrollY, [0, 1000], [0, 400])
 
   return (
-    <div className="w-full min-h-[calc(450px+88px)] h-[calc(50dvh+88px)] md:min-h-[calc(500px+88px)] md:h-[calc(60vh+88px)] lg:min-h-[calc(600px+88px)] lg:h-[calc(70vh+88px)] relative -mt-[88px] pt-[88px] overflow-hidden">
+    <div
+      className={cn(
+        "relative -mt-[88px] w-full overflow-hidden pt-[88px]",
+        post.coverUrl
+          ? "min-h-[calc(450px+88px)] h-[calc(50dvh+88px)] md:min-h-[calc(500px+88px)] md:h-[calc(60vh+88px)] lg:min-h-[calc(600px+88px)] lg:h-[calc(70vh+88px)]"
+          : "bg-transparent",
+      )}
+      data-testid={post.coverUrl ? undefined : "post-hero-no-cover"}
+    >
       {post.coverUrl && (
         <motion.div style={{ y }} className="absolute inset-0 right-0 left-0 bottom-0 top-0 h-full md:top-[-20vh] md:h-[120%]">
           <img
@@ -36,7 +45,15 @@ export function PostHero({ post, authorUsernames }: PostHeroProps) {
           />
         </motion.div>
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent flex flex-col justify-end pb-8 md:pb-16">
+      <div
+        className={cn(
+          "flex flex-col",
+          post.coverUrl
+            ? "absolute inset-0 justify-end bg-gradient-to-t from-background via-background/60 to-transparent pb-8 md:pb-16"
+            : "relative justify-center py-10 md:py-12 lg:py-14",
+        )}
+        data-testid="post-hero-content"
+      >
         <div className="w-full max-w-[1000px] mx-auto px-4 md:px-5 xl:px-0">
           <ScrollReveal delay={0.1}>
             {post.category && (
@@ -45,7 +62,10 @@ export function PostHero({ post, authorUsernames }: PostHeroProps) {
               </div>
             )}
           </ScrollReveal>
-          <h1 className="text-[28px] md:text-[44px] lg:text-[52px] font-display font-bold text-text-primary leading-[1.1] tracking-[-0.02em] drop-shadow-[0_2px_10px_rgba(255,255,255,0.1)] mb-4">
+          <h1 className={cn(
+            "mb-4 font-display text-[28px] font-bold leading-[1.1] tracking-[-0.02em] text-text-primary md:text-[44px] lg:text-[52px]",
+            post.coverUrl && "drop-shadow-[0_2px_10px_rgba(255,255,255,0.1)]",
+          )}>
             <TextReveal text={post.title} />
           </h1>
           {post.excerpt && (

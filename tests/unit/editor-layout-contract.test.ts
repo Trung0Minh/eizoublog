@@ -8,12 +8,13 @@ function read(relativePath: string) {
 }
 
 describe("post editor layout contracts", () => {
-  it("places settings on the right and save status at the bottom left", () => {
+  it("places settings on the right and keeps save status above the mobile dock", () => {
     const editor = read("components/posts/PostEditor.tsx")
 
     expect(editor).toContain("fixed inset-y-0 right-0")
     expect(editor).toContain("lg:mr-[320px] xl:mr-[360px]")
-    expect(editor).toContain("fixed bottom-6 left-6")
+    expect(editor).toContain("fixed bottom-[72px] left-1/2")
+    expect(editor).toContain("lg:bottom-6 lg:left-6")
     expect(editor).not.toContain("fixed bottom-6 right-6")
     expect(editor).toContain("overflow-y-auto lg:ml-20")
     expect(editor).not.toContain("min-w-[320px] xl:min-w-[360px]")

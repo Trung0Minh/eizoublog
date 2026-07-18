@@ -45,6 +45,13 @@ describe("EventRoomEditor", () => {
     expect(screen.getByRole("option", { name: /Draft pick/i })).toBeVisible()
     expect(screen.queryByTestId("event-editor")).not.toBeInTheDocument()
     expect(screen.getByRole("button", { name: /Nộp bài/i })).toBeVisible()
+    expect(screen.getByTestId("submission-header")).toContainElement(
+      screen.getByRole("button", { name: /Nộp bài/i }),
+    )
+    expect(screen.getByTestId("submission-heading-row")).toHaveClass(
+      "items-start",
+      "sm:items-center",
+    )
     expect(screen.queryByRole("button", { name: /Lưu/i })).not.toBeInTheDocument()
     const primaryRow = screen.getByTestId("submission-primary-row")
     expect(primaryRow).toContainElement(screen.getByLabelText("Bài viết được chọn"))

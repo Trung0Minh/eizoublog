@@ -29,6 +29,7 @@ vi.mock("next-auth/react", () => ({
 
 import { AdminCommentsTable } from "@/components/admin/AdminCommentsTable"
 import { AdminContentManager } from "@/components/admin/AdminContentManager"
+import { AdminHeader } from "@/components/admin/AdminHeader"
 import { AdminNav } from "@/components/admin/AdminNav"
 import { AdminPostsTable } from "@/components/admin/AdminPostsTable"
 import { InviteWriterForm } from "@/components/admin/InviteWriterForm"
@@ -111,6 +112,32 @@ describe("admin client components", () => {
     )
   })
 
+  it("keeps theme, season, and particle controls available in the mobile admin header", () => {
+    render(<AdminHeader />)
+
+    expect(screen.getByTestId("mobile-admin-appearance-controls")).toHaveClass("flex")
+    expect(screen.getByTestId("mobile-admin-appearance-controls")).not.toHaveClass("hidden")
+    expect(screen.getByRole("button", { name: /particles/i })).toBeVisible()
+    expect(screen.getByRole("button", { name: /mode/i })).toBeVisible()
+  })
+
+  it("opens the admin navigation as a compact anchored menu", async () => {
+    const user = userEvent.setup()
+    render(<AdminHeader />)
+
+    await user.click(screen.getByRole("button", { name: /open admin menu/i }))
+    expect(screen.getByRole("navigation", { name: "Mobile admin navigation" })).toBeVisible()
+
+    await user.keyboard("{Escape}")
+    expect(screen.queryByRole("navigation", { name: "Mobile admin navigation" })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: /open admin menu/i }))
+    fireEvent.pointerDown(document.body)
+    await waitFor(() => {
+      expect(screen.queryByRole("navigation", { name: "Mobile admin navigation" })).not.toBeInTheDocument()
+    })
+  })
+
   it("shows categories and tags as separate independently scrollable sections", () => {
     render(
       <AdminContentManager
@@ -139,11 +166,14 @@ describe("admin client components", () => {
     expect(screen.getByRole("heading", { name: "Categories" })).toBeVisible()
     expect(screen.getByRole("heading", { name: "Tags" })).toBeVisible()
     expect(screen.getByTestId("category-management-scroll")).toHaveClass(
-      "overflow-x-auto",
+      "sm:overflow-x-auto",
     )
     expect(screen.getByTestId("tag-management-scroll")).toHaveClass(
-      "overflow-x-auto",
+      "sm:overflow-x-auto",
     )
+    expect(screen.getByTestId("category-post-count-suffix")).toHaveClass("sm:hidden")
+    expect(screen.getByTestId("category-child-count-suffix")).toHaveClass("sm:hidden")
+    expect(screen.getByTestId("tag-post-count-suffix")).toHaveClass("sm:hidden")
     expect(
       screen.getByTestId("category-management-scroll").parentElement?.parentElement,
     ).toHaveClass("lg:grid-cols-2")
@@ -244,6 +274,34 @@ describe("admin client components", () => {
     await waitFor(() => expect(screen.getByText("Removed")).toBeVisible())
     expect(screen.getByRole("button", { name: "Restore removed post" })).toBeVisible()
     expect(routerMocks.refresh).not.toHaveBeenCalled()
+  })
+
+  it("renders admin posts as mobile cards without a forced desktop-width table", () => {
+    render(
+      <AdminPostsTable
+        posts={[
+          {
+            _count: { comments: 2 },
+            author: { name: "Mina", username: "mina" },
+            id: "post-mobile",
+            publishedAt: null,
+            slug: "mobile-post",
+            status: "DRAFT",
+            title: "Mobile post",
+            updatedAt: new Date("2026-01-02T00:00:00Z"),
+          },
+        ]}
+      />,
+    )
+
+    expect(screen.getByTestId("admin-posts-list")).toHaveClass(
+      "min-w-0",
+      "md:min-w-[750px]",
+    )
+    expect(screen.getByTestId("admin-post-row-post-mobile")).toHaveClass(
+      "flex-col",
+      "md:flex-row",
+    )
   })
 
   it("archives and restores posts from the admin posts table without a full refresh", async () => {
@@ -533,6 +591,35 @@ describe("admin client components", () => {
     expect(screen.getAllByText("Admin")).toHaveLength(2)
     expect(screen.getAllByText("Writer")).toHaveLength(2)
     expect(screen.queryByText("Editor")).not.toBeInTheDocument()
+  })
+
+  it("uses direct compact profile actions without the invite plus icon", () => {
+    const { container } = render(
+      <WritersTable
+        writers={[
+          {
+            _count: { posts: 0 },
+            createdAt: new Date("2026-01-01T00:00:00Z"),
+            displayRoleColor: null,
+            displayRoleLocked: false,
+            displayRoleName: null,
+            email: "writer@example.com",
+            id: "writer-1",
+            name: "Mina",
+            role: "WRITER",
+            username: "mina",
+          },
+        ]}
+      />,
+    )
+
+    expect(screen.getByRole("button", { name: "Invite Writer" })).not.toContainHTML("lucide-plus")
+    expect(screen.getByRole("link", { name: "View public profile for Mina" })).toHaveAttribute(
+      "href",
+      "/authors/mina",
+    )
+    expect(screen.queryByRole("button", { name: "More options" })).not.toBeInTheDocument()
+    expect(container.querySelector("article > div:last-child")).toHaveClass("w-fit")
   })
 
   it("lets admins edit and lock a writer display role", async () => {

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { CoverImageUpload } from "@/components/posts/CoverImageUpload"
 import { toast } from "sonner"
-import { Loader2 } from "lucide-react"
+import { Loader2, Save } from "lucide-react"
 
 export function BackgroundSettings() {
   const router = useRouter()
@@ -62,11 +62,13 @@ export function BackgroundSettings() {
           </p>
         </div>
         <button
+          aria-label="Save changes"
           onClick={handleSave}
           disabled={saving}
-          className="bg-accent text-white px-4 py-2 rounded-md font-medium hover:bg-accent/90 disabled:opacity-50"
+          title="Save changes"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-white shadow-sm transition-colors hover:bg-accent/90 disabled:opacity-50"
         >
-          {saving ? "Đang lưu..." : "Lưu thay đổi"}
+          <Save aria-hidden="true" className={saving ? "h-4 w-4 animate-pulse" : "h-4 w-4"} />
         </button>
       </div>
 

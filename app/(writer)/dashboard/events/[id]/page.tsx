@@ -173,8 +173,8 @@ export default async function DashboardEventRoomPage({
           <h2 className="text-sm font-bold uppercase tracking-wider text-text-tertiary">
             Your Room
           </h2>
-          <div className="rounded-[16px] border border-border-default/80 dark:border-white/10 bg-background/60 dark:bg-background/40 backdrop-blur-md hover:bg-background/85 dark:hover:bg-background/60 p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-out flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-            <div className="flex items-start gap-4">
+          <div className="flex items-start justify-between gap-3 rounded-[16px] border border-border-default/80 bg-background/60 p-4 shadow-sm backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-background/85 hover:shadow-lg dark:border-white/10 dark:bg-background/40 dark:hover:bg-background/60 sm:items-center sm:gap-6 sm:p-6">
+            <div className="flex min-w-0 flex-1 items-start gap-3 sm:gap-4">
               {session.user.avatarUrl ? (
                 <img
                   src={session.user.avatarUrl}
@@ -232,7 +232,7 @@ export default async function DashboardEventRoomPage({
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
+            <div className="flex shrink-0 flex-wrap justify-end gap-2">
               {ourRoom.postId && ourRoom.selectedPost && (
                 <Button asChild size="icon" variant="outline">
                   <Link
@@ -293,9 +293,9 @@ export default async function DashboardEventRoomPage({
               {otherParticipants.map((pr) => (
                 <div
                   key={pr.id}
-                  className="flex flex-col items-start justify-between gap-4 rounded-[16px] border border-border-default/80 dark:border-white/10 bg-background/60 dark:bg-background/40 p-5 shadow-[0_8px_28px_rgba(31,24,38,0.06)] backdrop-blur-md transition-all duration-300 ease-out hover:border-accent/40 hover:bg-background/85 dark:hover:bg-background/60 hover:-translate-y-1 hover:shadow-lg sm:flex-row sm:items-center"
+                  className="flex items-start justify-between gap-3 rounded-[16px] border border-border-default/80 bg-background/60 p-4 shadow-[0_8px_28px_rgba(31,24,38,0.06)] backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-1 hover:border-accent/40 hover:bg-background/85 hover:shadow-lg dark:border-white/10 dark:bg-background/40 dark:hover:bg-background/60 sm:items-center sm:gap-4 sm:p-5"
                 >
-                  <div className="flex min-w-0 items-center gap-4">
+                  <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
                     {pr.writer.avatarUrl ? (
                       <img
                         src={pr.writer.avatarUrl}
@@ -358,7 +358,7 @@ export default async function DashboardEventRoomPage({
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-end w-full sm:w-auto">
+                  <div className="flex shrink-0 items-center justify-end">
                     {pr.postId && pr.selectedPost && pr.visibility === "PARTICIPANTS" ? (
                       <Button asChild size="icon" variant="outline">
                         <Link

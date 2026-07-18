@@ -451,11 +451,11 @@ export function AdminContentManager({
             </Button>
           </div>
           <div
-            className="min-h-0 w-full flex-1 overflow-x-auto pb-4"
+            className="min-h-0 w-full flex-1 pb-4 sm:overflow-x-auto"
             data-testid="category-management-scroll"
           >
-            <div className="min-w-[680px] flex flex-col gap-2">
-              <div className="flex h-10 items-center px-6 text-[11px] font-bold uppercase tracking-[0.1em] text-text-tertiary">
+            <div className="flex min-w-0 flex-col gap-2 sm:min-w-[680px]">
+              <div className="hidden h-10 items-center px-6 text-[11px] font-bold uppercase tracking-[0.1em] text-text-tertiary sm:flex">
                 <div className="min-w-0 flex-1 pr-4">Category</div>
                 <div className="w-[120px] shrink-0 text-right">Posts</div>
                 <div className="w-[120px] shrink-0 text-right">Children</div>
@@ -465,13 +465,13 @@ export function AdminContentManager({
                 {categoryRows.map(({ category, depth }, index) => (
                   <div
                     className={cn(
-                      "group relative flex items-center rounded-[20px] border border-transparent bg-subtle-bg/40 p-4 transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10",
-                      depth === 1 && "ml-6 border-l-2 border-l-border-default/30"
+                      "group relative flex flex-wrap items-center gap-x-3 gap-y-3 rounded-[20px] border border-transparent bg-subtle-bg/40 p-4 transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10 sm:flex-nowrap sm:gap-x-0",
+                      depth === 1 && "ml-3 border-l-2 border-l-border-default/30 sm:ml-6"
                     )}
                     style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
                     key={category.id}
                   >
-                    <div className="min-w-0 flex-1 pr-4 pl-2">
+                    <div className="w-full min-w-0 pl-2 sm:flex-1 sm:pr-4">
                       <div className="truncate text-[14px] font-bold text-text-primary">
                         {category.name}
                       </div>
@@ -479,15 +479,15 @@ export function AdminContentManager({
                         /category/{category.slug}
                       </div>
                     </div>
-                    <div className="w-[120px] shrink-0 text-right text-[13px] font-medium text-text-secondary">
-                      {category._count.posts}
+                    <div className="shrink-0 pl-2 text-left text-[12px] font-medium text-text-secondary sm:w-[120px] sm:pl-0 sm:text-right sm:text-[13px]">
+                      {category._count.posts}<span className="sm:hidden" data-testid="category-post-count-suffix"> posts</span>
                     </div>
-                    <div className="w-[120px] shrink-0 text-right text-[13px] font-medium text-text-secondary">
-                      {category._count.children}
+                    <div className="shrink-0 text-left text-[12px] font-medium text-text-secondary sm:w-[120px] sm:text-right sm:text-[13px]">
+                      {category._count.children}<span className="sm:hidden" data-testid="category-child-count-suffix"> children</span>
                     </div>
-                    <div className="w-[140px] shrink-0" />
+                    <div className="hidden w-[140px] shrink-0 sm:block" />
 
-                    <div className="absolute right-4 flex items-center justify-end gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100 bg-background/95 backdrop-blur-md rounded-[12px] shadow-sm border border-border-default/50 p-1.5 translate-x-4 group-hover:translate-x-0">
+                    <div className="ml-auto flex items-center justify-end gap-1 rounded-[12px] border border-border-default/50 bg-background/95 p-1.5 opacity-100 shadow-sm backdrop-blur-md transition-all duration-300 sm:absolute sm:right-4 sm:translate-x-4 sm:opacity-0 sm:group-hover:translate-x-0 sm:group-hover:opacity-100">
                       {depth === 0 && (
                         <Button
                           aria-label={`Add child to ${category.name}`}
@@ -563,11 +563,11 @@ export function AdminContentManager({
             </Button>
           </div>
           <div
-            className="min-h-0 w-full flex-1 overflow-x-auto pb-4"
+            className="min-h-0 w-full flex-1 pb-4 sm:overflow-x-auto"
             data-testid="tag-management-scroll"
           >
-            <div className="min-w-[520px] flex flex-col gap-2">
-              <div className="flex h-10 items-center px-6 text-[11px] font-bold uppercase tracking-[0.1em] text-text-tertiary">
+            <div className="flex min-w-0 flex-col gap-2 sm:min-w-[520px]">
+              <div className="hidden h-10 items-center px-6 text-[11px] font-bold uppercase tracking-[0.1em] text-text-tertiary sm:flex">
                 <div className="min-w-0 flex-1 pr-4">Tag</div>
                 <div className="w-[120px] shrink-0 text-right">Posts</div>
                 <div className="w-[80px] shrink-0 text-right opacity-0">Actions</div>
@@ -575,11 +575,11 @@ export function AdminContentManager({
               <div className="flex flex-col gap-3">
                 {tags.map((tag, index) => (
                   <div
-                    className="group relative flex items-center rounded-[20px] border border-transparent bg-subtle-bg/40 p-4 transition-all duration-300 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10 animate-in fade-in slide-in-from-bottom-2"
+                    className="group relative flex flex-wrap items-center gap-x-3 gap-y-3 rounded-[20px] border border-transparent bg-subtle-bg/40 p-4 transition-all duration-300 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10 animate-in fade-in slide-in-from-bottom-2 sm:flex-nowrap sm:gap-x-0"
                     style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
                     key={tag.id}
                   >
-                    <div className="min-w-0 flex-1 pr-4 pl-2">
+                    <div className="w-full min-w-0 pl-2 sm:flex-1 sm:pr-4">
                       <div className="truncate text-[14px] font-bold text-text-primary">
                         {tag.name}
                       </div>
@@ -587,12 +587,12 @@ export function AdminContentManager({
                         /tag/{tag.slug}
                       </div>
                     </div>
-                    <div className="w-[120px] shrink-0 text-right text-[13px] font-medium text-text-secondary">
-                      {tag._count.posts}
+                    <div className="shrink-0 pl-2 text-left text-[12px] font-medium text-text-secondary sm:w-[120px] sm:pl-0 sm:text-right sm:text-[13px]">
+                      {tag._count.posts}<span className="sm:hidden" data-testid="tag-post-count-suffix"> posts</span>
                     </div>
-                    <div className="w-[140px] shrink-0" />
+                    <div className="hidden w-[140px] shrink-0 sm:block" />
 
-                    <div className="absolute right-4 flex items-center justify-end gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100 bg-background/95 backdrop-blur-md rounded-[12px] shadow-sm border border-border-default/50 p-1.5 translate-x-4 group-hover:translate-x-0">
+                    <div className="ml-auto flex items-center justify-end gap-1 rounded-[12px] border border-border-default/50 bg-background/95 p-1.5 opacity-100 shadow-sm backdrop-blur-md transition-all duration-300 sm:absolute sm:right-4 sm:translate-x-4 sm:opacity-0 sm:group-hover:translate-x-0 sm:group-hover:opacity-100">
                       <Button
                         aria-label={`Edit tag ${tag.name}`}
                         onClick={() => {

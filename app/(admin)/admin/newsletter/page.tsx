@@ -74,9 +74,9 @@ export default async function AdminNewsletterPage() {
           </div>
         </div>
 
-        <div className="overflow-x-auto w-full">
-          <div className="min-w-[700px] flex flex-col">
-            <div className="flex h-[40px] items-center border-b border-border-default px-6 text-[11px] font-bold uppercase tracking-[0.05em] text-text-secondary">
+        <div className="w-full md:overflow-x-auto">
+          <div className="flex min-w-0 flex-col md:min-w-[700px]">
+            <div className="hidden h-[40px] items-center border-b border-border-default px-6 text-[11px] font-bold uppercase tracking-[0.05em] text-text-secondary md:flex">
               <div className="min-w-0 flex-1 pr-4">Subject</div>
               <div className="w-[120px] shrink-0">Status</div>
               <div className="w-[100px] shrink-0 text-right">Recipients</div>
@@ -88,29 +88,29 @@ export default async function AdminNewsletterPage() {
             <div className="flex flex-col">
               {recentPosts.map((post) => (
                 <div
-                  className="group flex items-center border-b border-border-default/50 px-4 py-4 transition-colors last:border-0 hover:bg-white/40 dark:hover:bg-white/5 sm:px-6 h-[64px]"
+                  className="group flex flex-wrap items-center gap-2 border-b border-border-default/50 px-4 py-4 transition-colors last:border-0 hover:bg-white/40 dark:hover:bg-white/5 sm:px-6 md:h-[64px] md:flex-nowrap md:gap-0"
                   key={post.id}
                 >
-                  <div className="min-w-0 flex-1 pr-4">
+                  <div className="w-full min-w-0 md:flex-1 md:pr-4">
                     <span className="block truncate text-[14px] font-bold text-text-primary group-hover:text-accent transition-colors">
                       {post.title}
                     </span>
                   </div>
-                  <div className="w-[120px] shrink-0">
+                  <div className="w-auto shrink-0 md:w-[120px]">
                     <span className="rounded-full border border-border-default/60 bg-background/50 px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase text-text-secondary shadow-sm">
                       Draft
                     </span>
                   </div>
-                  <div className="w-[100px] shrink-0 text-right text-[13px] font-medium text-text-secondary">
+                  <div className="shrink-0 text-left text-[12px] font-medium text-text-secondary before:content-['Recipients:_'] md:w-[100px] md:text-right md:text-[13px] md:before:content-none">
                     {activeCount.toLocaleString()}
                   </div>
-                  <div className="w-[80px] shrink-0 text-right text-[13px] font-medium text-text-secondary">
+                  <div className="hidden w-[80px] shrink-0 text-right text-[13px] font-medium text-text-secondary md:block">
                     -
                   </div>
-                  <div className="w-[80px] shrink-0 text-right text-[13px] font-medium text-text-secondary">
+                  <div className="hidden w-[80px] shrink-0 text-right text-[13px] font-medium text-text-secondary md:block">
                     -
                   </div>
-                  <div className="flex w-[80px] shrink-0 items-center justify-end gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
+                  <div className="ml-auto flex w-auto shrink-0 items-center justify-end gap-1 opacity-100 transition-opacity md:w-[80px] md:opacity-0 md:group-hover:opacity-100">
                     <button
                       className="flex h-8 w-8 items-center justify-center rounded-[8px] border border-transparent text-text-tertiary transition-all hover:bg-subtle-bg hover:text-text-primary"
                       title="View report"

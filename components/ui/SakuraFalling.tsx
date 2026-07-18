@@ -58,7 +58,8 @@ export function SeasonalEffects() {
 
   return (
     <div
-      className="fixed inset-0 pointer-events-none z-[100] overflow-hidden"
+      className="fixed inset-0 z-[5] overflow-hidden pointer-events-none md:z-[100]"
+      data-seasonal-particles="true"
       aria-hidden="true"
       style={containPaint}
     >

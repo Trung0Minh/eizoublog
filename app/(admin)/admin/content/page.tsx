@@ -12,7 +12,7 @@ export default async function AdminContentPage() {
         subtitle="Manage categories and tags used by posts."
         title="Content"
       />
-      <ScrollReveal index={0} className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6">
+      <ScrollReveal index={0} className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-3 sm:p-6">
         <AdminContentManager categories={categories} tags={tags} />
       </ScrollReveal>
     </div>

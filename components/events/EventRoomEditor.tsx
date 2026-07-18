@@ -109,16 +109,16 @@ export function EventRoomEditor({
         </div>
       )}
       <section className="overflow-hidden rounded-[16px] border border-border-default/80 dark:border-white/10 bg-background/60 dark:bg-background/40 shadow-[0_18px_60px_rgba(31,24,38,0.08)] backdrop-blur-md hover:-translate-y-0.5 hover:shadow-lg hover:border-accent/30 transition-all duration-300 ease-out">
-        <div className="flex flex-col gap-4 border-b border-border-default/70 bg-subtle-bg/55 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-accent/25 bg-accent/10 text-accent">
+        <div className="flex items-start justify-between gap-3 border-b border-border-default/70 bg-subtle-bg/55 px-4 py-5 sm:px-7" data-testid="submission-header">
+          <div className="flex min-w-0 items-start gap-3 sm:items-center" data-testid="submission-heading-row">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-accent/25 bg-accent/10 text-accent">
               {status === "SUBMITTED" ? (
                 <CheckCircle2 aria-hidden="true" className="h-5 w-5" />
               ) : (
                 <FileText aria-hidden="true" className="h-5 w-5" />
               )}
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-sm font-bold text-text-primary">
                 {status === "SUBMITTED" ? "Bài dự thi đã được gửi" : "Chọn bài cho sự kiện"}
               </p>
@@ -129,12 +129,12 @@ export function EventRoomEditor({
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 self-end sm:self-auto">
+          <div className="flex shrink-0 items-center gap-2">
             <Button
               disabled={isPending || controlsDisabled || !postId}
               onClick={() => void submit()}
               aria-label="Nộp bài dự thi"
-              className="h-11 w-11 rounded-[14px] bg-accent text-white shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-colors hover:bg-accent/90"
+              className="h-10 w-10 rounded-[13px] bg-accent text-white shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-colors hover:bg-accent/90 sm:h-11 sm:w-11 sm:rounded-[14px]"
               size="icon"
               title="Nộp bài dự thi"
               type="button"
@@ -142,7 +142,7 @@ export function EventRoomEditor({
               <Send aria-hidden="true" className="h-4 w-4" />
             </Button>
             {event.finalPost && (
-              <Button asChild className="h-11 w-11 rounded-[14px]" size="icon" variant="outline">
+              <Button asChild className="h-10 w-10 rounded-[13px] sm:h-11 sm:w-11 sm:rounded-[14px]" size="icon" variant="outline">
                 <Link
                   aria-label="Mở bài viết công khai"
                   href={`/${event.finalPost.slug}`}
@@ -167,7 +167,7 @@ export function EventRoomEditor({
             data-testid="submission-primary-row"
           >
             <label className="block" htmlFor="submission-post">
-              <span className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-text-tertiary">
+              <span className="mb-2 flex min-h-5 items-center gap-2 text-xs font-bold uppercase leading-none tracking-[0.12em] text-text-tertiary">
                 <FileText aria-hidden="true" className="h-3.5 w-3.5 text-accent" />
                 Bài viết được chọn
               </span>
@@ -187,7 +187,7 @@ export function EventRoomEditor({
               </select>
             </label>
             <label className="block" htmlFor="submission-visibility">
-              <span className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-text-tertiary">
+              <span className="mb-2 flex min-h-5 items-center gap-2 text-xs font-bold uppercase leading-none tracking-[0.12em] text-text-tertiary">
                 <Users aria-hidden="true" className="h-3.5 w-3.5 text-accent" />
                 Ai có thể xem
               </span>

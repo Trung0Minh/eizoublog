@@ -470,6 +470,7 @@ export function PostEditor({
   return (
     <div
       className="fixed inset-0 z-50 flex h-dvh min-h-dvh flex-col bg-transparent text-text-primary"
+      data-editor-surface="true"
       data-testid="post-editor-shell"
     >
       <EditorTopBar
@@ -488,7 +489,7 @@ export function PostEditor({
       />
 
       {/* Floating Save Status Pill */}
-      <div className="fixed bottom-6 left-6 z-[90] flex items-center gap-2 rounded-full border border-border-default bg-card/60 px-4 py-2 text-[13px] backdrop-blur-md shadow-glass">
+      <div className="fixed bottom-[72px] left-1/2 z-[90] flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full border border-border-default bg-card/75 px-3 py-2 text-[12px] backdrop-blur-md shadow-glass lg:bottom-6 lg:left-6 lg:translate-x-0 lg:px-4 lg:text-[13px]">
         {isPending || savingAction !== null ? (
           <span className="text-text-tertiary">Đang lưu...</span>
         ) : saveStatus === "idle" ? (
@@ -509,12 +510,12 @@ export function PostEditor({
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: "100%" }}
               transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
-              className="z-50 shrink-0 overflow-y-auto border-l border-border-default/40 bg-card/30 backdrop-blur-xl shadow-glass flex fixed inset-y-0 right-0 pt-6 flex-col w-full lg:w-[320px] xl:w-[360px]"
+              className="fixed inset-y-0 right-0 z-50 flex w-full shrink-0 flex-col overflow-y-auto border-l border-border-default/40 bg-card/55 pb-24 pt-4 shadow-glass backdrop-blur-xl lg:w-[320px] lg:pb-0 lg:pt-6 xl:w-[360px]"
               id="post-settings-panel"
             >
               <div className="w-full px-5 py-6">
 
-              <div className="mb-6 space-y-4 lg:mb-8">
+              <div className="mb-6 flex items-start justify-between gap-4 lg:mb-8">
                 <div>
                   <h2 className="text-[13px] font-bold uppercase tracking-widest text-text-primary">
                     Cài đặt bài viết
@@ -523,6 +524,14 @@ export function PostEditor({
                     Ảnh bìa, phân loại, thẻ, và cộng tác viên.
                   </p>
                 </div>
+                <button
+                  aria-label="Đóng cài đặt bài viết"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border-default bg-background/70 text-text-secondary lg:hidden"
+                  onClick={() => setIsSettingsOpen(false)}
+                  type="button"
+                >
+                  <X aria-hidden="true" className="h-4 w-4" />
+                </button>
               </div>
 
               <div className="flex flex-col gap-6">
@@ -753,7 +762,7 @@ export function PostEditor({
                 className="relative w-full bg-transparent sm:bg-subtle-bg sm:backdrop-blur-md rounded-[8px] sm:border border-transparent sm:border-border-default mb-8 md:mb-12 z-30"
                 data-testid="editor-writing-surface"
               >
-                <div className="px-0 py-4 sm:p-8 md:p-12">
+                <div className="px-3 py-4 sm:p-8 md:p-12">
                   <div className="mt-4 pb-2 md:mt-0">
                     <label className="sr-only" htmlFor="post-title">
                       Tiêu đề

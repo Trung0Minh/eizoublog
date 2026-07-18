@@ -12,7 +12,7 @@ export default async function AdminEventsPage() {
         subtitle="Open annual writing events, collect writer rooms, and publish one merged article."
         title="Events"
       />
-      <ScrollReveal index={0} className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6">
+      <ScrollReveal index={0} className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-3 sm:p-6">
         <AdminEventsManager categories={categories} events={events} tags={tags} />
       </ScrollReveal>
     </div>

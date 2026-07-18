@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 export default function BackgroundsSettingsPage() {
   return (
-    <div className="p-6">
+    <div className="p-0 sm:p-6">
       <BackgroundSettings />
     </div>
   )

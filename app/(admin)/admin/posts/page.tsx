@@ -76,7 +76,7 @@ export default async function AdminPostsPage({
       />
 
       <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center rounded-[24px] border border-border-default/50 bg-background/50 backdrop-blur-xl p-3 shadow-sm">
-        <div className="inline-flex w-fit gap-1 overflow-x-auto rounded-full bg-subtle-bg/50 p-1">
+        <div className="inline-flex w-full gap-1 overflow-x-auto rounded-full bg-subtle-bg/50 p-1 md:w-fit">
           {STATUS_FILTERS.map((filter) => {
             const active = filter.status === status || (!filter.status && !status)
 
@@ -101,7 +101,7 @@ export default async function AdminPostsPage({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <AdminPostSearch />
           <Link
-            className="flex h-10 shrink-0 items-center gap-2 rounded-full bg-accent px-5 text-[13px] font-bold text-white transition-all hover:scale-105 shadow-md shadow-accent/20 hover:shadow-accent/40"
+            className="flex h-10 shrink-0 items-center justify-center gap-2 rounded-full bg-accent px-5 text-[13px] font-bold text-white transition-all hover:scale-105 shadow-md shadow-accent/20 hover:shadow-accent/40"
             href="/dashboard/new"
             prefetch={false}
           >

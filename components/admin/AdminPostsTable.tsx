@@ -353,9 +353,9 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
         </div>
       )}
 
-      <div className="w-full overflow-x-auto pb-4 px-2">
-        <div className="min-w-[750px] flex flex-col gap-2">
-          <div className="flex h-10 items-center px-6 text-[11px] font-bold uppercase tracking-[0.1em] text-text-tertiary">
+      <div className="w-full px-0 pb-4 sm:px-2 md:overflow-x-auto">
+        <div className="flex min-w-0 flex-col gap-2 md:min-w-[750px]" data-testid="admin-posts-list">
+          <div className="hidden h-10 items-center px-6 text-[11px] font-bold uppercase tracking-[0.1em] text-text-tertiary md:flex">
             <div className="mr-4 flex shrink-0 items-center">
               <input
                 type="checkbox"
@@ -397,11 +397,12 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
 
               return (
                 <div
-                  className={`group relative flex items-center rounded-[20px] border border-transparent bg-subtle-bg/20 p-4 pl-6 transition-all duration-300 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10 ${selectedIds.has(post.id) ? "border-accent/30 bg-accent/5 ring-1 ring-accent/20" : ""} animate-in fade-in slide-in-from-bottom-2`}
+                  className={`group relative flex flex-col items-stretch rounded-[20px] border border-transparent bg-subtle-bg/20 p-4 transition-all duration-300 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10 md:flex-row md:items-center md:pl-6 ${selectedIds.has(post.id) ? "border-accent/30 bg-accent/5 ring-1 ring-accent/20" : ""} animate-in fade-in slide-in-from-bottom-2`}
+                  data-testid={`admin-post-row-${post.id}`}
                   style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
                   key={post.id}
                 >
-                  <div className="mr-4 flex shrink-0 items-center">
+                  <div className="absolute left-4 top-4 flex shrink-0 items-center md:static md:mr-4">
                     <input
                       type="checkbox"
                       className="h-4 w-4 rounded border-border-default text-accent focus:ring-accent accent-accent cursor-pointer"
@@ -409,7 +410,7 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
                       onChange={() => toggleSelect(post.id)}
                     />
                   </div>
-                  <div className="flex min-w-0 flex-1 flex-col justify-center pr-4">
+                  <div className="flex min-w-0 flex-1 flex-col justify-center pl-8 pr-24 md:pl-0 md:pr-4">
                     <Link
                       className="block truncate text-[14px] font-bold text-text-primary transition-colors group-hover:text-accent"
                       href={`/dashboard/edit/${post.id}`}
@@ -431,7 +432,7 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
                     </span>
                   </div>
 
-                  <div className="w-[100px] shrink-0">
+                  <div className="absolute right-4 top-4 w-fit shrink-0 md:static md:ml-0 md:mt-0 md:w-[100px]">
                     <AdminStatusBadge status={statusLabel} />
                   </div>
 
@@ -446,9 +447,9 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
                   </div>
 
                   {/* Spacer for absolute actions to match header layout */}
-                  <div className="w-[80px] shrink-0" />
+                  <div className="hidden w-[80px] shrink-0 md:block" />
 
-                  <div className="absolute right-6 flex items-center justify-end gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100 bg-background/90 backdrop-blur-md rounded-[12px] shadow-sm border border-border-default/50 p-1.5 translate-x-4 group-hover:translate-x-0">
+                  <div className="ml-8 mt-3 flex w-fit max-w-[calc(100%-2rem)] flex-wrap items-center justify-end gap-1 rounded-[12px] border border-border-default/50 bg-background/90 p-1.5 opacity-100 shadow-sm backdrop-blur-md transition-all duration-300 md:absolute md:right-6 md:ml-0 md:mt-0 md:max-w-none md:translate-x-4 md:opacity-0 md:group-hover:translate-x-0 md:group-hover:opacity-100">
                     {post.status === "PUBLISHED" && (
                       <Button asChild className="h-8 w-8 rounded-[8px] p-0 hover:bg-subtle-bg text-text-secondary hover:text-text-primary transition-colors" size="sm" variant="ghost">
                         <Link aria-label="View post" href={`/${post.slug}`} prefetch={false}>

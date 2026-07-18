@@ -189,7 +189,7 @@ export function DynamicBackground({
       />
       {/* A subtle overlay to ensure text remains readable */}
       <div
-        className="absolute inset-0 bg-background/40 dark:bg-background/60"
+        className="absolute inset-0 bg-background/75 dark:bg-background/80 sm:bg-background/40 sm:dark:bg-background/60"
         style={overlayStyle}
       />
     </div>
