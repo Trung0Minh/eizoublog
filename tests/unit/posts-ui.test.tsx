@@ -732,6 +732,92 @@ describe("PostEditor", () => {
     vi.useRealTimers()
   })
 
+  it("queues manual saves behind an in-flight autosave version", async () => {
+    vi.useFakeTimers()
+    let resolveAutosave: ((response: Response) => void) | undefined
+    const autosaveResponse = new Promise<Response>((resolve) => {
+      resolveAutosave = resolve
+    })
+    vi.stubGlobal(
+      "fetch",
+      vi.fn()
+        .mockReturnValueOnce(autosaveResponse)
+        .mockResolvedValueOnce(
+          new Response(
+            JSON.stringify({
+              data: {
+                id: "post-1",
+                slug: "existing-post",
+                status: "DRAFT",
+                version: 3,
+              },
+            }),
+            { status: 200 },
+          ),
+        ),
+    )
+
+    render(
+      <PostEditor
+        categories={[]}
+        currentUserId="writer-1"
+        initialData={{
+          categoryId: null,
+          coAuthorIds: [],
+          content: { content: [], type: "doc" },
+          contentText: null,
+          coverAlt: null,
+          coverUrl: null,
+          excerpt: "Initial excerpt",
+          id: "post-1",
+          status: "DRAFT",
+          tags: [],
+          title: "Existing post",
+          version: 1,
+        }}
+        writers={[]}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Mock editor" }))
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000)
+    })
+    expect(fetch).toHaveBeenCalledTimes(1)
+
+    fireEvent.click(screen.getByRole("button", { name: "Lưu nháp" }))
+    expect(fetch).toHaveBeenCalledTimes(1)
+    await act(async () => {
+      resolveAutosave?.(
+        new Response(
+          JSON.stringify({
+            data: {
+              id: "post-1",
+              slug: "existing-post",
+              status: "DRAFT",
+              version: 2,
+            },
+          }),
+          { status: 200 },
+        ),
+      )
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+
+    expect(fetch).toHaveBeenCalledTimes(2)
+    const manualRequest = (fetch as ReturnType<typeof vi.fn>).mock.calls[1]?.[1] as {
+      body: string
+    }
+    expect(JSON.parse(manualRequest.body) as Record<string, unknown>).toMatchObject({
+      baseVersion: 2,
+      saveKind: "MANUAL",
+      status: "DRAFT",
+    })
+
+    vi.useRealTimers()
+  })
+
   it("does not resend an over-limit legacy excerpt when autosaving other fields", async () => {
     vi.useFakeTimers()
     vi.stubGlobal(

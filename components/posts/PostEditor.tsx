@@ -212,7 +212,15 @@ export function PostEditor({
     tagIds: selectedTags.map((tag) => tag.id),
     title,
   })
-  const isEditing = Boolean(postId)
+  const saveQueueRef = useRef<Promise<void>>(Promise.resolve())
+  const enqueuePostSave = useCallback(<T,>(operation: () => Promise<T>) => {
+    const queued = saveQueueRef.current.then(operation, operation)
+    saveQueueRef.current = queued.then(
+      () => undefined,
+      () => undefined,
+    )
+    return queued
+  }, [])
   const canSave = title.trim().length > 0
   const hasInitialData = initialData !== undefined
   const initialExcerpt = initialData?.excerpt
@@ -233,40 +241,41 @@ export function PostEditor({
   const performAutosave = useCallback(async () => {
     if (!postId) return
 
-    const draft = autosaveDraftRef.current
-    const response = await fetch(`/api/posts/${postId}`, {
-      body: JSON.stringify({
-        baseVersion: postVersionRef.current,
-        categoryId: draft.categoryId || undefined,
-        coAuthorIds: draft.coAuthorIds,
-        content: draft.content,
-        contentText: draft.contentText,
-        coverAlt: draft.coverAlt || undefined,
-        coverUrl: draft.coverUrl || undefined,
-        draftVisibility:
-          draft.coAuthorIds.length > 0 ? "CO_AUTHORS" : "PRIVATE",
-        ...getExcerptPayload(draft.excerpt, initialExcerpt, hasInitialData),
-        saveKind: "AUTO",
-        tagIds: draft.tagIds,
-        title: draft.title,
-      }),
-      headers: { "Content-Type": "application/json" },
-      method: "PATCH",
+    await enqueuePostSave(async () => {
+      const draft = autosaveDraftRef.current
+      const response = await fetch(`/api/posts/${postId}`, {
+        body: JSON.stringify({
+          baseVersion: postVersionRef.current,
+          categoryId: draft.categoryId || undefined,
+          coAuthorIds: draft.coAuthorIds,
+          content: draft.content,
+          contentText: draft.contentText,
+          coverAlt: draft.coverAlt || undefined,
+          coverUrl: draft.coverUrl || undefined,
+          draftVisibility:
+            draft.coAuthorIds.length > 0 ? "CO_AUTHORS" : "PRIVATE",
+          ...getExcerptPayload(draft.excerpt, initialExcerpt, hasInitialData),
+          saveKind: "AUTO",
+          tagIds: draft.tagIds,
+          title: draft.title,
+        }),
+        headers: { "Content-Type": "application/json" },
+        method: "PATCH",
+      })
+      const result: unknown = await response.json()
+
+      if (!response.ok) {
+        if (response.status === 409) throw new AutosaveConflictError()
+        throw new Error(getApiError(result))
+      }
+
+      const savedPost = getPostResponse(result)
+      if (savedPost?.version !== null && savedPost?.version !== undefined) {
+        postVersionRef.current = savedPost.version
+        setPostVersion(savedPost.version)
+      }
     })
-    const result: unknown = await response.json()
-
-    if (!response.ok) {
-      if (response.status === 409) throw new AutosaveConflictError()
-      throw new Error(getApiError(result))
-    }
-
-    const savedPost = getPostResponse(result)
-    if (savedPost?.version !== null && savedPost?.version !== undefined) {
-      postVersionRef.current = savedPost.version
-      setPostVersion(savedPost.version)
-    }
-
-  }, [hasInitialData, initialExcerpt, postId])
+  }, [enqueuePostSave, hasInitialData, initialExcerpt, postId])
 
   const {
     getGeneration,
@@ -366,47 +375,68 @@ export function PostEditor({
     let isNavigatingAway = false
     const savingGeneration = getGeneration()
 
-    const payload = {
-      categoryId: categoryId || undefined,
+    const currentPostId = postId
+    const manualDraft = {
+      categoryId,
       coAuthorIds,
       content,
       contentText,
-      coverAlt: coverAlt || undefined,
-      coverUrl: coverUrl || undefined,
-      draftVisibility: coAuthorIds.length > 0 ? "CO_AUTHORS" : "PRIVATE",
-      ...getExcerptPayload(excerpt, initialExcerpt, hasInitialData),
-      status,
+      coverAlt,
+      coverUrl,
+      excerpt,
       tagIds: selectedTags.map((tag) => tag.id),
       title,
-      ...(postId && { baseVersion: postVersion }),
-      saveKind: "MANUAL" as const,
     }
 
     try {
-      const response = await fetch(
-        postId ? `/api/posts/${postId}` : "/api/posts",
-        {
-          body: JSON.stringify(payload),
-          headers: { "Content-Type": "application/json" },
-          method: isEditing ? "PATCH" : "POST",
-        },
-      )
-      const result: unknown = await response.json()
+      const post = await enqueuePostSave(async () => {
+        const payload = {
+          categoryId: manualDraft.categoryId || undefined,
+          coAuthorIds: manualDraft.coAuthorIds,
+          content: manualDraft.content,
+          contentText: manualDraft.contentText,
+          coverAlt: manualDraft.coverAlt || undefined,
+          coverUrl: manualDraft.coverUrl || undefined,
+          draftVisibility:
+            manualDraft.coAuthorIds.length > 0 ? "CO_AUTHORS" : "PRIVATE",
+          ...getExcerptPayload(
+            manualDraft.excerpt,
+            initialExcerpt,
+            hasInitialData,
+          ),
+          status,
+          tagIds: manualDraft.tagIds,
+          title: manualDraft.title,
+          ...(currentPostId && { baseVersion: postVersionRef.current }),
+          saveKind: "MANUAL" as const,
+        }
+        const response = await fetch(
+          currentPostId ? `/api/posts/${currentPostId}` : "/api/posts",
+          {
+            body: JSON.stringify(payload),
+            headers: { "Content-Type": "application/json" },
+            method: currentPostId ? "PATCH" : "POST",
+          },
+        )
+        const result: unknown = await response.json()
 
-      if (!response.ok) {
-        throw new Error(getApiError(result))
-      }
+        if (!response.ok) {
+          throw new Error(getApiError(result))
+        }
 
-      const post = getPostResponse(result)
+        const savedPost = getPostResponse(result)
 
-      if (!post) {
-        throw new Error("Phản hồi bài viết không bao gồm slug")
-      }
+        if (!savedPost) {
+          throw new Error("Phản hồi bài viết không bao gồm slug")
+        }
 
-      if (post.version !== null) {
-        postVersionRef.current = post.version
-        setPostVersion(post.version)
-      }
+        if (savedPost.version !== null) {
+          postVersionRef.current = savedPost.version
+          setPostVersion(savedPost.version)
+        }
+
+        return savedPost
+      })
 
       if (status === "PUBLISHED") {
         markSavedThrough(savingGeneration)
