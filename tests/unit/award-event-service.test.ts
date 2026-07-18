@@ -158,7 +158,7 @@ describe("updateAwardEventRoom", () => {
     expect(mocks.prisma.post.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          excerpt: longIntroduction,
+          excerpt: `${longIntroduction.slice(0, 499).trimEnd()}…`,
           status: "PUBLISHED",
           title: "Awards",
         }),

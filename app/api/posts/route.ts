@@ -11,6 +11,7 @@ import {
   validatePostContentSize,
 } from "@/lib/postDurability"
 import { prisma } from "@/lib/prisma"
+import { MAX_POST_EXCERPT_CHARACTERS } from "@/lib/postLimits"
 import { ensureUniqueSlug, generateSlug } from "@/lib/utils"
 
 const querySchema = z.object({
@@ -30,7 +31,7 @@ const createSchema = z.object({
   coverAlt: z.string().max(200).optional(),
   coverUrl: z.string().url().optional(),
   draftVisibility: z.enum(["PRIVATE", "CO_AUTHORS"]).default("PRIVATE"),
-  excerpt: z.string().trim().max(500).optional(),
+  excerpt: z.string().trim().max(MAX_POST_EXCERPT_CHARACTERS).optional(),
   status: z.enum(["DRAFT", "PUBLISHED"]).default("DRAFT"),
   tagIds: z.array(z.string().min(1)).default([]),
   title: z.string().trim().min(1).max(200),

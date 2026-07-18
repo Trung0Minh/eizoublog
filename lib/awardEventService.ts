@@ -13,6 +13,7 @@ import {
   shuffleAwardEventRooms,
 } from "@/lib/awardEvents"
 import { prisma } from "@/lib/prisma"
+import { truncatePostExcerpt } from "@/lib/postLimits"
 import { ensureUniqueSlug, generateSlug } from "@/lib/utils"
 
 export class AwardEventError extends Error {
@@ -183,7 +184,7 @@ export async function regenerateAwardEventPost(eventId: string) {
           contentText,
           coverAlt: event.coverAlt,
           coverUrl: event.coverUrl,
-          excerpt: event.introText || null,
+          excerpt: truncatePostExcerpt(event.introText),
           lastSavedAt: new Date(),
           publishedAt: event.publishedAt ?? new Date(),
           status: "PUBLISHED",
@@ -210,7 +211,7 @@ export async function regenerateAwardEventPost(eventId: string) {
         contentText,
         coverAlt: event.coverAlt,
         coverUrl: event.coverUrl,
-        excerpt: event.introText || undefined,
+        excerpt: truncatePostExcerpt(event.introText) || undefined,
         publishedAt: new Date(),
         slug,
         status: "PUBLISHED",

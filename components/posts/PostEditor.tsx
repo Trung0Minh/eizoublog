@@ -30,6 +30,7 @@ import { AutosaveConflictError, useAutosave } from "@/hooks/useAutosave"
 import { usePostRecoveryDraft } from "@/hooks/usePostRecoveryDraft"
 import { useWarnUnsaved } from "@/hooks/useWarnUnsaved"
 import { cn } from "@/lib/utils"
+import { MAX_POST_EXCERPT_CHARACTERS } from "@/lib/postLimits"
 
 interface CategoryOption {
   children: { id: string; name: string; slug?: string }[]
@@ -82,6 +83,19 @@ interface PostMutationResponse {
   id: string
   slug: string
   version: number | null
+}
+
+function getExcerptPayload(
+  excerpt: string,
+  initialExcerpt: string | null | undefined,
+  isExistingPost: boolean,
+) {
+  const isUnchangedLegacyExcerpt =
+    isExistingPost &&
+    excerpt === initialExcerpt &&
+    excerpt.length > MAX_POST_EXCERPT_CHARACTERS
+
+  return isUnchangedLegacyExcerpt ? {} : { excerpt }
 }
 
 interface RecoveryDraftPayload {
@@ -200,6 +214,8 @@ export function PostEditor({
   })
   const isEditing = Boolean(postId)
   const canSave = title.trim().length > 0
+  const hasInitialData = initialData !== undefined
+  const initialExcerpt = initialData?.excerpt
   useEffect(() => {
     autosaveDraftRef.current = {
       categoryId,
@@ -229,7 +245,7 @@ export function PostEditor({
         coverUrl: draft.coverUrl || undefined,
         draftVisibility:
           draft.coAuthorIds.length > 0 ? "CO_AUTHORS" : "PRIVATE",
-        excerpt: draft.excerpt,
+        ...getExcerptPayload(draft.excerpt, initialExcerpt, hasInitialData),
         saveKind: "AUTO",
         tagIds: draft.tagIds,
         title: draft.title,
@@ -250,7 +266,7 @@ export function PostEditor({
       setPostVersion(savedPost.version)
     }
 
-  }, [postId])
+  }, [hasInitialData, initialExcerpt, postId])
 
   const {
     getGeneration,
@@ -358,7 +374,7 @@ export function PostEditor({
       coverAlt: coverAlt || undefined,
       coverUrl: coverUrl || undefined,
       draftVisibility: coAuthorIds.length > 0 ? "CO_AUTHORS" : "PRIVATE",
-      excerpt,
+      ...getExcerptPayload(excerpt, initialExcerpt, hasInitialData),
       status,
       tagIds: selectedTags.map((tag) => tag.id),
       title,
@@ -787,7 +803,7 @@ export function PostEditor({
                     <Textarea
                       className="min-h-10 resize-none overflow-hidden border-none bg-transparent px-0 text-[16px] text-text-secondary/80 shadow-none placeholder:text-text-tertiary focus-visible:border-transparent focus-visible:ring-0 leading-relaxed"
                       id="post-excerpt"
-                      maxLength={500}
+                      maxLength={MAX_POST_EXCERPT_CHARACTERS}
                       onChange={(event) => {
                         setExcerpt(event.target.value)
                         markDirtyAndAutosave()

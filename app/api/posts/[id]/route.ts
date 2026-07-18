@@ -11,6 +11,7 @@ import {
 } from "@/lib/postDurability"
 import { revalidatePostMutationPaths } from "@/lib/postRevalidation"
 import { prisma } from "@/lib/prisma"
+import { MAX_POST_EXCERPT_CHARACTERS } from "@/lib/postLimits"
 import { ensureUniqueSlug, generateSlug } from "@/lib/utils"
 
 class RouteError extends Error {
@@ -31,7 +32,7 @@ const updateSchema = z.object({
   coverAlt: z.string().max(200).optional(),
   coverUrl: z.string().url().nullable().optional(),
   draftVisibility: z.enum(["PRIVATE", "CO_AUTHORS"]).optional(),
-  excerpt: z.string().trim().max(500).optional(),
+  excerpt: z.string().trim().max(MAX_POST_EXCERPT_CHARACTERS).optional(),
   saveKind: z.enum(["AUTO", "MANUAL"]).optional(),
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional(),
   tagIds: z.array(z.string().min(1)).optional(),

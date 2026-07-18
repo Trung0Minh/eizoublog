@@ -732,6 +732,64 @@ describe("PostEditor", () => {
     vi.useRealTimers()
   })
 
+  it("does not resend an over-limit legacy excerpt when autosaving other fields", async () => {
+    vi.useFakeTimers()
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            data: {
+              id: "post-legacy",
+              slug: "legacy-post",
+              status: "DRAFT",
+              updatedAt: "2024-04-01T00:00:00.000Z",
+              version: 2,
+            },
+          }),
+          { status: 200 },
+        ),
+      ),
+    )
+    const legacyExcerpt = "Legacy event introduction ".repeat(30)
+
+    render(
+      <PostEditor
+        categories={[]}
+        currentUserId="writer-1"
+        initialData={{
+          categoryId: null,
+          coAuthorIds: [],
+          content: { content: [], type: "doc" },
+          contentText: null,
+          coverAlt: null,
+          coverUrl: null,
+          excerpt: legacyExcerpt,
+          id: "post-legacy",
+          status: "DRAFT",
+          tags: [],
+          title: "Legacy post",
+          version: 1,
+        }}
+        writers={[]}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Mock editor" }))
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000)
+    })
+
+    const request = (fetch as ReturnType<typeof vi.fn>).mock.calls[0]?.[1] as {
+      body: string
+    }
+    expect(JSON.parse(request.body) as Record<string, unknown>).not.toHaveProperty(
+      "excerpt",
+    )
+
+    vi.useRealTimers()
+  })
+
   it("periodically autosaves existing posts during continuous editing", async () => {
     vi.useFakeTimers()
     vi.stubGlobal(
