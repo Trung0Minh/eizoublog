@@ -119,12 +119,12 @@ export const GalleryExtension = Node.create({
           const mediaNode = isVideoUrl
             ? [
                 "div",
-                { class: "relative w-full aspect-video" },
+                { class: isNative ? "w-full" : "relative w-full aspect-video" },
                 isNative
                   ? [
                       "video",
                       {
-                        class: "absolute inset-0 h-full w-full rounded-md object-contain bg-black/5",
+                        class: "h-auto w-full rounded-md bg-black/5",
                         controls: "true",
                         preload: "metadata",
                         src: image.url,

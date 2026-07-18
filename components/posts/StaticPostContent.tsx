@@ -224,16 +224,16 @@ function renderImageGallery(node: JSONContent, key: string) {
           return (
             <figure className="image-gallery__item" key={image.url + index}>
               {isVideoUrl ? (
-                <div className="relative w-full h-full aspect-video">
-                  {isNative ? (
-                    <video
-                      className="absolute inset-0 h-full w-full rounded-md object-contain bg-black/5"
-                      controls
-                      preload="metadata"
-                      src={image.url}
-                      title={getGalleryImageAlt(image)}
-                    />
-                  ) : (
+                isNative ? (
+                  <video
+                    className="h-auto w-full rounded-md bg-black/5"
+                    controls
+                    preload="metadata"
+                    src={image.url}
+                    title={getGalleryImageAlt(image)}
+                  />
+                ) : (
+                  <div className="relative aspect-video w-full">
                     <iframe
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
@@ -242,8 +242,8 @@ function renderImageGallery(node: JSONContent, key: string) {
                       src={toVideoEmbedUrl(image.url)}
                       title={getGalleryImageAlt(image)}
                     />
-                  )}
-                </div>
+                  </div>
+                )
               ) : (
                 <img
                   alt={getGalleryImageAlt(image)}
@@ -283,16 +283,16 @@ function renderVideoEmbed(node: JSONContent, key: string) {
 
   return (
     <figure className="my-6" data-type="video-embed" key={key}>
-      <div className="relative aspect-video w-full">
-        {isNativeVideo(rawUrl) ? (
+      {isNativeVideo(rawUrl) ? (
           <video
-            className="absolute inset-0 h-full w-full rounded-md object-contain bg-black/5"
+            className="h-auto w-full rounded-md bg-black/5"
             controls
             preload="metadata"
             src={rawUrl}
             title={caption || "Embedded video"}
           />
         ) : (
+          <div className="relative aspect-video w-full">
           <iframe
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
@@ -301,8 +301,8 @@ function renderVideoEmbed(node: JSONContent, key: string) {
             src={toVideoEmbedUrl(rawUrl)}
             title={caption || "Embedded video"}
           />
+          </div>
         )}
-      </div>
       {caption && captionIsVisible(attrs) ? (
         <figcaption className="media-caption">{caption}</figcaption>
       ) : null}

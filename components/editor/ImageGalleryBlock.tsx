@@ -330,16 +330,16 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
                   )}
                 
                 {isVideoUrl ? (
-                  <div className="relative w-full aspect-video">
-                    {isNative ? (
+                  isNative ? (
                       <video
-                        className="absolute inset-0 h-full w-full rounded-md object-contain bg-black/5"
+                        className="h-auto w-full rounded-md bg-black/5"
                         controls
                         preload="metadata"
                         src={image.url}
                         title={getGalleryImageAlt(image)}
                       />
                     ) : (
+                      <div className="relative aspect-video w-full">
                       <iframe
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
@@ -348,8 +348,8 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
                         src={toVideoEmbedUrl(image.url)}
                         title={getGalleryImageAlt(image)}
                       />
-                    )}
-                  </div>
+                      </div>
+                    )
                 ) : (
                   <img
                     alt={getGalleryImageAlt(image)}

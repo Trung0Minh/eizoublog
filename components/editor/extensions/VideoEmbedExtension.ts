@@ -54,7 +54,7 @@ export const VideoEmbedExtension = Node.create({
       ? [
           "video",
           {
-            class: "absolute inset-0 h-full w-full rounded-md object-contain bg-black/5",
+            class: "h-auto w-full rounded-md bg-black/5",
             controls: "true",
             preload: "metadata",
             src: rawUrl,
@@ -77,7 +77,7 @@ export const VideoEmbedExtension = Node.create({
     const children: DOMOutputSpec[] = [
       [
         "div",
-        { class: "relative w-full aspect-video" },
+        { class: isNative ? "w-full" : "relative w-full aspect-video" },
         mediaNode,
       ],
     ]

@@ -38,16 +38,16 @@ export function VideoNodeView(props: NodeViewProps) {
       )}
 
       <figure className="m-0" data-type="video-embed">
-        <div className="relative w-full aspect-video">
-          {isNative ? (
+        {isNative ? (
             <video
-              className="absolute inset-0 h-full w-full rounded-md object-contain bg-black/5"
+              className="h-auto w-full rounded-md bg-black/5"
               controls
               preload="metadata"
               src={rawUrl}
               title={caption || "Embedded video"}
             />
           ) : (
+            <div className="relative aspect-video w-full">
             <iframe
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
@@ -56,8 +56,8 @@ export function VideoNodeView(props: NodeViewProps) {
               src={toVideoEmbedUrl(rawUrl)}
               title={caption || "Embedded video"}
             />
+            </div>
           )}
-        </div>
         {editor.isEditable ? (
           node.attrs.showCaption ? (
             <figcaption className="editor-media-caption mt-1 w-full text-center text-sm">

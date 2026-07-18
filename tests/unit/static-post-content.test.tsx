@@ -203,6 +203,25 @@ describe("StaticPostContent", () => {
     expect(screen.queryByText("Hidden video caption")).not.toBeInTheDocument()
   })
 
+  it("lets native videos use their intrinsic aspect ratio", () => {
+    const content: JSONContent = {
+      content: [
+        {
+          attrs: { url: "https://cdn.example.com/portrait.mp4" },
+          type: "videoEmbed",
+        },
+      ],
+      type: "doc",
+    }
+
+    const { container } = render(<StaticPostContent content={content} />)
+    const video = screen.getByTitle("Embedded video")
+
+    expect(video).toHaveClass("h-auto", "w-full")
+    expect(video).not.toHaveClass("object-contain", "absolute")
+    expect(container.querySelector(".aspect-video")).toBeNull()
+  })
+
   it("keeps legacy captions visible when caption visibility is not stored", () => {
     const content: JSONContent = {
       content: [
