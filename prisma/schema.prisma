@@ -205,6 +205,7 @@ model AwardEvent {
   updatedAt   DateTime         @updatedAt
   createdById String
   finalPostId String?          @unique
+  editorialContentEditedAt DateTime?
   categoryId  String?
 
   createdBy User             @relation("AwardEventCreatedBy", fields: [createdById], references: [id])

@@ -43,6 +43,9 @@ const mocks = vi.hoisted(() => {
     awardEventRoom: {
       findFirst: vi.fn(),
     },
+    awardEvent: {
+      update: vi.fn(),
+    },
   }
 
   return {
@@ -775,6 +778,63 @@ describe("single post API", () => {
       }),
     )
     expect(mocks.revalidateTag).not.toHaveBeenCalledWith("posts", "max")
+  })
+
+  it("marks a final event article as manually edited by an admin", async () => {
+    mocks.auth.mockResolvedValue({
+      user: { id: "admin-1", role: "ADMIN" },
+    })
+    mocks.prisma.post.findUnique.mockResolvedValue({
+      authorId: "writer-1",
+      categoryId: null,
+      coAuthors: [],
+      content: { content: [], type: "doc" },
+      contentText: "Original anthology",
+      coverAlt: null,
+      coverUrl: null,
+      draftVisibility: "PRIVATE",
+      excerpt: null,
+      finalAwardEvent: { id: "event-1" },
+      id: "post-1",
+      moderationLockedAt: null,
+      publishedAt: new Date("2026-07-01T00:00:00.000Z"),
+      removedAt: null,
+      removedFromStatus: null,
+      slug: "event-anthology",
+      status: "PUBLISHED",
+      tags: [],
+      title: "Event anthology",
+      version: 1,
+    })
+    mocks.prisma.post.update.mockResolvedValue({
+      id: "post-1",
+      lastSavedAt: new Date("2026-07-18T00:00:00.000Z"),
+      slug: "event-anthology",
+      status: "PUBLISHED",
+      updatedAt: new Date("2026-07-18T00:00:00.000Z"),
+      version: 2,
+    })
+
+    const response = await PATCH(
+      jsonRequest(
+        "https://example.test/api/posts/post-1",
+        {
+          baseVersion: 1,
+          content: { content: [], type: "doc" },
+          contentText: "Edited anthology",
+          saveKind: "MANUAL",
+        },
+        "PATCH",
+      ),
+      routeContext("post-1"),
+    )
+
+    expect(response.status).toBe(200)
+    expect(mocks.prisma.awardEvent.update).toHaveBeenCalledWith({
+      data: { editorialContentEditedAt: expect.any(Date) },
+      where: { id: "event-1" },
+    })
+    expect(mocks.revalidateTag).toHaveBeenCalledWith("award-events", "max")
   })
 
   it("rejects a stale post version without overwriting newer content", async () => {

@@ -5,7 +5,7 @@ import type {
   AwardEventStatus,
   PostStatus,
 } from "@prisma/client"
-import { ExternalLink, Eye, EyeOff, GripVertical, Save, Shuffle, Upload } from "lucide-react"
+import { ExternalLink, Eye, EyeOff, GripVertical, Pencil, Save, Shuffle, Upload } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import type { DragEvent } from "react"
@@ -38,7 +38,8 @@ interface AdminEventDetail {
   categoryId?: string | null
   coverAlt?: string | null
   coverUrl?: string | null
-  finalPost: { slug: string } | null
+  editorialContentEditedAt?: Date | null
+  finalPost: { id: string; slug: string; status: PostStatus; version: number } | null
   id: string
   introText: string | null
   rooms: AdminEventRoom[]
@@ -287,6 +288,17 @@ export function AdminEventDetailManager({
             >
               <Upload aria-hidden="true" className="h-4 w-4" />
             </Button>
+            {event.finalPost && (
+              <Button asChild className="h-10 rounded-full px-4 font-semibold" variant="outline">
+                <Link
+                  href={`/admin/events/${event.id}/edit`}
+                  title="Edit merged event article"
+                >
+                  <Pencil aria-hidden="true" className="mr-2 h-4 w-4" />
+                  Edit merged article
+                </Link>
+              </Button>
+            )}
             {event.finalPost && (
               <Button asChild className="h-10 w-10 rounded-full p-0 transition-all hover:scale-105" variant="ghost">
                 <Link

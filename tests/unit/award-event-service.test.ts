@@ -29,6 +29,7 @@ vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }))
 import {
   AwardEventError,
   adminAwardEventDetailSelect,
+  regeneratePublishedEventIfNeeded,
   updateAwardEventRoom,
 } from "@/lib/awardEventService"
 
@@ -180,5 +181,23 @@ describe("adminAwardEventDetailSelect", () => {
       title: true,
     })
     expect(selectedPostSelect).not.toHaveProperty("content")
+  })
+})
+
+describe("regeneratePublishedEventIfNeeded", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it("preserves an admin-edited final article", async () => {
+    mocks.prisma.awardEvent.findUnique.mockResolvedValue({
+      editorialContentEditedAt: new Date("2026-07-18T12:00:00.000Z"),
+      finalPostId: "final-post-1",
+      status: "PUBLISHED",
+    })
+
+    await regeneratePublishedEventIfNeeded("event-1")
+
+    expect(mocks.prisma.post.update).not.toHaveBeenCalled()
   })
 })

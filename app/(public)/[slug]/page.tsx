@@ -119,7 +119,10 @@ export default async function PostPage({ params }: PostPageProps) {
           updatedAt={post.updatedAt}
         />
         <PostReadTracker slug={post.slug} title={post.title} />
-        <EventAnthologyView event={post.finalAwardEvent} />
+        <EventAnthologyView
+          editorialContent={content}
+          event={post.finalAwardEvent}
+        />
         <div className="mx-auto grid w-full max-w-[1360px] gap-12 px-4 pb-24 sm:px-6 lg:px-10 xl:grid-cols-[minmax(0,1000px)_220px] xl:justify-center">
           <div className="min-w-0">
             <CommentSection

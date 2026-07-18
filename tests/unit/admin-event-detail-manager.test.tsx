@@ -52,6 +52,30 @@ describe("AdminEventDetailManager", () => {
     vi.unstubAllGlobals()
   })
 
+  it("links published events to the dedicated merged article editor", () => {
+    render(
+      <AdminEventDetailManager
+        event={{
+          finalPost: {
+            id: "final-post-1",
+            slug: "event-archive-2025",
+            status: "PUBLISHED",
+            version: 7,
+          },
+          id: "event-1",
+          introText: null,
+          rooms: [],
+          status: "PUBLISHED",
+          title: "Event Archive 2025",
+        }}
+      />,
+    )
+
+    expect(
+      screen.getByRole("link", { name: "Edit merged article" }),
+    ).toHaveAttribute("href", "/admin/events/event-1/edit")
+  })
+
   it("saves optional category, tags, cover, and cover alt without defaults", async () => {
     const user = userEvent.setup()
     const fetchMock = vi.fn().mockResolvedValue(

@@ -2,6 +2,7 @@ import type { JSONContent } from "@tiptap/react"
 import Link from "next/link"
 
 import { EventAnthologyTableOfContents } from "@/components/events/EventAnthologyTableOfContents"
+import { TableOfContents } from "@/components/posts/TableOfContents"
 import { AuthorCreditList } from "@/components/posts/AuthorCreditList"
 import { PostBody } from "@/components/posts/PostBody"
 import {
@@ -10,6 +11,7 @@ import {
   namespaceAwardEventPostContent,
   type AwardEventPostRoom,
 } from "@/lib/awardEvents"
+import { extractHeadings } from "@/lib/postHeadings"
 import { cn } from "@/lib/utils"
 
 interface AnthologyRoom {
@@ -42,6 +44,7 @@ interface EventAnthologyViewProps {
     tags?: Array<{ tag: { name: string; slug: string } }>
     title: string
   }
+  editorialContent?: JSONContent | null
   preview?: boolean
 }
 
@@ -112,7 +115,11 @@ function EventContributorAttribution({
   )
 }
 
-export function EventAnthologyView({ event, preview = false }: EventAnthologyViewProps) {
+export function EventAnthologyView({
+  editorialContent = null,
+  event,
+  preview = false,
+}: EventAnthologyViewProps) {
   const normalizedRooms: Array<AwardEventPostRoom & {
     writer: AwardEventPostRoom["writer"] & {
       avatarUrl: string | null
@@ -135,7 +142,9 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
     },
   }))
   const rooms = getSubmittedAwardEventRooms(normalizedRooms)
-  const headings = buildAwardEventOutline(rooms)
+  const headings = editorialContent
+    ? extractHeadings(editorialContent)
+    : buildAwardEventOutline(rooms)
   const richIntro =
     isJsonContent(event.intro) && hasMeaningfulContent(event.intro)
       ? event.intro
@@ -227,12 +236,17 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
               {event.coverAlt}
             </p>
           )}
-          {headings.length > 0 && (
+          {headings.length > 0 && !editorialContent && (
             <div className="xl:hidden">
               <EventAnthologyTableOfContents collapsible headings={headings} />
             </div>
           )}
-          {(richIntro || event.introText) && (
+          {headings.length > 0 && editorialContent && (
+            <div className="xl:hidden">
+              <TableOfContents content={editorialContent} />
+            </div>
+          )}
+          {(richIntro || event.introText) && !editorialContent && (
             <section className="rounded-[24px] border border-border-default/80 bg-background/90 p-5 shadow-[0_18px_60px_rgba(31,24,38,0.08)] backdrop-blur-xl dark:bg-background/80 sm:p-8 md:p-10">
               <div
                 className="post-content font-lora text-[17px] leading-8 text-text-primary sm:text-xl sm:leading-9"
@@ -249,7 +263,16 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
             </section>
           )}
 
-          {rooms.length === 0 ? (
+          {editorialContent ? (
+            <article
+              className="rounded-[24px] border border-border-default/80 bg-background/90 p-5 shadow-[0_18px_60px_rgba(31,24,38,0.08)] backdrop-blur-xl dark:bg-background/80 sm:p-8 md:p-10"
+              data-testid="event-editorial-content"
+            >
+              <div className="post-content font-lora text-[16px] leading-[1.8] text-text-primary sm:text-[17.5px]">
+                <PostBody content={editorialContent} />
+              </div>
+            </article>
+          ) : rooms.length === 0 ? (
             <div className="rounded-[24px] border border-dashed border-border-default bg-background/70 py-20 text-center text-text-secondary">
               No submitted entries are included yet.
             </div>
@@ -308,7 +331,11 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
         {headings.length > 0 && (
           <aside className="hidden xl:block">
             <div className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto overscroll-contain pr-2 [scrollbar-gutter:stable]">
-              <EventAnthologyTableOfContents headings={headings} />
+              {editorialContent ? (
+                <TableOfContents content={editorialContent} />
+              ) : (
+                <EventAnthologyTableOfContents headings={headings} />
+              )}
             </div>
           </aside>
         )}
