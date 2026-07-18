@@ -66,10 +66,7 @@ describe("admin client components", () => {
       "href",
       "/admin/posts",
     )
-    expect(screen.getByRole("link", { name: /analytics/i })).toHaveAttribute(
-      "href",
-      "/admin/analytics",
-    )
+    expect(screen.queryByRole("link", { name: /analytics/i })).not.toBeInTheDocument()
     expect(screen.getByRole("link", { name: /content/i })).toHaveAttribute(
       "href",
       "/admin/content",
@@ -205,6 +202,47 @@ describe("admin client components", () => {
       "/admin/events/event-1",
     )
     expect(screen.queryByRole("link", { name: /Manage Awards 2026/i })).not.toBeInTheDocument()
+  })
+
+  it("deletes an event after explicit confirmation", async () => {
+    const user = userEvent.setup()
+    const fetchMock = vi.fn().mockResolvedValue(okResponse())
+    vi.stubGlobal("fetch", fetchMock)
+
+    render(
+      <AdminEventsManager
+        categories={[]}
+        events={[
+          {
+            _count: { rooms: 2 },
+            createdAt: new Date("2026-01-01T00:00:00Z"),
+            id: "event-1",
+            publishedAt: null,
+            slug: "awards-2026",
+            status: "OPEN",
+            title: "Awards 2026",
+            updatedAt: new Date("2026-01-02T00:00:00Z"),
+          },
+        ]}
+        tags={[]}
+      />,
+    )
+
+    await user.click(screen.getByRole("button", { name: "Delete Awards 2026" }))
+    expect(screen.getByRole("dialog", { name: "Delete event?" })).toBeVisible()
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Delete event?" })).getByRole(
+        "button",
+        { name: "Delete event" },
+      ),
+    )
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/admin/events/event-1", {
+      body: JSON.stringify({ confirmation: "Awards 2026" }),
+      headers: { "Content-Type": "application/json" },
+      method: "DELETE",
+    })
+    await waitFor(() => expect(routerMocks.refresh).toHaveBeenCalled())
   })
 
   it("uses the server-provided admin user without fetching the session again", () => {
@@ -780,5 +818,6 @@ describe("admin client components", () => {
     expect(await screen.findByRole("status")).toHaveTextContent(
       "Queued for 5 of 5 subscribers",
     )
+    expect(routerMocks.refresh).toHaveBeenCalled()
   })
 })

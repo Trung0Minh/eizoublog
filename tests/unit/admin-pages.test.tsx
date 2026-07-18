@@ -13,6 +13,11 @@ const mocks = vi.hoisted(() => ({
     invite: {
       findMany: vi.fn(),
     },
+    newsletterBroadcast: {
+      aggregate: vi.fn(),
+      count: vi.fn(),
+      findMany: vi.fn(),
+    },
     newsletterSubscriber: {
       count: vi.fn(),
     },
@@ -179,6 +184,10 @@ describe("admin server pages", () => {
     expect(screen.getAllByText(/Drafts/i).length).toBeGreaterThan(0)
     expect(screen.getByText(/Subscribers/i)).toBeVisible()
     expect(screen.getByTestId("analytics-widget")).toBeVisible()
+    expect(screen.queryByText("Recent Posts")).not.toBeInTheDocument()
+    expect(screen.queryByText("Recent Comments")).not.toBeInTheDocument()
+    expect(mocks.prisma.post.findMany).not.toHaveBeenCalled()
+    expect(mocks.prisma.comment.findMany).not.toHaveBeenCalled()
     expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(1)
   })
 
@@ -334,6 +343,22 @@ describe("admin server pages", () => {
 
   it("loads active subscriber count and recent posts for newsletter broadcasts", async () => {
     mocks.prisma.newsletterSubscriber.count.mockResolvedValue(42)
+    mocks.prisma.newsletterBroadcast.count.mockResolvedValue(2)
+    mocks.prisma.newsletterBroadcast.aggregate.mockResolvedValue({
+      _sum: { sentCount: 18 },
+    })
+    mocks.prisma.newsletterBroadcast.findMany.mockResolvedValue([
+      {
+        completedAt: new Date("2026-01-04T00:00:00Z"),
+        createdAt: new Date("2026-01-03T00:00:00Z"),
+        failedCount: 1,
+        id: "broadcast-1",
+        sentCount: 11,
+        status: "PARTIAL",
+        subject: "January issue",
+        totalCount: 12,
+      },
+    ])
     mocks.prisma.post.findMany.mockResolvedValue([
       { id: "post-1", title: "Recent essay" },
     ])
@@ -344,6 +369,12 @@ describe("admin server pages", () => {
     expect(screen.getByText("TOTAL SUBSCRIBERS")).toBeVisible()
     expect(screen.getAllByText("42").length).toBeGreaterThan(0)
     expect(screen.getByText("Recent Broadcasts")).toBeVisible()
+    expect(screen.getByText("January issue")).toBeVisible()
+    expect(screen.getByText("TOTAL BROADCASTS")).toBeVisible()
+    expect(screen.getByText("EMAILS DELIVERED")).toBeVisible()
+    expect(screen.queryByPlaceholderText("Search emails...")).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "New email" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "More" })).not.toBeInTheDocument()
     expect(screen.getByTestId("newsletter-broadcast-form")).toHaveTextContent(
       "1 recent posts",
     )

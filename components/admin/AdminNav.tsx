@@ -2,7 +2,6 @@
 
 import {
   ArrowLeft,
-  BarChart3,
   FolderTree,
   FileText,
   LayoutDashboard,
@@ -34,7 +33,6 @@ const ADMIN_LINKS = [
   { href: "/admin/writers", icon: Users, label: "Writers" },
   { href: "/admin/comments", icon: MessageSquare, label: "Comments" },
   { href: "/admin/newsletter", icon: Mail, label: "Newsletter" },
-  { href: "/admin/analytics", icon: BarChart3, label: "Analytics" },
   { href: "/admin/settings/backgrounds", icon: ImageIcon, label: "Backgrounds" },
 ]
 

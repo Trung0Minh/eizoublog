@@ -419,15 +419,6 @@ export async function AnalyticsWidget({
           </p>
         )}
       </div>
-      {compact && (
-        <Link
-          className="mt-4 inline-block text-[13px] font-medium text-accent hover:underline"
-          href="/admin/analytics"
-          prefetch={false}
-        >
-          View full analytics dashboard &rarr;
-        </Link>
-      )}
     </section>
   )
 }

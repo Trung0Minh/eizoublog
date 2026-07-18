@@ -1,7 +1,7 @@
 "use client"
 
 import type { Role } from "@prisma/client"
-import { ExternalLink, Mail, Palette, ShieldOff, Search, X } from "lucide-react"
+import { BadgeCheck, ExternalLink, Mail, ShieldOff, Search, X } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState, useMemo } from "react"
 import { toast } from "sonner"
@@ -180,7 +180,7 @@ export function WritersTable({ writers }: { writers: Writer[] }) {
                     type="button"
                     variant="ghost"
                   >
-                    <Palette aria-hidden="true" className="h-4 w-4" />
+                    <BadgeCheck aria-hidden="true" className="h-4 w-4" />
                   </Button>
                   <Button
                     aria-label={`Remove writer access for ${writer.name}`}
@@ -194,7 +194,6 @@ export function WritersTable({ writers }: { writers: Writer[] }) {
                   >
                     <ShieldOff aria-hidden="true" className="h-4 w-4" />
                   </Button>
-                  <div className="h-5 w-px bg-border-default/50 mx-1"></div>
                   <Button
                     asChild
                     aria-label={`View public profile for ${writer.name}`}

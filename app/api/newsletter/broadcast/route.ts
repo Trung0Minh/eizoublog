@@ -1,5 +1,6 @@
 import { ZodError, z } from "zod"
 import { after } from "next/server"
+import { revalidateTag } from "next/cache"
 
 import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
 import {
@@ -71,6 +72,8 @@ export async function POST(request: Request) {
       previewText: data.previewText,
       subject: data.subject,
     })
+
+    revalidateTag("newsletter", "max")
 
     after(async () => {
       try {

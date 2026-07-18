@@ -1,5 +1,5 @@
 import type { AwardEventStatus, Prisma } from "@prisma/client"
-import { revalidateTag } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { ZodError, z } from "zod"
 
 import {
@@ -27,6 +27,10 @@ const updateEventSchema = z.object({
   status: z.enum(["DRAFT", "OPEN", "CLOSED", "PUBLISHED", "ARCHIVED"]).optional(),
   tagIds: z.array(z.string().min(1)).optional(),
   title: z.string().trim().min(1).max(200).optional(),
+})
+
+const deleteEventSchema = z.object({
+  confirmation: z.string().trim().min(1),
 })
 
 function getStatusDates(status: AwardEventStatus | undefined) {
@@ -153,6 +157,99 @@ export async function PATCH(
     }
 
     console.error("[PATCH /api/admin/events/[id]]", error)
+    return Response.json({ error: "Something went wrong" }, { status: 500 })
+  }
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const activeSession = await getActiveSession(["ADMIN"])
+
+  if (!activeSession) {
+    return unauthorizedResponse()
+  }
+
+  try {
+    const { id } = await params
+    const data = deleteEventSchema.parse(await request.json())
+    const deleted = await prisma.$transaction(async (tx) => {
+      const event = await tx.awardEvent.findUnique({
+        select: {
+          finalPost: {
+            select: { id: true, slug: true, status: true, title: true },
+          },
+          id: true,
+          title: true,
+        },
+        where: { id },
+      })
+
+      if (!event) {
+        throw new AwardEventError("Event not found", 404)
+      }
+
+      if (data.confirmation !== event.title) {
+        throw new AwardEventError("Event title does not match", 400)
+      }
+
+      if (event.finalPost && event.finalPost.status !== "REMOVED") {
+        const removedAt = new Date()
+        await tx.post.update({
+          data: {
+            moderationLockedAt: removedAt,
+            removedAt,
+            removedFromStatus: event.finalPost.status,
+            status: "REMOVED",
+          },
+          select: { id: true },
+          where: { id: event.finalPost.id },
+        })
+        await tx.postAuditEvent.create({
+          data: {
+            action: "DELETE",
+            actorId: activeSession.user.id,
+            metadata: {
+              eventId: event.id,
+              reason: "Award event deleted",
+              title: event.finalPost.title,
+            },
+            postId: event.finalPost.id,
+            sourceVersion: null,
+          },
+          select: { id: true },
+        })
+      }
+
+      await tx.awardEvent.delete({
+        select: { id: true },
+        where: { id },
+      })
+
+      return { finalPostSlug: event.finalPost?.slug ?? null }
+    })
+
+    revalidateTag("award-events", "max")
+    revalidateTag("posts", "max")
+    if (deleted.finalPostSlug) {
+      revalidatePath(`/${deleted.finalPostSlug}`)
+    }
+
+    return Response.json({ data: { message: "Event deleted" } })
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return Response.json(
+        { error: "Type the event title to confirm deletion" },
+        { status: 400 },
+      )
+    }
+
+    if (error instanceof AwardEventError) {
+      return Response.json({ error: error.message }, { status: error.status })
+    }
+
+    console.error("[DELETE /api/admin/events/[id]]", error)
     return Response.json({ error: "Something went wrong" }, { status: 500 })
   }
 }

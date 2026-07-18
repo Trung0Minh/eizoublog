@@ -2,6 +2,7 @@
 
 import type { FormEvent } from "react"
 import { Send } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -55,6 +56,7 @@ export function NewsletterBroadcastForm({
 }: {
   recentPosts: BroadcastPost[]
 }) {
+  const router = useRouter()
   const [subject, setSubject] = useState("")
   const [previewText, setPreviewText] = useState("")
   const [postId, setPostId] = useState("")
@@ -112,6 +114,7 @@ export function NewsletterBroadcastForm({
       setPreviewText("")
       setPostId("")
       setCustomBody("")
+      router.refresh()
     } catch (sendError) {
       setError(
         sendError instanceof Error
@@ -136,55 +139,59 @@ export function NewsletterBroadcastForm({
         </div>
       )}
 
-      <div className="space-y-2">
-        <label className="text-[14px] font-bold text-text-primary" htmlFor="broadcast-subject">
-          Subject
-        </label>
-        <Input
-          id="broadcast-subject"
-          maxLength={200}
-          onChange={(event) => setSubject(event.target.value)}
-          placeholder="New essay from the blog"
-          required
-          value={subject}
-          className="h-11 rounded-[12px] border-[2px] border-border-default bg-subtle-bg/30 text-[14px] font-medium outline-none transition-all focus:border-accent focus:bg-background focus:ring-2 focus:ring-accent/20"
-        />
-      </div>
+      <div className="grid gap-5 lg:grid-cols-3">
+        <div className="space-y-2">
+          <label className="text-[14px] font-bold text-text-primary" htmlFor="broadcast-subject">
+            Subject
+          </label>
+          <Input
+            id="broadcast-subject"
+            maxLength={200}
+            onChange={(event) => setSubject(event.target.value)}
+            placeholder="New essay from the blog"
+            required
+            value={subject}
+            className="h-11 rounded-[12px] border-[2px] border-border-default bg-subtle-bg/30 text-[14px] font-medium outline-none transition-all focus:border-accent focus:bg-background focus:ring-2 focus:ring-accent/20"
+          />
+        </div>
 
-      <div className="space-y-2">
-        <label className="text-[14px] font-bold text-text-primary" htmlFor="broadcast-preview">
-          Preview text
-        </label>
-        <Input
-          id="broadcast-preview"
-          maxLength={200}
-          onChange={(event) => setPreviewText(event.target.value)}
-          placeholder="Optional inbox preview"
-          value={previewText}
-          className="h-11 rounded-[12px] border-[2px] border-border-default bg-subtle-bg/30 text-[14px] font-medium outline-none transition-all focus:border-accent focus:bg-background focus:ring-2 focus:ring-accent/20"
-        />
-      </div>
+        <div className="space-y-2">
+          <label className="text-[14px] font-bold text-text-primary" htmlFor="broadcast-preview">
+            Preview text
+          </label>
+          <Input
+            id="broadcast-preview"
+            maxLength={200}
+            onChange={(event) => setPreviewText(event.target.value)}
+            placeholder="Optional inbox preview"
+            value={previewText}
+            className="h-11 rounded-[12px] border-[2px] border-border-default bg-subtle-bg/30 text-[14px] font-medium outline-none transition-all focus:border-accent focus:bg-background focus:ring-2 focus:ring-accent/20"
+          />
+        </div>
 
-      <div className="space-y-2">
-        <label className="text-[14px] font-bold text-text-primary" htmlFor="broadcast-post">
-          Featured post
-        </label>
-        <div className="relative">
-          <select
-            className="h-11 w-full rounded-[12px] border-[2px] border-border-default bg-subtle-bg/30 px-3 py-2 text-[14px] font-medium outline-none transition-all focus:border-accent focus:bg-background focus:ring-2 focus:ring-accent/20 appearance-none pr-10"
-            id="broadcast-post"
-            onChange={(event) => setPostId(event.target.value)}
-            value={postId}
-          >
-            <option value="">No featured post</option>
-            {recentPosts.map((post) => (
-              <option key={post.id} value={post.id}>
-                {post.title}
-              </option>
-            ))}
-          </select>
-          <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        <div className="space-y-2">
+          <label className="text-[14px] font-bold text-text-primary" htmlFor="broadcast-post">
+            Featured post
+          </label>
+          <div className="relative">
+            <select
+              className="h-11 w-full appearance-none rounded-[12px] border-[2px] border-border-default bg-subtle-bg/30 px-3 py-2 pr-10 text-[14px] font-medium outline-none transition-all focus:border-accent focus:bg-background focus:ring-2 focus:ring-accent/20"
+              id="broadcast-post"
+              onChange={(event) => setPostId(event.target.value)}
+              value={postId}
+            >
+              <option value="">No featured post</option>
+              {recentPosts.map((post) => (
+                <option key={post.id} value={post.id}>
+                  {post.title}
+                </option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary">
+              <svg fill="none" height="16" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="16">
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </div>
           </div>
         </div>
       </div>

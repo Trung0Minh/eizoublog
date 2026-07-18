@@ -355,8 +355,8 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
 
       <div className="w-full px-0 pb-4 sm:px-2 md:overflow-x-auto">
         <div className="flex min-w-0 flex-col gap-2 md:min-w-[750px]" data-testid="admin-posts-list">
-          <div className="hidden h-10 items-center px-6 text-[11px] font-bold uppercase tracking-[0.1em] text-text-tertiary md:flex">
-            <div className="mr-4 flex shrink-0 items-center">
+          <div className="hidden h-10 items-center px-6 text-[11px] font-bold uppercase tracking-[0.1em] text-text-tertiary md:flex lg:grid lg:grid-cols-[36px_minmax(0,1fr)_140px_100px_120px_80px_80px]">
+            <div className="flex items-center md:mr-4 lg:mr-0">
               <input
                 type="checkbox"
                 className="h-4 w-4 rounded border-border-default text-accent focus:ring-accent accent-accent cursor-pointer"
@@ -364,19 +364,19 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
                 onChange={toggleSelectAll}
               />
             </div>
-            <div className="min-w-0 flex-1 pr-4">Title</div>
-            <div className="hidden w-[140px] shrink-0 md:block">Author</div>
+            <div className="min-w-0 pr-4 md:flex-1 lg:flex-none">Title</div>
+            <div className="w-[140px] shrink-0">Author</div>
             <div className="w-[100px] shrink-0">Status</div>
             <Link 
               href={createSortLink(currentSort === "oldest" ? "latest" : "oldest")}
-              className="hidden w-[120px] shrink-0 lg:flex items-center gap-1 hover:text-text-primary transition-colors cursor-pointer"
+              className="hidden items-center gap-1 hover:text-text-primary transition-colors cursor-pointer lg:flex"
             >
               Date
               {currentSort === "oldest" ? " ↑" : " ↓"}
             </Link>
             <Link 
               href={createSortLink(currentSort === "comments" ? "latest" : "comments")}
-              className="hidden w-[80px] shrink-0 lg:flex items-center justify-end gap-1 hover:text-text-primary transition-colors cursor-pointer"
+              className="hidden items-center justify-end gap-1 hover:text-text-primary transition-colors cursor-pointer lg:flex"
             >
               Comments
               {currentSort === "comments" && " ↓"}
@@ -397,12 +397,12 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
 
               return (
                 <div
-                  className={`group relative flex flex-col items-stretch rounded-[20px] border border-transparent bg-subtle-bg/20 p-4 transition-all duration-300 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10 md:flex-row md:items-center md:pl-6 ${selectedIds.has(post.id) ? "border-accent/30 bg-accent/5 ring-1 ring-accent/20" : ""} animate-in fade-in slide-in-from-bottom-2`}
+                  className={`group relative flex flex-col items-stretch rounded-[20px] border border-transparent bg-subtle-bg/20 p-4 transition-all duration-300 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10 md:flex-row md:items-center md:pl-6 lg:grid lg:grid-cols-[36px_minmax(0,1fr)_140px_100px_120px_80px_80px] lg:items-center lg:px-6 ${selectedIds.has(post.id) ? "border-accent/30 bg-accent/5 ring-1 ring-accent/20" : ""} animate-in fade-in slide-in-from-bottom-2`}
                   data-testid={`admin-post-row-${post.id}`}
                   style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
                   key={post.id}
                 >
-                  <div className="absolute left-4 top-4 flex shrink-0 items-center md:static md:mr-4">
+                  <div className="absolute left-4 top-4 flex shrink-0 items-center lg:static">
                     <input
                       type="checkbox"
                       className="h-4 w-4 rounded border-border-default text-accent focus:ring-accent accent-accent cursor-pointer"
@@ -410,7 +410,7 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
                       onChange={() => toggleSelect(post.id)}
                     />
                   </div>
-                  <div className="flex min-w-0 flex-1 flex-col justify-center pl-8 pr-24 md:pl-0 md:pr-4">
+                  <div className="flex min-w-0 flex-col justify-center pl-8 pr-24 lg:pl-0 lg:pr-4">
                     <Link
                       className="block truncate text-[14px] font-bold text-text-primary transition-colors group-hover:text-accent"
                       href={`/dashboard/edit/${post.id}`}
@@ -423,7 +423,7 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
                     </div>
                   </div>
 
-                  <div className="hidden w-[140px] shrink-0 items-center gap-2 md:flex">
+                  <div className="hidden items-center gap-2 lg:flex">
                     <div className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-[#0d9488] text-[10px] font-semibold text-white">
                       {post.author.name.charAt(0)}
                     </div>
@@ -432,22 +432,22 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
                     </span>
                   </div>
 
-                  <div className="absolute right-4 top-4 w-fit shrink-0 md:static md:ml-0 md:mt-0 md:w-[100px]">
+                  <div className="absolute right-4 top-4 w-fit shrink-0 lg:static lg:ml-0 lg:mt-0">
                     <AdminStatusBadge status={statusLabel} />
                   </div>
 
-                  <div className="hidden w-[120px] shrink-0 text-[12px] text-text-secondary lg:block">
+                  <div className="hidden text-[12px] text-text-secondary lg:block">
                     {post.status === "DRAFT"
                       ? `Updated ${formatDate(post.updatedAt)}`
                       : formatDate(post.publishedAt ?? post.updatedAt)}
                   </div>
 
-                  <div className="hidden w-[80px] shrink-0 text-right text-[12px] font-medium text-text-secondary lg:block">
+                  <div className="hidden text-right text-[12px] font-medium text-text-secondary lg:block">
                     {post._count.comments}
                   </div>
 
                   {/* Spacer for absolute actions to match header layout */}
-                  <div className="hidden w-[80px] shrink-0 md:block" />
+                  <div className="hidden lg:block" />
 
                   <div className="ml-8 mt-3 flex w-fit max-w-[calc(100%-2rem)] flex-wrap items-center justify-end gap-1 rounded-[12px] border border-border-default/50 bg-background/90 p-1.5 opacity-100 shadow-sm backdrop-blur-md transition-all duration-300 md:absolute md:right-6 md:ml-0 md:mt-0 md:max-w-none md:translate-x-4 md:opacity-0 md:group-hover:translate-x-0 md:group-hover:opacity-100">
                     {post.status === "PUBLISHED" && (

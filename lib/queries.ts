@@ -166,6 +166,17 @@ const newsletterRecentPostSelect = {
   title: true,
 } satisfies Prisma.PostSelect
 
+const adminNewsletterBroadcastSelect = {
+  completedAt: true,
+  createdAt: true,
+  failedCount: true,
+  id: true,
+  sentCount: true,
+  status: true,
+  subject: true,
+  totalCount: true,
+} satisfies Prisma.NewsletterBroadcastSelect
+
 const adminAwardEventCategorySelect = {
   id: true,
   name: true,
@@ -202,22 +213,6 @@ const adminContentTagSelect = {
   name: true,
   slug: true,
 } satisfies Prisma.TagSelect
-
-const adminDashboardRecentPostSelect = {
-  author: { select: { name: true } },
-  id: true,
-  status: true,
-  title: true,
-  updatedAt: true,
-} satisfies Prisma.PostSelect
-
-const adminDashboardRecentCommentSelect = {
-  authorName: true,
-  content: true,
-  createdAt: true,
-  id: true,
-  post: { select: { slug: true, title: true } },
-} satisfies Prisma.CommentSelect
 
 export const publishedPostDetailSelect = {
   _count: { select: { comments: true } },
@@ -1017,6 +1012,11 @@ export const getCachedWriterDashboardPosts = unstable_cache(
         WHERE pa."postId" = p.id
       ) co_authors ON TRUE
       WHERE p.status NOT IN ('ARCHIVED', 'REMOVED')
+        AND NOT EXISTS (
+          SELECT 1
+          FROM award_events event
+          WHERE event."finalPostId" = p.id
+        )
         AND (
           p."authorId" = ${userId}
           OR EXISTS (
@@ -1354,41 +1354,38 @@ export const getCachedAdminContentData = unstable_cache(
   { revalidate: 60, tags: ["categories", "tags", "posts"] },
 )
 
-export const getCachedAdminDashboardRecentData = unstable_cache(
-  async () => {
-    const [recentPosts, recentComments] = await Promise.all([
-      prisma.post.findMany({
-        orderBy: [{ updatedAt: "desc" }],
-        select: adminDashboardRecentPostSelect,
-        take: 5,
-      }),
-      prisma.comment.findMany({
-        orderBy: { createdAt: "desc" },
-        select: adminDashboardRecentCommentSelect,
-        take: 5,
-        where: { status: "APPROVED" },
-      }),
-    ])
-
-    return { recentComments, recentPosts }
-  },
-  ["admin-dashboard-recent-data"],
-  { revalidate: 60, tags: ["posts", "comments"] },
-)
-
 export const getCachedAdminNewsletterData = unstable_cache(
   async () => {
-    const [activeCount, recentPosts] = await Promise.all([
+    const [
+      activeCount,
+      deliveredTotals,
+      recentBroadcasts,
+      recentPosts,
+      totalBroadcasts,
+    ] = await Promise.all([
       prisma.newsletterSubscriber.count({ where: { status: "ACTIVE" } }),
+      prisma.newsletterBroadcast.aggregate({ _sum: { sentCount: true } }),
+      prisma.newsletterBroadcast.findMany({
+        orderBy: { createdAt: "desc" },
+        select: adminNewsletterBroadcastSelect,
+        take: 10,
+      }),
       prisma.post.findMany({
         orderBy: { publishedAt: "desc" },
         select: newsletterRecentPostSelect,
         take: 10,
         where: { status: "PUBLISHED" },
       }),
+      prisma.newsletterBroadcast.count(),
     ])
 
-    return { activeCount, recentPosts }
+    return {
+      activeCount,
+      deliveredCount: deliveredTotals._sum.sentCount ?? 0,
+      recentBroadcasts,
+      recentPosts,
+      totalBroadcasts,
+    }
   },
   ["admin-newsletter-data"],
   { revalidate: 60, tags: ["newsletter", "posts"] },

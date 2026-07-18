@@ -1,12 +1,13 @@
 "use client"
 
 import type { AwardEventStatus } from "@prisma/client"
-import { CalendarPlus, Plus, X } from "lucide-react"
+import { CalendarPlus, Plus, Trash2, X } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 
@@ -85,6 +86,7 @@ export function AdminEventsManager({
 }) {
   const router = useRouter()
   const [categoryId, setCategoryId] = useState("")
+  const [deleteTarget, setDeleteTarget] = useState<AdminEventItem | null>(null)
   const [error, setError] = useState("")
   const [isPending, setIsPending] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -129,6 +131,33 @@ export function AdminEventsManager({
       router.refresh()
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "Failed to create event")
+    } finally {
+      setIsPending(false)
+    }
+  }
+
+  async function deleteEvent() {
+    if (!deleteTarget) return
+
+    setError("")
+    setIsPending(true)
+
+    try {
+      const response = await fetch(`/api/admin/events/${deleteTarget.id}`, {
+        body: JSON.stringify({ confirmation: deleteTarget.title }),
+        headers: { "Content-Type": "application/json" },
+        method: "DELETE",
+      })
+      const result: unknown = await response.json()
+
+      if (!response.ok) {
+        throw new Error(getApiError(result))
+      }
+
+      setDeleteTarget(null)
+      router.refresh()
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "Failed to delete event")
     } finally {
       setIsPending(false)
     }
@@ -265,7 +294,7 @@ export function AdminEventsManager({
               style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
               key={event.id}
             >
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-3">
                   <h2 className="min-w-0 truncate text-[16px] font-bold">
                     <Link
@@ -294,10 +323,42 @@ export function AdminEventsManager({
                   <span className="font-mono text-[11.5px] text-text-tertiary">/{event.slug}</span>
                 </p>
               </div>
+              <Button
+                aria-label={`Delete ${event.title}`}
+                className="h-9 w-9 shrink-0 rounded-full text-text-tertiary hover:bg-destructive/10 hover:text-destructive"
+                disabled={isPending}
+                onClick={() => setDeleteTarget(event)}
+                size="icon"
+                title={`Delete ${event.title}`}
+                type="button"
+                variant="ghost"
+              >
+                <Trash2 aria-hidden="true" className="h-4 w-4" />
+              </Button>
             </article>
           ))
         )}
       </div>
+
+      <ConfirmationDialog
+        confirmLabel="Delete event"
+        description={
+          <>
+            Delete <strong className="text-text-primary">{deleteTarget?.title}</strong>,
+            all participant rooms, and their feedback. Any generated public event post
+            will be moved to Removed for recovery.
+          </>
+        }
+        icon={Trash2}
+        onConfirm={() => void deleteEvent()}
+        onOpenChange={(open) => {
+          if (!open && !isPending) setDeleteTarget(null)
+        }}
+        open={Boolean(deleteTarget)}
+        pending={isPending}
+        title="Delete event?"
+        tone="destructive"
+      />
     </div>
   )
 }

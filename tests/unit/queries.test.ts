@@ -24,6 +24,11 @@ const mocks = vi.hoisted(() => {
     category: { findMany: vi.fn(), findUnique: vi.fn() },
     comment: { count: vi.fn(), findMany: vi.fn() },
     invite: { findMany: vi.fn() },
+    newsletterBroadcast: {
+      aggregate: vi.fn(),
+      count: vi.fn(),
+      findMany: vi.fn(),
+    },
     newsletterSubscriber: { count: vi.fn() },
     post: {
       count: vi.fn(),
@@ -58,7 +63,6 @@ import {
   getCachedAdminCommentCounts,
   getCachedAdminComments,
   getCachedAdminContentData,
-  getCachedAdminDashboardRecentData,
   getCachedAdminDashboardStats,
   getCachedAdminNewsletterData,
   getCachedAdminPosts,
@@ -109,6 +113,9 @@ describe("cached Prisma query helpers", () => {
     mocks.prisma.comment.count.mockReset()
     mocks.prisma.comment.findMany.mockReset()
     mocks.prisma.invite.findMany.mockReset()
+    mocks.prisma.newsletterBroadcast.aggregate.mockReset()
+    mocks.prisma.newsletterBroadcast.count.mockReset()
+    mocks.prisma.newsletterBroadcast.findMany.mockReset()
     mocks.prisma.newsletterSubscriber.count.mockReset()
     mocks.prisma.post.count.mockReset()
     mocks.prisma.post.findMany.mockReset()
@@ -449,6 +456,17 @@ describe("cached Prisma query helpers", () => {
     })
   })
 
+  it("excludes generated award-event final posts from writer dashboards", async () => {
+    mocks.prisma.$queryRaw.mockResolvedValueOnce([])
+
+    await getCachedWriterDashboardPosts("admin-1")
+
+    const sql = flattenSql(mocks.prisma.$queryRaw.mock.calls[0])
+    expect(sql).toMatch(
+      /NOT EXISTS\s*\(\s*SELECT 1\s*FROM award_events event\s*WHERE event\."finalPostId" = p\.id\s*\)/,
+    )
+  })
+
   it("caches profile form data by user id behind the users tag", async () => {
     mocks.prisma.user.findUnique.mockResolvedValue({
       avatarOriginalUrl: "https://cdn.example.com/avatar-originals/writer.png",
@@ -704,6 +722,13 @@ describe("cached Prisma query helpers", () => {
     mocks.prisma.user.findMany.mockResolvedValue([{ username: "writer" }])
     mocks.prisma.invite.findMany.mockResolvedValue([{ email: "new@example.com" }])
     mocks.prisma.newsletterSubscriber.count.mockResolvedValue(42)
+    mocks.prisma.newsletterBroadcast.count.mockResolvedValue(3)
+    mocks.prisma.newsletterBroadcast.aggregate.mockResolvedValue({
+      _sum: { sentCount: 28 },
+    })
+    mocks.prisma.newsletterBroadcast.findMany.mockResolvedValue([
+      { id: "broadcast-1", status: "COMPLETED", subject: "Recent issue" },
+    ])
     mocks.prisma.post.findMany.mockResolvedValue([{ title: "Recent essay" }])
 
     await expect(getCachedAdminWritersData()).resolves.toEqual({
@@ -712,7 +737,12 @@ describe("cached Prisma query helpers", () => {
     })
     await expect(getCachedAdminNewsletterData()).resolves.toEqual({
       activeCount: 42,
+      deliveredCount: 28,
+      recentBroadcasts: [
+        { id: "broadcast-1", status: "COMPLETED", subject: "Recent issue" },
+      ],
       recentPosts: [{ title: "Recent essay" }],
+      totalBroadcasts: 3,
     })
 
     expect(mocks.prisma.user.findMany).toHaveBeenCalledWith(
@@ -735,7 +765,7 @@ describe("cached Prisma query helpers", () => {
     })
   })
 
-  it("caches shared admin content, dashboard recents, and writer events data", async () => {
+  it("caches shared admin content and writer events data", async () => {
     mocks.prisma.category.findMany.mockResolvedValue([{ id: "category-1" }])
     mocks.prisma.tag.findMany.mockResolvedValue([{ id: "tag-1" }])
     mocks.prisma.post.findMany.mockResolvedValue([{ id: "post-1" }])
@@ -755,10 +785,6 @@ describe("cached Prisma query helpers", () => {
       categories: [{ id: "category-1" }],
       tags: [{ id: "tag-1" }],
     })
-    await expect(getCachedAdminDashboardRecentData()).resolves.toEqual({
-      recentComments: [{ id: "comment-1" }],
-      recentPosts: [{ id: "post-1" }],
-    })
     await expect(getCachedWriterEvents("writer-1")).resolves.toEqual([
       {
         _count: { rooms: 4 },
@@ -774,10 +800,6 @@ describe("cached Prisma query helpers", () => {
     expect(mocks.cacheEntries).toContainEqual({
       keyParts: ["admin-content-data"],
       options: { revalidate: 60, tags: ["categories", "tags", "posts"] },
-    })
-    expect(mocks.cacheEntries).toContainEqual({
-      keyParts: ["admin-dashboard-recent-data"],
-      options: { revalidate: 60, tags: ["posts", "comments"] },
     })
     expect(mocks.cacheEntries).toContainEqual({
       keyParts: ["writer-events"],

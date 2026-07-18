@@ -317,6 +317,7 @@ describe("POST /api/newsletter/broadcast", () => {
       subject: "New essay",
     })
     expect(mocks.after).toHaveBeenCalledTimes(1)
+    expect(mocks.revalidateTag).toHaveBeenCalledWith("newsletter", "max")
     expect(mocks.sendNewsletterBroadcast).not.toHaveBeenCalled()
   })
 

@@ -8,6 +8,12 @@ const analyticsMocks = vi.hoisted(() => ({
   getInternalTopPages: vi.fn(),
 }))
 
+const redirectMock = vi.hoisted(() =>
+  vi.fn((path: string) => {
+    throw new Error(`redirect:${path}`)
+  }),
+)
+
 vi.mock("@/lib/queries", () => ({
   getCachedAdminAnalyticsData: analyticsMocks.getCachedAdminAnalyticsData,
 }))
@@ -23,6 +29,7 @@ vi.mock("next/link", () => ({
     <a data-prefetch={String(prefetch)} {...props} />
   ),
 }))
+vi.mock("next/navigation", () => ({ redirect: redirectMock }))
 
 import AdminAnalyticsPage from "@/app/(admin)/admin/analytics/page"
 import { AnalyticsWidget } from "@/components/admin/AnalyticsWidget"
@@ -137,18 +144,8 @@ describe("AdminAnalyticsPage", () => {
     })
   })
 
-  it("renders the full analytics page without an external dashboard link", async () => {
-    renderAsync(await AdminAnalyticsPage())
-
-    expect(screen.getByRole("heading", { name: "Analytics" })).toBeVisible()
-    expect(
-      screen.getByText(/Detailed traffic and engagement data/i),
-    ).toBeVisible()
-    expect(screen.getByRole("button", { name: /Last 30 Days/i })).toBeVisible()
-    expect(screen.getByRole("button", { name: /Export/i })).toBeVisible()
-    expect(screen.getByText("Loading analytics...")).toBeVisible()
-    expect(
-      screen.queryByRole("link", { name: /open analytics dashboard/i }),
-    ).not.toBeInTheDocument()
+  it("redirects the redundant analytics route to the consolidated dashboard", async () => {
+    expect(() => AdminAnalyticsPage()).toThrow("redirect:/admin")
+    expect(redirectMock).toHaveBeenCalledWith("/admin")
   })
 })
