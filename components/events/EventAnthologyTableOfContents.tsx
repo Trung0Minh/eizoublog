@@ -94,10 +94,10 @@ export function EventAnthologyTableOfContents({
   }, [activeId, collapsible, expandedWriterIds])
 
   const contents = (
-    <nav aria-label="Event contents" className="font-sans">
+    <nav aria-label="Mục lục sự kiện" className="font-sans">
       {!collapsible && (
         <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.16em] text-text-tertiary">
-          Contributors
+          Tác giả
         </p>
       )}
       <ol className="border-l border-border-default">
@@ -136,7 +136,7 @@ export function EventAnthologyTableOfContents({
                 {children.length > 0 && (
                   <button
                     aria-expanded={isExpanded}
-                    aria-label={`Toggle ${writer.text} sections`}
+                    aria-label={`Thu gọn hoặc mở rộng các mục của ${writer.text}`}
                     className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-subtle-bg hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                     onClick={() =>
                       setExpandedWriterIds((current) =>
@@ -210,12 +210,12 @@ export function EventAnthologyTableOfContents({
     <div className="rounded-[18px] border border-border-default/80 bg-background/90 px-5 py-4 shadow-sm backdrop-blur-xl dark:bg-background/80">
       <button
         aria-expanded={mobileOpen}
-        aria-label="Contents"
+        aria-label="Mục lục"
         className="flex w-full cursor-pointer items-center justify-between text-left font-sans text-sm font-bold text-text-primary transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
         onClick={() => setMobileOpen((current) => !current)}
         type="button"
       >
-        Contents
+        Mục lục
         <ChevronDown
           aria-hidden="true"
           className={cn(

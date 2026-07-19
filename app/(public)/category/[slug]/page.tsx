@@ -69,7 +69,7 @@ export default async function CategoryPage({
       <section className="mb-10 border-b pb-8">
         <ScrollReveal>
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-accent">
-            Category
+            Chuyên mục
           </p>
           <h1 className="text-[32px] font-bold leading-tight tracking-tight">
             <TextReveal text={category.name} />
@@ -89,8 +89,8 @@ export default async function CategoryPage({
           </div>
           {posts.length === 0 ? (
           <EmptyState
-            description="There are no published posts in this category yet. Check back later!"
-            title="No posts found"
+            description="Chưa có bài viết nào được xuất bản trong chuyên mục này."
+            title="Không tìm thấy bài viết"
           />
         ) : (
           <PostList

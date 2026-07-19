@@ -62,7 +62,7 @@ export default async function TagPage({ params, searchParams }: TagPageProps) {
       <section className="mb-10 border-b pb-8">
         <ScrollReveal>
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-accent">
-            Tag
+            Thẻ
           </p>
           <h1 className="text-[32px] font-bold leading-tight tracking-tight">
             <TextReveal text={`#${tag.name}`} />
@@ -77,8 +77,8 @@ export default async function TagPage({ params, searchParams }: TagPageProps) {
           </div>
           {posts.length === 0 ? (
           <EmptyState
-            description="There are no published posts with this tag yet. Check back later!"
-            title="No posts found"
+            description="Chưa có bài viết nào được xuất bản với thẻ này."
+            title="Không tìm thấy bài viết"
           />
         ) : (
           <PostList

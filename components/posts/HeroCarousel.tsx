@@ -55,7 +55,7 @@ export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
     <div className="relative w-full max-w-[1440px] auto mb-8 md:mb-12 mt-4 px-4 md:px-5">
       <div className="flex items-center gap-2 mb-4">
         <Sparkles className="w-5 h-5 text-accent animate-pulse" />
-        <h2 className="text-[18px] font-bold tracking-tight">Featured Stories</h2>
+        <h2 className="text-[18px] font-bold tracking-tight">Bài viết nổi bật</h2>
       </div>
 
       <div className="glass-card overflow-hidden" ref={emblaRef}>
@@ -74,7 +74,7 @@ export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
                   <div>
                     <div className="transform transition-transform duration-700 ease-out md:translate-y-6 md:group-hover:translate-y-0">
                       <span className="bg-accent text-white text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full w-max mb-3 flex items-center gap-1 shadow-lg md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-700 md:delay-100">
-                        <Sparkles className="w-3 h-3" /> {post.category?.name || 'Featured'}
+                        <Sparkles className="w-3 h-3" /> {post.category?.name || 'Nổi bật'}
                       </span>
                       <h3 className="text-white text-[19px] md:text-[34px] lg:text-[38px] font-display font-bold leading-[1.18] md:leading-[1.15] mb-3 md:mb-4 max-w-3xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] opacity-100">
                         {post.title}
@@ -104,7 +104,7 @@ export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
             key={index}
             className={`h-2.5 rounded-full transition-all duration-300 ${index === selectedIndex ? 'w-8 bg-accent' : 'w-2.5 bg-border-strong hover:bg-accent/50'}`}
             onClick={() => emblaApi?.scrollTo(index)}
-            aria-label={'Jump to slide ' + (index + 1)}
+            aria-label={'Chuyển đến bài nổi bật ' + (index + 1)}
           />
         ))}
       </div>

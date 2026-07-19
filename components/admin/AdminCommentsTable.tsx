@@ -11,6 +11,7 @@ import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog"
 import { formatDate } from "@/lib/utils"
 
 interface AdminComment {
+  authorRole: "ADMIN" | "WRITER" | "REVOKED" | null
   authorName: string
   content: string
   createdAt: Date
@@ -29,12 +30,19 @@ function getApiError(value: unknown) {
     return value.error
   }
 
-  return "Something went wrong"
+  return "Đã xảy ra lỗi"
+}
+
+function getCommentRoleLabel(role: AdminComment["authorRole"]) {
+  if (role === "ADMIN") return "Quản trị"
+  if (role === "WRITER") return "Tác giả"
+  if (role === "REVOKED") return "Đã khóa"
+  return "Độc giả"
 }
 
 export function AdminCommentsTable({
   comments,
-  emptyLabel = "No approved comments found.",
+  emptyLabel = "Không tìm thấy bình luận đã duyệt.",
   status = "APPROVED",
 }: {
   comments: AdminComment[]
@@ -58,13 +66,13 @@ export function AdminCommentsTable({
       }
 
       setSpamTarget(null)
-      toast.success("Comment marked as spam", {
-        description: `${comment.authorName}'s comment is now hidden.`,
+      toast.success("Đã đánh dấu là spam", {
+        description: `Bình luận của ${comment.authorName} đã được ẩn.`,
       })
       router.refresh()
     } catch (error) {
-      toast.error("Failed to hide comment", {
-        description: error instanceof Error ? error.message : "Please try again.",
+      toast.error("Không thể ẩn bình luận", {
+        description: error instanceof Error ? error.message : "Vui lòng thử lại.",
       })
     } finally {
       setSpammingId(null)
@@ -100,7 +108,7 @@ export function AdminCommentsTable({
                 {comment.authorName}
               </span>
               <span className="rounded-full border border-border-default/60 bg-background/50 px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase text-text-secondary shadow-sm">
-                {status === "SPAM" ? "Hidden" : "Reader"}
+                {status === "SPAM" ? "Đã ẩn" : getCommentRoleLabel(comment.authorRole)}
               </span>
               <span className="px-1 text-[12px] text-text-tertiary">·</span>
               <span className="text-[12px] font-medium text-text-tertiary">
@@ -109,7 +117,7 @@ export function AdminCommentsTable({
             </div>
 
             <div className="mb-3 flex items-center gap-1.5 text-[13px] font-medium text-text-secondary">
-              <span>on</span>
+              <span>trong</span>
               <Link
                 className="max-w-[200px] truncate font-semibold text-text-primary hover:text-accent hover:underline sm:max-w-[400px]"
                 href={`/${comment.post.slug}`}
@@ -131,11 +139,11 @@ export function AdminCommentsTable({
               <>
                 <button className="flex h-8 items-center gap-1.5 rounded-[8px] bg-[#15803d]/10 px-3 text-[12px] font-bold text-[#15803d] transition-colors hover:bg-[#15803d]/20 dark:bg-[#4ade80]/10 dark:text-[#4ade80] dark:hover:bg-[#4ade80]/20">
                   <Check aria-hidden="true" className="h-4 w-4" />
-                  Approve
+                  Duyệt
                 </button>
                 <button
                   className="flex h-8 w-8 items-center justify-center rounded-[8px] text-text-secondary transition-colors hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-400"
-                  title="Mark as spam"
+                  title="Đánh dấu là spam"
                   type="button"
                 >
                   <ShieldAlert aria-hidden="true" className="h-4 w-4" />
@@ -145,7 +153,7 @@ export function AdminCommentsTable({
 
             {status === "APPROVED" && (
               <Button
-                aria-label="Mark as spam"
+                aria-label="Đánh dấu là spam"
                 className="h-8 rounded-[8px] px-3 text-[12px] font-semibold text-text-secondary hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-400 border-none bg-transparent"
                 disabled={spammingId === comment.id}
                 onClick={() => setSpamTarget(comment)}
@@ -154,7 +162,7 @@ export function AdminCommentsTable({
                 variant="ghost"
               >
                 <ShieldAlert aria-hidden="true" className="mr-1.5 h-4 w-4" />
-                Mark spam
+                Đánh dấu spam
               </Button>
             )}
 
@@ -164,12 +172,12 @@ export function AdminCommentsTable({
                 type="button"
               >
                 <Check aria-hidden="true" className="h-4 w-4" />
-                Not Spam
+                Không phải spam
               </button>
             )}
 
             <button
-              aria-label="Delete"
+              aria-label="Xóa"
               className="flex h-8 w-8 items-center justify-center rounded-[8px] text-text-tertiary transition-colors hover:bg-destructive/10 hover:text-destructive"
               type="button"
             >
@@ -180,12 +188,12 @@ export function AdminCommentsTable({
       ))}
     </div>
       <ConfirmationDialog
-        cancelLabel="Keep visible"
-        confirmLabel="Mark as spam"
+        cancelLabel="Giữ hiển thị"
+        confirmLabel="Đánh dấu spam"
         description={
           spamTarget ? (
             <>
-              Hide the comment from <strong className="text-text-primary">{spamTarget.authorName}</strong>:
+              Ẩn bình luận của <strong className="text-text-primary">{spamTarget.authorName}</strong>:
               <span className="mt-2 block line-clamp-3 rounded-[8px] border border-border-default bg-subtle-bg/60 p-3 text-[13px]">
                 {spamTarget.content}
               </span>
@@ -197,7 +205,7 @@ export function AdminCommentsTable({
         onOpenChange={(open) => !open && setSpamTarget(null)}
         open={spamTarget !== null}
         pending={spammingId !== null}
-        title="Mark comment as spam?"
+        title="Đánh dấu bình luận là spam?"
         tone="warning"
       />
     </>

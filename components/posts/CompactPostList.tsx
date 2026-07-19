@@ -22,7 +22,7 @@ interface CompactPostListProps {
 }
 
 export function CompactPostList({
-  emptyMessage = "No posts found.",
+  emptyMessage = "Không tìm thấy bài viết.",
   pagination,
   posts,
 }: CompactPostListProps) {
@@ -63,7 +63,7 @@ export function CompactPostList({
               className={cn(
                 "glass-card grid gap-3 p-4 transition-colors hover:bg-subtle-bg/60 sm:gap-5 sm:p-5",
                 post.coverUrl
-                  ? "grid-cols-[24px_80px_minmax(0,1fr)] sm:grid-cols-[32px_140px_minmax(0,1fr)]"
+                  ? "grid-cols-[24px_minmax(0,1fr)] sm:grid-cols-[32px_140px_minmax(0,1fr)]"
                   : "grid-cols-[24px_minmax(0,1fr)] sm:grid-cols-[32px_minmax(0,1fr)]",
               )}
               key={post.slug}
@@ -74,7 +74,7 @@ export function CompactPostList({
               {post.coverUrl && (
                 <Link
                   aria-label={post.title}
-                  className="relative block aspect-[16/9] w-[80px] overflow-hidden rounded-[8px] border border-border-default bg-subtle-bg sm:w-[140px]"
+                  className="relative col-start-2 block aspect-[16/9] w-full overflow-hidden rounded-[8px] border border-border-default bg-subtle-bg sm:col-start-auto sm:w-[140px]"
                   href={`/${post.slug}`}
                 >
                   <img
@@ -87,7 +87,7 @@ export function CompactPostList({
                   />
                 </Link>
               )}
-              <div className="min-w-0 py-0.5">
+              <div className={cn("min-w-0 py-0.5", post.coverUrl && "col-start-2 sm:col-start-auto")}>
                 <div className="flex flex-wrap items-center gap-1.5">
                   {!post.coverUrl && (
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-accent/20 bg-accent/10 text-accent" title="Bài viết không có ảnh bìa">
@@ -111,10 +111,10 @@ export function CompactPostList({
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-secondary">
                   {post.publishedAt && <RelativeTime date={post.publishedAt} />}
-                  <span>by {post.author.name}</span>
+                  <span>bởi {post.author.name}</span>
                   <span className="inline-flex items-center gap-1 font-semibold">
                     <MessageSquare aria-hidden="true" className="h-3 w-3" />
-                    {post._count.comments} comments
+                    {post._count.comments} bình luận
                   </span>
                 </div>
                 {post.excerpt && (

@@ -30,7 +30,9 @@ describe("EventAnthologyTableOfContents", () => {
     expect(screen.getByRole("link", { name: "Opening B" })).toBeInTheDocument()
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Toggle Writer B sections" }),
+      screen.getByRole("button", {
+        name: "Thu gọn hoặc mở rộng các mục của Writer B",
+      }),
     )
 
     expect(screen.getByRole("link", { name: "Opening A" })).toBeInTheDocument()
@@ -45,12 +47,12 @@ describe("EventAnthologyTableOfContents", () => {
       />,
     )
 
-    expect(screen.queryByText("Contents")).toBeInTheDocument()
+    expect(screen.queryByText("Mục lục")).toBeInTheDocument()
     expect(document.querySelector("details")).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole("button", { name: "Contents" }))
+    fireEvent.click(screen.getByRole("button", { name: "Mục lục" }))
 
-    expect(screen.getByRole("button", { name: "Contents" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Mục lục" })).toHaveAttribute(
       "aria-expanded",
       "true",
     )
@@ -60,7 +62,7 @@ describe("EventAnthologyTableOfContents", () => {
 
     fireEvent.click(screen.getByRole("link", { name: "Writer A" }))
 
-    expect(screen.getByRole("button", { name: "Contents" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Mục lục" })).toHaveAttribute(
       "aria-expanded",
       "false",
     )
@@ -456,7 +458,7 @@ describe("EventAnthologyView", () => {
       "text-center",
     )
     expect(screen.getByTestId("event-cover-alt").nextElementSibling).toContainElement(
-      screen.getByRole("button", { name: "Contents" }),
+      screen.getByRole("button", { name: "Mục lục" }),
     )
   })
 })

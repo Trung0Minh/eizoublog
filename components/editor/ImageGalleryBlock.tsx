@@ -22,6 +22,7 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [dropIndex, setDropIndex] = useState<number | null>(null)
   const galleryContainerRef = useRef<HTMLDivElement>(null)
+  const reorderHandleRef = useRef<HTMLButtonElement | null>(null)
   const dropIndexRef = useRef<number | null>(null)
   const hasVisibleCaption = images.some(
     (image) =>
@@ -63,6 +64,7 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
     event.preventDefault()
     event.stopPropagation()
     event.currentTarget.setPointerCapture(event.pointerId)
+    reorderHandleRef.current = event.currentTarget
     setDraggedIndex(index)
     setDropIndex(index)
     dropIndexRef.current = index
@@ -130,7 +132,12 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
         setDropIndex(index)
       }
     }
-    const handlePointerUp = () => {
+    const handlePointerUp = (event: globalThis.PointerEvent) => {
+      const handle = reorderHandleRef.current
+      if (handle?.hasPointerCapture(event.pointerId)) {
+        handle.releasePointerCapture(event.pointerId)
+      }
+
       const reordered = reorderGalleryImages(
         images,
         draggedIndex,
@@ -142,6 +149,7 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
       setDraggedIndex(null)
       setDropIndex(null)
       dropIndexRef.current = null
+      reorderHandleRef.current = null
     }
     document.addEventListener("pointermove", handlePointerMove)
     document.addEventListener("pointerup", handlePointerUp, { once: true })

@@ -499,11 +499,15 @@ describe("Navbar", () => {
     expect(container.querySelector("header > div")).toHaveClass(
       "mx-auto",
       "max-w-[1440px]",
+      "pl-6",
+      "pr-3",
       "glass-navbar",
     )
     expect(container.querySelector("header")).toHaveClass(
       "bg-transparent",
+      "px-4",
       "py-2",
+      "md:px-0",
       "md:py-4",
     )
   })
@@ -792,7 +796,7 @@ describe("Sidebar", () => {
     expect(
       screen.getByRole("link", { name: "Frieren and the passage of time" }),
     ).toHaveAttribute("href", "/frieren")
-    expect(screen.getByRole("link", { name: /June 2026/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /tháng 6 năm 2026/ })).toHaveAttribute(
       "href",
       "/archive/2026-06",
     )

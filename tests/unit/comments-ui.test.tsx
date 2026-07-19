@@ -72,7 +72,7 @@ describe("CommentForm", () => {
     await user.type(screen.getByLabelText("Tên *"), "Mina")
     await user.type(screen.getByLabelText("Email *"), "mina@example.com")
     await user.type(
-      screen.getByLabelText("Bình luận *"),
+      screen.getByLabelText("Bình luận"),
       "This changed my read of the scene.",
     )
     await user.click(screen.getByRole("button", { name: "Đăng bình luận" }))
@@ -273,7 +273,7 @@ describe("CommentSection", () => {
       "rei@example.com",
     )
     await user.type(
-      within(replyForm).getByLabelText("Bình luận *"),
+      within(replyForm).getByLabelText("Bình luận"),
       "That is the line I noticed too.",
     )
     await user.click(within(replyForm).getByRole("button", { name: "Đăng trả lời" }))

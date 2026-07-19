@@ -561,6 +561,7 @@ describe("cached Prisma query helpers", () => {
           postSlug: "draft",
           postTitle: "Draft",
           status: "APPROVED",
+          authorRole: "ADMIN",
           totalCount: BigInt(1),
         },
       ])
@@ -583,6 +584,7 @@ describe("cached Prisma query helpers", () => {
     await expect(getCachedAdminComments(1, "APPROVED", 30)).resolves.toEqual({
       comments: [
         {
+          authorRole: "ADMIN",
           authorName: "Reader",
           content: "Good post",
           createdAt: new Date("2024-04-02T00:00:00Z"),

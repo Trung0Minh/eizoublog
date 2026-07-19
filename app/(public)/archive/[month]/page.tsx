@@ -34,7 +34,7 @@ function formatArchiveMonth(month: string) {
     return null
   }
 
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat("vi-VN", {
     month: "long",
     timeZone: "UTC",
     year: "numeric",
@@ -53,7 +53,7 @@ export async function generateMetadata({
 
   return buildMetadata({
     canonicalPath: `/archive/${month}`,
-    description: `Posts published in ${archiveLabel}`,
+    description: `Bài viết được xuất bản trong ${archiveLabel}`,
     title: archiveLabel,
   })
 }
@@ -86,13 +86,13 @@ export default async function ArchivePage({
       <section className="mb-10 border-b pb-8">
         <ScrollReveal>
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-accent">
-            Archive
+            Lưu trữ
           </p>
           <h1 className="text-[32px] font-bold leading-tight tracking-tight">
             <TextReveal text={archiveLabel} />
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Posts published in {archiveLabel}.
+            Bài viết được xuất bản trong {archiveLabel}.
           </p>
         </ScrollReveal>
       </section>
@@ -104,8 +104,8 @@ export default async function ArchivePage({
           </div>
           {posts.length === 0 ? (
             <EmptyState
-              description="There are no published posts in this archive."
-              title="No posts found"
+              description="Chưa có bài viết nào được xuất bản trong tháng này."
+              title="Không tìm thấy bài viết"
             />
           ) : (
             <PostList

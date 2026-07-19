@@ -15,7 +15,7 @@ interface PostListProps {
 }
 
 export function PostList({
-  emptyMessage = "No posts found.",
+  emptyMessage = "Không tìm thấy bài viết.",
   pagination,
   posts,
 }: PostListProps) {

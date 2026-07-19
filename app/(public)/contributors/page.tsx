@@ -98,7 +98,7 @@ export default async function ContributorsPage({ searchParams }: ContributorsPag
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
           {sortedContributors.map((contributor, index) => (
-            <ScrollReveal key={contributor.username} delay={index * 0.1}>
+            <ScrollReveal key={contributor.username} delay={index * 0.035}>
               <div className="glass-card group flex flex-col sm:flex-row gap-6 items-center sm:items-start text-center sm:text-left overflow-hidden p-6">
                 <Link href={`/authors/${contributor.username}`} className="w-[120px] h-[120px] shrink-0 relative rounded-full overflow-hidden border-4 border-background shadow-md group-hover:scale-105 transition-transform block">
                 {contributor.avatarUrl ? (
@@ -141,10 +141,10 @@ export default async function ContributorsPage({ searchParams }: ContributorsPag
                 </div>
                 <div className="w-full bg-background/50 rounded-lg p-3 text-[12px] flex items-center justify-between">
                   <div>
-                    <span className="font-bold text-text-primary">Username:</span> <Link href={`/authors/${contributor.username}`} className="text-text-secondary hover:text-accent">@{contributor.username}</Link>
+                    <span className="font-bold text-text-primary">Tên đăng nhập:</span> <Link href={`/authors/${contributor.username}`} className="text-text-secondary hover:text-accent">@{contributor.username}</Link>
                   </div>
                   <div>
-                    <span className="font-bold text-text-primary">Posts:</span> <span className="text-text-secondary">{contributor._count.posts}</span>
+                    <span className="font-bold text-text-primary">Bài viết:</span> <span className="text-text-secondary">{contributor._count.posts}</span>
                   </div>
                 </div>
               </div>

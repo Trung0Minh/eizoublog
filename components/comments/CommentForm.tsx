@@ -144,12 +144,12 @@ export function CommentForm({
           </div>
         )}
 
-        <div className="space-y-1.5">
-            <label
-            className="text-[13px] font-medium text-text-primary"
+        <div>
+          <label
+            className="sr-only"
             htmlFor={`${id}-comment-content`}
           >
-            Bình luận *
+            Bình luận
           </label>
           <Textarea
             id={`${id}-comment-content`}

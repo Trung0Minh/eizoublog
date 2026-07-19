@@ -6,6 +6,7 @@ import {
   type CoAuthorStatus,
   type CommentStatus,
   type PostStatus,
+  type Role,
 } from "@prisma/client"
 
 import {
@@ -343,6 +344,7 @@ export interface AdminPostListItem {
   updatedAt: Date
 }
 export interface AdminCommentListItem {
+  authorRole: Role | null
   authorName: string
   content: string
   createdAt: Date
@@ -400,6 +402,7 @@ interface AdminPostRow {
 
 interface AdminCommentRow {
   authorName: string | null
+  authorRole: string | null
   content: string | null
   createdAt: Date | null
   id: string | null
@@ -483,6 +486,16 @@ function parseCommentStatus(value: string | null): CommentStatus {
   }
 
   throw new Error(`Unexpected comment status: ${String(value)}`)
+}
+
+function parseRole(value: string | null): Role | null {
+  if (value === null) return null
+
+  if (value === "ADMIN" || value === "WRITER" || value === "REVOKED") {
+    return value
+  }
+
+  throw new Error(`Unexpected role: ${String(value)}`)
 }
 
 function parseAwardEventStatus(value: string | null): AwardEventStatus {
@@ -1194,6 +1207,7 @@ export const getCachedAdminComments = unstable_cache(
         SELECT
           c.id,
           c."authorName",
+          author.role::text AS "authorRole",
           c.content,
           c."createdAt",
           c.status::text AS status,
@@ -1201,6 +1215,7 @@ export const getCachedAdminComments = unstable_cache(
           p.title AS "postTitle"
         FROM comments c
         JOIN posts p ON p.id = c."postId"
+        LEFT JOIN users author ON author.id = c."authorId"
         WHERE c.status = ${status}::"CommentStatus"
       ),
       counted AS (
@@ -1232,6 +1247,7 @@ export const getCachedAdminComments = unstable_cache(
       }
 
       comments.push({
+        authorRole: parseRole(row.authorRole),
         authorName: row.authorName,
         content: row.content,
         createdAt: row.createdAt,

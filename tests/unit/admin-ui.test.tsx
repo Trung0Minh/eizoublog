@@ -743,6 +743,7 @@ describe("admin client components", () => {
       <AdminCommentsTable
         comments={[
           {
+            authorRole: "ADMIN",
             authorName: "Reader",
             content: "<script>alert(1)</script>",
             createdAt: new Date("2026-01-01T00:00:00Z"),
@@ -756,10 +757,10 @@ describe("admin client components", () => {
 
     expect(screen.getByText("<script>alert(1)</script>")).toBeVisible()
 
-    await user.click(screen.getByRole("button", { name: /mark as spam/i }))
+    await user.click(screen.getByRole("button", { name: /đánh dấu là spam/i }))
     await user.click(
-      within(screen.getByRole("dialog", { name: "Mark comment as spam?" }))
-        .getByRole("button", { name: "Mark as spam" }),
+      within(screen.getByRole("dialog", { name: "Đánh dấu bình luận là spam?" }))
+        .getByRole("button", { name: "Đánh dấu spam" }),
     )
 
     expect(fetchMock).toHaveBeenCalledWith("/api/comments/comment-1", {

@@ -22,8 +22,8 @@ const COMMENT_TABS: Array<{
   key: "APPROVED" | "PENDING" | "SPAM"
   label: string
 }> = [
-  { href: "/admin/comments?status=PENDING", key: "PENDING", label: "Pending" },
-  { href: "/admin/comments", key: "APPROVED", label: "Approved" },
+  { href: "/admin/comments?status=PENDING", key: "PENDING", label: "Chờ duyệt" },
+  { href: "/admin/comments", key: "APPROVED", label: "Đã duyệt" },
   { href: "/admin/comments?status=SPAM", key: "SPAM", label: "Spam" },
 ]
 
@@ -68,8 +68,8 @@ export default async function AdminCommentsPage({
   return (
     <div className="animate-in fade-in duration-300">
       <AdminPageHeader
-        subtitle="Manage reader discussions"
-        title="Comments"
+        subtitle="Quản lý thảo luận của độc giả"
+        title="Bình luận"
       />
 
       <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center">
@@ -112,7 +112,7 @@ export default async function AdminCommentsPage({
           />
           <input
             className="h-11 w-full rounded-full border-[2px] border-border-default bg-subtle-bg/30 pl-10 pr-4 text-[14px] font-medium outline-none transition-all placeholder:text-text-tertiary focus:border-accent focus:bg-background focus:ring-2 focus:ring-accent/20 backdrop-blur-md"
-            placeholder="Search comments..."
+            placeholder="Tìm bình luận..."
             type="text"
           />
         </div>
@@ -121,7 +121,7 @@ export default async function AdminCommentsPage({
       <ScrollReveal index={0} className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-2 sm:p-6 backdrop-blur-md shadow-sm">
         <AdminCommentsTable
           comments={commentsData.comments}
-          emptyLabel={`No ${COMMENT_TABS.find((tab) => tab.key === status)?.label.toLowerCase()} comments found.`}
+          emptyLabel={`Không tìm thấy bình luận ${COMMENT_TABS.find((tab) => tab.key === status)?.label.toLowerCase()}.`}
           status={status}
         />
 

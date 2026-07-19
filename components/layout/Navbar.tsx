@@ -21,8 +21,8 @@ export function Navbar({ user }: { user?: WriterMenuUser | null }) {
   const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "Anime Blog"
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-transparent py-2 transition-all duration-300 md:py-4">
-      <div className="glass-navbar mx-auto flex h-12 max-w-[1440px] items-center justify-between gap-3 px-3 sm:px-4 md:h-14 md:gap-4 md:px-6 lg:px-8">
+    <header className="sticky top-0 z-40 w-full bg-transparent px-4 py-2 transition-all duration-300 sm:px-5 md:px-0 md:py-4">
+      <div className="glass-navbar mx-auto flex h-12 w-full max-w-[1440px] items-center justify-between gap-3 py-0 pl-6 pr-3 sm:pl-7 sm:pr-4 md:h-14 md:gap-4 md:px-6 lg:px-8">
         <Link
           aria-label={appName}
           className="group flex shrink-0 items-center"
