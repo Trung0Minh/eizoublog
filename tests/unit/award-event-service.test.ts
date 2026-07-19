@@ -140,7 +140,7 @@ describe("updateAwardEventRoom", () => {
     )
   })
 
-  it("falls back to visible public profile text when the submitted intro is blank", async () => {
+  it("leaves the submitted intro blank so the profile bio can render richly", async () => {
     mocks.prisma.post.findFirst.mockResolvedValue(
       selectedPost({
         author: {
@@ -166,7 +166,7 @@ describe("updateAwardEventRoom", () => {
     expect(mocks.prisma.awardEventRoom.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          submittedWriterIntro: "Anime editor and sakuga fan",
+          submittedWriterIntro: null,
           writerIntro: null,
         }),
       }),

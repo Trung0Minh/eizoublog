@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 const mocks = vi.hoisted(() => ({
   getCachedCategoryBySlug: vi.fn(),
   getCachedCategoryPosts: vi.fn(),
+  getCachedPublishedPosts: vi.fn(),
   getCachedTagBySlug: vi.fn(),
   getCachedTagPosts: vi.fn(),
   notFound: vi.fn(() => {
@@ -11,24 +12,30 @@ const mocks = vi.hoisted(() => ({
   }),
 }))
 
-vi.mock("next/navigation", () => ({ notFound: mocks.notFound }))
+vi.mock("next/navigation", () => ({
+  notFound: mocks.notFound,
+  useRouter: () => ({ push: vi.fn() }),
+}))
 vi.mock("@/components/posts/PostList", () => ({
   PostList: () => <div data-testid="post-list" />,
 }))
 vi.mock("@/lib/queries", () => ({
   getCachedCategoryBySlug: mocks.getCachedCategoryBySlug,
   getCachedCategoryPosts: mocks.getCachedCategoryPosts,
+  getCachedPublishedPosts: mocks.getCachedPublishedPosts,
   getCachedTagBySlug: mocks.getCachedTagBySlug,
   getCachedTagPosts: mocks.getCachedTagPosts,
 }))
 
 import CategoryPage from "@/app/(public)/category/[slug]/page"
+import ArchivePage from "@/app/(public)/archive/[month]/page"
 import TagPage from "@/app/(public)/tag/[slug]/page"
 
 describe("taxonomy pages", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.getCachedCategoryPosts.mockResolvedValue({ posts: [], total: 0 })
+    mocks.getCachedPublishedPosts.mockResolvedValue({ posts: [], total: 0 })
     mocks.getCachedTagPosts.mockResolvedValue({ posts: [], total: 0 })
   })
 
@@ -75,6 +82,22 @@ describe("taxonomy pages", () => {
       1,
       10,
       "comments",
+    )
+  })
+
+  it("renders archive months as dedicated sortable listing pages", async () => {
+    render(
+      await ArchivePage({
+        params: Promise.resolve({ month: "2026-07" }),
+        searchParams: Promise.resolve({ page: "2", sort: "comments" }),
+      }),
+    )
+
+    expect(mocks.getCachedPublishedPosts).toHaveBeenCalledWith(
+      2,
+      10,
+      "comments",
+      "2026-07",
     )
   })
 })

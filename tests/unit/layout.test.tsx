@@ -154,6 +154,10 @@ describe("Navbar", () => {
   it("renders publication navigation and search access", () => {
     render(<Navbar user={null} />)
 
+    expect(screen.getByTestId("site-wordmark")).toHaveClass("bg-accent")
+    expect(screen.getByTestId("site-wordmark").getAttribute("style")).toContain(
+      "mask-image: url(\"/eizoublog-logo.svg\")",
+    )
     const contributors = screen.getByRole("link", { name: "Đóng góp" })
     expect(contributors).toHaveAttribute("href", "/contributors")
     expect(contributors).toHaveAttribute("data-prefetch", "undefined")
@@ -490,8 +494,8 @@ describe("Navbar", () => {
     )
     expect(container.querySelector("header")).toHaveClass(
       "bg-transparent",
-      "pt-4",
-      "pb-4",
+      "py-2",
+      "md:py-4",
     )
   })
 })
@@ -752,6 +756,12 @@ describe("Sidebar", () => {
             name: "Production",
             slug: "production",
           },
+          {
+            _count: { posts: 0 },
+            id: "category-empty",
+            name: "Empty category",
+            slug: "empty-category",
+          },
         ]}
         newsletter={<form aria-label="Newsletter signup" />}
         recentPosts={[
@@ -769,12 +779,13 @@ describe("Sidebar", () => {
       "href",
       "/category/production",
     )
+    expect(screen.queryByText("Empty category")).not.toBeInTheDocument()
     expect(
       screen.getByRole("link", { name: "Frieren and the passage of time" }),
     ).toHaveAttribute("href", "/frieren")
     expect(screen.getByRole("link", { name: /June 2026/ })).toHaveAttribute(
       "href",
-      "/?archive=2026-06",
+      "/archive/2026-06",
     )
   })
 

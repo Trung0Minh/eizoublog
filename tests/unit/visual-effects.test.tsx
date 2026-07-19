@@ -144,6 +144,15 @@ describe("responsive visual effects", () => {
     })
   })
 
+  it("tints the navbar with the active seasonal accent", () => {
+    const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8")
+    const navbarRule =
+      css.match(/\.glass-navbar\s*\{([\s\S]*?)\n\s*\}/)?.[1] ?? ""
+
+    expect(navbarRule).toContain("var(--accent)")
+    expect(navbarRule).toContain("color-mix")
+  })
+
   it("keeps the shared subtle background utility cheap to paint", () => {
     const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8")
     const subtleBgRule = css.match(/\.bg-subtle-bg\s*\{([\s\S]*?)\n\s*\}/)

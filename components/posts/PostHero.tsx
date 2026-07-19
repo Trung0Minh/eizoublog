@@ -25,9 +25,9 @@ export function PostHero({ post, authorUsernames }: PostHeroProps) {
   return (
     <div
       className={cn(
-        "relative -mt-[88px] w-full overflow-hidden pt-[88px]",
+        "relative -mt-[64px] w-full overflow-hidden pt-[64px] md:-mt-[88px] md:pt-[88px]",
         post.coverUrl
-          ? "min-h-[calc(450px+88px)] h-[calc(50dvh+88px)] md:min-h-[calc(500px+88px)] md:h-[calc(60vh+88px)] lg:min-h-[calc(600px+88px)] lg:h-[calc(70vh+88px)]"
+          ? "h-[calc(50dvh+64px)] min-h-[calc(450px+64px)] md:h-[calc(60vh+88px)] md:min-h-[calc(500px+88px)] lg:h-[calc(70vh+88px)] lg:min-h-[calc(600px+88px)]"
           : "bg-transparent",
       )}
       data-testid={post.coverUrl ? undefined : "post-hero-no-cover"}

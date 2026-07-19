@@ -819,6 +819,7 @@ export const getCachedSidebarData = unstable_cache(
       prisma.category.findMany({
         orderBy: { name: "asc" },
         select: sidebarCategorySelect,
+        where: { posts: { some: { status: "PUBLISHED" } } },
       }),
       prisma.post.findMany({
         orderBy: [{ publishedAt: "desc" }, { updatedAt: "desc" }],

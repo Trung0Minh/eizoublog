@@ -109,7 +109,7 @@ describe("EventAnthologyView", () => {
     expect(screen.queryByText("Later room edit.")).not.toBeInTheDocument()
   })
 
-  it("falls back to the writer profile bio when the event intro is blank", () => {
+  it("renders the rich writer profile bio when the event intro is blank", () => {
     render(
       <EventAnthologyView
         event={{
@@ -134,7 +134,21 @@ describe("EventAnthologyView", () => {
               submittedWriterIntro: null,
               writer: {
                 avatarUrl: null,
-                bio: "Public profile introduction.",
+                bio: JSON.stringify({
+                  content: [
+                    {
+                      content: [
+                        { text: "Public profile introduction.", type: "text" },
+                      ],
+                      type: "paragraph",
+                    },
+                    {
+                      content: [{ text: "Second profile line.", type: "text" }],
+                      type: "paragraph",
+                    },
+                  ],
+                  type: "doc",
+                }),
                 name: "Writer A",
                 username: "writer-a",
               },
@@ -151,6 +165,14 @@ describe("EventAnthologyView", () => {
         "Public profile introduction.",
       ),
     ).toBeVisible()
+    expect(
+      within(screen.getByTestId("event-contributor-header")).getByText(
+        "Second profile line.",
+      ),
+    ).toBeVisible()
+    expect(screen.getByTestId("event-contributor-header")).toHaveClass(
+      "border-b",
+    )
   })
 
   it("keeps the original desktop shell while letting the intro fill its card", () => {
@@ -418,8 +440,9 @@ describe("EventAnthologyView", () => {
       "sm:w-32",
     )
     expect(screen.getAllByTestId("event-contributor-header")[0]).toHaveClass(
-      "mb-6",
-      "sm:mb-8",
+      "pb-6",
+      "sm:pb-8",
+      "border-b",
     )
     expect(screen.getByTestId("event-cover-alt").nextElementSibling).toContainElement(
       screen.getByRole("button", { name: "Contents" }),

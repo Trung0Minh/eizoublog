@@ -30,6 +30,10 @@ export function Sidebar({
   newsletter,
   recentPosts,
 }: SidebarProps) {
+  const visibleCategories = categories.filter(
+    (category) => category._count.posts > 0,
+  )
+
   return (
     <aside
       className={cn(
@@ -41,10 +45,10 @@ export function Sidebar({
         <SidebarSection title="Bản tin">{newsletter}</SidebarSection>
       )}
 
-      {categories.length > 0 && (
+      {visibleCategories.length > 0 && (
         <SidebarSection title="Danh mục">
           <ul className="flex flex-col gap-3 text-[13px]">
-            {categories.map((category) => (
+            {visibleCategories.map((category) => (
               <li key={category.id} className="flex flex-col">
                 <Link
                   className="flex justify-between text-text-primary hover:text-accent cursor-pointer group transition-transform duration-200 hover:translate-x-1.5"
@@ -89,7 +93,7 @@ export function Sidebar({
               <li key={archive.month}>
                 <Link
                   className="flex justify-between text-text-primary hover:text-accent cursor-pointer group transition-transform duration-200 hover:translate-x-1.5"
-                  href={`/?archive=${archive.month}`}
+                  href={`/archive/${archive.month}`}
                 >
                   <span className="group-hover:text-accent transition-colors">{formatArchiveMonth(archive.month)}</span>
                   <span className="text-text-tertiary">{Number(archive.count)}</span>

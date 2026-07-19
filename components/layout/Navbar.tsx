@@ -1,5 +1,4 @@
 import Link from "next/link"
-import { Sparkles } from "lucide-react"
 
 import { ThemeToggle } from "@/components/layout/ThemeToggle"
 import { WriterNavControls } from "@/components/layout/WriterNavControls"
@@ -22,18 +21,28 @@ export function Navbar({ user }: { user?: WriterMenuUser | null }) {
   const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "Anime Blog"
 
   return (
-    <header className="sticky top-0 z-40 w-full pt-4 pb-4 bg-transparent transition-all duration-300">
-      <div className="glass-navbar mx-auto flex h-14 max-w-[1440px] items-center justify-between gap-4 px-4 md:px-6 lg:px-8">
+    <header className="sticky top-0 z-40 w-full bg-transparent py-2 transition-all duration-300 md:py-4">
+      <div className="glass-navbar mx-auto flex h-12 max-w-[1440px] items-center justify-between gap-3 px-3 sm:px-4 md:h-14 md:gap-4 md:px-6 lg:px-8">
         <Link
-          className="font-bold text-[18px] text-accent flex items-center gap-2 tracking-tight group shrink-0"
+          aria-label={appName}
+          className="group flex shrink-0 items-center"
           href="/"
         >
-          <MagneticEffect strength={0.4}>
-            <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform text-accent block" />
-          </MagneticEffect>
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-accent via-purple-500 to-accent animate-gradient-x drop-shadow-sm">
-            {appName}
-          </span>
+          <span
+            aria-hidden="true"
+            className="block aspect-[3480.342/402] w-[102px] bg-accent transition-opacity duration-200 group-hover:opacity-75 sm:w-[128px] lg:w-[146px]"
+            data-testid="site-wordmark"
+            style={{
+              maskImage: "url('/eizoublog-logo.svg')",
+              maskPosition: "center",
+              maskRepeat: "no-repeat",
+              maskSize: "contain",
+              WebkitMaskImage: "url('/eizoublog-logo.svg')",
+              WebkitMaskPosition: "center",
+              WebkitMaskRepeat: "no-repeat",
+              WebkitMaskSize: "contain",
+            }}
+          />
         </Link>
 
         <nav

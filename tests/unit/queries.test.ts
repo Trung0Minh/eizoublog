@@ -274,6 +274,7 @@ describe("cached Prisma query helpers", () => {
         select: expect.objectContaining({
           _count: expect.any(Object),
         }),
+        where: { posts: { some: { status: "PUBLISHED" } } },
       }),
     )
     expect(mocks.prisma.$queryRaw).toHaveBeenCalled()

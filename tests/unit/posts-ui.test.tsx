@@ -1023,13 +1023,22 @@ describe("HomePage sorting UI", () => {
     })
   })
 
-  it("renders homepage sorting tabs correctly and passes sort parameter to query", async () => {
+  it("renders the homepage sorting dropdown and navigates to the selected sort", async () => {
     const elementLatest = await HomePostList({ page: 1, sort: "latest" })
     const { unmount } = render(elementLatest)
 
-    expect(screen.getByRole("tab", { name: "Mới nhất" })).toHaveAttribute("aria-selected", "true")
-    expect(screen.getByRole("tab", { name: "Cũ nhất" })).toHaveAttribute("aria-selected", "false")
-    expect(screen.getByRole("tab", { name: "Nhiều bình luận" })).toHaveAttribute("aria-selected", "false")
+    expect(screen.getByRole("combobox", { name: "Sắp xếp bài viết" })).toHaveValue(
+      "latest",
+    )
+    expect(screen.getByRole("option", { name: "Cũ nhất" })).toBeVisible()
+    expect(screen.getByRole("option", { name: "Nhiều bình luận" })).toBeVisible()
+
+    fireEvent.change(screen.getByRole("combobox", { name: "Sắp xếp bài viết" }), {
+      target: { value: "comments" },
+    })
+    expect(routerMocks.push).toHaveBeenCalledWith("/?sort=comments", {
+      scroll: false,
+    })
     
     expect(queriesMocks.getCachedPublishedPosts).toHaveBeenCalledWith(
       1,
@@ -1043,8 +1052,9 @@ describe("HomePage sorting UI", () => {
     const elementComments = await HomePostList({ page: 2, sort: "comments" })
     render(elementComments)
 
-    expect(screen.getByRole("tab", { name: "Mới nhất" })).toHaveAttribute("aria-selected", "false")
-    expect(screen.getByRole("tab", { name: "Nhiều bình luận" })).toHaveAttribute("aria-selected", "true")
+    expect(screen.getByRole("combobox", { name: "Sắp xếp bài viết" })).toHaveValue(
+      "comments",
+    )
     
     expect(queriesMocks.getCachedPublishedPosts).toHaveBeenCalledWith(
       2,
@@ -1073,9 +1083,8 @@ describe("HomePage sorting UI", () => {
     expect(
       screen.getByRole("heading", { name: "Bài viết June 2026" }),
     ).toBeVisible()
-    expect(screen.getByRole("tab", { name: "Mới nhất" })).toHaveAttribute(
-      "href",
-      "/?archive=2026-06",
+    expect(screen.getByRole("combobox", { name: "Sắp xếp bài viết" })).toHaveValue(
+      "oldest",
     )
     expect(screen.getByRole("link", { name: "Page 2" })).toHaveAttribute(
       "href",

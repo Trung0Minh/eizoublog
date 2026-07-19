@@ -21,7 +21,7 @@ export async function HomePostList({
     data ?? (await getCachedPublishedPosts(page, PAGE_SIZE, sort, archiveMonth))
 
   return (
-    <div className="flex flex-col">
+    <div className="flex scroll-mt-24 flex-col" id="post-list">
       {archiveMonth && (
         <h1 className="text-2xl font-bold mb-4">
           Bài viết {formatArchiveHeading(archiveMonth)}

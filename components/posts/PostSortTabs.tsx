@@ -1,14 +1,13 @@
 "use client"
 
-import Link from "next/link"
-import { useState } from "react"
+import { ChevronDown } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useTransition } from "react"
 
 import {
   POST_LIST_SORT_OPTIONS,
   type PostListSort,
 } from "@/lib/postListSort"
-import { cn } from "@/lib/utils"
-import { Loader } from "@/components/ui/Loader"
 
 interface PostSortTabsProps {
   basePath: string
@@ -31,8 +30,6 @@ function buildSortHref(
 
   if (sort !== "latest") {
     params.set("sort", sort)
-  } else {
-    params.delete("sort")
   }
 
   params.delete("page")
@@ -46,44 +43,35 @@ export function PostSortTabs({
   query = {},
   sort,
 }: PostSortTabsProps) {
-  const [pendingSort, setPendingSort] = useState<PostListSort | null>(null)
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
 
   return (
-    <div className="flex items-center gap-2">
-      <div
+    <div className="relative w-full max-w-[240px]">
+      <select
         aria-label="Sắp xếp bài viết"
-        className="flex rounded-full border-[2px] border-border-default bg-subtle-bg/30 p-1 backdrop-blur-sm"
-        role="tablist"
+        className="h-11 w-full cursor-pointer appearance-none rounded-[14px] border border-border-default bg-background/85 px-4 pr-10 text-sm font-bold text-text-primary shadow-sm outline-none transition-colors hover:border-accent/50 focus:border-accent focus:ring-2 focus:ring-accent/15 disabled:cursor-wait disabled:opacity-70"
+        disabled={isPending}
+        onChange={(event) => {
+          const nextSort = event.target.value as PostListSort
+          startTransition(() => {
+            router.push(buildSortHref(basePath, query, nextSort), {
+              scroll: false,
+            })
+          })
+        }}
+        value={sort}
       >
-        {POST_LIST_SORT_OPTIONS.map((option) => {
-          const isActive = sort === option.value
-          const isPending = pendingSort === option.value && !isActive
-
-          return (
-            <Link
-              aria-selected={isActive}
-              className={cn(
-                "inline-flex items-center gap-1 rounded-full px-4 py-1.5 text-[12px] font-bold uppercase tracking-wider transition-all duration-300",
-                isActive
-                  ? "bg-accent text-white shadow-md"
-                  : "text-text-secondary hover:text-text-primary hover:bg-subtle-bg/50",
-              )}
-              href={buildSortHref(basePath, query, option.value)}
-              key={option.value}
-              onClick={() => {
-                if (!isActive) {
-                  setPendingSort(option.value)
-                }
-              }}
-              role="tab"
-              scroll={false}
-            >
-              {isPending && <Loader aria-hidden="true" size="sm" />}
-              {option.label}
-            </Link>
-          )
-        })}
-      </div>
+        {POST_LIST_SORT_OPTIONS.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown
+        aria-hidden="true"
+        className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-accent"
+      />
     </div>
   )
 }

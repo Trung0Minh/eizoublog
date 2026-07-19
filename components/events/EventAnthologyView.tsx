@@ -4,6 +4,7 @@ import Link from "next/link"
 import { EventAnthologyTableOfContents } from "@/components/events/EventAnthologyTableOfContents"
 import { AuthorCreditList } from "@/components/posts/AuthorCreditList"
 import { PostBody } from "@/components/posts/PostBody"
+import { ContributorBio } from "@/components/profile/ContributorBio"
 import {
   buildAwardEventOutline,
   getSubmittedAwardEventRooms,
@@ -119,40 +120,55 @@ function EventContributorAttribution({
 
 export function EventAnthologyView({ event, preview = false }: EventAnthologyViewProps) {
   const normalizedRooms: Array<AwardEventPostRoom & {
+    profileBio: string | null
     writer: AwardEventPostRoom["writer"] & {
       avatarUrl: string | null
       bio: string | null
     }
-  }> = event.rooms.map((room) => ({
-    ...room,
-    selectedPost: isJsonContent(room.submittedContent)
-      ? {
-          content: room.submittedContent,
-          id: room.submittedPostId ?? room.selectedPost?.id ?? room.id,
-          status: "DRAFT",
-          title: room.submittedPostTitle ?? room.selectedPost?.title ?? "Untitled",
-        }
-      : room.selectedPost
-      ? {
-          ...room.selectedPost,
-          content: isJsonContent(room.selectedPost.content)
-            ? room.selectedPost.content
-            : { content: [], type: "doc" },
-      }
-      : null,
-    writerIntro: isJsonContent(room.submittedContent)
-      ? room.submittedWriterIntro?.trim() ||
-        getProfileBioVisibleText(room.writer.bio ?? "") ||
-        null
-      : room.writerIntro?.trim() ||
-        getProfileBioVisibleText(room.writer.bio ?? "") ||
-        null,
-    writer: {
-      ...room.writer,
-      avatarUrl: room.writer.avatarUrl ?? null,
-      bio: room.writer.bio ?? null,
-    },
-  }))
+  }> = event.rooms.map((room) => {
+    const submittedContent = isJsonContent(room.submittedContent)
+      ? room.submittedContent
+      : null
+    const hasSubmittedSnapshot = submittedContent !== null
+    const profileBio = room.writer.bio?.trim() || null
+    const visibleProfileBio = getProfileBioVisibleText(profileBio ?? "")
+    const storedIntro = hasSubmittedSnapshot
+      ? room.submittedWriterIntro?.trim()
+      : room.writerIntro?.trim()
+    const usesProfileBio = Boolean(
+      profileBio &&
+        (!storedIntro ||
+          storedIntro === visibleProfileBio ||
+          !room.writerIntro?.trim()),
+    )
+
+    return {
+      ...room,
+      profileBio: usesProfileBio ? profileBio : null,
+      selectedPost: hasSubmittedSnapshot
+        ? {
+            content: submittedContent,
+            id: room.submittedPostId ?? room.selectedPost?.id ?? room.id,
+            status: "DRAFT",
+            title:
+              room.submittedPostTitle ?? room.selectedPost?.title ?? "Untitled",
+          }
+        : room.selectedPost
+          ? {
+              ...room.selectedPost,
+              content: isJsonContent(room.selectedPost.content)
+                ? room.selectedPost.content
+                : { content: [], type: "doc" },
+            }
+          : null,
+      writerIntro: usesProfileBio ? null : storedIntro || null,
+      writer: {
+        ...room.writer,
+        avatarUrl: room.writer.avatarUrl ?? null,
+        bio: room.writer.bio ?? null,
+      },
+    }
+  })
   const rooms = getSubmittedAwardEventRooms(normalizedRooms)
   const headings = buildAwardEventOutline(rooms)
   const richIntro =
@@ -173,7 +189,7 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
           "relative isolate overflow-hidden",
           preview
             ? "min-h-[440px] sm:min-h-[56vh] lg:min-h-[64vh]"
-            : "-mt-[88px] min-h-[calc(440px+88px)] pt-[88px] sm:min-h-[calc(56vh+88px)] lg:min-h-[calc(64vh+88px)]",
+            : "-mt-[64px] min-h-[calc(440px+64px)] pt-[64px] sm:min-h-[calc(56vh+64px)] md:-mt-[88px] md:min-h-[calc(56vh+88px)] md:pt-[88px] lg:min-h-[calc(64vh+88px)]",
         )}
       >
         {event.coverUrl && (
@@ -282,7 +298,7 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
                   key={room.id}
                 >
                   <div
-                    className="mb-6 sm:mb-8"
+                    className="mb-6 border-b border-border-default/70 pb-6 sm:mb-8 sm:pb-8"
                     data-testid="event-contributor-header"
                   >
                     <div className="grid grid-cols-[6rem_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[8rem_minmax(0,1fr)] sm:gap-7">
@@ -302,9 +318,14 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
                           {room.writer.name}
                         </h2>
                         {room.writerIntro && (
-                          <p className="mt-2 text-[13px] leading-5 text-text-secondary sm:mt-3 sm:text-base sm:leading-7">
+                          <p className="mt-2 whitespace-pre-wrap text-[13px] leading-5 text-text-secondary sm:mt-3 sm:text-base sm:leading-7">
                             {room.writerIntro}
                           </p>
+                        )}
+                        {room.profileBio && (
+                          <div className="mt-2 sm:mt-3 sm:[&>div]:text-base sm:[&>div]:leading-7">
+                            <ContributorBio bio={room.profileBio} />
+                          </div>
                         )}
                       </div>
                     </div>

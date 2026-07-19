@@ -402,7 +402,6 @@ export async function updateAwardEventRoom({
     if (postId) {
       const selectedPost = await tx.post.findFirst({
         select: {
-          author: { select: { bio: true } },
           content: true,
           id: true,
           status: true,
@@ -426,10 +425,7 @@ export async function updateAwardEventRoom({
           submittedPostId: selectedPost.id,
           submittedPostTitle: selectedPost.title,
           submittedPostVersion: selectedPost.version,
-          submittedWriterIntro:
-            trimmedWriterIntro ||
-            getProfileBioVisibleText(selectedPost.author.bio ?? "") ||
-            null,
+          submittedWriterIntro: trimmedWriterIntro || null,
         }
       }
     }

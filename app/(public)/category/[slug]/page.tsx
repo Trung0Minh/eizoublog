@@ -68,7 +68,7 @@ export default async function CategoryPage({
     <PageContainer>
       <section className="mb-10 border-b pb-8">
         <ScrollReveal>
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-editorial">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-accent">
             Category
           </p>
           <h1 className="text-[32px] font-bold leading-tight tracking-tight">
