@@ -10,12 +10,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 
 interface CategoryItem {
-  _count: { children: number; posts: number }
-  children?: CategoryItem[]
+  _count: { posts: number }
   description: string | null
   id: string
   name: string
-  parentId: string | null
   slug: string
 }
 
@@ -29,7 +27,6 @@ interface TagItem {
 interface CategoryFormState {
   description: string
   name: string
-  parentId: string
 }
 
 interface TagFormState {
@@ -51,16 +48,6 @@ function getApiError(value: unknown) {
   return "Something went wrong"
 }
 
-function flattenCategories(categories: CategoryItem[]) {
-  return categories.flatMap((category) => [
-    category,
-    ...(category.children ?? []).map((child) => ({
-      ...child,
-      name: `${category.name} / ${child.name}`,
-    })),
-  ])
-}
-
 export function AdminContentManager({
   categories,
   tags,
@@ -73,7 +60,6 @@ export function AdminContentManager({
   const [categoryForm, setCategoryForm] = useState<CategoryFormState>({
     description: "",
     name: "",
-    parentId: "",
   })
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null)
   const [editingTagId, setEditingTagId] = useState<string | null>(null)
@@ -87,21 +73,10 @@ export function AdminContentManager({
   const [isPending, setIsPending] = useState(false)
   const [tagForm, setTagForm] = useState<TagFormState>({ name: "" })
 
-  const flatCategories = useMemo(
-    () => flattenCategories(categories),
-    [categories],
-  )
-  const categoryRows = useMemo(
-    () =>
-      categories.flatMap((category) => [
-        { category, depth: 0 },
-        ...(category.children ?? []).map((child) => ({ category: child, depth: 1 })),
-      ]),
-    [categories],
-  )
+  const categoryRows = useMemo(() => categories, [categories])
 
   function resetCategoryForm() {
-    setCategoryForm({ description: "", name: "", parentId: "" })
+    setCategoryForm({ description: "", name: "" })
     setEditingCategoryId(null)
     setIsModalOpen(false)
     setError("")
@@ -117,19 +92,12 @@ export function AdminContentManager({
   function openAddModal(tab: Tab) {
     setActiveTab(tab)
     if (tab === "categories") {
-      setCategoryForm({ description: "", name: "", parentId: "" })
+      setCategoryForm({ description: "", name: "" })
       setEditingCategoryId(null)
     } else {
       setTagForm({ name: "" })
       setEditingTagId(null)
     }
-    setIsModalOpen(true)
-    setError("")
-  }
-
-  function openAddChildModal(parentId: string) {
-    setCategoryForm({ description: "", name: "", parentId })
-    setEditingCategoryId(null)
     setIsModalOpen(true)
     setError("")
   }
@@ -147,7 +115,6 @@ export function AdminContentManager({
           body: JSON.stringify({
             description: categoryForm.description,
             name: categoryForm.name,
-            parentId: categoryForm.parentId || null,
           }),
           headers: { "Content-Type": "application/json" },
           method: editingCategoryId ? "PATCH" : "POST",
@@ -319,7 +286,7 @@ export function AdminContentManager({
                     {editingCategoryId ? "Edit Category" : "Add Category"}
                   </h2>
                   <p className="mt-1 text-[13px] text-text-tertiary">
-                    Categories can be top-level or nested one level deep.
+                    Categories are flat and apply directly to posts.
                   </p>
                 </div>
 
@@ -337,32 +304,6 @@ export function AdminContentManager({
                     className="h-11 rounded-[12px] border-border-default/60 bg-subtle-bg/30 px-4 focus:border-accent focus:bg-background focus:ring-2 focus:ring-accent/20 transition-all text-[14px]"
                     placeholder="e.g. Analysis"
                   />
-                </div>
-
-                <div className="space-y-2.5">
-                  <label className="text-[12px] font-bold uppercase tracking-wider text-text-secondary ml-1" htmlFor="category-parent">
-                    Parent
-                  </label>
-                  <select
-                    className="h-11 w-full rounded-[12px] border border-border-default/60 bg-subtle-bg/30 px-4 text-[14px] text-text-primary outline-none focus:border-accent focus:bg-background focus:ring-2 focus:ring-accent/20 transition-all appearance-none cursor-pointer"
-                    id="category-parent"
-                    onChange={(event) =>
-                      setCategoryForm({
-                        ...categoryForm,
-                        parentId: event.target.value,
-                      })
-                    }
-                    value={categoryForm.parentId}
-                  >
-                    <option value="">No parent</option>
-                    {flatCategories
-                      .filter((category) => category.id !== editingCategoryId)
-                      .map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                  </select>
                 </div>
 
                 <div className="space-y-2.5">
@@ -455,18 +396,16 @@ export function AdminContentManager({
             data-testid="category-management-scroll"
           >
             <div className="flex min-w-0 flex-col gap-2 sm:min-w-[680px]">
-              <div className="hidden h-10 items-center px-6 text-[11px] font-bold uppercase tracking-[0.1em] text-text-tertiary sm:grid sm:grid-cols-[minmax(0,1fr)_120px_120px_140px]">
-                <div className="min-w-0 pr-4">Category</div>
-                <div className="text-right">Posts</div>
-                <div className="text-right">Children</div>
-                <div className="text-right opacity-0">Actions</div>
-              </div>
+                <div className="hidden h-10 items-center px-6 text-[11px] font-bold uppercase tracking-[0.1em] text-text-tertiary sm:grid sm:grid-cols-[minmax(0,1fr)_120px_140px]">
+                  <div className="min-w-0 pr-4">Category</div>
+                  <div className="text-right">Posts</div>
+                  <div className="text-right opacity-0">Actions</div>
+                </div>
               <div className="flex flex-col gap-3">
-                {categoryRows.map(({ category, depth }, index) => (
+                {categoryRows.map((category, index) => (
                   <div
                     className={cn(
-                      "group relative flex flex-wrap items-center gap-x-3 gap-y-3 rounded-[20px] border border-transparent bg-subtle-bg/40 p-4 transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10 sm:grid sm:grid-cols-[minmax(0,1fr)_120px_120px_140px] sm:gap-x-0",
-                      depth === 1 && "ml-3 border-l-2 border-l-border-default/30 sm:ml-6"
+                      "group relative flex flex-wrap items-center gap-x-3 gap-y-3 rounded-[20px] border border-transparent bg-subtle-bg/40 p-4 transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10 sm:grid sm:grid-cols-[minmax(0,1fr)_120px_140px] sm:gap-x-0",
                     )}
                     style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
                     key={category.id}
@@ -482,24 +421,9 @@ export function AdminContentManager({
                     <div className="shrink-0 pl-2 text-left text-[12px] font-medium text-text-secondary sm:w-auto sm:pl-0 sm:text-right sm:text-[13px]">
                       {category._count.posts}<span className="sm:hidden" data-testid="category-post-count-suffix"> posts</span>
                     </div>
-                    <div className="shrink-0 text-left text-[12px] font-medium text-text-secondary sm:w-auto sm:text-right sm:text-[13px]">
-                      {category._count.children}<span className="sm:hidden" data-testid="category-child-count-suffix"> children</span>
-                    </div>
                     <div className="hidden sm:block" />
 
                     <div className="ml-auto flex items-center justify-end gap-1 rounded-[12px] border border-border-default/50 bg-background/95 p-1.5 opacity-100 shadow-sm backdrop-blur-md transition-all duration-300 sm:absolute sm:right-4 sm:translate-x-4 sm:opacity-0 sm:group-hover:translate-x-0 sm:group-hover:opacity-100">
-                      {depth === 0 && (
-                        <Button
-                          aria-label={`Add child to ${category.name}`}
-                          onClick={() => openAddChildModal(category.id)}
-                          className="h-8 w-8 rounded-[8px] p-0 hover:bg-subtle-bg text-text-secondary hover:text-text-primary transition-colors"
-                          title="Add child category"
-                          type="button"
-                          variant="ghost"
-                        >
-                          <Plus aria-hidden="true" className="h-4 w-4" />
-                        </Button>
-                      )}
                       <Button
                         aria-label={`Edit category ${category.name}`}
                         onClick={() => {
@@ -507,7 +431,6 @@ export function AdminContentManager({
                           setCategoryForm({
                             description: category.description ?? "",
                             name: category.name,
-                            parentId: category.parentId ?? "",
                           })
                           setIsModalOpen(true)
                         }}

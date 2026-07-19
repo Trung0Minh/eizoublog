@@ -1,7 +1,4 @@
-import {
-  AwardEventError,
-  regenerateAwardEventPost,
-} from "@/lib/awardEventService"
+import { AwardEventError, unpublishAwardEventPost } from "@/lib/awardEventService"
 import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
 
 export async function POST(
@@ -16,7 +13,7 @@ export async function POST(
 
   try {
     const { id } = await params
-    const post = await regenerateAwardEventPost(id, { publish: true })
+    const post = await unpublishAwardEventPost(id)
 
     return Response.json({ data: post })
   } catch (error) {
@@ -24,7 +21,7 @@ export async function POST(
       return Response.json({ error: error.message }, { status: error.status })
     }
 
-    console.error("[POST /api/admin/events/[id]/publish]", error)
+    console.error("[POST /api/admin/events/[id]/unpublish]", error)
     return Response.json({ error: "Something went wrong" }, { status: 500 })
   }
 }

@@ -58,6 +58,10 @@ const populatedTopPages = [
   { path: "/frieren-memory", readRate: 60, reads: 15, views: 25 },
   { path: "/", readRate: 0, reads: 0, views: 10 },
 ]
+const dailyPageviews = Array.from({ length: 30 }, (_, index) => ({
+  day: `2026-06-${String(index + 1).padStart(2, "0")}`,
+  pageviews: index,
+}))
 
 function renderAsync(node: React.ReactNode) {
   render(<>{node}</>)
@@ -69,6 +73,7 @@ describe("AnalyticsWidget", () => {
     analyticsMocks.getInternalAnalyticsStats.mockResolvedValue(populatedStats)
     analyticsMocks.getInternalTopPages.mockResolvedValue(populatedTopPages)
     analyticsMocks.getCachedAdminAnalyticsData.mockResolvedValue({
+      dailyPageviews,
       stats: populatedStats,
       topPages: populatedTopPages,
     })
@@ -79,8 +84,8 @@ describe("AnalyticsWidget", () => {
 
     expect(analyticsMocks.getCachedAdminAnalyticsData).toHaveBeenCalledTimes(1)
     expect(screen.getByText("Total page views")).toBeVisible()
-    expect(screen.getByRole("heading", { name: "Top Referrers" })).toBeVisible()
-    expect(screen.getByRole("heading", { name: "Device Breakdown" })).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Top Pages" })).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Engagement" })).toBeVisible()
     expect(screen.getByText("150")).toBeVisible()
     expect(screen.getAllByText("60").length).toBeGreaterThan(0)
     expect(screen.getByRole("link", { name: "/frieren-memory" })).toHaveAttribute(
@@ -98,6 +103,7 @@ describe("AnalyticsWidget", () => {
       .mockImplementation(() => undefined)
 
     analyticsMocks.getCachedAdminAnalyticsData.mockResolvedValue({
+      dailyPageviews,
       stats: populatedStats,
       topPages: [
         { path: "/", readRate: 0, reads: 0, views: 10 },
@@ -139,6 +145,7 @@ describe("AdminAnalyticsPage", () => {
     analyticsMocks.getInternalAnalyticsStats.mockResolvedValue(emptyStats)
     analyticsMocks.getInternalTopPages.mockResolvedValue([])
     analyticsMocks.getCachedAdminAnalyticsData.mockResolvedValue({
+      dailyPageviews,
       stats: emptyStats,
       topPages: [],
     })

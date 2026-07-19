@@ -13,6 +13,7 @@ import {
   awardEventListSelect,
 } from "@/lib/awardEventService"
 import {
+  getInternalDailyPageviews,
   getInternalAnalyticsStats,
   getInternalTopPages,
 } from "@/lib/internalAnalytics"
@@ -24,17 +25,6 @@ import type { SearchResult } from "@/lib/search"
 const sidebarCategorySelect = {
   _count: {
     select: { posts: { where: { status: "PUBLISHED" } } },
-  },
-  children: {
-    orderBy: { name: "asc" },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      _count: {
-        select: { posts: { where: { status: "PUBLISHED" } } },
-      },
-    },
   },
   id: true,
   name: true,
@@ -112,10 +102,6 @@ const publicAuthorSelect = {
 } satisfies Prisma.UserSelect
 
 const editorCategorySelect = {
-  children: {
-    orderBy: { name: "asc" },
-    select: { id: true, name: true, slug: true },
-  },
   id: true,
   name: true,
   slug: true,
@@ -188,22 +174,10 @@ const adminAwardEventTagSelect = {
 } satisfies Prisma.TagSelect
 
 const adminContentCategorySelect = {
-  _count: { select: { children: true, posts: true } },
-  children: {
-    orderBy: { name: "asc" },
-    select: {
-      _count: { select: { children: true, posts: true } },
-      description: true,
-      id: true,
-      name: true,
-      parentId: true,
-      slug: true,
-    },
-  },
+  _count: { select: { posts: true } },
   description: true,
   id: true,
   name: true,
-  parentId: true,
   slug: true,
 } satisfies Prisma.CategorySelect
 
@@ -389,7 +363,7 @@ export interface WriterDashboardPostItem {
 
 export interface WriterEventItem {
   _count: { rooms: number }
-  finalPost: { slug: string } | null
+  finalPost: { slug: string; status: PostStatus } | null
   id: string
   rooms: { id: string; status: AwardEventRoomStatus }[]
   status: AwardEventStatus
@@ -510,13 +484,7 @@ function parseCommentStatus(value: string | null): CommentStatus {
 }
 
 function parseAwardEventStatus(value: string | null): AwardEventStatus {
-  if (
-    value === "DRAFT" ||
-    value === "OPEN" ||
-    value === "CLOSED" ||
-    value === "PUBLISHED" ||
-    value === "ARCHIVED"
-  ) {
+  if (value === "OPEN" || value === "CLOSED") {
     return value
   }
 
@@ -847,7 +815,6 @@ export const getCachedSidebarData = unstable_cache(
       prisma.category.findMany({
         orderBy: { name: "asc" },
         select: sidebarCategorySelect,
-        where: { parentId: null },
       }),
       prisma.post.findMany({
         orderBy: [{ publishedAt: "desc" }, { updatedAt: "desc" }],
@@ -873,23 +840,7 @@ export const getCachedSidebarData = unstable_cache(
       month: archive.month,
     }))
 
-    const categoriesWithCount = categories.map((cat) => {
-      const childCount = (cat.children ?? []).reduce(
-        (sum, child) => sum + (child._count?.posts ?? 0),
-        0,
-      )
-      if (cat._count === undefined) {
-        return cat
-      }
-      return {
-        ...cat,
-        _count: {
-          posts: cat._count.posts + childCount,
-        },
-      }
-    })
-
-    return { archives, categories: categoriesWithCount, recentPosts }
+    return { archives, categories, recentPosts }
   },
   ["sidebar-data"],
   { revalidate: 300, tags: ["posts", "categories"] },
@@ -966,7 +917,6 @@ export const getCachedEditorReferenceData = unstable_cache(
       prisma.category.findMany({
         orderBy: { name: "asc" },
         select: editorCategorySelect,
-        where: { parentId: null },
       }),
       prisma.user.findMany({
         orderBy: { name: "asc" },
@@ -1340,7 +1290,6 @@ export const getCachedAdminContentData = unstable_cache(
       prisma.category.findMany({
         orderBy: { name: "asc" },
         select: adminContentCategorySelect,
-        where: { parentId: null },
       }),
       prisma.tag.findMany({
         orderBy: { name: "asc" },
@@ -1393,12 +1342,13 @@ export const getCachedAdminNewsletterData = unstable_cache(
 
 export const getCachedAdminAnalyticsData = unstable_cache(
   async (startAt: number, endAt: number) => {
-    const [stats, topPages] = await Promise.all([
+    const [dailyPageviews, stats, topPages] = await Promise.all([
+      getInternalDailyPageviews(startAt, endAt),
       getInternalAnalyticsStats(startAt, endAt),
       getInternalTopPages(startAt, endAt, 5),
     ])
 
-    return { stats, topPages }
+    return { dailyPageviews, stats, topPages }
   },
   ["admin-analytics-data"],
   { revalidate: 60, tags: ["analytics"] },
@@ -1453,7 +1403,7 @@ export const getCachedWriterEvents = unstable_cache(
         e.id,
         CASE
           WHEN final_post.slug IS NULL THEN NULL
-          ELSE json_build_object('slug', final_post.slug)
+          ELSE json_build_object('slug', final_post.slug, 'status', final_post.status::text)
         END AS "finalPost",
         COALESCE(room_counts.count, 0) AS "roomCount",
         COALESCE(writer_rooms.items, '[]'::json) AS rooms,
@@ -1478,7 +1428,7 @@ export const getCachedWriterEvents = unstable_cache(
         WHERE room."eventId" = e.id
           AND room."writerId" = ${userId}
       ) writer_rooms ON TRUE
-      WHERE e.status IN ('OPEN', 'PUBLISHED')
+      WHERE e.status IN ('OPEN', 'CLOSED')
       ORDER BY e."createdAt" DESC
     `
 
@@ -1539,9 +1489,8 @@ export const getCachedCategoryPosts = unstable_cache(
         AND EXISTS (
           SELECT 1
           FROM categories c
-          LEFT JOIN categories parent ON parent.id = c."parentId"
           WHERE c.id = p."categoryId"
-            AND (c.slug = ${categorySlug} OR parent.slug = ${categorySlug})
+            AND c.slug = ${categorySlug}
         )
       `,
       page,

@@ -140,12 +140,10 @@ describe("admin client components", () => {
       <AdminContentManager
         categories={[
           {
-            _count: { children: 0, posts: 1 },
-            children: [],
+            _count: { posts: 1 },
             description: null,
             id: "category-1",
             name: "Analysis",
-            parentId: null,
             slug: "analysis",
           },
         ]}
@@ -169,7 +167,6 @@ describe("admin client components", () => {
       "sm:overflow-x-auto",
     )
     expect(screen.getByTestId("category-post-count-suffix")).toHaveClass("sm:hidden")
-    expect(screen.getByTestId("category-child-count-suffix")).toHaveClass("sm:hidden")
     expect(screen.getByTestId("tag-post-count-suffix")).toHaveClass("sm:hidden")
     expect(
       screen.getByTestId("category-management-scroll").parentElement?.parentElement,
@@ -186,7 +183,7 @@ describe("admin client components", () => {
             _count: { rooms: 2 },
             createdAt: new Date("2026-01-01T00:00:00Z"),
             id: "event-1",
-            publishedAt: null,
+            finalPost: null,
             slug: "awards-2026",
             status: "OPEN",
             title: "Awards 2026",
@@ -216,8 +213,8 @@ describe("admin client components", () => {
           {
             _count: { rooms: 2 },
             createdAt: new Date("2026-01-01T00:00:00Z"),
+            finalPost: null,
             id: "event-1",
-            publishedAt: null,
             slug: "awards-2026",
             status: "OPEN",
             title: "Awards 2026",
@@ -229,13 +226,10 @@ describe("admin client components", () => {
     )
 
     await user.click(screen.getByRole("button", { name: "Delete Awards 2026" }))
-    expect(screen.getByRole("dialog", { name: "Delete event?" })).toBeVisible()
-    await user.click(
-      within(screen.getByRole("dialog", { name: "Delete event?" })).getByRole(
-        "button",
-        { name: "Delete event" },
-      ),
-    )
+    const dialog = screen.getByRole("dialog", { name: "Delete event?" })
+    expect(dialog).toBeVisible()
+    await user.type(within(dialog).getByRole("textbox"), "Awards 2026")
+    await user.click(within(dialog).getByRole("button", { name: "Delete event" }))
 
     expect(fetchMock).toHaveBeenCalledWith("/api/admin/events/event-1", {
       body: JSON.stringify({ confirmation: "Awards 2026" }),

@@ -558,7 +558,6 @@ describe("PostEditor", () => {
       <PostEditor
         categories={[
           {
-            children: [],
             id: "category-1",
             name: "Production",
             slug: "production",
@@ -605,7 +604,6 @@ describe("PostEditor", () => {
       <PostEditor
         categories={[
           {
-            children: [],
             id: "category-1",
             name: "Production",
             slug: "production",

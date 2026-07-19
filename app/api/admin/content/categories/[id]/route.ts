@@ -6,18 +6,16 @@ import { prisma } from "@/lib/prisma"
 import { generateSlug } from "@/lib/utils"
 
 const categorySelect = {
-  _count: { select: { children: true, posts: true } },
+  _count: { select: { posts: true } },
   description: true,
   id: true,
   name: true,
-  parentId: true,
   slug: true,
 } as const
 
 const updateSchema = z.object({
   description: z.string().trim().max(500).optional(),
   name: z.string().trim().min(1).max(80).optional(),
-  parentId: z.string().min(1).nullable().optional(),
 })
 
 class RouteError extends Error {
@@ -55,11 +53,6 @@ export async function PATCH(
           name: data.name,
           slug: generateSlug(data.name) || "category",
         }),
-        ...(data.parentId !== undefined && {
-          parent: data.parentId
-            ? { connect: { id: data.parentId } }
-            : { disconnect: true },
-        }),
       },
       select: categorySelect,
       where: { id },
@@ -95,7 +88,7 @@ export async function DELETE(
     await prisma.$transaction(async (tx) => {
       const category = await tx.category.findUnique({
         select: {
-          _count: { select: { children: true, posts: true } },
+          _count: { select: { posts: true } },
           id: true,
           name: true,
         },
@@ -104,10 +97,6 @@ export async function DELETE(
 
       if (!category) {
         throw new RouteError("Category not found", 404)
-      }
-
-      if (category._count.children > 0) {
-        throw new RouteError("Move or delete child categories first", 400)
       }
 
       await tx.post.updateMany({

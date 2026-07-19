@@ -29,6 +29,7 @@ vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }))
 import {
   AwardEventError,
   adminAwardEventDetailSelect,
+  unpublishAwardEventPost,
   updateAwardEventRoom,
 } from "@/lib/awardEventService"
 
@@ -75,6 +76,19 @@ describe("updateAwardEventRoom", () => {
     } satisfies Partial<AwardEventError>)
   })
 
+  it("rejects every writer room update after the event is closed", async () => {
+    mocks.prisma.awardEventRoom.findUnique.mockResolvedValue({
+      event: { status: "CLOSED" },
+      id: "room-1",
+    })
+
+    await expect(updateAwardEventRoom(updateInput("post-1"))).rejects.toMatchObject({
+      message: "Event is closed",
+      status: 400,
+    } satisfies Partial<AwardEventError>)
+    expect(mocks.prisma.post.findFirst).not.toHaveBeenCalled()
+  })
+
   it("saves the selected post id when the writer owns an eligible post", async () => {
     mocks.prisma.post.findFirst.mockResolvedValue({
       id: "post-1",
@@ -100,21 +114,22 @@ describe("updateAwardEventRoom", () => {
     )
   })
 
-  it("regenerates an already-published anthology when a writer submits later", async () => {
+  it("regenerates an existing published anthology while the event is open", async () => {
     const longIntroduction = "Event introduction ".repeat(40).trim()
     mocks.prisma.awardEventRoom.findUnique.mockResolvedValue({
-      event: { status: "PUBLISHED" },
+      event: { status: "OPEN" },
       id: "room-1",
     })
     mocks.prisma.post.findFirst.mockResolvedValue({ id: "post-1", status: "DRAFT" })
     mocks.prisma.awardEvent.findUnique
-      .mockResolvedValueOnce({ finalPostId: "final-post-1", status: "PUBLISHED" })
+      .mockResolvedValueOnce({ finalPostId: "final-post-1", status: "OPEN" })
       .mockResolvedValueOnce({
         categoryId: null,
         coverAlt: null,
         coverUrl: null,
         createdById: "admin-1",
         finalPostId: "final-post-1",
+        finalPost: { id: "final-post-1", slug: "awards", status: "PUBLISHED" },
         id: "event-1",
         intro: { content: [], type: "doc" },
         introText: longIntroduction,
@@ -180,5 +195,33 @@ describe("adminAwardEventDetailSelect", () => {
       title: true,
     })
     expect(selectedPostSelect).not.toHaveProperty("content")
+  })
+})
+
+describe("unpublishAwardEventPost", () => {
+  it("keeps the generated article but returns it to an editable draft", async () => {
+    mocks.prisma.awardEvent.findUnique.mockResolvedValue({
+      finalPostId: "final-post-1",
+    })
+    mocks.prisma.post.update.mockResolvedValue({
+      id: "final-post-1",
+      slug: "awards",
+      status: "DRAFT",
+    })
+
+    await expect(unpublishAwardEventPost("event-1")).resolves.toMatchObject({
+      status: "DRAFT",
+    })
+    expect(mocks.prisma.post.update).toHaveBeenCalledWith({
+      data: {
+        moderationLockedAt: null,
+        publishedAt: null,
+        removedAt: null,
+        removedFromStatus: null,
+        status: "DRAFT",
+      },
+      select: { id: true, slug: true, status: true },
+      where: { id: "final-post-1" },
+    })
   })
 })

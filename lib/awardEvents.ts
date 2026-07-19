@@ -221,5 +221,31 @@ export function shuffleAwardEventRooms(
     shuffled[swapIndex] = current
   }
 
+  if (
+    shuffled.length > 1 &&
+    shuffled.every((room, index) => room.id === rooms[index]?.id)
+  ) {
+    shuffled.push(shuffled.shift()!)
+  }
+
   return shuffled.map((room, order) => ({ ...room, order }))
+}
+
+export function reorderAwardEventRooms<T extends OrderedAwardEventRoom>(
+  rooms: T[],
+  roomId: string,
+  targetRoomId: string,
+) {
+  const currentIndex = rooms.findIndex((room) => room.id === roomId)
+  const targetIndex = rooms.findIndex((room) => room.id === targetRoomId)
+
+  if (currentIndex < 0 || targetIndex < 0 || currentIndex === targetIndex) {
+    return rooms
+  }
+
+  const reordered = [...rooms]
+  const [draggedRoom] = reordered.splice(currentIndex, 1)
+  reordered.splice(targetIndex, 0, draggedRoom)
+
+  return reordered.map((room, order) => ({ ...room, order }))
 }

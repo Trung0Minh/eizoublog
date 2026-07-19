@@ -55,7 +55,6 @@ export function AdminNav({ user }: { user?: WriterMenuUser | null }) {
           <Link
             className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border-default/60 bg-background/45 px-3 text-[13px] font-medium text-text-secondary shadow-sm backdrop-blur-md transition-colors hover:border-accent/35 hover:bg-subtle-bg hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             href="/"
-            prefetch={false}
           >
             <ArrowLeft aria-hidden="true" className="h-3.5 w-3.5" />
             Blog
@@ -82,7 +81,6 @@ export function AdminNav({ user }: { user?: WriterMenuUser | null }) {
                 )}
                 href={href}
                 key={href}
-                prefetch={false}
                 style={
                   active
                     ? {
@@ -155,7 +153,6 @@ export function AdminNav({ user }: { user?: WriterMenuUser | null }) {
                     href={href}
                     key={href}
                     onClick={() => setDrawerOpen(false)}
-                    prefetch={false}
                   >
                     <Icon aria-hidden="true" className="h-4 w-4" />
                     {label}
@@ -167,7 +164,6 @@ export function AdminNav({ user }: { user?: WriterMenuUser | null }) {
               <Link
                 className="flex items-center gap-1.5 text-[13px] font-medium text-text-secondary transition-colors hover:text-text-primary"
                 href="/"
-                prefetch={false}
               >
                 View blog &rarr;
               </Link>

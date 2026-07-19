@@ -5,7 +5,7 @@ import { ZodError, z } from "zod"
 import {
   AwardEventError,
   awardEventDetailSelect,
-  regeneratePublishedEventIfNeeded,
+  regenerateEventPostIfExists,
 } from "@/lib/awardEventService"
 import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
 import { prisma } from "@/lib/prisma"
@@ -24,7 +24,7 @@ const updateEventSchema = z.object({
     excluded: z.boolean(),
     id: z.string().min(1),
   }).optional(),
-  status: z.enum(["DRAFT", "OPEN", "CLOSED", "PUBLISHED", "ARCHIVED"]).optional(),
+  status: z.enum(["OPEN", "CLOSED"]).optional(),
   tagIds: z.array(z.string().min(1)).optional(),
   title: z.string().trim().min(1).max(200).optional(),
 })
@@ -38,7 +38,7 @@ function getStatusDates(status: AwardEventStatus | undefined) {
     return { openedAt: new Date() }
   }
 
-  if (status === "CLOSED" || status === "ARCHIVED") {
+  if (status === "CLOSED") {
     return { closedAt: new Date() }
   }
 
@@ -143,7 +143,7 @@ export async function PATCH(
       })
     })
 
-    await regeneratePublishedEventIfNeeded(id)
+    await regenerateEventPostIfExists(id)
     revalidateTag("award-events", "max")
 
     return Response.json({ data: event })
@@ -178,7 +178,7 @@ export async function DELETE(
       const event = await tx.awardEvent.findUnique({
         select: {
           finalPost: {
-            select: { id: true, slug: true, status: true, title: true },
+            select: { id: true, slug: true, title: true },
           },
           id: true,
           title: true,
@@ -194,25 +194,14 @@ export async function DELETE(
         throw new AwardEventError("Event title does not match", 400)
       }
 
-      if (event.finalPost && event.finalPost.status !== "REMOVED") {
-        const removedAt = new Date()
-        await tx.post.update({
-          data: {
-            moderationLockedAt: removedAt,
-            removedAt,
-            removedFromStatus: event.finalPost.status,
-            status: "REMOVED",
-          },
-          select: { id: true },
-          where: { id: event.finalPost.id },
-        })
+      if (event.finalPost) {
         await tx.postAuditEvent.create({
           data: {
-            action: "DELETE",
+            action: "PURGE",
             actorId: activeSession.user.id,
             metadata: {
               eventId: event.id,
-              reason: "Award event deleted",
+              reason: "Award event permanently removed",
               title: event.finalPost.title,
             },
             postId: event.finalPost.id,
@@ -220,12 +209,33 @@ export async function DELETE(
           },
           select: { id: true },
         })
+        await tx.awardEventRoom.updateMany({
+          data: { postId: null },
+          where: { postId: event.finalPost.id },
+        })
+        await tx.notification.deleteMany({
+          where: { data: { equals: event.finalPost.id, path: ["postId"] } },
+        })
+        await tx.analyticsEvent.deleteMany({
+          where: { postSlug: event.finalPost.slug },
+        })
+        await tx.analyticsDailyPage.deleteMany({
+          where: { postSlug: event.finalPost.slug },
+        })
+        await tx.postRevision.deleteMany({ where: { postId: event.finalPost.id } })
       }
 
       await tx.awardEvent.delete({
         select: { id: true },
         where: { id },
       })
+
+      if (event.finalPost) {
+        await tx.post.delete({
+          select: { id: true },
+          where: { id: event.finalPost.id },
+        })
+      }
 
       return { finalPostSlug: event.finalPost?.slug ?? null }
     })

@@ -36,7 +36,7 @@ interface EligiblePost {
 interface EventRoomEditorProps {
   eligiblePosts: EligiblePost[]
   event: {
-    finalPost: { slug: string } | null
+    finalPost: { slug: string; status: PostStatus } | null
     id: string
     status: string
     title: string
@@ -70,7 +70,7 @@ export function EventRoomEditor({
   const [visibility, setVisibility] = useState<AwardEventRoomVisibility>(room.visibility)
   const [writerIntro, setWriterIntro] = useState(room.writerIntro ?? "")
 
-  const controlsDisabled = event.status === "CLOSED" || event.status === "ARCHIVED"
+  const controlsDisabled = event.status === "CLOSED"
   async function submit() {
     setError("")
     setIsPending(true)
@@ -141,7 +141,7 @@ export function EventRoomEditor({
             >
               <Send aria-hidden="true" className="h-4 w-4" />
             </Button>
-            {event.finalPost && (
+            {event.finalPost?.status === "PUBLISHED" && (
               <Button asChild className="h-10 w-10 rounded-[13px] sm:h-11 sm:w-11 sm:rounded-[14px]" size="icon" variant="outline">
                 <Link
                   aria-label="Mở bài viết công khai"

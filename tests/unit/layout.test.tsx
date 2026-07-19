@@ -606,7 +606,6 @@ describe("Sidebar", () => {
         categories={[
           {
             _count: { posts: 3 },
-            children: [{ id: "child-1", name: "Animation", slug: "animation" }],
             id: "category-1",
             name: "Analysis",
             slug: "analysis",
@@ -749,9 +748,6 @@ describe("Sidebar", () => {
         categories={[
           {
             _count: { posts: 2 },
-            children: [
-              { id: "child-1", name: "Animation", slug: "animation" },
-            ],
             id: "category-1",
             name: "Production",
             slug: "production",

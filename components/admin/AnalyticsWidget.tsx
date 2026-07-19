@@ -12,21 +12,23 @@ import {
 
 import { AdminMetricCard } from "@/components/admin/AdminPrimitives"
 import type {
+  InternalDailyPageview,
   InternalAnalyticsStats,
   InternalTopPage,
 } from "@/lib/internalAnalytics"
 import { getCachedAdminAnalyticsData } from "@/lib/queries"
 
 function last30Days() {
-  const endAt = Date.now()
-  const startAt = endAt - 30 * 24 * 60 * 60 * 1000
+  const now = new Date()
+  const endAt = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  const startAt = endAt - 29 * 24 * 60 * 60 * 1000
 
   return { endAt, startAt }
 }
 
 function percentChange(current: number, previous: number) {
   if (previous === 0) {
-    return current === 0 ? "0%" : "+100%"
+    return current === 0 ? "0%" : "New"
   }
 
   const change = ((current - previous) / previous) * 100
@@ -73,9 +75,10 @@ export async function AnalyticsWidget({
   const { endAt, startAt } = last30Days()
   let stats: InternalAnalyticsStats
   let topPages: InternalTopPage[]
+  let dailyPageviews: InternalDailyPageview[]
 
   try {
-    ;({ stats, topPages } = await getCachedAdminAnalyticsData(startAt, endAt))
+    ;({ dailyPageviews, stats, topPages } = await getCachedAdminAnalyticsData(startAt, endAt))
 
     // Aggregate by path to merge duplicates (e.g. tracking variations with different postSlugs)
     const aggregatedPagesMap = topPages.reduce((acc, page) => {
@@ -163,18 +166,16 @@ export async function AnalyticsWidget({
   const visibleMetrics = compact ? metrics.slice(0, 4) : metrics
 
   if (!compact) {
-    const chartValues = [
-      Math.max(stats.pageviews.prev, 0),
-      Math.max(stats.visits.prev, 0),
-      Math.max(stats.visitors.prev, 0),
-      Math.max(stats.reads.prev, 0),
-      Math.max(stats.reads.value, 0),
-      Math.max(stats.visitors.value, 0),
-      Math.max(stats.visits.value, 0),
-      Math.max(stats.pageviews.value, 0),
-    ]
+    const chartValues = dailyPageviews.map((point) => Math.max(point.pageviews, 0))
     const chartPoints = buildLinePoints(chartValues)
-    const chartLabels = ["Day 1", "Day 5", "Day 9", "Day 13"]
+    const chartLabels = [0, 9, 19, 29]
+      .map((index) => dailyPageviews[index])
+      .filter((point): point is InternalDailyPageview => Boolean(point))
+      .map((point) =>
+        new Intl.DateTimeFormat("en", { day: "numeric", month: "short", timeZone: "UTC" }).format(
+          new Date(`${point.day}T00:00:00Z`),
+        ),
+      )
     const totalViews = stats.pageviews.value
     const topPanelPages = topPages.slice(0, 5)
     const engagementRows = [
@@ -216,11 +217,10 @@ export async function AnalyticsWidget({
             </div>
           </div>
 
-          <div className="h-[300px] w-full">
+          <div className="h-[260px] w-full">
             <svg
               aria-label="Page views trend"
               className="h-full w-full overflow-visible"
-              preserveAspectRatio="none"
               viewBox="0 0 720 300"
             >
               {[48, 96, 144, 192, 240].map((y) => (
@@ -259,21 +259,10 @@ export async function AnalyticsWidget({
                   />
                 )
               })}
-              {chartLabels.map((label, index) => (
-                <text
-                  fill="var(--text-tertiary)"
-                  fontSize="11"
-                  key={label}
-                  textAnchor={
-                    index === 0 ? "start" : index === chartLabels.length - 1 ? "end" : "middle"
-                  }
-                  x={index * 240}
-                  y="292"
-                >
-                  {label}
-                </text>
-              ))}
             </svg>
+          </div>
+          <div className="mt-2 flex justify-between text-[11px] font-medium text-text-tertiary">
+            {chartLabels.map((label) => <span key={label}>{label}</span>)}
           </div>
         </div>
 
@@ -281,7 +270,7 @@ export async function AnalyticsWidget({
           <div className="overflow-hidden rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 backdrop-blur-md shadow-sm">
             <div className="border-b border-border-default/50 p-5 sm:p-6">
               <h3 className="text-[16px] font-bold text-text-primary">
-                Top Referrers
+                Top Pages
               </h3>
             </div>
             <div className="flex flex-col">
@@ -319,7 +308,7 @@ export async function AnalyticsWidget({
           <div className="overflow-hidden rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 backdrop-blur-md shadow-sm">
             <div className="border-b border-border-default/50 p-5 sm:p-6">
               <h3 className="text-[16px] font-bold text-text-primary">
-                Device Breakdown
+                Engagement
               </h3>
             </div>
             <div className="flex flex-col gap-6 p-5 sm:p-6">
@@ -363,7 +352,7 @@ export async function AnalyticsWidget({
     <section>
       <div className={compact ? "mb-6 grid grid-cols-2 gap-3" : "mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"}>
         {visibleMetrics.map(({ change, icon, label, value }) => {
-          const isPositive = change.startsWith("+")
+          const isPositive = change.startsWith("+") || change === "New"
           const isFlat = change === "0%"
 
           return (

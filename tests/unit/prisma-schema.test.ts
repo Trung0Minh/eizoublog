@@ -85,7 +85,7 @@ describe("Prisma Auth.js adapter schema", () => {
     expect(inviteModel).toContain(
       "@@index([status, expiresAt, createdAt(sort: Desc)])",
     )
-    expect(categoryModel).toContain("@@index([parentId, name])")
+    expect(categoryModel).not.toContain("parentId")
   })
 
   it("defines internal analytics tables for event tracking and daily aggregates", () => {

@@ -197,10 +197,9 @@ model AwardEvent {
   introText   String?          @db.Text
   coverUrl    String?
   coverAlt    String?
-  status      AwardEventStatus @default(DRAFT)
+  status      AwardEventStatus @default(OPEN)
   openedAt    DateTime?
   closedAt    DateTime?
-  publishedAt DateTime?
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
   createdById String
@@ -221,11 +220,8 @@ model AwardEvent {
 }
 
 enum AwardEventStatus {
-  DRAFT
   OPEN
   CLOSED
-  PUBLISHED
-  ARCHIVED
 }
 
 model AwardEventRoom {
@@ -314,15 +310,11 @@ model Category {
   name        String       @unique
   slug        String       @unique
   description String?      @db.Text
-  parentId    String?
   createdAt   DateTime     @default(now())
-  parent      Category?    @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children    Category[]   @relation("CategoryHierarchy")
   posts       Post[]
   awardEvents AwardEvent[]
 
   @@index([slug])
-  @@index([parentId, name])
   @@map("categories")
 }
 

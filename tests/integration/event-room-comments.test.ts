@@ -49,6 +49,7 @@ describe("Event Room Comments API", () => {
     mocks.prisma.awardEventRoom.findUnique.mockImplementation(async ({ where }) => {
       if (where.id === "room-1") {
         return {
+          event: { status: "OPEN" },
           eventId: "event-1",
           id: "room-1",
           visibility: "PARTICIPANTS",
@@ -202,6 +203,25 @@ describe("Event Room Comments API", () => {
         id: "participant-1",
         role: "WRITER",
       })
+    })
+
+    it("rejects new feedback after the event is closed", async () => {
+      mocks.prisma.awardEventRoom.findUnique.mockResolvedValue({
+        event: { status: "CLOSED" },
+        eventId: "event-1",
+        id: "room-1",
+        visibility: "PARTICIPANTS",
+        writerId: "owner-1",
+      })
+
+      const response = await POST(
+        jsonRequest({ content: "Too late" }),
+        routeParams(),
+      )
+
+      expect(response.status).toBe(400)
+      await expect(response.json()).resolves.toEqual({ error: "Event is closed" })
+      expect(mocks.prisma.awardEventRoomComment.create).not.toHaveBeenCalled()
     })
 
     it("creates a public comment when isPrivate is omitted (defaults to false)", async () => {

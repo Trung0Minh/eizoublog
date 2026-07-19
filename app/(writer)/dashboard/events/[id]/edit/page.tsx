@@ -21,7 +21,7 @@ export default async function EditRoomPage({ params }: EditRoomPageProps) {
   const { id } = await params
   let event = await prisma.awardEvent.findUnique({
     select: {
-      finalPost: { select: { slug: true } },
+      finalPost: { select: { slug: true, status: true } },
       id: true,
       rooms: {
         select: {
@@ -48,9 +48,7 @@ export default async function EditRoomPage({ params }: EditRoomPageProps) {
 
   if (
     !event ||
-    (event.status !== "OPEN" &&
-      event.status !== "PUBLISHED" &&
-      event.status !== "CLOSED")
+    (event.status !== "OPEN" && event.status !== "CLOSED")
   ) {
     notFound()
   }
@@ -63,7 +61,7 @@ export default async function EditRoomPage({ params }: EditRoomPageProps) {
     await joinAwardEvent(id, session.user.id)
     event = await prisma.awardEvent.findUnique({
       select: {
-        finalPost: { select: { slug: true } },
+        finalPost: { select: { slug: true, status: true } },
         id: true,
         rooms: {
           select: {

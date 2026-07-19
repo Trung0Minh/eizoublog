@@ -273,9 +273,7 @@ describe("cached Prisma query helpers", () => {
         orderBy: { name: "asc" },
         select: expect.objectContaining({
           _count: expect.any(Object),
-          children: expect.any(Object),
         }),
-        where: { parentId: null },
       }),
     )
     expect(mocks.prisma.$queryRaw).toHaveBeenCalled()
@@ -402,7 +400,6 @@ describe("cached Prisma query helpers", () => {
     expect(mocks.prisma.category.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         orderBy: { name: "asc" },
-        where: { parentId: null },
       }),
     )
     expect(mocks.prisma.user.findMany).toHaveBeenCalledWith(

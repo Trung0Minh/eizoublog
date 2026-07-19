@@ -13,9 +13,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
@@ -33,7 +31,6 @@ import { cn } from "@/lib/utils"
 import { MAX_POST_EXCERPT_CHARACTERS } from "@/lib/postLimits"
 
 interface CategoryOption {
-  children: { id: string; name: string; slug?: string }[]
   id: string
   name: string
   slug: string
@@ -636,15 +633,9 @@ export function PostEditor({
                         <SelectContent className="z-[110]">
                           <SelectItem value="none">Không có danh mục</SelectItem>
                           {categories.map((category) => (
-                            <SelectGroup key={category.id}>
-                              <SelectLabel className="font-bold text-text-primary pl-2">{category.name}</SelectLabel>
-                              <SelectItem value={category.id} className="pl-4">{category.name}</SelectItem>
-                              {category.children.map((child) => (
-                                <SelectItem key={child.id} value={child.id} className="pl-6 text-text-secondary">
-                                  {child.name}
-                                </SelectItem>
-                              ))}
-                            </SelectGroup>
+                            <SelectItem key={category.id} value={category.id}>
+                              {category.name}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>

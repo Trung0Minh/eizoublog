@@ -57,8 +57,8 @@ describe("public navigation performance contracts", () => {
     expect(rootTemplate).toContain("duration: 0.5")
     expect(publicTemplate).toContain("initial={{ opacity: 0 }}")
     expect(publicTemplate).toContain("duration: 0.4")
-    expect(scrollReveal).toContain("initial={{ opacity: 0, y: 30 }}")
-    expect(scrollReveal).toContain("duration: 0.6")
+    expect(scrollReveal).toContain("initial={{ opacity: 0, y: 12 }}")
+    expect(scrollReveal).toContain("duration: 0.3")
   })
 
   it("keeps the homepage hero visible in server-rendered HTML", () => {
@@ -96,15 +96,11 @@ describe("public navigation performance contracts", () => {
     expect(background).not.toContain('useState("spring")')
   })
 
-  it("keeps the current page mounted instead of replacing it with a transparent route loader", () => {
-    for (const loadingPath of [
-      "app/(public)/loading.tsx",
-      "app/(writer)/dashboard/loading.tsx",
-      "app/(writer)/dashboard/events/loading.tsx",
-      "app/(admin)/admin/loading.tsx",
-    ]) {
-      expect(() => read(loadingPath)).toThrow()
-    }
+  it("only adds a loading boundary for the admin workspace", () => {
+    expect(() => read("app/(public)/loading.tsx")).toThrow()
+    expect(() => read("app/(writer)/dashboard/loading.tsx")).toThrow()
+    expect(() => read("app/(writer)/dashboard/events/loading.tsx")).toThrow()
+    expect(read("app/(admin)/admin/loading.tsx")).toContain("Loading admin workspace")
   })
 
   it("prevents browser reload scroll restoration from accumulating offsets", () => {

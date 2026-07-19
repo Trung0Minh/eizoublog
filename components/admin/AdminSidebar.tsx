@@ -56,7 +56,6 @@ export function AdminSidebar({ user }: { user?: WriterMenuUser | null }) {
         <Link
           className="mb-4 flex h-10 items-center gap-3 rounded-[16px] px-3 text-[14px] font-medium text-text-secondary transition-all hover:bg-subtle-bg/80 hover:text-text-primary group"
           href="/"
-          prefetch={false}
         >
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-background border border-border-default/50 shadow-sm text-text-tertiary group-hover:text-text-primary transition-colors">
             <ArrowLeft aria-hidden="true" className="h-3.5 w-3.5" />
@@ -78,7 +77,6 @@ export function AdminSidebar({ user }: { user?: WriterMenuUser | null }) {
               )}
               href={href}
               key={href}
-              prefetch={false}
             >
               <div className={cn(
                 "flex h-7 w-7 items-center justify-center rounded-[8px] transition-colors shadow-sm border",

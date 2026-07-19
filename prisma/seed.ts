@@ -15,7 +15,7 @@ async function main() {
     },
   })
 
-  const analysis = await prisma.category.upsert({
+  await prisma.category.upsert({
     where: { slug: "analysis" },
     update: {},
     create: {
@@ -41,7 +41,7 @@ async function main() {
     create: {
       name: "Animation Analysis",
       slug: "animation-analysis",
-      parentId: analysis.id,
+      description: "Analysis of animation craft and movement",
     },
   })
 
@@ -51,7 +51,7 @@ async function main() {
     create: {
       name: "Narrative Analysis",
       slug: "narrative-analysis",
-      parentId: analysis.id,
+      description: "Analysis of narrative structure and storytelling",
     },
   })
 

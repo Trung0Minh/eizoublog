@@ -24,7 +24,7 @@ export default async function DashboardEventRoomPage({
   const { id } = await params
   let event = await prisma.awardEvent.findUnique({
     select: {
-      finalPost: { select: { slug: true } },
+      finalPost: { select: { slug: true, status: true } },
       id: true,
       rooms: {
         select: {
@@ -51,9 +51,7 @@ export default async function DashboardEventRoomPage({
 
   if (
     !event ||
-    (event.status !== "OPEN" &&
-      event.status !== "PUBLISHED" &&
-      event.status !== "CLOSED")
+    (event.status !== "OPEN" && event.status !== "CLOSED")
   ) {
     notFound()
   }
@@ -66,7 +64,7 @@ export default async function DashboardEventRoomPage({
     await joinAwardEvent(id, session.user.id)
     event = await prisma.awardEvent.findUnique({
       select: {
-        finalPost: { select: { slug: true } },
+        finalPost: { select: { slug: true, status: true } },
         id: true,
         rooms: {
           select: {
@@ -159,7 +157,7 @@ export default async function DashboardEventRoomPage({
           </h1>
         </div>
         <div className="flex gap-2">
-          {event.finalPost && (
+          {event.finalPost?.status === "PUBLISHED" && (
             <Button asChild size="sm" variant="outline">
               <Link href={`/${event.finalPost.slug}`}>Public post</Link>
             </Button>

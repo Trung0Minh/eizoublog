@@ -6,29 +6,16 @@ import { prisma } from "@/lib/prisma"
 import { generateSlug } from "@/lib/utils"
 
 const categorySelect = {
-  _count: { select: { children: true, posts: true } },
-  children: {
-    orderBy: { name: "asc" },
-    select: {
-      _count: { select: { children: true, posts: true } },
-      description: true,
-      id: true,
-      name: true,
-      parentId: true,
-      slug: true,
-    },
-  },
+  _count: { select: { posts: true } },
   description: true,
   id: true,
   name: true,
-  parentId: true,
   slug: true,
 } as const
 
 const categorySchema = z.object({
   description: z.string().trim().max(500).optional(),
   name: z.string().trim().min(1).max(80),
-  parentId: z.string().min(1).nullable().optional(),
 })
 
 async function requireAdmin() {
@@ -46,7 +33,6 @@ export async function GET() {
     const categories = await prisma.category.findMany({
       orderBy: { name: "asc" },
       select: categorySelect,
-      where: { parentId: null },
     })
 
     return Response.json({ data: categories })
@@ -70,9 +56,6 @@ export async function POST(request: Request) {
       data: {
         description: data.description || null,
         name: data.name,
-        ...(data.parentId
-          ? { parent: { connect: { id: data.parentId } } }
-          : {}),
         slug,
       },
       select: categorySelect,

@@ -4,8 +4,10 @@ import * as Dialog from "@radix-ui/react-dialog"
 import type { LucideIcon } from "lucide-react"
 import { AlertTriangle, Loader2, X } from "lucide-react"
 import type { ReactNode } from "react"
+import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 
 type ConfirmationTone = "default" | "destructive" | "warning"
@@ -13,6 +15,7 @@ type ConfirmationTone = "default" | "destructive" | "warning"
 interface ConfirmationDialogProps {
   cancelLabel?: string
   confirmLabel: string
+  confirmationText?: string
   description: ReactNode
   icon?: LucideIcon
   onConfirm: () => void
@@ -33,6 +36,7 @@ const toneClasses: Record<ConfirmationTone, string> = {
 export function ConfirmationDialog({
   cancelLabel = "Cancel",
   confirmLabel,
+  confirmationText,
   description,
   icon: Icon = AlertTriangle,
   onConfirm,
@@ -42,8 +46,18 @@ export function ConfirmationDialog({
   title,
   tone = "default",
 }: ConfirmationDialogProps) {
+  const [confirmation, setConfirmation] = useState("")
+
+  const confirmationMatches =
+    !confirmationText || confirmation === confirmationText
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) setConfirmation("")
+    onOpenChange(nextOpen)
+  }
+
   return (
-    <Dialog.Root onOpenChange={onOpenChange} open={open}>
+    <Dialog.Root onOpenChange={handleOpenChange} open={open}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-[120] bg-black/55 backdrop-blur-sm data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <Dialog.Content className="fixed left-1/2 top-1/2 z-[121] w-[calc(100%-2rem)] max-w-[430px] -translate-x-1/2 -translate-y-1/2 rounded-[20px] border border-border-default/70 bg-background/90 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl outline-none data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:p-7">
@@ -73,6 +87,20 @@ export function ConfirmationDialog({
             </div>
           </Dialog.Description>
 
+          {confirmationText && (
+            <div className="mt-5 space-y-2">
+              <label className="text-xs font-semibold text-text-secondary" htmlFor="confirmation-text">
+                Type <span className="font-mono text-text-primary">{confirmationText}</span> to confirm
+              </label>
+              <Input
+                autoComplete="off"
+                id="confirmation-text"
+                onChange={(event) => setConfirmation(event.target.value)}
+                value={confirmation}
+              />
+            </div>
+          )}
+
           <div className="mt-7 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Dialog.Close asChild>
               <Button disabled={pending} type="button" variant="outline">
@@ -84,7 +112,7 @@ export function ConfirmationDialog({
                 tone === "warning" &&
                   "bg-orange-600 text-white hover:bg-orange-600/90 dark:bg-orange-500",
               )}
-              disabled={pending}
+              disabled={pending || !confirmationMatches}
               onClick={onConfirm}
               type="button"
               variant={tone === "destructive" ? "destructive" : "default"}

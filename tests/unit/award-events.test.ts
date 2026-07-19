@@ -6,6 +6,7 @@ import {
   buildAwardEventPostContent,
   emptyAwardEventDoc,
   namespaceAwardEventPostContent,
+  reorderAwardEventRooms,
   shuffleAwardEventRooms,
 } from "@/lib/awardEvents"
 
@@ -222,5 +223,37 @@ describe("shuffleAwardEventRooms", () => {
     expect(shuffled.map((room) => room.id).sort()).toEqual(["a", "b", "c"])
     expect(shuffled.map((room) => room.order)).toEqual([0, 1, 2])
     expect(shuffled.map((room) => room.id)).toEqual(["a", "c", "b"])
+  })
+
+  it("rotates rooms when randomization would keep the original order", () => {
+    const shuffled = shuffleAwardEventRooms(
+      [
+        { id: "a", order: 0 },
+        { id: "b", order: 1 },
+      ],
+      () => 0.99,
+    )
+
+    expect(shuffled.map((room) => room.id)).toEqual(["b", "a"])
+  })
+})
+
+describe("reorderAwardEventRooms", () => {
+  it("moves a room to the hovered position and normalizes all orders", () => {
+    const reordered = reorderAwardEventRooms(
+      [
+        { id: "a", order: 0 },
+        { id: "b", order: 1 },
+        { id: "c", order: 2 },
+      ],
+      "a",
+      "c",
+    )
+
+    expect(reordered).toEqual([
+      { id: "b", order: 0 },
+      { id: "c", order: 1 },
+      { id: "a", order: 2 },
+    ])
   })
 })

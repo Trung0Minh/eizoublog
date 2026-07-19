@@ -15,7 +15,7 @@ interface AdminEventItem {
   _count: { rooms: number }
   createdAt: Date
   id: string
-  publishedAt: Date | null
+  finalPost: { status: "DRAFT" | "PUBLISHED" | "ARCHIVED" | "REMOVED" } | null
   slug: string
   status: AwardEventStatus
   title: string
@@ -47,16 +47,10 @@ function getApiError(value: unknown) {
 
 function statusLabel(status: AwardEventStatus) {
   switch (status) {
-    case "ARCHIVED":
-      return "Archived"
     case "CLOSED":
       return "Closed"
-    case "DRAFT":
-      return "Draft"
     case "OPEN":
       return "Open"
-    case "PUBLISHED":
-      return "Published"
   }
 }
 
@@ -64,14 +58,8 @@ function statusClass(status: AwardEventStatus) {
   switch (status) {
     case "OPEN":
       return "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-    case "PUBLISHED":
-      return "border-accent/30 bg-accent/10 text-accent"
     case "CLOSED":
       return "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
-    case "ARCHIVED":
-      return "border-border-default bg-subtle-bg text-text-tertiary"
-    case "DRAFT":
-      return "border-border-default bg-background text-text-secondary"
   }
 }
 
@@ -300,7 +288,6 @@ export function AdminEventsManager({
                     <Link
                       className="rounded-sm text-text-primary transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                       href={`/admin/events/${event.id}`}
-                      prefetch={false}
                     >
                       {event.title}
                     </Link>
@@ -312,6 +299,9 @@ export function AdminEventsManager({
                     )}
                   >
                     {statusLabel(event.status)}
+                  </span>
+                  <span className="rounded-full border border-border-default bg-background px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-text-secondary">
+                    Article: {event.finalPost?.status === "PUBLISHED" ? "Published" : event.finalPost?.status === "REMOVED" ? "Removed" : "Unpublished"}
                   </span>
                 </div>
                 <p className="mt-1.5 flex items-center gap-2 text-[13px] font-medium text-text-secondary">
@@ -341,12 +331,14 @@ export function AdminEventsManager({
       </div>
 
       <ConfirmationDialog
+        key={deleteTarget?.id ?? "delete-event"}
         confirmLabel="Delete event"
+        confirmationText={deleteTarget?.title}
         description={
           <>
             Delete <strong className="text-text-primary">{deleteTarget?.title}</strong>,
-            all participant rooms, and their feedback. Any generated public event post
-            will be moved to Removed for recovery.
+            all participant rooms, feedback, and its generated article permanently.
+            Writers&apos; source posts are not affected.
           </>
         }
         icon={Trash2}

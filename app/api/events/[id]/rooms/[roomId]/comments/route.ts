@@ -21,6 +21,7 @@ async function canAccessRoom({
 }) {
   const room = await prisma.awardEventRoom.findUnique({
     select: {
+      event: { select: { status: true } },
       eventId: true,
       id: true,
       visibility: true,
@@ -127,6 +128,10 @@ export async function POST(
 
     if (!room) {
       return Response.json({ error: "Room not found" }, { status: 404 })
+    }
+
+    if (room.event.status === "CLOSED") {
+      return Response.json({ error: "Event is closed" }, { status: 400 })
     }
 
     const data = commentSchema.parse(await request.json())

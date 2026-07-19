@@ -29,9 +29,9 @@ export const awardEventListSelect = {
   _count: { select: { rooms: true } },
   closedAt: true,
   createdAt: true,
+  finalPost: { select: { status: true } },
   id: true,
   openedAt: true,
-  publishedAt: true,
   slug: true,
   status: true,
   title: true,
@@ -54,7 +54,6 @@ export const awardEventDetailSelect = {
   intro: true,
   introText: true,
   openedAt: true,
-  publishedAt: true,
   rooms: {
     orderBy: [{ order: "asc" }, { updatedAt: "asc" }],
     select: {
@@ -139,7 +138,10 @@ export function normalizeAwardEventContent(content: unknown): JSONContent {
   return emptyAwardEventDoc
 }
 
-export async function regenerateAwardEventPost(eventId: string) {
+export async function regenerateAwardEventPost(
+  eventId: string,
+  options: { publish?: boolean } = {},
+) {
   const event = await prisma.awardEvent.findUnique({
     select: awardEventDetailSelect,
     where: { id: eventId },
@@ -175,6 +177,11 @@ export async function regenerateAwardEventPost(eventId: string) {
 
   const post = await prisma.$transaction(async (tx) => {
     if (event.finalPostId) {
+      const nextStatus = options.publish
+        ? "PUBLISHED"
+        : event.finalPost?.status === "PUBLISHED"
+          ? "PUBLISHED"
+          : "DRAFT"
       return tx.post.update({
         data: {
           category: event.categoryId
@@ -186,8 +193,16 @@ export async function regenerateAwardEventPost(eventId: string) {
           coverUrl: event.coverUrl,
           excerpt: truncatePostExcerpt(event.introText),
           lastSavedAt: new Date(),
-          publishedAt: event.publishedAt ?? new Date(),
-          status: "PUBLISHED",
+          moderationLockedAt: null,
+          publishedAt:
+            nextStatus === "PUBLISHED"
+              ? event.finalPost?.status === "PUBLISHED"
+                ? undefined
+                : new Date()
+              : null,
+          removedAt: null,
+          removedFromStatus: null,
+          status: nextStatus,
           tags: {
             create: tagIds.map((tagId) => ({
               tag: { connect: { id: tagId } },
@@ -226,8 +241,6 @@ export async function regenerateAwardEventPost(eventId: string) {
     await tx.awardEvent.update({
       data: {
         finalPostId: createdPost.id,
-        publishedAt: new Date(),
-        status: "PUBLISHED",
       },
       where: { id: event.id },
     })
@@ -241,13 +254,45 @@ export async function regenerateAwardEventPost(eventId: string) {
   return post
 }
 
-export async function regeneratePublishedEventIfNeeded(eventId: string) {
+export async function unpublishAwardEventPost(eventId: string) {
   const event = await prisma.awardEvent.findUnique({
-    select: { finalPostId: true, status: true },
+    select: { finalPostId: true },
     where: { id: eventId },
   })
 
-  if (event?.status === "PUBLISHED" && event.finalPostId) {
+  if (!event) {
+    throw new AwardEventError("Event not found", 404)
+  }
+
+  if (!event.finalPostId) {
+    return null
+  }
+
+  const post = await prisma.post.update({
+    data: {
+      moderationLockedAt: null,
+      publishedAt: null,
+      removedAt: null,
+      removedFromStatus: null,
+      status: "DRAFT",
+    },
+    select: { id: true, slug: true, status: true },
+    where: { id: event.finalPostId },
+  })
+
+  revalidateTag("posts", "max")
+  revalidatePath(`/${post.slug}`)
+
+  return post
+}
+
+export async function regenerateEventPostIfExists(eventId: string) {
+  const event = await prisma.awardEvent.findUnique({
+    select: { finalPostId: true },
+    where: { id: eventId },
+  })
+
+  if (event?.finalPostId) {
     await regenerateAwardEventPost(eventId)
   }
 }
@@ -262,7 +307,7 @@ export async function joinAwardEvent(eventId: string, writerId: string) {
     throw new AwardEventError("Event not found", 404)
   }
 
-  if (event.status !== "OPEN" && event.status !== "PUBLISHED") {
+  if (event.status !== "OPEN") {
     throw new AwardEventError("Event is not open", 400)
   }
 
@@ -316,7 +361,7 @@ export async function updateAwardEventRoom({
     throw new AwardEventError("Room not found", 404)
   }
 
-  if (room.event.status === "ARCHIVED" || room.event.status === "CLOSED") {
+  if (room.event.status === "CLOSED") {
     throw new AwardEventError("Event is closed", 400)
   }
 
@@ -352,24 +397,29 @@ export async function updateAwardEventRoom({
     where: { id: room.id },
   })
 
-  await regeneratePublishedEventIfNeeded(eventId)
+  await regenerateEventPostIfExists(eventId)
 
   return updated
 }
 
 export async function shuffleSubmittedRooms(eventId: string) {
   const rooms = await prisma.awardEventRoom.findMany({
-    select: { id: true, order: true },
-    where: {
-      eventId,
-      excludedAt: null,
-      status: "SUBMITTED",
-    },
+    orderBy: [{ order: "asc" }, { updatedAt: "asc" }],
+    select: { excludedAt: true, id: true, order: true, status: true },
+    where: { eventId },
   })
-  const shuffled = shuffleAwardEventRooms(rooms)
+  const submitted = rooms.filter(
+    (room) => room.status === "SUBMITTED" && !room.excludedAt,
+  )
+  const remaining = rooms.filter(
+    (room) => room.status !== "SUBMITTED" || room.excludedAt,
+  )
+  const ordered = [...shuffleAwardEventRooms(submitted), ...remaining].map(
+    (room, order) => ({ ...room, order }),
+  )
 
   await prisma.$transaction(
-    shuffled.map((room) =>
+    ordered.map((room) =>
       prisma.awardEventRoom.update({
         data: { order: room.order },
         where: { id: room.id },
@@ -377,7 +427,7 @@ export async function shuffleSubmittedRooms(eventId: string) {
     ),
   )
 
-  await regeneratePublishedEventIfNeeded(eventId)
+  await regenerateEventPostIfExists(eventId)
 
-  return shuffled
+  return ordered.map(({ id, order }) => ({ id, order }))
 }

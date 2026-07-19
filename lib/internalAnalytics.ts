@@ -38,6 +38,11 @@ export interface InternalTopPage {
   views: number
 }
 
+export interface InternalDailyPageview {
+  day: string
+  pageviews: number
+}
+
 export interface PostAnalytics {
   comments: number
   lastViewedAt: Date | null
@@ -232,11 +237,39 @@ function getReadRate(reads: number, views: number) {
 function getRange(startAt: number, endAt: number) {
   const start = startOfUtcDay(new Date(startAt))
   const end = startOfUtcDay(new Date(endAt))
-  const duration = Math.max(1, endAt - startAt)
-  const previousStart = startOfUtcDay(new Date(startAt - duration))
-  const previousEnd = startOfUtcDay(new Date(startAt - 1))
+  const dayMs = 24 * 60 * 60 * 1000
+  const dayCount = Math.max(1, Math.round((end.getTime() - start.getTime()) / dayMs) + 1)
+  const previousEnd = new Date(start.getTime() - dayMs)
+  const previousStart = new Date(previousEnd.getTime() - (dayCount - 1) * dayMs)
 
   return { end, previousEnd, previousStart, start }
+}
+
+export async function getInternalDailyPageviews(
+  startAt: number,
+  endAt: number,
+): Promise<InternalDailyPageview[]> {
+  const { end, start } = getRange(startAt, endAt)
+  const rows = await prisma.analyticsDailySummary.findMany({
+    orderBy: { day: "asc" },
+    select: { day: true, pageviews: true },
+    where: { day: { gte: start, lte: end } },
+  })
+  const pageviewsByDay = new Map(
+    rows.map((row) => [getDayKey(row.day), row.pageviews]),
+  )
+  const points: InternalDailyPageview[] = []
+
+  for (
+    let current = start.getTime();
+    current <= end.getTime();
+    current += 24 * 60 * 60 * 1000
+  ) {
+    const day = getDayKey(new Date(current))
+    points.push({ day, pageviews: pageviewsByDay.get(day) ?? 0 })
+  }
+
+  return points
 }
 
 function sumSummaries(

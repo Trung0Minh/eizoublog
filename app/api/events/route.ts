@@ -13,10 +13,9 @@ export async function GET() {
       orderBy: [{ status: "asc" }, { createdAt: "desc" }],
       select: {
         _count: { select: { rooms: true } },
-        finalPost: { select: { slug: true } },
+        finalPost: { select: { slug: true, status: true } },
         id: true,
         openedAt: true,
-        publishedAt: true,
         rooms: {
           select: { id: true, status: true, updatedAt: true },
           where: { writerId: activeSession.user.id },
@@ -26,7 +25,7 @@ export async function GET() {
         title: true,
         updatedAt: true,
       },
-      where: { status: { in: ["OPEN", "PUBLISHED"] } },
+      where: { status: { in: ["OPEN", "CLOSED"] } },
     })
 
     return Response.json({ data: { events } })

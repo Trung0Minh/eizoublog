@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils"
 
 interface WriterEventItem {
   _count: { rooms: number }
-  finalPost: { slug: string } | null
+  finalPost: { slug: string; status: "DRAFT" | "PUBLISHED" | "ARCHIVED" | "REMOVED" } | null
   id: string
   rooms: { id: string; status: AwardEventRoomStatus }[]
   status: AwardEventStatus
@@ -33,11 +33,8 @@ function getApiError(value: unknown) {
 }
 
 const eventStatusMeta: Record<AwardEventStatus, { label: string; tone: string }> = {
-  ARCHIVED: { label: "Đã lưu trữ", tone: "border-slate-500/25 bg-slate-500/10 text-slate-700 dark:text-slate-300" },
   CLOSED: { label: "Đã đóng", tone: "border-rose-500/25 bg-rose-500/10 text-rose-700 dark:text-rose-300" },
-  DRAFT: { label: "Bản nháp", tone: "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300" },
   OPEN: { label: "Đang mở", tone: "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" },
-  PUBLISHED: { label: "Đã xuất bản", tone: "border-sky-500/25 bg-sky-500/10 text-sky-700 dark:text-sky-300" },
 }
 
 const roomStatusMeta: Record<AwardEventRoomStatus, { label: string; tone: string }> = {
@@ -116,7 +113,7 @@ export function WriterEventsList({ events }: { events: WriterEventItem[] }) {
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
-                {!room && (
+                {!room && event.status === "OPEN" && (
                   <Button
                     disabled={joiningId === event.id}
                     onClick={() => void joinEvent(event.id)}
@@ -128,7 +125,7 @@ export function WriterEventsList({ events }: { events: WriterEventItem[] }) {
                     <ArrowRight aria-hidden="true" className="h-4 w-4" />
                   </Button>
                 )}
-                {event.finalPost && (
+                  {event.finalPost?.status === "PUBLISHED" && (
                   <Button asChild size="sm" variant="ghost" className="rounded-full">
                     <Link href={`/${event.finalPost.slug}`}>
                       <ExternalLink aria-hidden="true" className="mr-2 h-4 w-4" />

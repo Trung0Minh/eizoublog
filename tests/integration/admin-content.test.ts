@@ -135,12 +135,10 @@ describe("admin content API", () => {
   it("lists categories with usage counts and creates categories", async () => {
     mocks.prisma.category.findMany.mockResolvedValue([
       {
-        _count: { children: 1, posts: 3 },
-        children: [],
+        _count: { posts: 3 },
         description: "Long form",
         id: "category-1",
         name: "Analysis",
-        parentId: null,
         slug: "analysis",
       },
     ])
@@ -155,7 +153,6 @@ describe("admin content API", () => {
       jsonRequest("https://example.test/api/admin/content/categories", {
         description: "Notes",
         name: "Production Notes",
-        parentId: "category-1",
       }),
     )
 
@@ -163,12 +160,10 @@ describe("admin content API", () => {
     await expect(listResponse.json()).resolves.toEqual({
       data: [
         {
-          _count: { children: 1, posts: 3 },
-          children: [],
+          _count: { posts: 3 },
           description: "Long form",
           id: "category-1",
           name: "Analysis",
-          parentId: null,
           slug: "analysis",
         },
       ],
@@ -178,7 +173,6 @@ describe("admin content API", () => {
       data: {
         description: "Notes",
         name: "Production Notes",
-        parent: { connect: { id: "category-1" } },
         slug: "production-notes",
       },
       select: expect.any(Object),
@@ -186,9 +180,9 @@ describe("admin content API", () => {
     expect(mocks.revalidateTag).toHaveBeenCalledWith("categories", "max")
   })
 
-  it("updates categories and blocks deleting categories with children", async () => {
+  it("updates and deletes flat categories", async () => {
     mocks.prisma.category.findUnique.mockResolvedValue({
-      _count: { children: 2, posts: 0 },
+      _count: { posts: 0 },
       id: "category-1",
       name: "Analysis",
     })
@@ -201,7 +195,7 @@ describe("admin content API", () => {
     const updateResponse = await UPDATE_CATEGORY(
       jsonRequest(
         "https://example.test/api/admin/content/categories/category-1",
-        { name: "Episode Analysis", parentId: null },
+        { name: "Episode Analysis" },
         "PATCH",
       ),
       routeContext("category-1"),
@@ -216,20 +210,16 @@ describe("admin content API", () => {
       expect.objectContaining({
         data: expect.objectContaining({
           name: "Episode Analysis",
-          parent: { disconnect: true },
           slug: "episode-analysis",
         }),
       }),
     )
-    expect(deleteResponse.status).toBe(400)
-    await expect(deleteResponse.json()).resolves.toEqual({
-      error: "Move or delete child categories first",
-    })
+    expect(deleteResponse.status).toBe(200)
   })
 
   it("deletes used categories by detaching posts first", async () => {
     mocks.prisma.category.findUnique.mockResolvedValue({
-      _count: { children: 0, posts: 12 },
+      _count: { posts: 12 },
       id: "category-1",
       name: "Analysis",
     })

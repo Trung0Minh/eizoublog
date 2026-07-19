@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -158,85 +158,21 @@ describe("AdminEventDetailManager", () => {
     )
   })
 
-  it("reorders rooms optimistically without a full refresh on success", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ data: { id: "event-1" } }), {
-        status: 200,
-      }),
-    )
-    vi.stubGlobal("fetch", fetchMock)
-
+  it("renders the sortable submissions region without legacy move buttons", () => {
     render(
       <AdminEventDetailManager
         event={{
           finalPost: null,
           id: "event-1",
           introText: null,
-          rooms: [
-            {
-              _count: { comments: 0 },
-              excludedAt: null,
-              id: "room-1",
-              order: 0,
-              postId: "post-1",
-              selectedPost: {
-                id: "post-1",
-                status: "DRAFT",
-                title: "First pick",
-              },
-              status: "SUBMITTED",
-              updatedAt: new Date("2026-06-17T00:00:00.000Z"),
-              visibility: "PARTICIPANTS",
-              writer: { name: "Mai", role: "WRITER", username: "mai" },
-            },
-            {
-              _count: { comments: 0 },
-              excludedAt: null,
-              id: "room-2",
-              order: 1,
-              postId: "post-2",
-              selectedPost: {
-                id: "post-2",
-                status: "PUBLISHED",
-                title: "Second pick",
-              },
-              status: "SUBMITTED",
-              updatedAt: new Date("2026-06-17T00:00:00.000Z"),
-              visibility: "PARTICIPANTS",
-              writer: { name: "Ren", role: "WRITER", username: "ren" },
-            },
-          ],
+          rooms: [],
           status: "OPEN",
           title: "Awards",
         }}
       />,
     )
 
-    const firstHandle = screen.getByRole("button", { name: "Drag Mai to reorder" })
-    const secondCard = screen.getByTestId("event-submission-room-2")
-    const dataTransfer = {
-      dropEffect: "none",
-      effectAllowed: "none",
-      getData: vi.fn(() => "room-1"),
-      setData: vi.fn(),
-    }
-    fireEvent.dragStart(firstHandle, { dataTransfer })
-    fireEvent.dragOver(secondCard, { dataTransfer })
-    fireEvent.drop(secondCard, { dataTransfer })
-
-    await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledWith("/api/admin/events/event-1", {
-        body: JSON.stringify({
-          roomOrder: [
-            { id: "room-2", order: 0 },
-            { id: "room-1", order: 1 },
-          ],
-        }),
-        headers: { "Content-Type": "application/json" },
-        method: "PATCH",
-      })
-    })
-    expect(routerMocks.refresh).not.toHaveBeenCalled()
+    expect(screen.getByTestId("event-submissions-scroll")).toBeVisible()
     expect(screen.queryByTitle("Move up")).not.toBeInTheDocument()
     expect(screen.queryByTitle("Move down")).not.toBeInTheDocument()
   })

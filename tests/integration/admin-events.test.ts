@@ -8,7 +8,12 @@ const mocks = vi.hoisted(() => ({
       delete: vi.fn(),
       findUnique: vi.fn(),
     },
-    post: { update: vi.fn() },
+    awardEventRoom: { updateMany: vi.fn() },
+    analyticsDailyPage: { deleteMany: vi.fn() },
+    analyticsEvent: { deleteMany: vi.fn() },
+    notification: { deleteMany: vi.fn() },
+    post: { delete: vi.fn() },
+    postRevision: { deleteMany: vi.fn() },
     postAuditEvent: { create: vi.fn() },
   },
   revalidatePath: vi.fn(),
@@ -47,12 +52,17 @@ describe("DELETE /api/admin/events/[id]", () => {
     mocks.prisma.$transaction.mockImplementation(async (callback) =>
       callback({
         awardEvent: mocks.prisma.awardEvent,
+        awardEventRoom: mocks.prisma.awardEventRoom,
+        analyticsDailyPage: mocks.prisma.analyticsDailyPage,
+        analyticsEvent: mocks.prisma.analyticsEvent,
+        notification: mocks.prisma.notification,
         post: mocks.prisma.post,
+        postRevision: mocks.prisma.postRevision,
         postAuditEvent: mocks.prisma.postAuditEvent,
       }),
     )
     mocks.prisma.awardEvent.delete.mockResolvedValue({ id: "event-1" })
-    mocks.prisma.post.update.mockResolvedValue({ id: "final-post-1" })
+    mocks.prisma.post.delete.mockResolvedValue({ id: "final-post-1" })
     mocks.prisma.postAuditEvent.create.mockResolvedValue({ id: "audit-1" })
   })
 
@@ -81,12 +91,11 @@ describe("DELETE /api/admin/events/[id]", () => {
     expect(mocks.prisma.awardEvent.delete).not.toHaveBeenCalled()
   })
 
-  it("deletes the event and moves its generated post to Removed", async () => {
+  it("deletes the event and permanently deletes its generated post", async () => {
     mocks.prisma.awardEvent.findUnique.mockResolvedValue({
       finalPost: {
         id: "final-post-1",
         slug: "awards",
-        status: "PUBLISHED",
         title: "Awards",
       },
       id: "event-1",
@@ -99,23 +108,17 @@ describe("DELETE /api/admin/events/[id]", () => {
     await expect(response.json()).resolves.toEqual({
       data: { message: "Event deleted" },
     })
-    expect(mocks.prisma.post.update).toHaveBeenCalledWith({
-      data: {
-        moderationLockedAt: expect.any(Date),
-        removedAt: expect.any(Date),
-        removedFromStatus: "PUBLISHED",
-        status: "REMOVED",
-      },
+    expect(mocks.prisma.post.delete).toHaveBeenCalledWith({
       select: { id: true },
       where: { id: "final-post-1" },
     })
     expect(mocks.prisma.postAuditEvent.create).toHaveBeenCalledWith({
       data: {
-        action: "DELETE",
+        action: "PURGE",
         actorId: "admin-1",
         metadata: {
           eventId: "event-1",
-          reason: "Award event deleted",
+          reason: "Award event permanently removed",
           title: "Awards",
         },
         postId: "final-post-1",

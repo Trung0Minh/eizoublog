@@ -85,7 +85,6 @@ export function AdminHeader({ user }: { user?: WriterMenuUser | null }) {
                       href={href}
                       key={href}
                       onClick={() => setDrawerOpen(false)}
-                      prefetch={false}
                     >
                       <Icon aria-hidden="true" className="h-[18px] w-[18px]" />
                       {label}
@@ -98,7 +97,6 @@ export function AdminHeader({ user }: { user?: WriterMenuUser | null }) {
                   className="flex h-10 items-center justify-center gap-2 rounded-[10px] bg-subtle-bg text-[14px] font-medium text-text-primary transition-colors hover:bg-border-default/50"
                   href="/"
                   onClick={() => setDrawerOpen(false)}
-                  prefetch={false}
                 >
                   View blog &rarr;
                 </Link>
