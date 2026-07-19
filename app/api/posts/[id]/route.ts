@@ -4,6 +4,7 @@ import { ZodError, z } from "zod"
 import { auth } from "@/lib/auth"
 import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
 import { canViewPost } from "@/lib/postAccess"
+import { getPostMediaUrls } from "@/lib/postMedia"
 import {
   getPostSnapshotChecksum,
   type PostRecoverySnapshot,
@@ -125,31 +126,6 @@ function canPerformOwnerAction({
 
 function uniqueIds(ids: string[]) {
   return Array.from(new Set(ids))
-}
-
-function collectMediaUrls(value: unknown, urls = new Set<string>()) {
-  if (typeof value === "string") {
-    if (/^https?:\/\//i.test(value)) urls.add(value)
-    return urls
-  }
-
-  if (Array.isArray(value)) {
-    value.forEach((item) => collectMediaUrls(item, urls))
-    return urls
-  }
-
-  if (typeof value === "object" && value !== null) {
-    Object.values(value).forEach((item) => collectMediaUrls(item, urls))
-  }
-
-  return urls
-}
-
-function getPostMediaUrls(post: { content: unknown; coverUrl: string | null }) {
-  const urls = new Set<string>()
-  if (post.coverUrl) urls.add(post.coverUrl)
-  collectMediaUrls(post.content, urls)
-  return urls
 }
 
 export async function GET(

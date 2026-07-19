@@ -9,6 +9,7 @@ import {
 } from "@/lib/awardEventService"
 import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
 import { prisma } from "@/lib/prisma"
+import { getPostMediaUrls } from "@/lib/postMedia"
 
 const updateEventSchema = z.object({
   categoryId: z.string().min(1).nullable().optional(),
@@ -178,7 +179,7 @@ export async function DELETE(
       const event = await tx.awardEvent.findUnique({
         select: {
           finalPost: {
-            select: { id: true, slug: true, title: true },
+            select: { content: true, coverUrl: true, id: true, slug: true, title: true },
           },
           id: true,
           title: true,
@@ -195,6 +196,20 @@ export async function DELETE(
       }
 
       if (event.finalPost) {
+        const mediaUrls = getPostMediaUrls(event.finalPost)
+        const otherPosts = mediaUrls.size > 0
+          ? await tx.post.findMany({
+              select: { content: true, coverUrl: true },
+              where: { id: { not: event.finalPost.id } },
+            })
+          : []
+        const sharedMediaUrls = new Set(
+          otherPosts.flatMap((post) => Array.from(getPostMediaUrls(post))),
+        )
+        const ownedMediaUrls = Array.from(mediaUrls).filter(
+          (url) => !sharedMediaUrls.has(url),
+        )
+
         await tx.postAuditEvent.create({
           data: {
             action: "PURGE",
@@ -223,6 +238,12 @@ export async function DELETE(
           where: { postSlug: event.finalPost.slug },
         })
         await tx.postRevision.deleteMany({ where: { postId: event.finalPost.id } })
+        if (ownedMediaUrls.length > 0) {
+          await tx.mediaCleanupJob.create({
+            data: { objectKeys: ownedMediaUrls },
+            select: { id: true },
+          })
+        }
       }
 
       await tx.awardEvent.delete({

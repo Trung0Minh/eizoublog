@@ -12,7 +12,8 @@ const mocks = vi.hoisted(() => ({
     analyticsDailyPage: { deleteMany: vi.fn() },
     analyticsEvent: { deleteMany: vi.fn() },
     notification: { deleteMany: vi.fn() },
-    post: { delete: vi.fn() },
+    mediaCleanupJob: { create: vi.fn() },
+    post: { delete: vi.fn(), findMany: vi.fn() },
     postRevision: { deleteMany: vi.fn() },
     postAuditEvent: { create: vi.fn() },
   },
@@ -56,6 +57,7 @@ describe("DELETE /api/admin/events/[id]", () => {
         analyticsDailyPage: mocks.prisma.analyticsDailyPage,
         analyticsEvent: mocks.prisma.analyticsEvent,
         notification: mocks.prisma.notification,
+        mediaCleanupJob: mocks.prisma.mediaCleanupJob,
         post: mocks.prisma.post,
         postRevision: mocks.prisma.postRevision,
         postAuditEvent: mocks.prisma.postAuditEvent,
@@ -63,6 +65,7 @@ describe("DELETE /api/admin/events/[id]", () => {
     )
     mocks.prisma.awardEvent.delete.mockResolvedValue({ id: "event-1" })
     mocks.prisma.post.delete.mockResolvedValue({ id: "final-post-1" })
+    mocks.prisma.post.findMany.mockResolvedValue([])
     mocks.prisma.postAuditEvent.create.mockResolvedValue({ id: "audit-1" })
   })
 
@@ -94,6 +97,8 @@ describe("DELETE /api/admin/events/[id]", () => {
   it("deletes the event and permanently deletes its generated post", async () => {
     mocks.prisma.awardEvent.findUnique.mockResolvedValue({
       finalPost: {
+        content: { content: [], type: "doc" },
+        coverUrl: null,
         id: "final-post-1",
         slug: "awards",
         title: "Awards",
