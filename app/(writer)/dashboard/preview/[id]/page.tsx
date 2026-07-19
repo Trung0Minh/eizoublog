@@ -1,10 +1,8 @@
 import type { JSONContent } from "@tiptap/react"
+import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 
-import { PostHero } from "@/components/posts/PostHero"
-import { PostBody } from "@/components/posts/PostBody"
-import { TableOfContents } from "@/components/posts/TableOfContents"
-import { extractHeadings } from "@/lib/postHeadings"
+import { PostArticleView } from "@/components/posts/PostArticleView"
 import { canViewPost } from "@/lib/postAccess"
 import { prisma } from "@/lib/prisma"
 import { getCurrentSession } from "@/lib/session"
@@ -81,47 +79,32 @@ export default async function DashboardPostPreviewPage({
   }
 
   const content = post.content as JSONContent
-  const hasTableOfContents = extractHeadings(content).length > 0
+  const authorUsernames = [
+    post.author.username,
+    ...post.coAuthors.map(({ user }) => user.username),
+  ]
 
   return (
     <>
-      {/* We render the Hero outside the restricted width to allow full screen bleed if needed */}
-      <div className="mb-6 mx-auto max-w-[1440px] px-4 md:px-12 pt-8">
-        <div className="rounded-[6px] border border-border-default bg-muted/30 px-4 py-3 text-sm text-text-secondary">
-          Previewing saved post content. Edit changes from My posts.
+      <div className="pointer-events-none fixed inset-x-0 bottom-4 z-[80] flex justify-center px-4">
+        <div
+          className="pointer-events-auto flex max-w-full items-center gap-3 rounded-full border border-border-default bg-background/95 px-4 py-2.5 text-sm text-text-secondary shadow-lg backdrop-blur-xl"
+          role="status"
+        >
+          <span className="truncate">Previewing the latest saved version.</span>
+          <Link
+            className="shrink-0 font-bold text-accent transition-colors hover:text-accent/80"
+            href={`/dashboard/edit/${post.id}`}
+          >
+            Edit post
+          </Link>
         </div>
       </div>
-
-      <PostHero post={post} />
-
-      <div className="flex-1 w-full max-w-[1440px] mx-auto xl:px-12 flex justify-center pt-0 pb-20 relative">
-        <main className="w-full max-w-[720px] px-5 xl:px-0">
-          <header className="flex flex-col">
-            {post.coverAlt && (
-              <div className="-mt-1 mb-1 pr-1 text-right text-[13px] md:text-[14px] font-medium text-text-tertiary italic">
-                {post.coverAlt}
-              </div>
-            )}
-            <div className="flex flex-wrap gap-[6px]">
-              {post.tags.map(({ tag }) => (
-                <span key={tag.slug} className="px-[12px] py-[6px] bg-accent/10 border border-accent/20 text-accent text-[11px] font-semibold rounded-full hover:bg-accent hover:text-white transition-colors cursor-pointer">
-                  {tag.name}
-                </span>
-              ))}
-            </div>
-          </header>
-
-          <article className="mt-12 max-w-[68ch] mx-auto text-text-primary font-lora text-[16px] md:text-[17.5px] leading-[1.75] md:leading-[1.8] post-content">
-            <PostBody content={content} />
-          </article>
-        </main>
-
-        {hasTableOfContents && (
-          <aside className="sticky top-24 hidden max-h-[calc(100vh-120px)] w-[200px] shrink-0 self-start overflow-y-auto overscroll-contain no-scrollbar xl:ml-10 xl:mt-12 xl:block [scrollbar-gutter:stable]">
-            <TableOfContents content={content} />
-          </aside>
-        )}
-      </div>
+      <PostArticleView
+        authorUsernames={authorUsernames}
+        content={content}
+        post={post}
+      />
     </>
   )
 }

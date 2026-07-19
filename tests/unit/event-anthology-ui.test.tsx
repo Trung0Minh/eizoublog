@@ -109,6 +109,50 @@ describe("EventAnthologyView", () => {
     expect(screen.queryByText("Later room edit.")).not.toBeInTheDocument()
   })
 
+  it("falls back to the writer profile bio when the event intro is blank", () => {
+    render(
+      <EventAnthologyView
+        event={{
+          coverAlt: null,
+          coverUrl: null,
+          intro: { content: [], type: "doc" },
+          introText: null,
+          rooms: [
+            {
+              id: "room-a",
+              order: 0,
+              selectedPost: {
+                content: { content: [], type: "doc" },
+                id: "post-a",
+                status: "DRAFT",
+                title: "Submitted post",
+              },
+              status: "SUBMITTED",
+              submittedContent: { content: [], type: "doc" },
+              submittedPostId: "post-a",
+              submittedPostTitle: "Submitted post",
+              submittedWriterIntro: null,
+              writer: {
+                avatarUrl: null,
+                bio: "Public profile introduction.",
+                name: "Writer A",
+                username: "writer-a",
+              },
+              writerIntro: null,
+            },
+          ],
+          title: "Collected perspectives",
+        }}
+      />,
+    )
+
+    expect(
+      within(screen.getByTestId("event-contributor-header")).getByText(
+        "Public profile introduction.",
+      ),
+    ).toBeVisible()
+  })
+
   it("keeps the original desktop shell while letting the intro fill its card", () => {
     render(
       <EventAnthologyView

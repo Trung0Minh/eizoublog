@@ -277,6 +277,10 @@ export const publishedPostDetailSelect = {
             select: { content: true, id: true, status: true, title: true },
           },
           status: true,
+          submittedContent: true,
+          submittedPostId: true,
+          submittedPostTitle: true,
+          submittedWriterIntro: true,
           writer: {
             select: { avatarUrl: true, bio: true, name: true, username: true },
           },

@@ -115,10 +115,11 @@ describe("anime-blog-4 appearance parity", () => {
 
   it("does not invent fallback tags on post pages", () => {
     const postPage = read("app/(public)/[slug]/page.tsx")
+    const articleView = read("components/posts/PostArticleView.tsx")
 
     expect(postPage).not.toContain("fallbackTags")
     expect(postPage).not.toContain("post.tags.length > 0")
-    expect(postPage).toContain("post.tags.map(({ tag }) => tag)")
+    expect(articleView).toContain("post.tags.map(({ tag }) => tag)")
   })
 
   it("keeps post title and excerpt outside the Tiptap body editor", () => {

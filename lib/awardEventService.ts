@@ -181,8 +181,12 @@ export async function regenerateAwardEventPost(
       status: room.status,
       writer: room.writer,
       writerIntro: room.submittedContent
-        ? room.submittedWriterIntro
-        : room.writerIntro,
+        ? room.submittedWriterIntro?.trim() ||
+          getProfileBioVisibleText(room.writer.bio ?? "") ||
+          null
+        : room.writerIntro?.trim() ||
+          getProfileBioVisibleText(room.writer.bio ?? "") ||
+          null,
     }))
   const content = buildAwardEventPostContent({
     eventIntro: normalizeAwardEventContent(event.intro),

@@ -10,30 +10,30 @@ function read(relativePath: string) {
 describe("published post width contract", () => {
   it("keeps the hero and article column aligned at the wider shared width", () => {
     const hero = read("components/posts/PostHero.tsx")
-    const page = read("app/(public)/[slug]/page.tsx")
+    const articleView = read("components/posts/PostArticleView.tsx")
 
     expect(hero).toContain("max-w-[1000px]")
-    expect(page).toContain('<main className="w-full max-w-[1000px]')
-    expect(page).toContain('<article className="mt-6 md:mt-12 w-full')
-    expect(page).toContain('<div className="w-full mx-auto font-lora')
+    expect(articleView).toContain('className="w-full max-w-[1000px]')
+    expect(articleView).toContain('className="post-content mx-auto mt-6')
+    expect(articleView).toContain('className="mx-auto w-full font-lora')
   })
 
   it("keeps the table of contents beside the same widened article column", () => {
-    const page = read("app/(public)/[slug]/page.tsx")
-    const articleIndex = page.indexOf('max-w-[1000px]')
+    const articleView = read("components/posts/PostArticleView.tsx")
+    const articleIndex = articleView.indexOf('max-w-[1000px]')
 
     expect(articleIndex).toBeGreaterThan(-1)
     expect(articleIndex).toBeLessThan(
-      page.indexOf("{hasTableOfContents && ("),
+      articleView.indexOf("{hasTableOfContents && ("),
     )
-    expect(page).toContain('aside className="hidden w-[200px]')
+    expect(articleView).toContain('aside className="sticky top-24')
   })
 
   it("uses a horizontally discoverable author strip when cards overflow", () => {
-    const page = read("app/(public)/[slug]/page.tsx")
+    const articleView = read("components/posts/PostArticleView.tsx")
     const authorCredits = read("components/posts/AuthorCreditList.tsx")
 
-    expect(page).toContain("<AuthorCreditList")
+    expect(articleView).toContain("<AuthorCreditList")
     expect(authorCredits).toContain('data-testid="author-credit-list"')
     expect(authorCredits).toContain("overflow-x-auto")
     expect(authorCredits).toContain("scroll-snap-type")

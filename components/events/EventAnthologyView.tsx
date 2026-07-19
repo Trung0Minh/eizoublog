@@ -10,6 +10,7 @@ import {
   namespaceAwardEventPostContent,
   type AwardEventPostRoom,
 } from "@/lib/awardEvents"
+import { getProfileBioVisibleText } from "@/lib/profileBio"
 import { cn } from "@/lib/utils"
 
 interface AnthologyRoom {
@@ -140,8 +141,12 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
       }
       : null,
     writerIntro: isJsonContent(room.submittedContent)
-      ? room.submittedWriterIntro ?? null
-      : room.writerIntro,
+      ? room.submittedWriterIntro?.trim() ||
+        getProfileBioVisibleText(room.writer.bio ?? "") ||
+        null
+      : room.writerIntro?.trim() ||
+        getProfileBioVisibleText(room.writer.bio ?? "") ||
+        null,
     writer: {
       ...room.writer,
       avatarUrl: room.writer.avatarUrl ?? null,

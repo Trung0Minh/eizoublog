@@ -305,8 +305,12 @@ describe("regenerateAwardEventPost", () => {
           submittedPostId: "post-1",
           submittedPostTitle: "Selected post",
           submittedPostVersion: 4,
-          submittedWriterIntro: "Snapshot introduction",
-          writer: { name: "Mai", username: "mai" },
+          submittedWriterIntro: null,
+          writer: {
+            bio: "Public profile introduction",
+            name: "Mai",
+            username: "mai",
+          },
           writerIntro: "Changed introduction",
         },
       ],
@@ -325,7 +329,7 @@ describe("regenerateAwardEventPost", () => {
     const update = mocks.prisma.post.update.mock.calls[0]?.[0]
     const generatedContent = JSON.stringify(update.data.content)
     expect(generatedContent).toContain("Submitted snapshot")
-    expect(generatedContent).toContain("Snapshot introduction")
+    expect(generatedContent).toContain("Public profile introduction")
     expect(generatedContent).not.toContain("Unsaved event update")
     expect(generatedContent).not.toContain("Changed introduction")
   })

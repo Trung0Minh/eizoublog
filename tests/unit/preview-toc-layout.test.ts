@@ -8,7 +8,9 @@ function read(relativePath: string) {
 }
 
 function getTocAsideClasses(relativePath: string) {
-  const source = read(relativePath)
+  const source = relativePath.includes("dashboard/preview")
+    ? read("components/posts/PostArticleView.tsx")
+    : read(relativePath)
   const tocIndex = source.indexOf("<TableOfContents")
   const asideIndex = source.lastIndexOf('<aside className="', tocIndex)
   const classStart = asideIndex + '<aside className="'.length

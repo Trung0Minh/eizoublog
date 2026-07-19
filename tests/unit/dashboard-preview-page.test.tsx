@@ -35,6 +35,20 @@ vi.mock("@/components/posts/PostBody", () => ({
 vi.mock("@/components/posts/TableOfContents", () => ({
   TableOfContents: () => <div>toc</div>,
 }))
+vi.mock("@/components/posts/PostArticleView", () => ({
+  PostArticleView: ({
+    content,
+    post,
+  }: {
+    content: { content?: { text?: string }[] }
+    post: { title: string }
+  }) => (
+    <div data-testid="post-article-view">
+      <h1>{post.title}</h1>
+      <div>{content.content?.[0]?.text}</div>
+    </div>
+  ),
+}))
 
 import DashboardPostPreviewPage from "@/app/(writer)/dashboard/preview/[id]/page"
 
@@ -85,6 +99,7 @@ describe("DashboardPostPreviewPage", () => {
 
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(/Draft\s*preview/i)
     expect(screen.getByText("Draft body")).toBeVisible()
+    expect(screen.getByTestId("post-article-view")).toBeVisible()
   })
 
   it("hides drafts from unrelated writers", async () => {

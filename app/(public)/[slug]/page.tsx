@@ -1,17 +1,12 @@
 import type { Metadata } from "next"
-import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { JSONContent } from "@tiptap/react"
 
 import { CommentSection } from "@/components/comments/CommentSection"
-import { AuthorCreditList } from "@/components/posts/AuthorCreditList"
-import { PostHero } from "@/components/posts/PostHero"
-import { PostBody } from "@/components/posts/PostBody"
+import { PostArticleView } from "@/components/posts/PostArticleView"
 import { PostJsonLd } from "@/components/posts/PostJsonLd"
 import { PostReadTracker } from "@/components/posts/PostReadTracker"
 import { ReadingProgress } from "@/components/posts/ReadingProgress"
-import { TableOfContents } from "@/components/posts/TableOfContents"
-import { extractHeadings } from "@/lib/postHeadings"
 import { ScrollReveal } from "@/components/ui/ScrollReveal"
 import { prisma } from "@/lib/prisma"
 import {
@@ -87,11 +82,8 @@ export default async function PostPage({ params }: PostPageProps) {
   }
 
   const authors = [post.author.username, ...post.coAuthors.map(c => c.user.username)]
-  const creditAuthors = [post.author, ...post.coAuthors.map(c => c.user)]
 
   const content = post.content as JSONContent
-  const hasTableOfContents = extractHeadings(content).length > 0
-  const tags = post.tags.map(({ tag }) => tag)
 
   if (post.finalAwardEvent) {
     const eventAuthorUsernames = Array.from(
@@ -147,75 +139,16 @@ export default async function PostPage({ params }: PostPageProps) {
         updatedAt={post.updatedAt}
       />
       <PostReadTracker slug={post.slug} title={post.title} />
-
-      <PostHero post={post} authorUsernames={authors} />
-
-      {post.coverUrl && (
-        <div className="relative z-0 h-0 w-full pointer-events-none">
-          <div className="absolute left-0 right-0 top-0 h-32 bg-gradient-to-b from-background to-transparent md:h-48 lg:h-64" />
-        </div>
-      )}
-
-      <div className="flex-1 w-full max-w-[1440px] mx-auto xl:px-12 flex justify-center pt-0 pb-20 relative z-10">
-        <main className="w-full max-w-[1000px] px-4 md:px-5 xl:px-0">
-          <header className="flex flex-col">
-            <ScrollReveal delay={0.1}>
-              {post.coverAlt && (
-                <div className="-mt-1 mb-1 pr-1 text-right text-[13px] md:text-[14px] font-medium text-text-tertiary italic">
-                  {post.coverAlt}
-                </div>
-              )}
-              <div className="flex overflow-x-auto whitespace-nowrap hide-scrollbar items-center gap-[6px] pb-1">
-                {tags.map((tag) => (
-                  <Link
-                    href={`/tag/${tag.slug}`}
-                    key={tag.slug}
-                    className="hover-glitch px-[12px] py-[6px] bg-accent/10 border border-accent/20 text-accent text-[11px] font-semibold rounded-full cursor-pointer"
-                  >
-                    {tag.name}
-                  </Link>
-                ))}
-              </div>
-            </ScrollReveal>
-          </header>
-
-          <article className="mt-6 md:mt-12 w-full mx-auto text-text-primary font-lora text-[16px] md:text-[17.5px] leading-[1.75] md:leading-[1.8] post-content">
-            <ScrollReveal delay={0.2}>
-              <div className="relative z-30 mb-8 overflow-hidden rounded-[16px] border border-border-default/60 bg-background/90 px-4 py-5 backdrop-blur-sm sm:mb-12 sm:rounded-[8px] sm:bg-subtle-bg/90 sm:p-8 md:p-12">
-                <PostBody content={content} />
-              </div>
-            </ScrollReveal>
-          </article>
-
-          <div className="w-full mx-auto font-lora text-[16px] md:text-[17.5px]">
-            <div className="font-sans text-text-primary">
-              <ScrollReveal delay={0.3}>
-                <AuthorCreditList
-                  authors={creditAuthors}
-                  className="mt-12 md:mt-16"
-                />
-              </ScrollReveal>
-              
-              <ScrollReveal delay={0.4}>
-                <CommentSection
-                  initialComments={post.comments}
-                  postId={post.id}
-                  postSlug={post.slug}
-                  postAuthorUsernames={authors}
-                />
-              </ScrollReveal>
-            </div>
-          </div>
-        </main>
-
-        {hasTableOfContents && (
-          <aside className="hidden w-[200px] shrink-0 xl:block ml-10 mt-12 sticky top-24 self-start max-h-[calc(100vh-120px)] overflow-y-auto no-scrollbar">
-            <ScrollReveal delay={0.5}>
-              <TableOfContents content={content} />
-            </ScrollReveal>
-          </aside>
-        )}
-      </div>
+      <PostArticleView authorUsernames={authors} content={content} post={post}>
+        <ScrollReveal delay={0.4}>
+          <CommentSection
+            initialComments={post.comments}
+            postId={post.id}
+            postSlug={post.slug}
+            postAuthorUsernames={authors}
+          />
+        </ScrollReveal>
+      </PostArticleView>
     </>
   )
 }
