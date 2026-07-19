@@ -96,36 +96,44 @@
   :root[data-season="spring"] {
     --season-accent: #ff1493;
     --season-brand: #ff1493;
+    --season-logo-secondary: #8b5cf6;
   }
   :root[data-season="summer"] {
     --season-accent: #059669;
     --season-brand: #059669;
+    --season-logo-secondary: #06b6d4;
   }
   :root[data-season="autumn"] {
     --season-accent: #d97706;
     --season-brand: #d97706;
+    --season-logo-secondary: #ef4444;
   }
   :root[data-season="winter"] {
     --season-accent: #2563eb;
     --season-brand: #2563eb;
+    --season-logo-secondary: #8b5cf6;
   }
 
   /* Seasons - Dark Mode */
   .dark[data-season="spring"] {
     --season-accent: #ff69b4;
     --season-brand: #ff69b4;
+    --season-logo-secondary: #c084fc;
   }
   .dark[data-season="summer"] {
     --season-accent: #10b981;
     --season-brand: #10b981;
+    --season-logo-secondary: #22d3ee;
   }
   .dark[data-season="autumn"] {
     --season-accent: #f59e0b;
     --season-brand: #f59e0b;
+    --season-logo-secondary: #fb7185;
   }
   .dark[data-season="winter"] {
     --season-accent: #60a5fa;
     --season-brand: #3b82f6;
+    --season-logo-secondary: #a78bfa;
   }
 
   * {

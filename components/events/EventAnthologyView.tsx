@@ -298,8 +298,12 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
                   key={room.id}
                 >
                   <div
-                    className="mb-6 border-b border-border-default/70 pb-6 sm:mb-8 sm:pb-8"
+                    className="mb-8 rounded-[20px] p-4 sm:mb-10 sm:p-6 md:p-7"
                     data-testid="event-contributor-header"
+                    style={{
+                      backgroundColor:
+                        "color-mix(in srgb, var(--accent) 7%, transparent)",
+                    }}
                   >
                     <div className="grid grid-cols-[6rem_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[8rem_minmax(0,1fr)] sm:gap-7">
                       {room.writer.avatarUrl ? (

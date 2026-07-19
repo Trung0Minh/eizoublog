@@ -171,6 +171,10 @@ describe("EventAnthologyView", () => {
       ),
     ).toBeVisible()
     expect(screen.getByTestId("event-contributor-header")).toHaveClass(
+      "rounded-[20px]",
+      "p-4",
+    )
+    expect(screen.getByTestId("event-contributor-header")).not.toHaveClass(
       "border-b",
     )
   })
@@ -440,9 +444,9 @@ describe("EventAnthologyView", () => {
       "sm:w-32",
     )
     expect(screen.getAllByTestId("event-contributor-header")[0]).toHaveClass(
-      "pb-6",
-      "sm:pb-8",
-      "border-b",
+      "mb-8",
+      "sm:mb-10",
+      "rounded-[20px]",
     )
     expect(screen.getByTestId("event-cover-alt").nextElementSibling).toContainElement(
       screen.getByRole("button", { name: "Contents" }),

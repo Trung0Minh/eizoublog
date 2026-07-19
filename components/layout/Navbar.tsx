@@ -30,9 +30,11 @@ export function Navbar({ user }: { user?: WriterMenuUser | null }) {
         >
           <span
             aria-hidden="true"
-            className="block aspect-[3480.342/402] w-[102px] bg-accent transition-opacity duration-200 group-hover:opacity-75 sm:w-[128px] lg:w-[146px]"
+            className="animate-gradient-x block aspect-[3480.342/402] w-[102px] bg-accent transition-opacity duration-200 group-hover:opacity-75 sm:w-[128px] lg:w-[146px]"
             data-testid="site-wordmark"
             style={{
+              backgroundImage:
+                "linear-gradient(105deg, var(--accent) 0%, var(--season-logo-secondary, var(--accent)) 48%, var(--accent) 100%)",
               maskImage: "url('/eizoublog-logo.svg')",
               maskPosition: "center",
               maskRepeat: "no-repeat",

@@ -155,8 +155,17 @@ describe("Navbar", () => {
     render(<Navbar user={null} />)
 
     expect(screen.getByTestId("site-wordmark")).toHaveClass("bg-accent")
+    expect(screen.getByTestId("site-wordmark")).toHaveClass(
+      "animate-gradient-x",
+    )
     expect(screen.getByTestId("site-wordmark").getAttribute("style")).toContain(
       "mask-image: url(\"/eizoublog-logo.svg\")",
+    )
+    expect(screen.getByTestId("site-wordmark").getAttribute("style")).toContain(
+      "linear-gradient(105deg",
+    )
+    expect(screen.getByTestId("site-wordmark").getAttribute("style")).toContain(
+      "--season-logo-secondary",
     )
     const contributors = screen.getByRole("link", { name: "Đóng góp" })
     expect(contributors).toHaveAttribute("href", "/contributors")
