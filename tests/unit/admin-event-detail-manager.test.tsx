@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -220,20 +220,10 @@ describe("AdminEventDetailManager", () => {
     )
   })
 
-  it("shuffles immediately and stays available while order is saving", async () => {
-    const user = userEvent.setup()
-    let resolveSave: ((response: Response) => void) | undefined
-    const fetchMock = vi
-      .fn()
-      .mockImplementationOnce(
-        () =>
-        new Promise<Response>((resolve) => {
-          resolveSave = resolve
-        }),
-      )
-      .mockResolvedValue(
-        new Response(JSON.stringify({ data: { id: "event-1" } }), { status: 200 }),
-      )
+  it("shuffles immediately and persists only the latest order after rapid clicks", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ data: { id: "event-1" } }), { status: 200 }),
+    )
     vi.stubGlobal("fetch", fetchMock)
     vi.spyOn(Math, "random").mockReturnValue(0.5)
 
@@ -278,7 +268,7 @@ describe("AdminEventDetailManager", () => {
         .getAllByTestId(/^event-submission-room-/)
         .map((submission) => submission.dataset.testid)
 
-    await user.click(shuffleButton)
+    fireEvent.click(shuffleButton)
     expect(submissionOrder()).toEqual([
       "event-submission-room-a",
       "event-submission-room-c",
@@ -286,27 +276,27 @@ describe("AdminEventDetailManager", () => {
     ])
     expect(shuffleButton).toBeEnabled()
 
-    await user.click(shuffleButton)
+    for (let click = 0; click < 6; click += 1) {
+      fireEvent.click(shuffleButton)
+    }
+
+    expect(fetchMock).not.toHaveBeenCalled()
     expect(submissionOrder()).toEqual([
       "event-submission-room-a",
-      "event-submission-room-b",
       "event-submission-room-c",
+      "event-submission-room-b",
     ])
 
-    resolveSave?.(
-      new Response(JSON.stringify({ data: { id: "event-1" } }), { status: 200 }),
-    )
-
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenNthCalledWith(
-        2,
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+      expect(fetchMock).toHaveBeenCalledWith(
         "/api/admin/events/event-1",
         expect.objectContaining({
           body: JSON.stringify({
             roomOrder: [
               { id: "room-a", order: 0 },
-              { id: "room-b", order: 1 },
-              { id: "room-c", order: 2 },
+              { id: "room-c", order: 1 },
+              { id: "room-b", order: 2 },
             ],
           }),
           method: "PATCH",

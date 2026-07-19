@@ -92,57 +92,61 @@ export async function PATCH(
     const { id } = await params
     const data = updateEventSchema.parse(await request.json())
 
-    const event = await prisma.$transaction(async (tx) => {
-      if (data.roomOrder) {
-        await Promise.all(
-          data.roomOrder.map((room) =>
-            tx.awardEventRoom.updateMany({
-              data: { order: room.order },
-              where: { eventId: id, id: room.id },
-            }),
-          ),
-        )
-      }
+    const mutations: Prisma.PrismaPromise<unknown>[] = []
 
-      if (data.roomExclusion) {
-        await tx.awardEventRoom.updateMany({
+    if (data.roomOrder) {
+      mutations.push(
+        ...data.roomOrder.map((room) =>
+          prisma.awardEventRoom.updateMany({
+            data: { order: room.order },
+            where: { eventId: id, id: room.id },
+          }),
+        ),
+      )
+    }
+
+    if (data.roomExclusion) {
+      mutations.push(
+        prisma.awardEventRoom.updateMany({
           data: { excludedAt: data.roomExclusion.excluded ? new Date() : null },
           where: { eventId: id, id: data.roomExclusion.id },
-        })
-      }
+        }),
+      )
+    }
 
-      return tx.awardEvent.update({
-        data: {
-          ...(data.categoryId !== undefined && {
-            category: data.categoryId
-              ? { connect: { id: data.categoryId } }
-              : { disconnect: true },
-          }),
-          ...(data.coverAlt !== undefined && {
-            coverAlt: data.coverAlt?.trim() || null,
-          }),
-          ...(data.coverUrl !== undefined && { coverUrl: data.coverUrl }),
-          ...(data.intro !== undefined && {
-            intro: data.intro as Prisma.InputJsonObject,
-          }),
-          ...(data.introText !== undefined && {
-            introText: data.introText.trim() || null,
-          }),
-          ...(data.status && { status: data.status, ...getStatusDates(data.status) }),
-          ...(data.tagIds && {
-            tags: {
-              create: uniqueIds(data.tagIds).map((tagId) => ({
-                tag: { connect: { id: tagId } },
-              })),
-              deleteMany: {},
-            },
-          }),
-          ...(data.title && { title: data.title }),
-        },
-        select: awardEventDetailSelect,
-        where: { id },
-      })
+    const eventMutation = prisma.awardEvent.update({
+      data: {
+        ...(data.categoryId !== undefined && {
+          category: data.categoryId
+            ? { connect: { id: data.categoryId } }
+            : { disconnect: true },
+        }),
+        ...(data.coverAlt !== undefined && {
+          coverAlt: data.coverAlt?.trim() || null,
+        }),
+        ...(data.coverUrl !== undefined && { coverUrl: data.coverUrl }),
+        ...(data.intro !== undefined && {
+          intro: data.intro as Prisma.InputJsonObject,
+        }),
+        ...(data.introText !== undefined && {
+          introText: data.introText.trim() || null,
+        }),
+        ...(data.status && { status: data.status, ...getStatusDates(data.status) }),
+        ...(data.tagIds && {
+          tags: {
+            create: uniqueIds(data.tagIds).map((tagId) => ({
+              tag: { connect: { id: tagId } },
+            })),
+            deleteMany: {},
+          },
+        }),
+        ...(data.title && { title: data.title }),
+      },
+      select: awardEventDetailSelect,
+      where: { id },
     })
+    const results = await prisma.$transaction([...mutations, eventMutation])
+    const event = results.at(-1) as Awaited<typeof eventMutation>
 
     await regenerateEventPostIfExists(id)
     revalidateTag("award-events", "max")

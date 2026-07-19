@@ -53,6 +53,8 @@ describe("WriterEventsList", () => {
     expect(screen.queryByRole("link", { name: /Edit room/i })).not.toBeInTheDocument()
     // Check that "Join" button is NOT rendered
     expect(screen.queryByRole("button", { name: /Join/i })).not.toBeInTheDocument()
+    expect(screen.getByText("Đang mở")).toHaveClass("text-emerald-700")
+    expect(screen.getByText("Bản nháp")).toHaveClass("text-amber-700")
     expect(screen.queryByText(/Sự kiện:/)).not.toBeInTheDocument()
     expect(screen.queryByText(/Bài gửi:/)).not.toBeInTheDocument()
   })

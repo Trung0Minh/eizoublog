@@ -85,6 +85,11 @@ describe("DashboardEventRoomPage (Page A)", () => {
     )
 
     expect(screen.getByText("Awards Event")).toBeVisible()
+    expect(screen.getByText("Open")).toHaveClass("text-emerald-700")
+    expect(screen.getByRole("link", { name: "Back to events" })).toHaveAttribute(
+      "href",
+      "/dashboard/events",
+    )
     expect(screen.getByText("Alice")).toBeVisible()
     expect(screen.getByText("My submission")).toBeVisible()
     expect(screen.getByRole("link", { name: "Edit submission" })).toBeVisible()

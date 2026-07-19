@@ -91,6 +91,8 @@ interface TagOption {
   name: string
 }
 
+const ROOM_ORDER_SAVE_DELAY_MS = 350
+
 function getApiError(value: unknown) {
   if (
     typeof value === "object" &&
@@ -201,6 +203,7 @@ export function AdminEventDetailManager({
     event.tags?.map(({ tag }) => tag.id) ?? [],
   )
   const pendingRoomOrderRef = useRef<Array<{ id: string; order: number }> | null>(null)
+  const roomOrderSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const roomOrderSaveRunningRef = useRef(false)
   const roomsRef = useRef(event.rooms)
   const sensors = useSensors(
@@ -274,36 +277,54 @@ export function AdminEventDetailManager({
   async function flushRoomOrder() {
     if (roomOrderSaveRunningRef.current) return
 
+    const roomOrder = pendingRoomOrderRef.current
+    if (!roomOrder) {
+      setIsSavingOrder(false)
+      return
+    }
+
     roomOrderSaveRunningRef.current = true
-    setIsSavingOrder(true)
+    pendingRoomOrderRef.current = null
 
     try {
-      while (pendingRoomOrderRef.current) {
-        const roomOrder = pendingRoomOrderRef.current
-        pendingRoomOrderRef.current = null
-        const response = await fetch(`/api/admin/events/${event.id}`, {
-          body: JSON.stringify({ roomOrder }),
-          headers: { "Content-Type": "application/json" },
-          method: "PATCH",
-        })
-        const result: unknown = await response.json()
+      const response = await fetch(`/api/admin/events/${event.id}`, {
+        body: JSON.stringify({ roomOrder }),
+        headers: { "Content-Type": "application/json" },
+        method: "PATCH",
+      })
+      const result: unknown = await response.json()
 
-        if (!response.ok) {
-          throw new Error(getApiError(result))
-        }
+      if (!response.ok) {
+        throw new Error(getApiError(result))
       }
     } catch (caughtError) {
-      pendingRoomOrderRef.current = null
       setError(caughtError instanceof Error ? caughtError.message : "Order update failed")
     } finally {
       roomOrderSaveRunningRef.current = false
-      setIsSavingOrder(false)
+      if (pendingRoomOrderRef.current) {
+        scheduleRoomOrderSave()
+      } else {
+        setIsSavingOrder(false)
+      }
     }
   }
 
+  function scheduleRoomOrderSave() {
+    if (roomOrderSaveTimerRef.current) {
+      clearTimeout(roomOrderSaveTimerRef.current)
+    }
+
+    roomOrderSaveTimerRef.current = setTimeout(() => {
+      roomOrderSaveTimerRef.current = null
+      void flushRoomOrder()
+    }, ROOM_ORDER_SAVE_DELAY_MS)
+  }
+
   function queueRoomOrder(orderedRooms: AdminEventRoom[]) {
+    setError("")
+    setIsSavingOrder(true)
     pendingRoomOrderRef.current = orderedRooms.map(({ id, order }) => ({ id, order }))
-    void flushRoomOrder()
+    scheduleRoomOrderSave()
   }
 
   function updateRoomOrder(orderedRooms: AdminEventRoom[]) {

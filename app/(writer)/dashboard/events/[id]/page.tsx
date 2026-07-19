@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
-import { Edit2, Eye, FileText, Lock, MessageSquare } from "lucide-react"
+import { ChevronLeft, Edit2, Eye, FileText, Lock, MessageSquare } from "lucide-react"
 
 import { joinAwardEvent } from "@/lib/awardEventService"
 import { prisma } from "@/lib/prisma"
@@ -146,15 +146,34 @@ export default async function DashboardEventRoomPage({
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:py-10 md:px-6 lg:px-8">
+      <Link
+        className="mb-5 inline-flex items-center gap-1 text-sm font-semibold text-text-secondary transition-colors hover:text-accent"
+        href="/dashboard/events"
+      >
+        <ChevronLeft aria-hidden="true" className="h-4 w-4" />
+        Back to events
+      </Link>
       {/* Header */}
       <div className="mb-8 border-b border-border-default pb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-accent">
             Event Overview
           </p>
-          <h1 className="text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
-            {event.title}
-          </h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
+              {event.title}
+            </h1>
+            <Badge
+              className={
+                event.status === "OPEN"
+                  ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/10 dark:text-emerald-300"
+                  : "border-rose-500/25 bg-rose-500/10 text-rose-700 hover:bg-rose-500/10 dark:text-rose-300"
+              }
+              variant="outline"
+            >
+              {event.status === "OPEN" ? "Open" : "Closed"}
+            </Badge>
+          </div>
         </div>
         <div className="flex gap-2">
           {event.finalPost?.status === "PUBLISHED" && (
