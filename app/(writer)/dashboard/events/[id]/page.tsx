@@ -39,7 +39,6 @@ export default async function DashboardEventRoomPage({
           },
           status: true,
           visibility: true,
-          writerIntro: true,
         },
         where: { writerId: session.user.id },
       },
@@ -79,7 +78,6 @@ export default async function DashboardEventRoomPage({
             },
             status: true,
             visibility: true,
-            writerIntro: true,
           },
           where: { writerId: session.user.id },
         },
@@ -129,7 +127,6 @@ export default async function DashboardEventRoomPage({
           username: true,
         },
       },
-      writerIntro: true,
     },
     where: {
       eventId: id,

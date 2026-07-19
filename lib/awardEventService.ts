@@ -13,7 +13,6 @@ import {
   shuffleSubmittedAwardEventRooms,
 } from "@/lib/awardEvents"
 import { prisma } from "@/lib/prisma"
-import { getProfileBioVisibleText } from "@/lib/profileBio"
 import { truncatePostExcerpt } from "@/lib/postLimits"
 import { ensureUniqueSlug, generateSlug } from "@/lib/utils"
 
@@ -68,7 +67,6 @@ export const awardEventDetailSelect = {
       submittedPostId: true,
       submittedPostTitle: true,
       submittedPostVersion: true,
-      submittedWriterIntro: true,
       selectedPost: {
         select: {
           content: true,
@@ -92,7 +90,6 @@ export const awardEventDetailSelect = {
         },
       },
       writerId: true,
-      writerIntro: true,
     },
   },
   slug: true,
@@ -180,13 +177,6 @@ export async function regenerateAwardEventPost(
           : null,
       status: room.status,
       writer: room.writer,
-      writerIntro: room.submittedContent
-        ? room.submittedWriterIntro?.trim() ||
-          getProfileBioVisibleText(room.writer.bio ?? "") ||
-          null
-        : room.writerIntro?.trim() ||
-          getProfileBioVisibleText(room.writer.bio ?? "") ||
-          null,
     }))
   const content = buildAwardEventPostContent({
     eventIntro: normalizeAwardEventContent(event.intro),
@@ -363,14 +353,12 @@ export async function updateAwardEventRoom({
   status,
   visibility,
   writerId,
-  writerIntro,
 }: {
   eventId: string
   postId: string | null
   status?: AwardEventRoomStatus
   visibility: AwardEventRoomVisibility
   writerId: string
-  writerIntro: string
 }) {
   const updated = await prisma.$transaction(async (tx) => {
     const room = await tx.awardEventRoom.findUnique({
@@ -390,7 +378,6 @@ export async function updateAwardEventRoom({
       throw new AwardEventError("Select a post before submitting", 400)
     }
 
-    const trimmedWriterIntro = writerIntro.trim()
     let snapshotData: {
       submittedContent?: Prisma.InputJsonValue
       submittedPostId?: string
@@ -410,6 +397,7 @@ export async function updateAwardEventRoom({
         },
         where: {
           authorId: writerId,
+          finalAwardEvent: null,
           id: postId,
           status: { in: ["DRAFT", "PUBLISHED"] },
         },
@@ -425,7 +413,7 @@ export async function updateAwardEventRoom({
           submittedPostId: selectedPost.id,
           submittedPostTitle: selectedPost.title,
           submittedPostVersion: selectedPost.version,
-          submittedWriterIntro: trimmedWriterIntro || null,
+          submittedWriterIntro: null,
         }
       }
     }
@@ -439,7 +427,7 @@ export async function updateAwardEventRoom({
           submittedAt: status === "SUBMITTED" ? new Date() : null,
         }),
         visibility,
-        writerIntro: trimmedWriterIntro || null,
+        writerIntro: null,
       },
       select: {
         id: true,
@@ -450,7 +438,6 @@ export async function updateAwardEventRoom({
         submittedPostTitle: true,
         submittedPostVersion: true,
         visibility: true,
-        writerIntro: true,
       },
       where: { id: room.id },
     })

@@ -68,7 +68,7 @@ describe("EventAnthologyTableOfContents", () => {
 })
 
 describe("EventAnthologyView", () => {
-  it("previews the submitted writer snapshot instead of later room edits", () => {
+  it("keeps writer introductions out of the open author rail", () => {
     render(
       <EventAnthologyView
         event={{
@@ -105,11 +105,11 @@ describe("EventAnthologyView", () => {
       />,
     )
 
-    expect(screen.getByText("Snapshot introduction.")).toBeVisible()
+    expect(screen.queryByText("Snapshot introduction.")).not.toBeInTheDocument()
     expect(screen.queryByText("Later room edit.")).not.toBeInTheDocument()
   })
 
-  it("renders the rich writer profile bio when the event intro is blank", () => {
+  it("keeps profile bio out of the open author rail", () => {
     render(
       <EventAnthologyView
         event={{
@@ -160,19 +160,18 @@ describe("EventAnthologyView", () => {
       />,
     )
 
+    const contributorBlock = screen.getByTestId("event-contributor-block")
     expect(
-      within(screen.getByTestId("event-contributor-header")).getByText(
-        "Public profile introduction.",
-      ),
-    ).toBeVisible()
+      within(contributorBlock).queryByText("Public profile introduction."),
+    ).not.toBeInTheDocument()
     expect(
-      within(screen.getByTestId("event-contributor-header")).getByText(
-        "Second profile line.",
-      ),
-    ).toBeVisible()
+      within(contributorBlock).queryByText("Second profile line."),
+    ).not.toBeInTheDocument()
     expect(screen.getByTestId("event-contributor-header")).toHaveClass(
-      "rounded-[20px]",
-      "p-4",
+      "items-center",
+      "text-center",
+      "2xl:absolute",
+      "2xl:w-32",
     )
     expect(screen.getByTestId("event-contributor-header")).not.toHaveClass(
       "border-b",
@@ -200,8 +199,9 @@ describe("EventAnthologyView", () => {
       screen.getByTestId("event-cover-alt"),
     )
     expect(screen.getByTestId("event-content-grid")).toHaveClass(
-      "max-w-[1360px]",
-      "xl:grid-cols-[minmax(0,1000px)_220px]",
+      "max-w-7xl",
+      "lg:grid-cols-[minmax(0,1000px)]",
+      "2xl:grid-cols-[minmax(0,1000px)_220px]",
     )
     expect(screen.getByText("The complete introduction.")).toHaveClass(
       "w-full",
@@ -418,6 +418,11 @@ describe("EventAnthologyView", () => {
     expect(within(heroCredits).queryByText("Removed Writer")).not.toBeInTheDocument()
 
     const authorCredits = screen.getByLabelText("Tác giả bài viết")
+    expect(screen.getByTestId("event-author-credits")).toHaveClass(
+      "max-w-7xl",
+      "lg:grid-cols-[minmax(0,1000px)]",
+      "2xl:pl-20",
+    )
     expect(within(authorCredits).getByText("Writer A")).toBeInTheDocument()
     expect(within(authorCredits).getByText("Writer B")).toBeInTheDocument()
     expect(within(authorCredits).getByText("Profile bio A.")).toBeInTheDocument()
@@ -434,19 +439,21 @@ describe("EventAnthologyView", () => {
       "Writer A",
     )
     expect(screen.getAllByTestId("event-contributor-block")[0]).toHaveClass(
-      "rounded-[24px]",
-      "border",
+      "relative",
+      "scroll-mt-24",
     )
     expect(screen.getAllByTestId("event-contributor-block")[0].querySelector("img")).toHaveClass(
-      "h-24",
-      "w-24",
+      "aspect-square",
+      "h-28",
+      "w-28",
       "sm:h-32",
       "sm:w-32",
+      "rounded-full",
     )
     expect(screen.getAllByTestId("event-contributor-header")[0]).toHaveClass(
-      "mb-8",
-      "sm:mb-10",
-      "rounded-[20px]",
+      "2xl:absolute",
+      "2xl:left-[-9rem]",
+      "text-center",
     )
     expect(screen.getByTestId("event-cover-alt").nextElementSibling).toContainElement(
       screen.getByRole("button", { name: "Contents" }),

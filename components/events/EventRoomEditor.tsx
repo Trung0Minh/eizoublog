@@ -11,7 +11,6 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
 
 interface EventRoom {
   id: string
@@ -26,7 +25,6 @@ interface EventRoom {
   submittedPostId: string | null
   submittedPostVersion: number | null
   visibility: AwardEventRoomVisibility
-  writerIntro: string | null
 }
 
 interface EligiblePost {
@@ -76,7 +74,6 @@ export function EventRoomEditor({
     room.submittedPostVersion,
   )
   const [visibility, setVisibility] = useState<AwardEventRoomVisibility>(room.visibility)
-  const [writerIntro, setWriterIntro] = useState(room.writerIntro ?? "")
 
   const controlsDisabled = event.status === "CLOSED"
   const selectedEligiblePost = eligiblePosts.find((post) => post.id === postId)
@@ -97,7 +94,6 @@ export function EventRoomEditor({
           postId: postId || null,
           status: "SUBMITTED",
           visibility,
-          writerIntro,
         }),
         headers: { "Content-Type": "application/json" },
         method: "PATCH",
@@ -148,7 +144,7 @@ export function EventRoomEditor({
               <p className="mt-0.5 text-xs leading-5 text-text-secondary">
                 {status === "SUBMITTED"
                   ? "Bạn có thể thay đổi lựa chọn và gửi lại khi sự kiện còn mở."
-                  : "Một bài viết, một lời giới thiệu ngắn, sau đó gửi cho quản trị viên."}
+                  : "Chọn một bài viết rồi gửi cho quản trị viên."}
               </p>
             </div>
           </div>
@@ -228,19 +224,6 @@ export function EventRoomEditor({
               </select>
             </label>
           </div>
-          <label className="block" data-testid="submission-writer-intro">
-            <span className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-text-tertiary">
-              Giới thiệu người viết
-            </span>
-            <Textarea
-              className="min-h-40 resize-y rounded-[16px] border border-border-default bg-background p-4 font-lora text-[15px] leading-7 text-text-primary focus-visible:border-accent"
-              disabled={controlsDisabled || isPending}
-              maxLength={1000}
-              onChange={(changeEvent) => setWriterIntro(changeEvent.target.value)}
-              placeholder="Một đoạn giới thiệu ngắn hiển thị trước phần của bạn trong sự kiện."
-              value={writerIntro}
-            />
-          </label>
         </div>
       </section>
     </div>

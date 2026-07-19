@@ -44,7 +44,6 @@ function updateInput(
     status: "SUBMITTED",
     visibility: "PARTICIPANTS",
     writerId: "writer-1",
-    writerIntro: "Writer intro",
     ...overrides,
   } satisfies Parameters<typeof updateAwardEventRoom>[0]
 }
@@ -126,6 +125,11 @@ describe("updateAwardEventRoom", () => {
 
     await updateAwardEventRoom(updateInput("post-1"))
 
+    expect(mocks.prisma.post.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ finalAwardEvent: null }),
+      }),
+    )
     expect(mocks.prisma.awardEventRoom.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
@@ -134,34 +138,16 @@ describe("updateAwardEventRoom", () => {
           submittedPostId: "post-1",
           submittedPostTitle: "Selected post",
           submittedPostVersion: 4,
-          submittedWriterIntro: "Writer intro",
+          submittedWriterIntro: null,
         }),
       }),
     )
   })
 
-  it("leaves the submitted intro blank so the profile bio can render richly", async () => {
-    mocks.prisma.post.findFirst.mockResolvedValue(
-      selectedPost({
-        author: {
-          bio: JSON.stringify({
-            content: [
-              {
-                content: [{ text: "Anime editor", type: "text" }],
-                type: "paragraph",
-              },
-              {
-                content: [{ text: "and sakuga fan", type: "text" }],
-                type: "paragraph",
-              },
-            ],
-            type: "doc",
-          }),
-        },
-      }),
-    )
+  it("clears legacy writer introductions when a writer submits", async () => {
+    mocks.prisma.post.findFirst.mockResolvedValue(selectedPost())
 
-    await updateAwardEventRoom(updateInput("post-1", { writerIntro: "   " }))
+    await updateAwardEventRoom(updateInput("post-1"))
 
     expect(mocks.prisma.awardEventRoom.update).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -329,7 +315,7 @@ describe("regenerateAwardEventPost", () => {
     const update = mocks.prisma.post.update.mock.calls[0]?.[0]
     const generatedContent = JSON.stringify(update.data.content)
     expect(generatedContent).toContain("Submitted snapshot")
-    expect(generatedContent).toContain("Public profile introduction")
+    expect(generatedContent).not.toContain("Public profile introduction")
     expect(generatedContent).not.toContain("Unsaved event update")
     expect(generatedContent).not.toContain("Changed introduction")
   })

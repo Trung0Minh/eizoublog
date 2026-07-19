@@ -39,7 +39,6 @@ export default async function EditRoomPage({ params }: EditRoomPageProps) {
           submittedPostId: true,
           submittedPostVersion: true,
           visibility: true,
-          writerIntro: true,
         },
         where: { writerId: session.user.id },
       },
@@ -82,7 +81,6 @@ export default async function EditRoomPage({ params }: EditRoomPageProps) {
             submittedPostId: true,
             submittedPostVersion: true,
             visibility: true,
-            writerIntro: true,
           },
           where: { writerId: session.user.id },
         },
@@ -110,6 +108,7 @@ export default async function EditRoomPage({ params }: EditRoomPageProps) {
     },
     where: {
       authorId: session.user.id,
+      finalAwardEvent: null,
       status: { in: ["DRAFT", "PUBLISHED"] },
     },
   })

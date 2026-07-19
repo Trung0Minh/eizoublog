@@ -39,4 +39,12 @@ describe("published post width contract", () => {
     expect(authorCredits).toContain("scroll-snap-type")
     expect(authorCredits).toContain("Kéo ngang để xem thêm")
   })
+
+  it("aligns event comments with the event article column", () => {
+    const publicPage = read("app/(public)/[slug]/page.tsx")
+
+    expect(publicPage).toContain('data-testid="event-comments"')
+    expect(publicPage).toContain("lg:grid-cols-[minmax(0,1000px)]")
+    expect(publicPage).toContain("2xl:pl-20")
+  })
 })

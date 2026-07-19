@@ -39,7 +39,6 @@ describe("EventRoomEditor", () => {
           submittedPostId: null,
           submittedPostVersion: null,
           visibility: "PRIVATE",
-          writerIntro: null,
         }}
       />,
     )
@@ -63,7 +62,8 @@ describe("EventRoomEditor", () => {
     const primaryRow = screen.getByTestId("submission-primary-row")
     expect(primaryRow).toContainElement(screen.getByLabelText("Bài viết được chọn"))
     expect(primaryRow).toContainElement(screen.getByLabelText("Ai có thể xem"))
-    expect(screen.getByTestId("submission-writer-intro")).toBeVisible()
+    expect(screen.queryByTestId("submission-writer-intro")).not.toBeInTheDocument()
+    expect(screen.queryByText("Giới thiệu người viết")).not.toBeInTheDocument()
     expect(screen.queryByText("Sẽ gửi")).not.toBeInTheDocument()
   })
 
@@ -93,7 +93,6 @@ describe("EventRoomEditor", () => {
           submittedPostId: "post-1",
           submittedPostVersion: 3,
           visibility: "PRIVATE",
-          writerIntro: null,
         }}
       />,
     )
@@ -128,7 +127,6 @@ describe("EventRoomEditor", () => {
           submittedPostId: "post-1",
           submittedPostVersion: 3,
           visibility: "PRIVATE",
-          writerIntro: null,
         }}
       />,
     )

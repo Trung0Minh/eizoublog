@@ -44,7 +44,6 @@ describe("buildAwardEventPostContent", () => {
           },
           status: "SUBMITTED",
           writer: { name: "Mai", username: "mai" },
-          writerIntro: "Cuts that stayed in my head.",
         },
         {
           id: "room-1",
@@ -57,7 +56,6 @@ describe("buildAwardEventPostContent", () => {
           },
           status: "SUBMITTED",
           writer: { name: "An", username: "an" },
-          writerIntro: "I watched too many endings.",
         },
         {
           id: "room-3",
@@ -70,7 +68,6 @@ describe("buildAwardEventPostContent", () => {
           },
           status: "DRAFT",
           writer: { name: "Draft", username: "draft" },
-          writerIntro: "Not ready.",
         },
       ],
     })
@@ -80,10 +77,8 @@ describe("buildAwardEventPostContent", () => {
       "heading",
       "bulletList",
       "heading",
-      "blockquote",
       "paragraph",
       "heading",
-      "blockquote",
       "paragraph",
     ])
     expect(JSON.stringify(content)).toContain("Entries")
@@ -105,7 +100,6 @@ describe("buildAwardEventPostContent", () => {
           selectedPost: null,
           status: "SUBMITTED",
           writer: { name: "Empty", username: "empty" },
-          writerIntro: "No post yet.",
         },
       ],
     })
@@ -129,7 +123,6 @@ describe("buildAwardEventPostContent", () => {
           },
           status: "SUBMITTED",
           writer: { name: "Removed Writer", username: "removed-writer" },
-          writerIntro: "This author should not appear.",
         },
       ],
     })
@@ -158,7 +151,6 @@ describe("buildAwardEventOutline", () => {
         },
         status: "SUBMITTED",
         writer: { name: "Writer A", username: "writer-a" },
-        writerIntro: null,
       },
       {
         id: "room-b",
@@ -175,7 +167,6 @@ describe("buildAwardEventOutline", () => {
         },
         status: "SUBMITTED",
         writer: { name: "Writer B", username: "writer-b" },
-        writerIntro: null,
       },
     ])
 

@@ -4,14 +4,12 @@ import Link from "next/link"
 import { EventAnthologyTableOfContents } from "@/components/events/EventAnthologyTableOfContents"
 import { AuthorCreditList } from "@/components/posts/AuthorCreditList"
 import { PostBody } from "@/components/posts/PostBody"
-import { ContributorBio } from "@/components/profile/ContributorBio"
 import {
   buildAwardEventOutline,
   getSubmittedAwardEventRooms,
   namespaceAwardEventPostContent,
   type AwardEventPostRoom,
 } from "@/lib/awardEvents"
-import { getProfileBioVisibleText } from "@/lib/profileBio"
 import { cn } from "@/lib/utils"
 
 interface AnthologyRoom {
@@ -34,7 +32,7 @@ interface AnthologyRoom {
     name: string
     username: string
   }
-  writerIntro: string | null
+  writerIntro?: string | null
 }
 
 interface EventAnthologyViewProps {
@@ -120,7 +118,6 @@ function EventContributorAttribution({
 
 export function EventAnthologyView({ event, preview = false }: EventAnthologyViewProps) {
   const normalizedRooms: Array<AwardEventPostRoom & {
-    profileBio: string | null
     writer: AwardEventPostRoom["writer"] & {
       avatarUrl: string | null
       bio: string | null
@@ -130,21 +127,9 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
       ? room.submittedContent
       : null
     const hasSubmittedSnapshot = submittedContent !== null
-    const profileBio = room.writer.bio?.trim() || null
-    const visibleProfileBio = getProfileBioVisibleText(profileBio ?? "")
-    const storedIntro = hasSubmittedSnapshot
-      ? room.submittedWriterIntro?.trim()
-      : room.writerIntro?.trim()
-    const usesProfileBio = Boolean(
-      profileBio &&
-        (!storedIntro ||
-          storedIntro === visibleProfileBio ||
-          !room.writerIntro?.trim()),
-    )
 
     return {
       ...room,
-      profileBio: usesProfileBio ? profileBio : null,
       selectedPost: hasSubmittedSnapshot
         ? {
             content: submittedContent,
@@ -161,7 +146,6 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
                 : { content: [], type: "doc" },
             }
           : null,
-      writerIntro: usesProfileBio ? null : storedIntro || null,
       writer: {
         ...room.writer,
         avatarUrl: room.writer.avatarUrl ?? null,
@@ -250,7 +234,7 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
       </div>
 
       <div
-        className="relative z-10 mx-auto grid w-full max-w-[1360px] gap-12 px-4 pt-12 sm:px-6 lg:px-10 xl:grid-cols-[minmax(0,1000px)_220px] xl:justify-center"
+        className="relative z-10 mx-auto grid w-full max-w-7xl gap-12 px-4 pt-12 sm:px-6 lg:grid-cols-[minmax(0,1000px)] lg:justify-start lg:px-10 2xl:max-w-[1360px] 2xl:grid-cols-[minmax(0,1000px)_220px] 2xl:pl-20 2xl:pr-0"
         data-testid="event-content-grid"
       >
         <div className="min-w-0 space-y-8 sm:space-y-10">
@@ -263,7 +247,7 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
             </p>
           )}
           {headings.length > 0 && (
-            <div className="xl:hidden">
+            <div className="2xl:hidden">
               <EventAnthologyTableOfContents collapsible headings={headings} />
             </div>
           )}
@@ -292,50 +276,32 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
             <div className="space-y-8 sm:space-y-10">
               {rooms.map((room) => (
                 <section
-                  className="scroll-mt-24 rounded-[24px] border border-border-default/80 bg-background/90 p-5 shadow-[0_18px_60px_rgba(31,24,38,0.08)] backdrop-blur-xl dark:bg-background/80 sm:p-8 md:p-10"
+                  className="relative scroll-mt-24 rounded-[24px] border border-border-default/80 bg-background/90 p-5 shadow-[0_18px_60px_rgba(31,24,38,0.08)] backdrop-blur-xl dark:bg-background/80 sm:p-8 md:p-10"
                   data-testid="event-contributor-block"
                   id={`event-room-${room.id}`}
                   key={room.id}
                 >
                   <div
-                    className="mb-8 rounded-[20px] p-4 sm:mb-10 sm:p-6 md:p-7"
+                    className="mb-8 flex flex-col items-center text-center 2xl:absolute 2xl:left-[-9rem] 2xl:top-10 2xl:mb-0 2xl:w-32"
                     data-testid="event-contributor-header"
-                    style={{
-                      backgroundColor:
-                        "color-mix(in srgb, var(--accent) 7%, transparent)",
-                    }}
                   >
-                    <div className="grid grid-cols-[6rem_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[8rem_minmax(0,1fr)] sm:gap-7">
-                      {room.writer.avatarUrl ? (
-                        <img
-                          alt={room.writer.name}
-                          className="h-24 w-24 rounded-full object-cover sm:h-32 sm:w-32"
-                          src={room.writer.avatarUrl}
-                        />
-                      ) : (
-                        <div className="flex h-24 w-24 items-center justify-center rounded-full border border-border-default bg-background font-display text-3xl font-bold sm:h-32 sm:w-32">
-                          {room.writer.name.charAt(0)}
-                        </div>
-                      )}
-                      <div className="min-w-0">
-                        <h2 className="font-display text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
-                          {room.writer.name}
-                        </h2>
-                        {room.writerIntro && (
-                          <p className="mt-2 whitespace-pre-wrap text-[13px] leading-5 text-text-secondary sm:mt-3 sm:text-base sm:leading-7">
-                            {room.writerIntro}
-                          </p>
-                        )}
-                        {room.profileBio && (
-                          <div className="mt-2 sm:mt-3 sm:[&>div]:text-base sm:[&>div]:leading-7">
-                            <ContributorBio bio={room.profileBio} />
-                          </div>
-                        )}
+                    {room.writer.avatarUrl ? (
+                      <img
+                        alt={room.writer.name}
+                        className="aspect-square h-28 w-28 shrink-0 rounded-full object-cover ring-2 ring-accent/25 ring-offset-4 ring-offset-background/40 sm:h-32 sm:w-32"
+                        src={room.writer.avatarUrl}
+                      />
+                    ) : (
+                      <div className="flex aspect-square h-28 w-28 shrink-0 items-center justify-center rounded-full border border-border-default bg-background font-display text-3xl font-bold sm:h-32 sm:w-32">
+                        {room.writer.name.charAt(0)}
                       </div>
-                    </div>
+                    )}
+                    <h2 className="mt-4 max-w-full break-words font-display text-2xl font-bold leading-tight tracking-tight text-text-primary">
+                      {room.writer.name}
+                    </h2>
                   </div>
 
-                  <article className="post-content font-lora text-[16px] leading-[1.8] text-text-primary sm:text-[17.5px]">
+                  <article className="post-content min-w-0 font-lora text-[16px] leading-[1.8] text-text-primary sm:text-[17.5px]">
                     <PostBody
                       content={namespaceAwardEventPostContent(
                         room.selectedPost?.content ?? { type: "doc", content: [] },
@@ -350,7 +316,7 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
         </div>
 
         {headings.length > 0 && (
-          <aside className="hidden xl:block">
+          <aside className="hidden 2xl:block">
             <div className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto overscroll-contain pr-2 [scrollbar-gutter:stable]">
               <EventAnthologyTableOfContents headings={headings} />
             </div>
@@ -359,7 +325,10 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
       </div>
 
       {rooms.length > 0 && (
-        <div className="mx-auto grid w-full max-w-[1360px] gap-12 px-4 pt-12 sm:px-6 lg:px-10 xl:grid-cols-[minmax(0,1000px)_220px] xl:justify-center">
+        <div
+          className="mx-auto grid w-full max-w-7xl gap-12 px-4 pt-12 sm:px-6 lg:grid-cols-[minmax(0,1000px)] lg:justify-start lg:px-10 2xl:max-w-[1360px] 2xl:grid-cols-[minmax(0,1000px)_220px] 2xl:pl-20 2xl:pr-0"
+          data-testid="event-author-credits"
+        >
           <div className="min-w-0 font-sans text-text-primary">
             <AuthorCreditList authors={rooms.map(({ writer }) => writer)} />
           </div>

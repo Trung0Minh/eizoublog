@@ -10,7 +10,6 @@ import { PostBody } from "@/components/posts/PostBody"
 import { PostContentFrame } from "@/components/posts/PostContentFrame"
 import { TableOfContents } from "@/components/posts/TableOfContents"
 import { RoomFeedbackSection } from "@/components/events/RoomFeedbackSection"
-import { getProfileBioVisibleText } from "@/lib/profileBio"
 
 interface RoomDetailPageProps {
   params: Promise<{ id: string; roomId: string }>
@@ -181,15 +180,6 @@ export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
             </div>
           </div>
         </div>
-
-        {/* Writer Intro if exists */}
-        {(room.writerIntro?.trim() || getProfileBioVisibleText(room.writer.bio ?? "")) && (
-          <div className="border-l-4 border-accent pl-4 py-1.5 bg-subtle-bg rounded-r-md">
-            <blockquote className="text-sm italic text-text-secondary leading-relaxed">
-              &ldquo;{room.writerIntro?.trim() || getProfileBioVisibleText(room.writer.bio ?? "")}&rdquo;
-            </blockquote>
-          </div>
-        )}
 
         {/* Post Image */}
         {room.selectedPost.coverUrl && (

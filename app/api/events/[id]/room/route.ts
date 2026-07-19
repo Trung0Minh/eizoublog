@@ -11,7 +11,6 @@ const updateRoomSchema = z.object({
   postId: z.string().nullable().default(null),
   status: z.enum(["DRAFT", "SUBMITTED"]).optional(),
   visibility: z.enum(["PRIVATE", "PARTICIPANTS"]).default("PRIVATE"),
-  writerIntro: z.string().max(1000).default(""),
 })
 
 export async function GET(
@@ -47,7 +46,6 @@ export async function GET(
             submittedPostVersion: true,
             updatedAt: true,
             visibility: true,
-            writerIntro: true,
           },
           where: { writerId: activeSession.user.id },
         },
@@ -88,7 +86,6 @@ export async function PATCH(
       status: data.status,
       visibility: data.visibility,
       writerId: activeSession.user.id,
-      writerIntro: data.writerIntro,
     })
 
     return Response.json({ data: room })

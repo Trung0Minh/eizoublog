@@ -21,7 +21,6 @@ export interface AwardEventPostRoom {
   } | null
   status: AwardEventRoomStatus
   writer: AwardEventWriter
-  writerIntro: string | null
 }
 
 export interface AwardEventPostContentInput {
@@ -60,13 +59,6 @@ function heading(level: number, text: string, id?: string): JSONContent {
     attrs: { ...(id && { id }), level },
     content: [textNode(text)],
     type: "heading",
-  }
-}
-
-function blockquote(text: string): JSONContent {
-  return {
-    content: [paragraph(text)],
-    type: "blockquote",
   }
 }
 
@@ -182,10 +174,6 @@ export function buildAwardEventPostContent({
 
   submittedRooms.forEach((room) => {
     content.push(heading(2, room.writer.name, getSectionId(room)))
-
-    if (room.writerIntro?.trim()) {
-      content.push(blockquote(room.writerIntro.trim()))
-    }
 
     content.push(...getDocContent(room.selectedPost?.content))
   })

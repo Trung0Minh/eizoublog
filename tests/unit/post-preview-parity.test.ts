@@ -24,6 +24,6 @@ describe("saved post preview parity", () => {
     expect(queries).toContain("submittedContent: true")
     expect(queries).toContain("submittedPostId: true")
     expect(queries).toContain("submittedPostTitle: true")
-    expect(queries).toContain("submittedWriterIntro: true")
+    expect(queries).not.toContain("submittedWriterIntro: true")
   })
 })
