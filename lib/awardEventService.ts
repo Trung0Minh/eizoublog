@@ -10,7 +10,7 @@ import {
   buildAwardEventPostContent,
   emptyAwardEventDoc,
   flattenAwardEventText,
-  shuffleAwardEventRooms,
+  shuffleSubmittedAwardEventRooms,
 } from "@/lib/awardEvents"
 import { prisma } from "@/lib/prisma"
 import { truncatePostExcerpt } from "@/lib/postLimits"
@@ -408,15 +408,7 @@ export async function shuffleSubmittedRooms(eventId: string) {
     select: { excludedAt: true, id: true, order: true, status: true },
     where: { eventId },
   })
-  const submitted = rooms.filter(
-    (room) => room.status === "SUBMITTED" && !room.excludedAt,
-  )
-  const remaining = rooms.filter(
-    (room) => room.status !== "SUBMITTED" || room.excludedAt,
-  )
-  const ordered = [...shuffleAwardEventRooms(submitted), ...remaining].map(
-    (room, order) => ({ ...room, order }),
-  )
+  const ordered = shuffleSubmittedAwardEventRooms(rooms)
 
   await prisma.$transaction(
     ordered.map((room) =>

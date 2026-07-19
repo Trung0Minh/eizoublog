@@ -10,9 +10,12 @@ import {
   DndContext,
   DragOverlay,
   KeyboardSensor,
+  MeasuringStrategy,
   PointerSensor,
+  pointerWithin,
   useSensor,
   useSensors,
+  type CollisionDetection,
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core"
@@ -23,19 +26,21 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { ExternalLink, Eye, EyeOff, GripVertical, Save, Shuffle, Upload } from "lucide-react"
+import { ExternalLink, Eye, EyeOff, GripVertical, Save, Shuffle } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { motion } from "motion/react"
 import type { ReactNode } from "react"
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { CoverImageUpload } from "@/components/posts/CoverImageUpload"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
-import { reorderAwardEventRooms } from "@/lib/awardEvents"
+import {
+  reorderAwardEventRooms,
+  shuffleSubmittedAwardEventRooms,
+} from "@/lib/awardEvents"
 
 interface AdminEventRoom {
   _count: { comments: number }
@@ -90,32 +95,6 @@ function getApiError(value: unknown) {
   return "Something went wrong"
 }
 
-function getShuffledOrders(value: unknown) {
-  if (typeof value !== "object" || value === null || !("data" in value)) {
-    return null
-  }
-  const data = value.data
-  if (typeof data !== "object" || data === null || !("rooms" in data)) {
-    return null
-  }
-  const rooms = data.rooms
-  if (!Array.isArray(rooms)) {
-    return null
-  }
-
-  const orders = rooms.filter(
-    (room): room is { id: string; order: number } =>
-      typeof room === "object" &&
-      room !== null &&
-      "id" in room &&
-      typeof room.id === "string" &&
-      "order" in room &&
-      typeof room.order === "number",
-  )
-
-  return orders.length === rooms.length ? orders : null
-}
-
 function statusTone(status: AwardEventStatus) {
   switch (status) {
     case "OPEN":
@@ -132,6 +111,24 @@ function articleStatusLabel(status: PostStatus | undefined) {
   return "Unpublished"
 }
 
+function articleStatusTone(status: PostStatus | undefined) {
+  if (status === "PUBLISHED") {
+    return "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 shadow-sm dark:text-emerald-300"
+  }
+  if (status === "REMOVED") {
+    return "border-destructive/30 bg-destructive/10 text-destructive shadow-sm"
+  }
+  if (status === "ARCHIVED") {
+    return "border-amber-500/30 bg-amber-500/10 text-amber-700 shadow-sm dark:text-amber-300"
+  }
+  return "border-border-default bg-subtle-bg text-text-tertiary shadow-sm"
+}
+
+const submissionCollisionDetection: CollisionDetection = (args) => {
+  const pointerCollisions = pointerWithin(args)
+  return pointerCollisions.length > 0 ? pointerCollisions : closestCenter(args)
+}
+
 function SortableSubmission({
   children,
   className,
@@ -146,22 +143,26 @@ function SortableSubmission({
   id: string
 }) {
   const { attributes, isDragging, listeners, setNodeRef, transform, transition } =
-    useSortable({ disabled, id })
+    useSortable({
+      disabled,
+      id,
+      transition: { duration: 180, easing: "cubic-bezier(0.2, 0, 0, 1)" },
+    })
 
   return (
-    <motion.article
+    <article
       className={className}
-      layout
       ref={setNodeRef}
       style={{
-        opacity: isDragging ? 0.25 : 1,
+        opacity: isDragging ? 0.18 : 1,
         transform: CSS.Transform.toString(transform),
         transition,
+        willChange: transform ? "transform" : undefined,
         zIndex: isDragging ? 20 : undefined,
       }}
     >
       {children({ attributes, listeners })}
-    </motion.article>
+    </article>
   )
 }
 
@@ -182,12 +183,17 @@ export function AdminEventDetailManager({
   const [error, setError] = useState("")
   const [introText, setIntroText] = useState(event.introText ?? "")
   const [isPending, setIsPending] = useState(false)
+  const [isSavingOrder, setIsSavingOrder] = useState(false)
   const [rooms, setRooms] = useState(event.rooms)
+  const [shuffleTurns, setShuffleTurns] = useState(0)
   const [selectedTagIds, setSelectedTagIds] = useState(
     event.tags?.map(({ tag }) => tag.id) ?? [],
   )
+  const pendingRoomOrderRef = useRef<Array<{ id: string; order: number }> | null>(null)
+  const roomOrderSaveRunningRef = useRef(false)
+  const roomsRef = useRef(event.rooms)
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
 
@@ -232,7 +238,7 @@ export function AdminEventDetailManager({
     }
   }
 
-  async function action(path: "publish" | "shuffle" | "unpublish") {
+  async function action(path: "publish" | "unpublish") {
     setError("")
     setIsPending(true)
 
@@ -246,23 +252,7 @@ export function AdminEventDetailManager({
         throw new Error(getApiError(result))
       }
 
-      if (path === "shuffle") {
-        const shuffledOrders = getShuffledOrders(result)
-        if (shuffledOrders) {
-          const orderById = new Map(
-            shuffledOrders.map(({ id, order }) => [id, order]),
-          )
-          setRooms((currentRooms) =>
-            [...currentRooms]
-              .map((room) => ({ ...room, order: orderById.get(room.id) ?? room.order }))
-              .sort((a, b) => a.order - b.order),
-          )
-        }
-      }
-
-      if (path !== "shuffle") {
-        router.refresh()
-      }
+      router.refresh()
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "Action failed")
     } finally {
@@ -270,24 +260,63 @@ export function AdminEventDetailManager({
     }
   }
 
+  async function flushRoomOrder() {
+    if (roomOrderSaveRunningRef.current) return
+
+    roomOrderSaveRunningRef.current = true
+    setIsSavingOrder(true)
+
+    try {
+      while (pendingRoomOrderRef.current) {
+        const roomOrder = pendingRoomOrderRef.current
+        pendingRoomOrderRef.current = null
+        const response = await fetch(`/api/admin/events/${event.id}`, {
+          body: JSON.stringify({ roomOrder }),
+          headers: { "Content-Type": "application/json" },
+          method: "PATCH",
+        })
+        const result: unknown = await response.json()
+
+        if (!response.ok) {
+          throw new Error(getApiError(result))
+        }
+      }
+    } catch (caughtError) {
+      pendingRoomOrderRef.current = null
+      setError(caughtError instanceof Error ? caughtError.message : "Order update failed")
+    } finally {
+      roomOrderSaveRunningRef.current = false
+      setIsSavingOrder(false)
+    }
+  }
+
+  function queueRoomOrder(orderedRooms: AdminEventRoom[]) {
+    pendingRoomOrderRef.current = orderedRooms.map(({ id, order }) => ({ id, order }))
+    void flushRoomOrder()
+  }
+
+  function updateRoomOrder(orderedRooms: AdminEventRoom[]) {
+    roomsRef.current = orderedRooms
+    setRooms(orderedRooms)
+    queueRoomOrder(orderedRooms)
+  }
+
+  function shuffleRooms() {
+    const orderedRooms = shuffleSubmittedAwardEventRooms(roomsRef.current)
+    setShuffleTurns((turns) => turns + 1)
+    updateRoomOrder(orderedRooms)
+  }
+
   function reorderRoom(roomId: string, targetRoomId: string) {
-    const currentIndex = rooms.findIndex((room) => room.id === roomId)
-    const targetIndex = rooms.findIndex((room) => room.id === targetRoomId)
+    const currentRooms = roomsRef.current
+    const currentIndex = currentRooms.findIndex((room) => room.id === roomId)
+    const targetIndex = currentRooms.findIndex((room) => room.id === targetRoomId)
 
     if (currentIndex < 0 || targetIndex < 0 || currentIndex === targetIndex) {
       return
     }
 
-    const nextRooms = reorderAwardEventRooms(rooms, roomId, targetRoomId)
-    const previousRooms = rooms
-    const ordered = nextRooms
-    setRooms(ordered)
-    void patchEvent(
-      {
-        roomOrder: ordered.map((room) => ({ id: room.id, order: room.order })),
-      },
-      { refreshOnSuccess: false, rollbackRooms: previousRooms },
-    )
+    updateRoomOrder(reorderAwardEventRooms(currentRooms, roomId, targetRoomId))
   }
 
   function handleDragStart(dragEvent: DragStartEvent) {
@@ -308,13 +337,15 @@ export function AdminEventDetailManager({
     if (!room) return
 
     const excluded = !room.excludedAt
-    setRooms((currentRooms) =>
-      currentRooms.map((candidate) =>
+    setRooms((currentRooms) => {
+      const updatedRooms = currentRooms.map((candidate) =>
         candidate.id === roomId
           ? { ...candidate, excludedAt: excluded ? new Date() : null }
           : candidate,
-      ),
-    )
+      )
+      roomsRef.current = updatedRooms
+      return updatedRooms
+    })
     void patchEvent(
       { roomExclusion: { excluded, id: roomId } },
       { refreshOnSuccess: false, rollbackRooms: previousRooms },
@@ -351,8 +382,13 @@ export function AdminEventDetailManager({
               >
                 Event: {event.status}
               </span>
-              <span className="inline-flex items-center rounded-full border border-border-default bg-background px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-text-secondary">
-                Article: {articleStatusLabel(event.finalPost?.status)}
+              <span
+                className={cn(
+                  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide",
+                  articleStatusTone(event.finalPost?.status),
+                )}
+              >
+                {articleStatusLabel(event.finalPost?.status)}
               </span>
             </div>
             <p className="mt-3 text-[14px] font-medium text-text-secondary">
@@ -386,11 +422,15 @@ export function AdminEventDetailManager({
                 void action(event.finalPost?.status === "PUBLISHED" ? "unpublish" : "publish")
               }
               aria-label={event.finalPost?.status === "PUBLISHED" ? "Unpublish event article" : "Publish event article"}
-              className="h-10 rounded-full bg-accent px-4 font-bold text-white shadow-md shadow-accent/20 transition-all hover:scale-105 hover:shadow-accent/40"
+              className={cn(
+                "h-10 rounded-full px-5 font-bold transition-colors",
+                event.finalPost?.status === "PUBLISHED"
+                  ? "border border-border-default bg-subtle-bg text-text-secondary shadow-sm hover:bg-muted hover:text-text-primary"
+                  : "bg-emerald-600 text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-700",
+              )}
               title={event.finalPost?.status === "PUBLISHED" ? "Unpublish event article" : "Publish event article"}
               type="button"
             >
-              <Upload aria-hidden="true" className="mr-2 h-4 w-4" />
               {event.finalPost?.status === "PUBLISHED" ? "Unpublish" : "Publish"}
             </Button>
             {event.finalPost?.status === "PUBLISHED" && (
@@ -555,13 +595,18 @@ export function AdminEventDetailManager({
           <Button
             aria-label="Shuffle submissions"
             className="h-9 w-9 rounded-full p-0 transition-colors hover:border-accent hover:bg-accent/10 hover:text-accent"
-            disabled={isPending}
-            onClick={() => void action("shuffle")}
+            aria-busy={isSavingOrder}
+            disabled={submittedRooms.length < 2}
+            onClick={shuffleRooms}
             title="Shuffle submissions"
             type="button"
             variant="outline"
           >
-            <Shuffle aria-hidden="true" className="h-4 w-4" />
+            <Shuffle
+              aria-hidden="true"
+              className="h-4 w-4 transition-transform duration-300 motion-reduce:transition-none"
+              style={{ transform: `rotate(${shuffleTurns * 180}deg)` }}
+            />
           </Button>
         </div>
         <div
@@ -574,7 +619,9 @@ export function AdminEventDetailManager({
             </div>
           ) : (
             <DndContext
-              collisionDetection={closestCenter}
+              collisionDetection={submissionCollisionDetection}
+              measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
+              onDragCancel={() => setDraggingRoomId(null)}
               onDragEnd={handleDragEnd}
               onDragStart={handleDragStart}
               sensors={sensors}
@@ -586,11 +633,11 @@ export function AdminEventDetailManager({
               {rooms.map((room) => (
               <SortableSubmission
                 className={cn(
-                  "group relative rounded-[18px] border border-transparent bg-subtle-bg/40 p-4 transition-all duration-200 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10 animate-in fade-in slide-in-from-bottom-2",
+                  "group relative rounded-[18px] border border-transparent bg-subtle-bg/40 p-4 transition-colors duration-200 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10",
                   room.excludedAt && "opacity-60",
-                  draggingRoomId === room.id && "border-accent/40 opacity-50",
+                  draggingRoomId === room.id && "border-dashed border-accent/50 bg-accent/5",
                 )}
-                disabled={isPending}
+                disabled={false}
                 id={room.id}
                 key={room.id}
               >
@@ -702,8 +749,14 @@ export function AdminEventDetailManager({
               </SortableContext>
               <DragOverlay>
                 {draggingRoomId ? (
-                  <div className="rounded-[18px] border border-accent/40 bg-background p-4 text-sm font-bold text-text-primary shadow-xl">
-                    {rooms.find((room) => room.id === draggingRoomId)?.writer.name}
+                  <div className="w-[min(420px,calc(100vw-2rem))] rounded-[18px] border border-accent/40 bg-background p-4 shadow-2xl shadow-black/15">
+                    <p className="text-[15px] font-bold text-text-primary">
+                      {rooms.find((room) => room.id === draggingRoomId)?.writer.name}
+                    </p>
+                    <p className="mt-1 truncate text-[12px] font-medium text-text-secondary">
+                      {rooms.find((room) => room.id === draggingRoomId)?.selectedPost?.title ??
+                        "No source post selected"}
+                    </p>
                   </div>
                 ) : null}
               </DragOverlay>

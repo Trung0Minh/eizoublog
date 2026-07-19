@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -175,6 +175,135 @@ describe("AdminEventDetailManager", () => {
     expect(screen.getByTestId("event-submissions-scroll")).toBeVisible()
     expect(screen.queryByTitle("Move up")).not.toBeInTheDocument()
     expect(screen.queryByTitle("Move down")).not.toBeInTheDocument()
+  })
+
+  it("shows a plain publication status and a text-only publication action", () => {
+    const { rerender } = render(
+      <AdminEventDetailManager
+        event={{
+          finalPost: { slug: "awards", status: "PUBLISHED" },
+          id: "event-1",
+          introText: null,
+          rooms: [],
+          status: "OPEN",
+          title: "Awards",
+        }}
+      />,
+    )
+
+    const publishedStatus = screen.getByText("Published")
+    const unpublishButton = screen.getByRole("button", {
+      name: "Unpublish event article",
+    })
+
+    expect(publishedStatus).toHaveClass("bg-emerald-500/10")
+    expect(screen.queryByText("Article: Published")).not.toBeInTheDocument()
+    expect(unpublishButton).toHaveClass("bg-subtle-bg")
+    expect(unpublishButton.querySelector("svg")).toBeNull()
+
+    rerender(
+      <AdminEventDetailManager
+        event={{
+          finalPost: { slug: "awards", status: "DRAFT" },
+          id: "event-1",
+          introText: null,
+          rooms: [],
+          status: "OPEN",
+          title: "Awards",
+        }}
+      />,
+    )
+
+    expect(screen.getByText("Unpublished")).toBeVisible()
+    expect(screen.getByRole("button", { name: "Publish event article" })).toHaveClass(
+      "bg-emerald-600",
+    )
+  })
+
+  it("shuffles immediately and stays available while order is saving", async () => {
+    const user = userEvent.setup()
+    let resolveSave: ((response: Response) => void) | undefined
+    const fetchMock = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+        new Promise<Response>((resolve) => {
+          resolveSave = resolve
+        }),
+      )
+      .mockResolvedValue(
+        new Response(JSON.stringify({ data: { id: "event-1" } }), { status: 200 }),
+      )
+    vi.stubGlobal("fetch", fetchMock)
+    vi.spyOn(Math, "random").mockReturnValue(0.5)
+
+    const room = (id: string, order: number, name: string) => ({
+      _count: { comments: 0 },
+      excludedAt: null,
+      id,
+      order,
+      postId: `${id}-post`,
+      selectedPost: { id: `${id}-post`, status: "DRAFT" as const, title: `${name} pick` },
+      status: "SUBMITTED" as const,
+      updatedAt: new Date("2026-06-17T00:00:00.000Z"),
+      visibility: "PARTICIPANTS" as const,
+      writer: { name, role: "WRITER" as const, username: name.toLowerCase() },
+    })
+
+    render(
+      <AdminEventDetailManager
+        event={{
+          finalPost: null,
+          id: "event-1",
+          introText: null,
+          rooms: [room("room-a", 0, "A"), room("room-b", 1, "B"), room("room-c", 2, "C")],
+          status: "OPEN",
+          title: "Awards",
+        }}
+      />,
+    )
+
+    const shuffleButton = screen.getByRole("button", { name: "Shuffle submissions" })
+    const submissionOrder = () =>
+      screen
+        .getAllByTestId(/^event-submission-room-/)
+        .map((submission) => submission.dataset.testid)
+
+    await user.click(shuffleButton)
+    expect(submissionOrder()).toEqual([
+      "event-submission-room-a",
+      "event-submission-room-c",
+      "event-submission-room-b",
+    ])
+    expect(shuffleButton).toBeEnabled()
+
+    await user.click(shuffleButton)
+    expect(submissionOrder()).toEqual([
+      "event-submission-room-a",
+      "event-submission-room-b",
+      "event-submission-room-c",
+    ])
+
+    resolveSave?.(
+      new Response(JSON.stringify({ data: { id: "event-1" } }), { status: 200 }),
+    )
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        2,
+        "/api/admin/events/event-1",
+        expect.objectContaining({
+          body: JSON.stringify({
+            roomOrder: [
+              { id: "room-a", order: 0 },
+              { id: "room-b", order: 1 },
+              { id: "room-c", order: 2 },
+            ],
+          }),
+          method: "PATCH",
+        }),
+      )
+    })
   })
 
   it("lets the admin exclude a submission from the final anthology", async () => {

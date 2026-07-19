@@ -8,6 +8,7 @@ import {
   namespaceAwardEventPostContent,
   reorderAwardEventRooms,
   shuffleAwardEventRooms,
+  shuffleSubmittedAwardEventRooms,
 } from "@/lib/awardEvents"
 
 const paragraph = (text: string): JSONContent => ({
@@ -235,6 +236,23 @@ describe("shuffleAwardEventRooms", () => {
     )
 
     expect(shuffled.map((room) => room.id)).toEqual(["b", "a"])
+  })
+})
+
+describe("shuffleSubmittedAwardEventRooms", () => {
+  it("shuffles eligible submissions while keeping drafts and exclusions after them", () => {
+    const shuffled = shuffleSubmittedAwardEventRooms(
+      [
+        { excludedAt: null, id: "a", order: 0, status: "SUBMITTED" as const },
+        { excludedAt: null, id: "draft", order: 1, status: "DRAFT" as const },
+        { excludedAt: null, id: "b", order: 2, status: "SUBMITTED" as const },
+        { excludedAt: new Date("2026-01-01"), id: "excluded", order: 3, status: "SUBMITTED" as const },
+      ],
+      () => 0.99,
+    )
+
+    expect(shuffled.map((room) => room.id)).toEqual(["b", "a", "draft", "excluded"])
+    expect(shuffled.map((room) => room.order)).toEqual([0, 1, 2, 3])
   })
 })
 

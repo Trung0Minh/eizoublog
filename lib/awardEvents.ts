@@ -34,6 +34,11 @@ export interface OrderedAwardEventRoom {
   order: number
 }
 
+export interface ShuffleableAwardEventRoom extends OrderedAwardEventRoom {
+  excludedAt: Date | null
+  status: AwardEventRoomStatus
+}
+
 export const emptyAwardEventDoc: JSONContent = {
   content: [{ type: "paragraph" }],
   type: "doc",
@@ -207,8 +212,8 @@ export function flattenAwardEventText(content: JSONContent): string {
   return parts.join(" ").replace(/\s+/g, " ").trim()
 }
 
-export function shuffleAwardEventRooms(
-  rooms: OrderedAwardEventRoom[],
+export function shuffleAwardEventRooms<T extends OrderedAwardEventRoom>(
+  rooms: T[],
   random: () => number = Math.random,
 ) {
   const shuffled = [...rooms]
@@ -229,6 +234,22 @@ export function shuffleAwardEventRooms(
   }
 
   return shuffled.map((room, order) => ({ ...room, order }))
+}
+
+export function shuffleSubmittedAwardEventRooms<T extends ShuffleableAwardEventRoom>(
+  rooms: T[],
+  random: () => number = Math.random,
+) {
+  const submitted = rooms.filter(
+    (room) => room.status === "SUBMITTED" && !room.excludedAt,
+  )
+  const remaining = rooms.filter(
+    (room) => room.status !== "SUBMITTED" || room.excludedAt,
+  )
+
+  return [...shuffleAwardEventRooms(submitted, random), ...remaining].map(
+    (room, order) => ({ ...room, order }),
+  )
 }
 
 export function reorderAwardEventRooms<T extends OrderedAwardEventRoom>(
