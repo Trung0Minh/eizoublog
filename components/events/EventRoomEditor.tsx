@@ -20,8 +20,11 @@ interface EventRoom {
     id: string
     status: PostStatus
     title: string
+    version: number
   } | null
   status: AwardEventRoomStatus
+  submittedPostId: string | null
+  submittedPostVersion: number | null
   visibility: AwardEventRoomVisibility
   writerIntro: string | null
 }
@@ -31,6 +34,7 @@ interface EligiblePost {
   status: PostStatus
   title: string
   updatedAt: Date
+  version: number
 }
 
 interface EventRoomEditorProps {
@@ -67,10 +71,22 @@ export function EventRoomEditor({
   const [isPending, setIsPending] = useState(false)
   const [postId, setPostId] = useState(room.postId ?? "")
   const [status, setStatus] = useState<AwardEventRoomStatus>(room.status)
+  const [submittedPostId, setSubmittedPostId] = useState(room.submittedPostId)
+  const [submittedPostVersion, setSubmittedPostVersion] = useState(
+    room.submittedPostVersion,
+  )
   const [visibility, setVisibility] = useState<AwardEventRoomVisibility>(room.visibility)
   const [writerIntro, setWriterIntro] = useState(room.writerIntro ?? "")
 
   const controlsDisabled = event.status === "CLOSED"
+  const selectedEligiblePost = eligiblePosts.find((post) => post.id === postId)
+  const updateAvailable =
+    status === "SUBMITTED" &&
+    (!submittedPostId ||
+      submittedPostId !== postId ||
+      (selectedEligiblePost?.version ?? 0) > (submittedPostVersion ?? 0))
+  const actionLabel = status === "SUBMITTED" ? "Cập nhật bài dự thi" : "Nộp bài dự thi"
+
   async function submit() {
     setError("")
     setIsPending(true)
@@ -93,6 +109,8 @@ export function EventRoomEditor({
       }
 
       setStatus("SUBMITTED")
+      setSubmittedPostId(postId || null)
+      setSubmittedPostVersion(selectedEligiblePost?.version ?? null)
       router.refresh()
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "Nộp bài thất bại")
@@ -109,7 +127,7 @@ export function EventRoomEditor({
         </div>
       )}
       <section className="overflow-hidden rounded-[16px] border border-border-default/80 dark:border-white/10 bg-background/60 dark:bg-background/40 shadow-[0_18px_60px_rgba(31,24,38,0.08)] backdrop-blur-md hover:-translate-y-0.5 hover:shadow-lg hover:border-accent/30 transition-all duration-300 ease-out">
-        <div className="flex items-start justify-between gap-3 border-b border-border-default/70 bg-subtle-bg/55 px-4 py-5 sm:px-7" data-testid="submission-header">
+        <div className="flex flex-col items-stretch gap-4 border-b border-border-default/70 bg-subtle-bg/55 px-4 py-5 sm:flex-row sm:items-start sm:justify-between sm:gap-3 sm:px-7" data-testid="submission-header">
           <div className="flex min-w-0 items-start gap-3 sm:items-center" data-testid="submission-heading-row">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-accent/25 bg-accent/10 text-accent">
               {status === "SUBMITTED" ? (
@@ -122,6 +140,11 @@ export function EventRoomEditor({
               <p className="text-sm font-bold text-text-primary">
                 {status === "SUBMITTED" ? "Bài dự thi đã được gửi" : "Chọn bài cho sự kiện"}
               </p>
+              {updateAvailable && (
+                <span className="mt-1 inline-flex rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-300">
+                  Có bản cập nhật
+                </span>
+              )}
               <p className="mt-0.5 text-xs leading-5 text-text-secondary">
                 {status === "SUBMITTED"
                   ? "Bạn có thể thay đổi lựa chọn và gửi lại khi sự kiện còn mở."
@@ -129,17 +152,17 @@ export function EventRoomEditor({
               </p>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto">
             <Button
+              aria-label={actionLabel}
+              className="h-10 flex-1 rounded-[13px] bg-accent px-4 text-white shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-colors hover:bg-accent/90 sm:h-11 sm:flex-none sm:rounded-[14px]"
               disabled={isPending || controlsDisabled || !postId}
               onClick={() => void submit()}
-              aria-label="Nộp bài dự thi"
-              className="h-10 w-10 rounded-[13px] bg-accent text-white shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-colors hover:bg-accent/90 sm:h-11 sm:w-11 sm:rounded-[14px]"
-              size="icon"
-              title="Nộp bài dự thi"
+              title={actionLabel}
               type="button"
             >
               <Send aria-hidden="true" className="h-4 w-4" />
+              <span>{actionLabel}</span>
             </Button>
             {event.finalPost?.status === "PUBLISHED" && (
               <Button asChild className="h-10 w-10 rounded-[13px] sm:h-11 sm:w-11 sm:rounded-[14px]" size="icon" variant="outline">

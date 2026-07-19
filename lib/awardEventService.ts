@@ -13,6 +13,7 @@ import {
   shuffleSubmittedAwardEventRooms,
 } from "@/lib/awardEvents"
 import { prisma } from "@/lib/prisma"
+import { getProfileBioVisibleText } from "@/lib/profileBio"
 import { truncatePostExcerpt } from "@/lib/postLimits"
 import { ensureUniqueSlug, generateSlug } from "@/lib/utils"
 
@@ -63,6 +64,11 @@ export const awardEventDetailSelect = {
       id: true,
       order: true,
       postId: true,
+      submittedContent: true,
+      submittedPostId: true,
+      submittedPostTitle: true,
+      submittedPostVersion: true,
+      submittedWriterIntro: true,
       selectedPost: {
         select: {
           content: true,
@@ -102,6 +108,7 @@ export const adminAwardEventDetailSelect = {
     ...awardEventDetailSelect.rooms,
     select: {
       ...awardEventDetailSelect.rooms.select,
+      submittedContent: false,
       selectedPost: {
         select: {
           id: true,
@@ -156,17 +163,26 @@ export async function regenerateAwardEventPost(
     .map((room) => ({
       id: room.id,
       order: room.order,
-      selectedPost: room.selectedPost
+      selectedPost: room.submittedContent
         ? {
-            content: normalizeAwardEventContent(room.selectedPost.content),
-            id: room.selectedPost.id,
-            status: room.selectedPost.status,
-            title: room.selectedPost.title,
+            content: normalizeAwardEventContent(room.submittedContent),
+            id: room.submittedPostId ?? room.selectedPost?.id ?? room.id,
+            status: "DRAFT" as const,
+            title: room.submittedPostTitle ?? room.selectedPost?.title ?? "Untitled",
           }
-        : null,
+        : room.selectedPost
+          ? {
+              content: normalizeAwardEventContent(room.selectedPost.content),
+              id: room.selectedPost.id,
+              status: room.selectedPost.status,
+              title: room.selectedPost.title,
+            }
+          : null,
       status: room.status,
       writer: room.writer,
-      writerIntro: room.writerIntro,
+      writerIntro: room.submittedContent
+        ? room.submittedWriterIntro
+        : room.writerIntro,
     }))
   const content = buildAwardEventPostContent({
     eventIntro: normalizeAwardEventContent(event.intro),
@@ -352,49 +368,92 @@ export async function updateAwardEventRoom({
   writerId: string
   writerIntro: string
 }) {
-  const room = await prisma.awardEventRoom.findUnique({
-    select: { event: { select: { status: true } }, id: true },
-    where: { eventId_writerId: { eventId, writerId } },
-  })
-
-  if (!room) {
-    throw new AwardEventError("Room not found", 404)
-  }
-
-  if (room.event.status === "CLOSED") {
-    throw new AwardEventError("Event is closed", 400)
-  }
-
-  if (status === "SUBMITTED" && !postId) {
-    throw new AwardEventError("Select a post before submitting", 400)
-  }
-
-  if (postId) {
-    const selectedPost = await prisma.post.findFirst({
-      select: { id: true, status: true },
-      where: {
-        authorId: writerId,
-        id: postId,
-        status: { in: ["DRAFT", "PUBLISHED"] },
-      },
+  const updated = await prisma.$transaction(async (tx) => {
+    const room = await tx.awardEventRoom.findUnique({
+      select: { event: { select: { status: true } }, id: true },
+      where: { eventId_writerId: { eventId, writerId } },
     })
 
-    if (!selectedPost) {
-      throw new AwardEventError("Selected post not found", 404)
+    if (!room) {
+      throw new AwardEventError("Room not found", 404)
     }
-  }
 
-  const updated = await prisma.awardEventRoom.update({
-    data: {
-      postId,
-      ...(status && {
-        status,
-        submittedAt: status === "SUBMITTED" ? new Date() : null,
-      }),
-      visibility,
-      writerIntro: writerIntro.trim() || null,
-    },
-    where: { id: room.id },
+    if (room.event.status === "CLOSED") {
+      throw new AwardEventError("Event is closed", 400)
+    }
+
+    if (status === "SUBMITTED" && !postId) {
+      throw new AwardEventError("Select a post before submitting", 400)
+    }
+
+    const trimmedWriterIntro = writerIntro.trim()
+    let snapshotData: {
+      submittedContent?: Prisma.InputJsonValue
+      submittedPostId?: string
+      submittedPostTitle?: string
+      submittedPostVersion?: number
+      submittedWriterIntro?: string | null
+    } = {}
+
+    if (postId) {
+      const selectedPost = await tx.post.findFirst({
+        select: {
+          author: { select: { bio: true } },
+          content: true,
+          id: true,
+          status: true,
+          title: true,
+          version: true,
+        },
+        where: {
+          authorId: writerId,
+          id: postId,
+          status: { in: ["DRAFT", "PUBLISHED"] },
+        },
+      })
+
+      if (!selectedPost) {
+        throw new AwardEventError("Selected post not found", 404)
+      }
+
+      if (status === "SUBMITTED") {
+        snapshotData = {
+          submittedContent: selectedPost.content as Prisma.InputJsonValue,
+          submittedPostId: selectedPost.id,
+          submittedPostTitle: selectedPost.title,
+          submittedPostVersion: selectedPost.version,
+          submittedWriterIntro:
+            trimmedWriterIntro ||
+            getProfileBioVisibleText(selectedPost.author.bio ?? "") ||
+            null,
+        }
+      }
+    }
+
+    return tx.awardEventRoom.update({
+      data: {
+        postId,
+        ...snapshotData,
+        ...(status && {
+          status,
+          submittedAt: status === "SUBMITTED" ? new Date() : null,
+        }),
+        visibility,
+        writerIntro: trimmedWriterIntro || null,
+      },
+      select: {
+        id: true,
+        postId: true,
+        status: true,
+        submittedAt: true,
+        submittedPostId: true,
+        submittedPostTitle: true,
+        submittedPostVersion: true,
+        visibility: true,
+        writerIntro: true,
+      },
+      where: { id: room.id },
+    })
   })
 
   await regenerateEventPostIfExists(eventId)

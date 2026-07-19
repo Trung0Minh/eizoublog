@@ -759,7 +759,7 @@ export function PostEditor({
 
           <div className="min-w-0 flex-1 w-full h-full overflow-y-auto lg:ml-20">
             <div
-              className="mx-auto flex w-full max-w-[1200px] flex-col px-4 pb-[120px] pt-6 md:px-6 md:pt-8"
+              className="mx-auto flex w-full max-w-[1000px] flex-col px-4 pb-[120px] pt-6 md:px-6 md:pt-8"
             >
               <DurabilityBanner scope="writer" />
               {error && (

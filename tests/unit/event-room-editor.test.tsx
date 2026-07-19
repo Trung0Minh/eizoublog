@@ -22,6 +22,7 @@ describe("EventRoomEditor", () => {
             status: "DRAFT",
             title: "Draft pick",
             updatedAt: new Date("2026-06-17T00:00:00.000Z"),
+            version: 1,
           },
         ]}
         event={{
@@ -35,6 +36,8 @@ describe("EventRoomEditor", () => {
           postId: null,
           selectedPost: null,
           status: "DRAFT",
+          submittedPostId: null,
+          submittedPostVersion: null,
           visibility: "PRIVATE",
           writerIntro: null,
         }}
@@ -48,6 +51,10 @@ describe("EventRoomEditor", () => {
     expect(screen.getByTestId("submission-header")).toContainElement(
       screen.getByRole("button", { name: /Nộp bài/i }),
     )
+    expect(screen.getByTestId("submission-header")).toHaveClass(
+      "flex-col",
+      "sm:flex-row",
+    )
     expect(screen.getByTestId("submission-heading-row")).toHaveClass(
       "items-start",
       "sm:items-center",
@@ -58,5 +65,74 @@ describe("EventRoomEditor", () => {
     expect(primaryRow).toContainElement(screen.getByLabelText("Ai có thể xem"))
     expect(screen.getByTestId("submission-writer-intro")).toBeVisible()
     expect(screen.queryByText("Sẽ gửi")).not.toBeInTheDocument()
+  })
+
+  it("switches to an update action after the first submitted snapshot", () => {
+    render(
+      <EventRoomEditor
+        eligiblePosts={[
+          {
+            id: "post-1",
+            status: "DRAFT",
+            title: "Draft pick",
+            updatedAt: new Date("2026-06-17T00:00:00.000Z"),
+            version: 3,
+          },
+        ]}
+        event={{ finalPost: null, id: "event-1", status: "OPEN", title: "Awards" }}
+        room={{
+          id: "room-1",
+          postId: "post-1",
+          selectedPost: {
+            id: "post-1",
+            status: "DRAFT",
+            title: "Draft pick",
+            version: 3,
+          },
+          status: "SUBMITTED",
+          submittedPostId: "post-1",
+          submittedPostVersion: 3,
+          visibility: "PRIVATE",
+          writerIntro: null,
+        }}
+      />,
+    )
+
+    expect(screen.getByRole("button", { name: "Cập nhật bài dự thi" })).toBeVisible()
+    expect(screen.queryByText("Có bản cập nhật")).not.toBeInTheDocument()
+  })
+
+  it("shows when the selected source post has a newer saved version", () => {
+    render(
+      <EventRoomEditor
+        eligiblePosts={[
+          {
+            id: "post-1",
+            status: "DRAFT",
+            title: "Draft pick",
+            updatedAt: new Date("2026-06-17T00:00:00.000Z"),
+            version: 4,
+          },
+        ]}
+        event={{ finalPost: null, id: "event-1", status: "OPEN", title: "Awards" }}
+        room={{
+          id: "room-1",
+          postId: "post-1",
+          selectedPost: {
+            id: "post-1",
+            status: "DRAFT",
+            title: "Draft pick",
+            version: 4,
+          },
+          status: "SUBMITTED",
+          submittedPostId: "post-1",
+          submittedPostVersion: 3,
+          visibility: "PRIVATE",
+          writerIntro: null,
+        }}
+      />,
+    )
+
+    expect(screen.getByText("Có bản cập nhật")).toBeVisible()
   })
 })

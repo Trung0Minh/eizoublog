@@ -230,6 +230,11 @@ model AwardEventRoom {
   writerId    String
   postId      String?
   writerIntro String?                  @db.Text
+  submittedContent     Json?
+  submittedPostId      String?
+  submittedPostTitle   String?
+  submittedPostVersion Int?
+  submittedWriterIntro String?                  @db.Text
   content     Json
   contentText String?                  @db.Text
   visibility  AwardEventRoomVisibility @default(PRIVATE)

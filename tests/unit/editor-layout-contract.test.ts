@@ -31,6 +31,13 @@ describe("post editor layout contracts", () => {
     expect(titleIndex).toBeGreaterThan(writingSurfaceIndex)
   })
 
+  it("matches the public article content width", () => {
+    const editor = read("components/posts/PostEditor.tsx")
+
+    expect(editor).toContain("max-w-[1000px]")
+    expect(editor).not.toContain("max-w-[1200px]")
+  })
+
   it("groups blockquote with inline and block code controls", () => {
     const toolbar = read("components/editor/EditorToolbar.tsx")
     const spoilerIndex = toolbar.lastIndexOf('title="Spoiler block"')

@@ -68,6 +68,47 @@ describe("EventAnthologyTableOfContents", () => {
 })
 
 describe("EventAnthologyView", () => {
+  it("previews the submitted writer snapshot instead of later room edits", () => {
+    render(
+      <EventAnthologyView
+        event={{
+          coverAlt: null,
+          coverUrl: null,
+          intro: { content: [], type: "doc" },
+          introText: null,
+          rooms: [
+            {
+              id: "room-a",
+              order: 0,
+              selectedPost: {
+                content: { content: [], type: "doc" },
+                id: "post-a",
+                status: "DRAFT",
+                title: "Live draft",
+              },
+              status: "SUBMITTED",
+              submittedContent: { content: [], type: "doc" },
+              submittedPostId: "post-a",
+              submittedPostTitle: "Submitted post",
+              submittedWriterIntro: "Snapshot introduction.",
+              writer: {
+                avatarUrl: null,
+                bio: null,
+                name: "Writer A",
+                username: "writer-a",
+              },
+              writerIntro: "Later room edit.",
+            },
+          ],
+          title: "Collected perspectives",
+        }}
+      />,
+    )
+
+    expect(screen.getByText("Snapshot introduction.")).toBeVisible()
+    expect(screen.queryByText("Later room edit.")).not.toBeInTheDocument()
+  })
+
   it("keeps the original desktop shell while letting the intro fill its card", () => {
     render(
       <EventAnthologyView

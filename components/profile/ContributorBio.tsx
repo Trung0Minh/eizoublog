@@ -1,32 +1,12 @@
 "use client"
 
-import type { JSONContent } from "@tiptap/react"
 import { ChevronDown } from "lucide-react"
 import { motion } from "motion/react"
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react"
 
 import { StaticPostContent } from "@/components/posts/StaticPostContent"
+import { getProfileBioVisibleText, parseProfileBio } from "@/lib/profileBio"
 import { cn } from "@/lib/utils"
-
-function parseRichBio(bio: string): JSONContent | null {
-  if (!bio.startsWith("{")) return null
-
-  try {
-    const parsed: unknown = JSON.parse(bio)
-    if (typeof parsed === "object" && parsed !== null && "type" in parsed) {
-      return parsed as JSONContent
-    }
-  } catch {
-    return null
-  }
-
-  return null
-}
-
-function getRichText(value: JSONContent): string {
-  if (value.type === "text") return value.text ?? ""
-  return value.content?.map(getRichText).join(" ") ?? ""
-}
 
 export function ContributorBio({ bio }: { bio: string }) {
   const [expanded, setExpanded] = useState(false)
@@ -34,8 +14,8 @@ export function ContributorBio({ bio }: { bio: string }) {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const [fullHeight, setFullHeight] = useState<number | null>(null)
   const contentRef = useRef<HTMLDivElement>(null)
-  const richBio = parseRichBio(bio)
-  const visibleText = richBio ? getRichText(richBio) : bio
+  const richBio = parseProfileBio(bio)
+  const visibleText = getProfileBioVisibleText(bio)
   const isCollapsible = visibleText.trim().length > 120
 
   useEffect(() => {

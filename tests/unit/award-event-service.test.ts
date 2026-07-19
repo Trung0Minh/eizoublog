@@ -29,11 +29,15 @@ vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }))
 import {
   AwardEventError,
   adminAwardEventDetailSelect,
+  regenerateAwardEventPost,
   unpublishAwardEventPost,
   updateAwardEventRoom,
 } from "@/lib/awardEventService"
 
-function updateInput(postId: string | null) {
+function updateInput(
+  postId: string | null,
+  overrides: Partial<Parameters<typeof updateAwardEventRoom>[0]> = {},
+) {
   return {
     eventId: "event-1",
     postId,
@@ -41,7 +45,28 @@ function updateInput(postId: string | null) {
     visibility: "PARTICIPANTS",
     writerId: "writer-1",
     writerIntro: "Writer intro",
+    ...overrides,
   } satisfies Parameters<typeof updateAwardEventRoom>[0]
+}
+
+function selectedPost(overrides: Record<string, unknown> = {}) {
+  return {
+    author: { bio: null },
+    content: {
+      content: [
+        {
+          content: [{ text: "Submitted snapshot", type: "text" }],
+          type: "paragraph",
+        },
+      ],
+      type: "doc",
+    },
+    id: "post-1",
+    status: "DRAFT",
+    title: "Selected post",
+    version: 4,
+    ...overrides,
+  }
 }
 
 describe("updateAwardEventRoom", () => {
@@ -62,7 +87,14 @@ describe("updateAwardEventRoom", () => {
     mocks.prisma.$transaction.mockImplementation(async (callback) =>
       callback({
         awardEvent: { update: mocks.prisma.awardEvent.update },
-        post: { update: mocks.prisma.post.update },
+        awardEventRoom: {
+          findUnique: mocks.prisma.awardEventRoom.findUnique,
+          update: mocks.prisma.awardEventRoom.update,
+        },
+        post: {
+          findFirst: mocks.prisma.post.findFirst,
+          update: mocks.prisma.post.update,
+        },
       }),
     )
   })
@@ -89,29 +121,67 @@ describe("updateAwardEventRoom", () => {
     expect(mocks.prisma.post.findFirst).not.toHaveBeenCalled()
   })
 
-  it("saves the selected post id when the writer owns an eligible post", async () => {
-    mocks.prisma.post.findFirst.mockResolvedValue({
-      id: "post-1",
-      status: "DRAFT",
-    })
+  it("captures an immutable snapshot when a writer submits", async () => {
+    mocks.prisma.post.findFirst.mockResolvedValue(selectedPost())
 
     await updateAwardEventRoom(updateInput("post-1"))
 
-    expect(mocks.prisma.post.findFirst).toHaveBeenCalledWith({
-      select: { id: true, status: true },
-      where: {
-        authorId: "writer-1",
-        id: "post-1",
-        status: { in: ["DRAFT", "PUBLISHED"] },
-      },
-    })
     expect(mocks.prisma.awardEventRoom.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           postId: "post-1",
+          submittedContent: selectedPost().content,
+          submittedPostId: "post-1",
+          submittedPostTitle: "Selected post",
+          submittedPostVersion: 4,
+          submittedWriterIntro: "Writer intro",
         }),
       }),
     )
+  })
+
+  it("falls back to visible public profile text when the submitted intro is blank", async () => {
+    mocks.prisma.post.findFirst.mockResolvedValue(
+      selectedPost({
+        author: {
+          bio: JSON.stringify({
+            content: [
+              {
+                content: [{ text: "Anime editor", type: "text" }],
+                type: "paragraph",
+              },
+              {
+                content: [{ text: "and sakuga fan", type: "text" }],
+                type: "paragraph",
+              },
+            ],
+            type: "doc",
+          }),
+        },
+      }),
+    )
+
+    await updateAwardEventRoom(updateInput("post-1", { writerIntro: "   " }))
+
+    expect(mocks.prisma.awardEventRoom.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          submittedWriterIntro: "Anime editor and sakuga fan",
+          writerIntro: null,
+        }),
+      }),
+    )
+  })
+
+  it("does not replace the submitted snapshot during an ordinary room edit", async () => {
+    mocks.prisma.post.findFirst.mockResolvedValue(selectedPost())
+
+    await updateAwardEventRoom(updateInput("post-1", { status: undefined }))
+
+    const update = mocks.prisma.awardEventRoom.update.mock.calls[0]?.[0]
+    expect(update.data).not.toHaveProperty("submittedContent")
+    expect(update.data).not.toHaveProperty("submittedPostVersion")
+    expect(update.data).not.toHaveProperty("submittedWriterIntro")
   })
 
   it("regenerates an existing published anthology while the event is open", async () => {
@@ -120,7 +190,7 @@ describe("updateAwardEventRoom", () => {
       event: { status: "OPEN" },
       id: "room-1",
     })
-    mocks.prisma.post.findFirst.mockResolvedValue({ id: "post-1", status: "DRAFT" })
+    mocks.prisma.post.findFirst.mockResolvedValue(selectedPost())
     mocks.prisma.awardEvent.findUnique
       .mockResolvedValueOnce({ finalPostId: "final-post-1", status: "OPEN" })
       .mockResolvedValueOnce({
@@ -154,6 +224,11 @@ describe("updateAwardEventRoom", () => {
               title: "Late entry",
             },
             status: "SUBMITTED",
+            submittedContent: selectedPost().content,
+            submittedPostId: "post-1",
+            submittedPostTitle: "Selected post",
+            submittedPostVersion: 4,
+            submittedWriterIntro: "Writer intro",
             writer: { name: "Mai", username: "mai" },
             writerIntro: "Writer intro",
           },
@@ -184,6 +259,78 @@ describe("updateAwardEventRoom", () => {
   })
 })
 
+describe("regenerateAwardEventPost", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.prisma.$transaction.mockImplementation(async (callback) =>
+      callback({
+        awardEvent: { update: mocks.prisma.awardEvent.update },
+        post: { update: mocks.prisma.post.update },
+      }),
+    )
+  })
+
+  it("builds the event article from the submitted snapshot instead of live draft content", async () => {
+    mocks.prisma.awardEvent.findUnique.mockResolvedValue({
+      categoryId: null,
+      coverAlt: null,
+      coverUrl: null,
+      createdById: "admin-1",
+      finalPostId: "final-post-1",
+      finalPost: { id: "final-post-1", slug: "awards", status: "PUBLISHED" },
+      id: "event-1",
+      intro: { content: [], type: "doc" },
+      introText: "Event introduction",
+      rooms: [
+        {
+          excludedAt: null,
+          id: "room-1",
+          order: 0,
+          selectedPost: {
+            content: {
+              content: [
+                {
+                  content: [{ text: "Unsaved event update", type: "text" }],
+                  type: "paragraph",
+                },
+              ],
+              type: "doc",
+            },
+            id: "post-1",
+            status: "DRAFT",
+            title: "Live draft",
+          },
+          status: "SUBMITTED",
+          submittedContent: selectedPost().content,
+          submittedPostId: "post-1",
+          submittedPostTitle: "Selected post",
+          submittedPostVersion: 4,
+          submittedWriterIntro: "Snapshot introduction",
+          writer: { name: "Mai", username: "mai" },
+          writerIntro: "Changed introduction",
+        },
+      ],
+      slug: "awards",
+      tags: [],
+      title: "Awards",
+    })
+    mocks.prisma.post.update.mockResolvedValue({
+      id: "final-post-1",
+      slug: "awards",
+      status: "PUBLISHED",
+    })
+
+    await regenerateAwardEventPost("event-1")
+
+    const update = mocks.prisma.post.update.mock.calls[0]?.[0]
+    const generatedContent = JSON.stringify(update.data.content)
+    expect(generatedContent).toContain("Submitted snapshot")
+    expect(generatedContent).toContain("Snapshot introduction")
+    expect(generatedContent).not.toContain("Unsaved event update")
+    expect(generatedContent).not.toContain("Changed introduction")
+  })
+})
+
 describe("adminAwardEventDetailSelect", () => {
   it("keeps selected post payloads lightweight for admin event navigation", () => {
     const selectedPostSelect =
@@ -195,6 +342,7 @@ describe("adminAwardEventDetailSelect", () => {
       title: true,
     })
     expect(selectedPostSelect).not.toHaveProperty("content")
+    expect(adminAwardEventDetailSelect.rooms.select.submittedContent).toBe(false)
   })
 })
 

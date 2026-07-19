@@ -22,6 +22,10 @@ interface AnthologyRoom {
     title: string
   } | null
   status: "DRAFT" | "SUBMITTED"
+  submittedContent?: unknown
+  submittedPostId?: string | null
+  submittedPostTitle?: string | null
+  submittedWriterIntro?: string | null
   writer: {
     avatarUrl?: string | null
     bio?: string | null
@@ -120,14 +124,24 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
     }
   }> = event.rooms.map((room) => ({
     ...room,
-    selectedPost: room.selectedPost
+    selectedPost: isJsonContent(room.submittedContent)
+      ? {
+          content: room.submittedContent,
+          id: room.submittedPostId ?? room.selectedPost?.id ?? room.id,
+          status: "DRAFT",
+          title: room.submittedPostTitle ?? room.selectedPost?.title ?? "Untitled",
+        }
+      : room.selectedPost
       ? {
           ...room.selectedPost,
           content: isJsonContent(room.selectedPost.content)
             ? room.selectedPost.content
             : { content: [], type: "doc" },
-        }
+      }
       : null,
+    writerIntro: isJsonContent(room.submittedContent)
+      ? room.submittedWriterIntro ?? null
+      : room.writerIntro,
     writer: {
       ...room.writer,
       avatarUrl: room.writer.avatarUrl ?? null,
