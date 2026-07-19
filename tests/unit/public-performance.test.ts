@@ -112,6 +112,14 @@ describe("public navigation performance contracts", () => {
     expect(scrollReset).not.toContain("previousPathnameRef.current === pathname")
   })
 
+  it("loads the pre-hydration appearance initializer through Next Script", () => {
+    const rootLayout = read("app/layout.tsx")
+
+    expect(rootLayout).toContain('import Script from "next/script"')
+    expect(rootLayout).toContain('strategy="beforeInteractive"')
+    expect(rootLayout).not.toContain("<script")
+  })
+
   it("server-renders the background instead of returning a blank hydration frame", () => {
     const rootLayout = read("app/layout.tsx")
     const background = read("components/ui/DynamicBackground.tsx")

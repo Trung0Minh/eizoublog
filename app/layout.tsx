@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Nunito, M_PLUS_Rounded_1c } from "next/font/google"
 import { cookies } from "next/headers"
+import Script from "next/script"
 import { Suspense } from "react"
 
 import { InternalAnalyticsTracker } from "@/components/analytics/InternalAnalyticsTracker"
@@ -92,10 +93,8 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <script
-          suppressHydrationWarning
-          dangerouslySetInnerHTML={{
-            __html: `
+        <Script id="appearance-init" strategy="beforeInteractive">
+          {`
               try {
                 ${getAppearanceInitScript()}
                 history.scrollRestoration = 'manual';
@@ -112,9 +111,8 @@ export default async function RootLayout({
                 }
                 document.documentElement.setAttribute('data-particles', particles);
               } catch (_) {}
-            `,
-          }}
-        />
+            `}
+        </Script>
       </head>
       <body className="min-h-screen font-sans bg-transparent text-text-primary antialiased selection:bg-accent/30 selection:text-accent">
         <ThemeProvider
