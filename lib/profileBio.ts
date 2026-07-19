@@ -1,10 +1,11 @@
 import type { JSONContent } from "@tiptap/react"
 
 export function parseProfileBio(bio: string): JSONContent | null {
-  if (!bio.startsWith("{")) return null
+  const normalizedBio = bio.trim().replace(/^\uFEFF/, "")
+  if (!normalizedBio.startsWith("{")) return null
 
   try {
-    const parsed: unknown = JSON.parse(bio)
+    const parsed: unknown = JSON.parse(normalizedBio)
     if (typeof parsed === "object" && parsed !== null && "type" in parsed) {
       return parsed as JSONContent
     }
