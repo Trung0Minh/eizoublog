@@ -8,7 +8,6 @@ import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { ScrollReveal } from "@/components/ui/ScrollReveal"
-import { cn } from "@/lib/utils"
 
 interface WriterEventItem {
   _count: { rooms: number }
@@ -30,16 +29,6 @@ function getApiError(value: unknown) {
   }
 
   return "Something went wrong"
-}
-
-const eventStatusMeta: Record<AwardEventStatus, { label: string; tone: string }> = {
-  CLOSED: { label: "Đã đóng", tone: "border-rose-500/25 bg-rose-500/10 text-rose-700 dark:text-rose-300" },
-  OPEN: { label: "Đang mở", tone: "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" },
-}
-
-const roomStatusMeta: Record<AwardEventRoomStatus, { label: string; tone: string }> = {
-  DRAFT: { label: "Bản nháp", tone: "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300" },
-  SUBMITTED: { label: "Đã gửi", tone: "border-sky-500/25 bg-sky-500/10 text-sky-700 dark:text-sky-300" },
 }
 
 export function WriterEventsList({ events }: { events: WriterEventItem[] }) {
@@ -78,8 +67,6 @@ export function WriterEventsList({ events }: { events: WriterEventItem[] }) {
       )}
       {events.map((event, index) => {
         const room = event.rooms[0] ?? null
-        const eventStatus = eventStatusMeta[event.status]
-        const roomStatus = room ? roomStatusMeta[room.status] : null
 
         return (
           <ScrollReveal key={event.id} index={index}>
@@ -99,14 +86,6 @@ export function WriterEventsList({ events }: { events: WriterEventItem[] }) {
                       event.title
                     )}
                   </h2>
-                  <span className={cn("rounded-full border px-2 py-0.5 text-xs font-semibold", eventStatus.tone)}>
-                    Sự kiện: {eventStatus.label}
-                  </span>
-                  {roomStatus && (
-                    <span className={cn("rounded-full border px-2 py-0.5 text-xs font-semibold", roomStatus.tone)}>
-                      Bài gửi: {roomStatus.label}
-                    </span>
-                  )}
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {event._count.rooms} phòng viết

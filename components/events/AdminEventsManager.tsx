@@ -32,6 +32,8 @@ interface TagOption {
   name: string
 }
 
+type AdminArticleStatus = NonNullable<AdminEventItem["finalPost"]>["status"]
+
 function getApiError(value: unknown) {
   if (
     typeof value === "object" &&
@@ -61,6 +63,26 @@ function statusClass(status: AwardEventStatus) {
     case "CLOSED":
       return "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
   }
+}
+
+function articleStatusLabel(status: AdminArticleStatus | undefined) {
+  if (status === "PUBLISHED") return "Published"
+  if (status === "REMOVED") return "Removed"
+  if (status === "ARCHIVED") return "Archived"
+  return "Unpublished"
+}
+
+function articleStatusClass(status: AdminArticleStatus | undefined) {
+  if (status === "PUBLISHED") {
+    return "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+  }
+  if (status === "REMOVED") {
+    return "border-destructive/30 bg-destructive/10 text-destructive"
+  }
+  if (status === "ARCHIVED") {
+    return "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+  }
+  return "border-border-default bg-subtle-bg text-text-tertiary"
 }
 
 export function AdminEventsManager({
@@ -300,8 +322,13 @@ export function AdminEventsManager({
                   >
                     {statusLabel(event.status)}
                   </span>
-                  <span className="rounded-full border border-border-default bg-background px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-text-secondary">
-                    Article: {event.finalPost?.status === "PUBLISHED" ? "Published" : event.finalPost?.status === "REMOVED" ? "Removed" : "Unpublished"}
+                  <span
+                    className={cn(
+                      "rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide",
+                      articleStatusClass(event.finalPost?.status),
+                    )}
+                  >
+                    {articleStatusLabel(event.finalPost?.status)}
                   </span>
                 </div>
                 <p className="mt-1.5 flex items-center gap-2 text-[13px] font-medium text-text-secondary">

@@ -26,20 +26,29 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { ExternalLink, Eye, EyeOff, GripVertical, Save, Shuffle } from "lucide-react"
+import {
+  ExternalLink,
+  Eye,
+  EyeOff,
+  GripVertical,
+  Save,
+  Shuffle,
+  UserMinus,
+} from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import type { ReactNode } from "react"
 import { useMemo, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog"
 import { CoverImageUpload } from "@/components/posts/CoverImageUpload"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import {
   reorderAwardEventRooms,
-  shuffleSubmittedAwardEventRooms,
+  shuffleAwardEventRooms,
 } from "@/lib/awardEvents"
 
 interface AdminEventRoom {
@@ -183,7 +192,9 @@ export function AdminEventDetailManager({
   const [error, setError] = useState("")
   const [introText, setIntroText] = useState(event.introText ?? "")
   const [isPending, setIsPending] = useState(false)
+  const [isRemovingRoom, setIsRemovingRoom] = useState(false)
   const [isSavingOrder, setIsSavingOrder] = useState(false)
+  const [removeTarget, setRemoveTarget] = useState<AdminEventRoom | null>(null)
   const [rooms, setRooms] = useState(event.rooms)
   const [shuffleTurns, setShuffleTurns] = useState(0)
   const [selectedTagIds, setSelectedTagIds] = useState(
@@ -302,9 +313,48 @@ export function AdminEventDetailManager({
   }
 
   function shuffleRooms() {
-    const orderedRooms = shuffleSubmittedAwardEventRooms(roomsRef.current)
+    const orderedRooms = shuffleAwardEventRooms(roomsRef.current)
     setShuffleTurns((turns) => turns + 1)
     updateRoomOrder(orderedRooms)
+  }
+
+  async function removeParticipant() {
+    if (!removeTarget) return
+
+    const previousRooms = roomsRef.current
+    const nextRooms = previousRooms
+      .filter((room) => room.id !== removeTarget.id)
+      .map((room, order) => ({ ...room, order }))
+
+    setError("")
+    setIsRemovingRoom(true)
+    roomsRef.current = nextRooms
+    setRooms(nextRooms)
+
+    try {
+      const response = await fetch(
+        `/api/admin/events/${event.id}/rooms/${removeTarget.id}`,
+        { method: "DELETE" },
+      )
+      const result: unknown = await response.json()
+
+      if (!response.ok) {
+        throw new Error(getApiError(result))
+      }
+
+      setRemoveTarget(null)
+      router.refresh()
+    } catch (caughtError) {
+      roomsRef.current = previousRooms
+      setRooms(previousRooms)
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Failed to remove participant",
+      )
+    } finally {
+      setIsRemovingRoom(false)
+    }
   }
 
   function reorderRoom(roomId: string, targetRoomId: string) {
@@ -596,7 +646,7 @@ export function AdminEventDetailManager({
             aria-label="Shuffle submissions"
             className="h-9 w-9 rounded-full p-0 transition-colors hover:border-accent hover:bg-accent/10 hover:text-accent"
             aria-busy={isSavingOrder}
-            disabled={submittedRooms.length < 2}
+            disabled={isRemovingRoom || rooms.length < 2}
             onClick={shuffleRooms}
             title="Shuffle submissions"
             type="button"
@@ -637,7 +687,7 @@ export function AdminEventDetailManager({
                   room.excludedAt && "opacity-60",
                   draggingRoomId === room.id && "border-dashed border-accent/50 bg-accent/5",
                 )}
-                disabled={false}
+                disabled={isRemovingRoom}
                 id={room.id}
                 key={room.id}
               >
@@ -703,6 +753,18 @@ export function AdminEventDetailManager({
                         <EyeOff aria-hidden="true" className="h-4 w-4" />
                       )}
                     </Button>
+                    <Button
+                      aria-label={`Remove ${room.writer.name} from event`}
+                      className="h-8 w-8 rounded-[8px] text-text-secondary hover:bg-destructive/10 hover:text-destructive"
+                      disabled={isRemovingRoom || isSavingOrder}
+                      onClick={() => setRemoveTarget(room)}
+                      size="icon"
+                      title={`Remove ${room.writer.name} from event`}
+                      type="button"
+                      variant="ghost"
+                    >
+                      <UserMinus aria-hidden="true" className="h-4 w-4" />
+                    </Button>
                     {room.selectedPost ? (
                       <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-[8px] text-text-secondary hover:bg-accent/10 hover:text-accent">
                         <Link
@@ -765,6 +827,25 @@ export function AdminEventDetailManager({
         </div>
       </section>
       </div>
+      <ConfirmationDialog
+        confirmLabel="Remove participant"
+        description={
+          <>
+            Remove <strong className="text-text-primary">{removeTarget?.writer.name}</strong>
+            from this event and delete their event feedback. Their account and source post
+            will not be deleted.
+          </>
+        }
+        icon={UserMinus}
+        onConfirm={() => void removeParticipant()}
+        onOpenChange={(open) => {
+          if (!open && !isRemovingRoom) setRemoveTarget(null)
+        }}
+        open={Boolean(removeTarget)}
+        pending={isRemovingRoom}
+        title="Remove participant?"
+        tone="destructive"
+      />
     </div>
   )
 }

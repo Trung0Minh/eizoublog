@@ -183,7 +183,7 @@ describe("admin client components", () => {
             _count: { rooms: 2 },
             createdAt: new Date("2026-01-01T00:00:00Z"),
             id: "event-1",
-            finalPost: null,
+            finalPost: { status: "PUBLISHED" },
             slug: "awards-2026",
             status: "OPEN",
             title: "Awards 2026",
@@ -199,6 +199,8 @@ describe("admin client components", () => {
       "/admin/events/event-1",
     )
     expect(screen.queryByRole("link", { name: /Manage Awards 2026/i })).not.toBeInTheDocument()
+    expect(screen.getByText("Published")).toHaveClass("bg-emerald-500/10")
+    expect(screen.queryByText("Article: Published")).not.toBeInTheDocument()
   })
 
   it("deletes an event after explicit confirmation", async () => {

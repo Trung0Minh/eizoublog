@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react"
+import { render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -237,14 +237,19 @@ describe("AdminEventDetailManager", () => {
     vi.stubGlobal("fetch", fetchMock)
     vi.spyOn(Math, "random").mockReturnValue(0.5)
 
-    const room = (id: string, order: number, name: string) => ({
+    const room = (
+      id: string,
+      order: number,
+      name: string,
+      status: "DRAFT" | "SUBMITTED",
+    ) => ({
       _count: { comments: 0 },
       excludedAt: null,
       id,
       order,
       postId: `${id}-post`,
       selectedPost: { id: `${id}-post`, status: "DRAFT" as const, title: `${name} pick` },
-      status: "SUBMITTED" as const,
+      status,
       updatedAt: new Date("2026-06-17T00:00:00.000Z"),
       visibility: "PARTICIPANTS" as const,
       writer: { name, role: "WRITER" as const, username: name.toLowerCase() },
@@ -256,7 +261,11 @@ describe("AdminEventDetailManager", () => {
           finalPost: null,
           id: "event-1",
           introText: null,
-          rooms: [room("room-a", 0, "A"), room("room-b", 1, "B"), room("room-c", 2, "C")],
+          rooms: [
+            room("room-a", 0, "A", "DRAFT"),
+            room("room-b", 1, "B", "SUBMITTED"),
+            room("room-c", 2, "C", "DRAFT"),
+          ],
           status: "OPEN",
           title: "Awards",
         }}
@@ -303,6 +312,55 @@ describe("AdminEventDetailManager", () => {
           method: "PATCH",
         }),
       )
+    })
+  })
+
+  it("removes a participant room after confirmation without touching source posts", async () => {
+    const user = userEvent.setup()
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ data: { message: "Participant removed" } }), {
+        status: 200,
+      }),
+    )
+    vi.stubGlobal("fetch", fetchMock)
+
+    render(
+      <AdminEventDetailManager
+        event={{
+          finalPost: null,
+          id: "event-1",
+          introText: null,
+          rooms: [
+            {
+              _count: { comments: 2 },
+              excludedAt: null,
+              id: "room-1",
+              order: 0,
+              postId: "post-1",
+              selectedPost: { id: "post-1", status: "DRAFT", title: "Mai pick" },
+              status: "SUBMITTED",
+              updatedAt: new Date("2026-06-17T00:00:00.000Z"),
+              visibility: "PARTICIPANTS",
+              writer: { name: "Mai", role: "WRITER", username: "mai" },
+            },
+          ],
+          status: "OPEN",
+          title: "Awards",
+        }}
+      />,
+    )
+
+    await user.click(screen.getByRole("button", { name: "Remove Mai from event" }))
+    const dialog = screen.getByRole("dialog", { name: "Remove participant?" })
+    expect(dialog).toHaveTextContent("source post will not be deleted")
+    await user.click(within(dialog).getByRole("button", { name: "Remove participant" }))
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/admin/events/event-1/rooms/room-1",
+      { method: "DELETE" },
+    )
+    await waitFor(() => {
+      expect(screen.queryByTestId("event-submission-room-1")).not.toBeInTheDocument()
     })
   })
 
