@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
-import { ChevronLeft, Edit2, Eye, FileText, Lock, MessageSquare } from "lucide-react"
+import { ChevronLeft, Edit2, Eye, FileText, Lock } from "lucide-react"
 
 import { joinAwardEvent } from "@/lib/awardEventService"
 import { prisma } from "@/lib/prisma"
@@ -93,15 +93,6 @@ export default async function DashboardEventRoomPage({
   if (!event || !room) {
     notFound()
   }
-
-  // Get unread feedback count on current user's room
-  const unreadFeedbackCount = await prisma.awardEventRoomComment.count({
-    where: {
-      authorId: { not: session.user.id },
-      isRead: false,
-      roomId: room.id,
-    },
-  })
 
   // Get all participants' rooms in this event (including ours)
   const participantRooms = await prisma.awardEventRoom.findMany({
@@ -255,22 +246,6 @@ export default async function DashboardEventRoomPage({
                     title="Preview submission"
                   >
                     <Eye aria-hidden="true" className="h-4 w-4" />
-                  </Link>
-                </Button>
-              )}
-              {ourRoom.postId && ourRoom.selectedPost && (
-                <Button asChild size="icon" variant="outline" className="relative">
-                  <Link
-                    aria-label="View feedback"
-                    href={`/dashboard/events/${id}/rooms/${ourRoom.id}`}
-                    title="View feedback"
-                  >
-                    <MessageSquare aria-hidden="true" className="h-4 w-4" />
-                    {unreadFeedbackCount > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground animate-pulse shadow-md">
-                        {unreadFeedbackCount}
-                      </span>
-                    )}
                   </Link>
                 </Button>
               )}

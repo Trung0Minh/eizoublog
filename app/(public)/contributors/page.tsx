@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { Sparkles } from "lucide-react"
 
+import { FourPointSparkle } from "@/components/ui/FourPointSparkle"
 import { TextReveal } from "@/components/ui/TextReveal"
 import { ScrollReveal } from "@/components/ui/ScrollReveal"
 import { ContributorBio } from "@/components/profile/ContributorBio"
@@ -56,12 +56,12 @@ export default async function ContributorsPage({ searchParams }: ContributorsPag
     <div className="min-h-screen flex flex-col pt-0">
       <main className="flex-1 w-full max-w-[1200px] mx-auto px-5 pt-8 md:pt-16 pb-20">
         <div className="text-center mb-16">
-          <div className="inline-flex items-center justify-center gap-2 mb-4">
-            <Sparkles className="w-8 h-8 text-accent animate-pulse" />
+          <div className="mb-4 inline-grid grid-cols-[32px_auto_32px] items-center justify-center gap-3">
+            <FourPointSparkle className="sparkle-glyph h-8 w-8 text-accent" />
             <h1 className="text-[36px] md:text-[48px] font-display font-bold text-text-primary">
-              <TextReveal text="Tác giả" />
+              <TextReveal text="Tác giả" className="[&>span:last-child]:mr-0" />
             </h1>
-            <Sparkles className="w-8 h-8 text-accent animate-pulse" />
+            <FourPointSparkle className="sparkle-glyph h-8 w-8 text-accent" />
           </div>
           <ScrollReveal delay={0.2}>
             <p className="text-[16px] text-text-secondary max-w-2xl mx-auto mb-6">

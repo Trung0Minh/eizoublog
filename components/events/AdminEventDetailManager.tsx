@@ -46,10 +46,7 @@ import { CoverImageUpload } from "@/components/posts/CoverImageUpload"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
-import {
-  reorderAwardEventRooms,
-  shuffleAwardEventRooms,
-} from "@/lib/awardEvents"
+import { reorderAwardEventRooms } from "@/lib/awardEvents"
 
 interface AdminEventRoom {
   _count: { comments: number }
@@ -62,6 +59,8 @@ interface AdminEventRoom {
     status: PostStatus
     title: string
   } | null
+  submittedPostId?: string | null
+  submittedPostTitle?: string | null
   status: AwardEventRoomStatus
   updatedAt: Date
   visibility: "PRIVATE" | "PARTICIPANTS"
@@ -104,6 +103,30 @@ function getApiError(value: unknown) {
   }
 
   return "Something went wrong"
+}
+
+function getShuffledRooms(value: unknown): Array<{ id: string; order: number }> {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    !("data" in value) ||
+    typeof value.data !== "object" ||
+    value.data === null ||
+    !("rooms" in value.data) ||
+    !Array.isArray(value.data.rooms)
+  ) {
+    return []
+  }
+
+  return value.data.rooms.filter(
+    (room): room is { id: string; order: number } =>
+      typeof room === "object" &&
+      room !== null &&
+      "id" in room &&
+      typeof room.id === "string" &&
+      "order" in room &&
+      typeof room.order === "number",
+  )
 }
 
 function statusTone(status: AwardEventStatus) {
@@ -214,7 +237,10 @@ export function AdminEventDetailManager({
   const submittedRooms = useMemo(
     () =>
       rooms.filter(
-        (room) => room.status === "SUBMITTED" && !room.excludedAt && room.selectedPost,
+        (room) =>
+          room.status === "SUBMITTED" &&
+          !room.excludedAt &&
+          (room.selectedPost || room.submittedPostId),
       ),
     [rooms],
   )
@@ -334,9 +360,49 @@ export function AdminEventDetailManager({
   }
 
   function shuffleRooms() {
-    const orderedRooms = shuffleAwardEventRooms(roomsRef.current)
-    setShuffleTurns((turns) => turns + 1)
-    updateRoomOrder(orderedRooms)
+    if (roomOrderSaveTimerRef.current) {
+      clearTimeout(roomOrderSaveTimerRef.current)
+      roomOrderSaveTimerRef.current = null
+    }
+
+    pendingRoomOrderRef.current = null
+    roomOrderSaveRunningRef.current = false
+    setIsSavingOrder(true)
+    setError("")
+
+    void (async () => {
+      try {
+        const response = await fetch(`/api/admin/events/${event.id}/shuffle`, {
+          method: "POST",
+        })
+        const result: unknown = await response.json()
+
+        if (!response.ok) {
+          throw new Error(getApiError(result))
+        }
+
+        const shuffledRooms = getShuffledRooms(result)
+        const orderById = new Map(shuffledRooms.map((room) => [room.id, room.order]))
+        const nextRooms = [...roomsRef.current].sort(
+          (a, b) =>
+            (orderById.get(a.id) ?? a.order) - (orderById.get(b.id) ?? b.order),
+        )
+
+        const normalizedRooms = nextRooms.map((room, order) => ({
+          ...room,
+          order,
+        }))
+
+        roomsRef.current = normalizedRooms
+        setRooms(normalizedRooms)
+        setShuffleTurns((turns) => turns + 1)
+        router.refresh()
+      } catch (caughtError) {
+        setError(caughtError instanceof Error ? caughtError.message : "Shuffle failed")
+      } finally {
+        setIsSavingOrder(false)
+      }
+    })()
   }
 
   async function removeParticipant() {
@@ -759,7 +825,11 @@ export function AdminEventDetailManager({
                         room.excludedAt ? "Include in final event" : "Exclude from final event"
                       }
                       className="h-8 w-8 rounded-[8px] text-text-secondary hover:bg-subtle-bg hover:text-text-primary"
-                      disabled={isPending || room.status !== "SUBMITTED" || !room.selectedPost}
+                      disabled={
+                        isPending ||
+                        room.status !== "SUBMITTED" ||
+                        !(room.selectedPost || room.submittedPostId)
+                      }
                       onClick={() => toggleRoomExclusion(room.id)}
                       size="icon"
                       title={
@@ -786,10 +856,10 @@ export function AdminEventDetailManager({
                     >
                       <UserMinus aria-hidden="true" className="h-4 w-4" />
                     </Button>
-                    {room.selectedPost ? (
+                    {room.selectedPost || room.submittedPostId ? (
                       <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-[8px] text-text-secondary hover:bg-accent/10 hover:text-accent">
                         <Link
-                          href={`/dashboard/preview/${room.selectedPost.id}`}
+                          href={`/dashboard/preview/${room.selectedPost?.id ?? room.submittedPostId}`}
                           title="Preview selected post"
                         >
                           <Eye aria-hidden="true" className="h-4 w-4" />
@@ -810,13 +880,13 @@ export function AdminEventDetailManager({
                   </div>
                 </div>
                 <div className="min-w-0">
-                  {room.selectedPost ? (
+                  {room.selectedPost || room.submittedPostTitle ? (
                     <div className="mt-3 flex items-center gap-2 rounded-[10px] border border-accent/20 bg-accent/5 px-3 py-2.5">
                       <p className="truncate text-[13px] font-semibold text-text-primary">
-                        {room.selectedPost.title}
+                        {room.selectedPost?.title ?? room.submittedPostTitle}
                       </p>
                       <span className="shrink-0 rounded-full bg-background/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-text-secondary shadow-sm">
-                        {room.selectedPost.status} source post
+                        {room.selectedPost?.status ?? "SUBMITTED"} source post
                       </span>
                     </div>
                   ) : (
@@ -838,6 +908,7 @@ export function AdminEventDetailManager({
                     </p>
                     <p className="mt-1 truncate text-[12px] font-medium text-text-secondary">
                       {rooms.find((room) => room.id === draggingRoomId)?.selectedPost?.title ??
+                        rooms.find((room) => room.id === draggingRoomId)?.submittedPostTitle ??
                         "No source post selected"}
                     </p>
                   </div>

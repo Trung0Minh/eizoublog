@@ -145,7 +145,7 @@ export function namespaceAwardEventPostContent(
       attrs: {
         ...node.attrs,
         id: occurrence === 1 ? baseId : `${baseId}-${occurrence}`,
-        level: Math.min(4, Math.max(3, level + 1)),
+        level,
       },
       ...(transformedContent && { content: transformedContent }),
     }

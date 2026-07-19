@@ -3,13 +3,14 @@
 import dynamic from "next/dynamic"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Pencil, Save, X, Sparkles, Heart } from "lucide-react"
+import { Pencil, Save, X, Heart } from "lucide-react"
 import type { Editor, JSONContent } from "@tiptap/react"
 import Link from "next/link"
 import { toast } from "sonner"
 
 import { PostBody } from "@/components/posts/PostBody"
 import { Button } from "@/components/ui/button"
+import { FourPointSparkle } from "@/components/ui/FourPointSparkle"
 import { TextReveal } from "@/components/ui/TextReveal"
 import { ScrollReveal } from "@/components/ui/ScrollReveal"
 import { cn } from "@/lib/utils"
@@ -322,7 +323,7 @@ export function AboutClient({
             <div className="w-full md:w-[60%] flex flex-col">
               <ScrollReveal>
                 <div className="flex items-center gap-2 mb-4">
-                  <Sparkles className="w-6 h-6 text-accent animate-pulse shrink-0" />
+                  <FourPointSparkle className="sparkle-glyph h-6 w-6 shrink-0 text-accent" />
                   {isEditing ? (
                     <input
                       className="w-full border-none bg-transparent text-[32px] md:text-[42px] font-display font-bold text-text-primary leading-tight outline-none focus:ring-2 focus:ring-accent rounded-[8px] placeholder:text-text-tertiary"

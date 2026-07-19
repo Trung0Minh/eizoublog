@@ -97,10 +97,7 @@ describe("DashboardEventRoomPage (Page A)", () => {
       "href",
       "/dashboard/preview/post-1",
     )
-    expect(screen.getByRole("link", { name: "View feedback" })).toHaveAttribute(
-      "href",
-      "/dashboard/events/event-1/rooms/room-1",
-    )
+    expect(screen.queryByRole("link", { name: "View feedback" })).not.toBeInTheDocument()
   })
 
   it("joins the event when the writer has no room yet", async () => {

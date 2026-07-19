@@ -500,9 +500,15 @@ export function ResourcesClient({
                 placeholder="Tiêu đề trang..."
               />
             ) : (
-              <h1 className="text-[40px] md:text-[56px] font-bold font-display tracking-tight text-text-primary leading-[1.1] mb-6">
-                <TextReveal text={data.title.split(" ")[0] || "Nguồn"} /> <br />
-                <TextReveal text={data.title.split(" ").slice(1).join(" ") || "tham khảo"} className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-purple-500" />
+              <h1
+                aria-label={data.title}
+                className="mb-6 flex flex-wrap items-baseline gap-x-0 text-[36px] font-bold leading-[1.1] tracking-tight text-text-primary sm:text-[44px] md:text-[56px]"
+              >
+                <TextReveal text={data.title.split(" ")[0] || "Nguồn"} />
+                <TextReveal
+                  text={data.title.split(" ").slice(1).join(" ") || "tham khảo"}
+                  className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-purple-500"
+                />
               </h1>
             )}
           </ScrollReveal>

@@ -357,10 +357,39 @@
 
   /* THE GLASS SYSTEM (Permanent Default) */
   .glass-navbar {
-    background-color: color-mix(in srgb, hsl(var(--background)) 92%, var(--accent) 8%);
-    border-color: color-mix(in srgb, var(--accent) 22%, transparent);
-    box-shadow: 0 8px 32px color-mix(in srgb, var(--accent) 9%, rgba(0, 0, 0, 0.14));
+    background-color: color-mix(in srgb, hsl(var(--background)) 52%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 14%, transparent);
+    box-shadow: 0 8px 26px color-mix(in srgb, var(--accent) 5%, rgba(0, 0, 0, 0.08));
     @apply backdrop-blur-xl border-[1.5px] rounded-[24px] transition-all duration-300;
+  }
+
+  .glass-navbar:hover {
+    background-color: color-mix(in srgb, hsl(var(--background)) 64%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+
+  .sparkle-glyph {
+    animation: sparkle-tight-expand 1.55s ease-in-out infinite;
+    filter: drop-shadow(0 0 8px hsl(var(--accent) / 0.42));
+    transform-origin: center;
+  }
+
+  @keyframes sparkle-tight-expand {
+    0%, 100% {
+      opacity: 0.82;
+      transform: scale(0.82) rotate(-8deg);
+      filter: drop-shadow(0 0 5px hsl(var(--accent) / 0.28));
+    }
+    42% {
+      opacity: 1;
+      transform: scale(1.22) rotate(0deg);
+      filter: drop-shadow(0 0 14px hsl(var(--accent) / 0.58));
+    }
+    64% {
+      opacity: 0.92;
+      transform: scale(0.96) rotate(8deg);
+      filter: drop-shadow(0 0 8px hsl(var(--accent) / 0.4));
+    }
   }
 
   .glass-card {

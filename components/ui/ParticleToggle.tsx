@@ -1,8 +1,7 @@
 "use client"
 
-import { Sparkles } from "lucide-react"
-
 import { Button } from "@/components/ui/button"
+import { FourPointSparkle } from "@/components/ui/FourPointSparkle"
 import { useParticleEffects } from "@/hooks/useParticleEffects"
 
 export function ParticleToggle() {
@@ -19,7 +18,7 @@ export function ParticleToggle() {
       type="button"
       variant="ghost"
     >
-      <Sparkles aria-hidden="true" />
+      <FourPointSparkle className={enabled ? "sparkle-glyph" : ""} />
     </Button>
   )
 }

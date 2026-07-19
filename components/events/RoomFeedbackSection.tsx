@@ -74,7 +74,7 @@ export function RoomFeedbackSection({
   }
 
   return (
-    <div className="border-t border-border-default pt-8 mt-12 space-y-6">
+    <div className="mt-12 space-y-6 rounded-[24px] border border-border-default/80 bg-background/90 p-5 shadow-[0_18px_60px_rgba(31,24,38,0.08)] backdrop-blur-xl dark:bg-background/80 sm:p-8 md:p-10">
       <div className="flex items-center gap-2">
         <MessageSquare className="h-5 w-5 text-accent" />
         <h3 className="font-bold text-text-primary text-lg">Feedback & Comments</h3>
@@ -133,7 +133,7 @@ export function RoomFeedbackSection({
 
       <form
         onSubmit={handleCommentSubmit}
-        className="space-y-4 border-t border-border-default pt-4"
+        className="space-y-4"
       >
         {submitError && (
           <div className="rounded-[6px] border border-destructive/20 bg-destructive/5 p-3 text-xs text-destructive flex items-center gap-2">

@@ -180,7 +180,7 @@ describe("buildAwardEventOutline", () => {
 })
 
 describe("namespaceAwardEventPostContent", () => {
-  it("assigns collision-safe room-prefixed ids and demotes headings below the writer", () => {
+  it("assigns collision-safe room-prefixed ids and preserves heading levels", () => {
     const content = namespaceAwardEventPostContent(
       doc(
         {
@@ -193,13 +193,19 @@ describe("namespaceAwardEventPostContent", () => {
           content: [{ text: "Introduction", type: "text" }],
           type: "heading",
         },
+        {
+          attrs: { level: 4 },
+          content: [{ text: "Follow-up", type: "text" }],
+          type: "heading",
+        },
       ),
       "room-a",
     )
 
     expect(content.content?.map((node) => node.attrs)).toEqual([
-      { id: "event-room-room-a-introduction", level: 3 },
-      { id: "event-room-room-a-introduction-2", level: 3 },
+      { id: "event-room-room-a-introduction", level: 2 },
+      { id: "event-room-room-a-introduction-2", level: 2 },
+      { id: "event-room-room-a-follow-up", level: 4 },
     ])
   })
 })

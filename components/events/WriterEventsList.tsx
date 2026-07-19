@@ -100,8 +100,8 @@ export function WriterEventsList({ events }: { events: WriterEventItem[] }) {
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="font-medium text-text-primary">
                     {room ? (
-                      <Link
-                        className="hover:underline hover:text-editorial"
+                    <Link
+                        className="transition-colors hover:text-accent hover:underline"
                         href={`/dashboard/events/${event.id}`}
                         prefetch={false}
                       >

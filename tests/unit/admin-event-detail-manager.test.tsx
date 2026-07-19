@@ -158,6 +158,44 @@ describe("AdminEventDetailManager", () => {
     )
   })
 
+  it("shows submitted snapshot metadata even when the live selected post relation is missing", () => {
+    render(
+      <AdminEventDetailManager
+        event={{
+          finalPost: null,
+          id: "event-1",
+          introText: null,
+          rooms: [
+            {
+              _count: { comments: 1 },
+              excludedAt: null,
+              id: "room-1",
+              order: 0,
+              postId: null,
+              selectedPost: null,
+              submittedPostId: "post-1",
+              submittedPostTitle: "Snapshot pick",
+              status: "SUBMITTED",
+              updatedAt: new Date("2026-06-17T00:00:00.000Z"),
+              visibility: "PARTICIPANTS",
+              writer: { name: "Mai", role: "WRITER", username: "mai" },
+            },
+          ],
+          status: "OPEN",
+          title: "Awards",
+        }}
+      />,
+    )
+
+    expect(screen.getByText("Snapshot pick")).toBeVisible()
+    expect(screen.getByText(/SUBMITTED source post/i)).toBeVisible()
+    expect(screen.queryByText("No source post selected yet.")).not.toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "Preview selected post" })).toHaveAttribute(
+      "href",
+      "/dashboard/preview/post-1",
+    )
+  })
+
   it("renders the sortable submissions region without legacy move buttons", () => {
     render(
       <AdminEventDetailManager
@@ -220,12 +258,22 @@ describe("AdminEventDetailManager", () => {
     )
   })
 
-  it("shuffles immediately and persists only the latest order after rapid clicks", async () => {
+  it("shuffles through the event shuffle endpoint and applies the returned order", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ data: { id: "event-1" } }), { status: 200 }),
+      new Response(
+        JSON.stringify({
+          data: {
+            rooms: [
+              { id: "room-a", order: 0 },
+              { id: "room-c", order: 1 },
+              { id: "room-b", order: 2 },
+            ],
+          },
+        }),
+        { status: 200 },
+      ),
     )
     vi.stubGlobal("fetch", fetchMock)
-    vi.spyOn(Math, "random").mockReturnValue(0.5)
 
     const room = (
       id: string,
@@ -269,39 +317,23 @@ describe("AdminEventDetailManager", () => {
         .map((submission) => submission.dataset.testid)
 
     fireEvent.click(shuffleButton)
-    expect(submissionOrder()).toEqual([
-      "event-submission-room-a",
-      "event-submission-room-c",
-      "event-submission-room-b",
-    ])
-    expect(shuffleButton).toBeEnabled()
-
-    for (let click = 0; click < 6; click += 1) {
-      fireEvent.click(shuffleButton)
-    }
-
-    expect(fetchMock).not.toHaveBeenCalled()
-    expect(submissionOrder()).toEqual([
-      "event-submission-room-a",
-      "event-submission-room-c",
-      "event-submission-room-b",
-    ])
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledTimes(1)
       expect(fetchMock).toHaveBeenCalledWith(
-        "/api/admin/events/event-1",
+        "/api/admin/events/event-1/shuffle",
         expect.objectContaining({
-          body: JSON.stringify({
-            roomOrder: [
-              { id: "room-a", order: 0 },
-              { id: "room-c", order: 1 },
-              { id: "room-b", order: 2 },
-            ],
-          }),
-          method: "PATCH",
+          method: "POST",
         }),
       )
+    })
+
+    await waitFor(() => {
+      expect(submissionOrder()).toEqual([
+        "event-submission-room-a",
+        "event-submission-room-c",
+        "event-submission-room-b",
+      ])
     })
   })
 
