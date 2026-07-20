@@ -120,14 +120,8 @@ function renderTextNode(node: JSONContent, key: string): ReactNode {
         rendered = <s key={markKey}>{rendered}</s>
         break
       case "textStyle": {
-        const color = stringAttr(attrs, "color")
-        if (color) {
-          rendered = (
-            <span key={markKey} style={{ color }}>
-              {rendered}
-            </span>
-          )
-        }
+        // Public rendering ignores saved text colors because pasted rich text can
+        // carry arbitrary browser-generated colors that break light/dark themes.
         break
       }
       case "underline":
@@ -160,6 +154,7 @@ function renderImage(node: JSONContent, key: string) {
   return (
     <figure 
       className={`relative flex flex-col items-center ${alignClass}`} 
+      data-align={align}
       data-type="image" 
       key={key}
       style={{

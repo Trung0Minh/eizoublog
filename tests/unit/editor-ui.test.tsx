@@ -918,7 +918,7 @@ describe("PostBody", () => {
     expect(marked.closest("mark")).toHaveClass("editor-highlight")
     expect(marked.closest("mark")).toHaveStyle({ backgroundColor: "#fef08a" })
     expect(marked.closest("mark")).toHaveStyle({ color: "#000000" })
-    expect(marked.closest("span")).toHaveStyle({ color: "#dc2626" })
+    expect(marked.closest(".post-text-color")).toBeNull()
     expect(marked.closest("u")).not.toBeNull()
     expect(marked.closest("p")).toHaveStyle({ textAlign: "center" })
     expect(screen.getByRole("checkbox")).toBeChecked()

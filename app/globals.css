@@ -729,6 +729,12 @@
     max-width: 100%;
   }
 
+  @media (min-width: 768px) {
+    .post-content .ProseMirror > figure[data-align="center"] {
+      width: 100%;
+    }
+  }
+
   .post-content img {
     border-radius: 4px;
     cursor: zoom-in;

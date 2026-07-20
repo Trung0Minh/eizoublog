@@ -68,6 +68,96 @@ describe("StaticPostContent", () => {
     )
   })
 
+  it("ignores saved text colors in public rendering", () => {
+    const content: JSONContent = {
+      content: [
+        {
+          content: [
+            {
+              marks: [{ attrs: { color: "#dc2626" }, type: "textStyle" }],
+              text: "Intentional red text",
+              type: "text",
+            },
+          ],
+          type: "paragraph",
+        },
+      ],
+      type: "doc",
+    }
+
+    render(<StaticPostContent content={content} />)
+
+    const colored = screen.getByText("Intentional red text")
+
+    expect(colored.tagName).toBe("P")
+    expect(colored).not.toHaveAttribute("style")
+    expect(colored.querySelector(".post-text-color")).toBeNull()
+  })
+
+  it("ignores pasted white text colors in public rendering", () => {
+    const content: JSONContent = {
+      content: [
+        {
+          content: [
+            {
+              marks: [
+                {
+                  attrs: { color: "rgb(255, 255, 255)" },
+                  type: "textStyle",
+                },
+              ],
+              text: "Pasted white text",
+              type: "text",
+            },
+          ],
+          type: "paragraph",
+        },
+      ],
+      type: "doc",
+    }
+
+    render(<StaticPostContent content={content} />)
+
+    const colored = screen.getByText("Pasted white text")
+
+    expect(colored.tagName).toBe("P")
+    expect(colored).not.toHaveAttribute("style")
+    expect(colored.querySelector(".post-text-color")).toBeNull()
+  })
+
+  it("ignores oklab colors saved by browser selection", () => {
+    const content: JSONContent = {
+      content: [
+        {
+          content: [
+            {
+              marks: [
+                {
+                  attrs: {
+                    color: "oklab(0.964355 0.000418752 -0.00125641)",
+                  },
+                  type: "textStyle",
+                },
+              ],
+              text: "Pasted oklab text",
+              type: "text",
+            },
+          ],
+          type: "paragraph",
+        },
+      ],
+      type: "doc",
+    }
+
+    render(<StaticPostContent content={content} />)
+
+    const colored = screen.getByText("Pasted oklab text")
+
+    expect(colored.tagName).toBe("P")
+    expect(colored).not.toHaveAttribute("style")
+    expect(colored.querySelector(".post-text-color")).toBeNull()
+  })
+
   it("renders horizontal galleries as a scrollable media list", () => {
     const content: JSONContent = {
       content: [

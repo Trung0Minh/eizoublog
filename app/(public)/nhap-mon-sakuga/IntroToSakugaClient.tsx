@@ -509,7 +509,7 @@ export function IntroToSakugaClient({
             </div>
 
             {/* Mascot Hero Card */}
-            <ScrollReveal delay={0.2} className="w-full max-w-[480px] mx-auto mb-8">
+            <ScrollReveal delay={0.2} className="w-full max-w-[600px] mx-auto mb-8">
               <div className="relative aspect-[16/10] rounded-[16px] overflow-hidden border-4 border-white dark:border-border shadow-lg bg-background">
                 {isEditing ? (
                   <CoverImageUpload
