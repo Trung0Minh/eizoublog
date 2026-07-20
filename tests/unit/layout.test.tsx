@@ -796,7 +796,7 @@ describe("Sidebar", () => {
     expect(
       screen.getByRole("link", { name: "Frieren and the passage of time" }),
     ).toHaveAttribute("href", "/frieren")
-    expect(screen.getByRole("link", { name: /tháng 6 năm 2026/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /06\/2026/ })).toHaveAttribute(
       "href",
       "/archive/2026-06",
     )

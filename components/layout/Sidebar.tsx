@@ -108,18 +108,18 @@ export function Sidebar({
 }
 
 function formatArchiveMonth(month: string) {
-  const [yearPart, monthPart] = month.split("-")
-  const date = new Date(Date.UTC(Number(yearPart), Number(monthPart) - 1, 1))
-
-  if (Number.isNaN(date.getTime())) {
+  if (!/^\d{4}-\d{2}$/.test(month)) {
     return month
   }
 
-  return new Intl.DateTimeFormat("vi-VN", {
-    month: "long",
-    timeZone: "UTC",
-    year: "numeric",
-  }).format(date)
+  const [yearPart, monthPart] = month.split("-")
+  const monthNumber = Number(monthPart)
+
+  if (monthNumber < 1 || monthNumber > 12) {
+    return month
+  }
+
+  return `${monthPart}/${yearPart}`
 }
 
 function SidebarSection({

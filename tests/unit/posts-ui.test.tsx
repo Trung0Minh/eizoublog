@@ -1106,7 +1106,7 @@ describe("HomePage sorting UI", () => {
     render(element)
 
     expect(
-      screen.getByRole("heading", { name: "Bài viết tháng 6 năm 2026" }),
+      screen.getByRole("heading", { name: "Bài viết 06/2026" }),
     ).toBeVisible()
     expect(screen.getByRole("combobox", { name: "Sắp xếp bài viết" })).toHaveValue(
       "oldest",

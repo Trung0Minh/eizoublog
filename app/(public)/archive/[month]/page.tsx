@@ -34,11 +34,7 @@ function formatArchiveMonth(month: string) {
     return null
   }
 
-  return new Intl.DateTimeFormat("vi-VN", {
-    month: "long",
-    timeZone: "UTC",
-    year: "numeric",
-  }).format(new Date(Date.UTC(year, monthIndex, 1)))
+  return `${monthPart}/${yearPart}`
 }
 
 export async function generateMetadata({
