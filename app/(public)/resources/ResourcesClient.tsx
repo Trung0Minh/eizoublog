@@ -546,7 +546,7 @@ export function ResourcesClient({
                   .map(({ resource, index }) => {
                     const isLink = resource.isLink !== false
 
-                    const CardContent = () => (
+                    const cardContent = (
                       <>
                         {!isEditing && (
                           <div className="absolute top-0 right-0 p-4 opacity-0 transition-opacity translate-x-2 duration-300 group-hover/resource:translate-x-0 group-hover/resource:opacity-100">
@@ -685,7 +685,7 @@ export function ResourcesClient({
                             rel="noopener noreferrer"
                             className={commonClasses}
                           >
-                            <CardContent />
+                            {cardContent}
                           </a>
                         </ScrollReveal>
                       )
@@ -710,7 +710,7 @@ export function ResourcesClient({
                               : undefined
                           }
                         >
-                          <CardContent />
+                          {cardContent}
                         </div>
                       </ScrollReveal>
                     )

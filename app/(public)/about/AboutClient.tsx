@@ -364,7 +364,7 @@ export function AboutClient({
 
                 {(isEditing || hasWhyContent(data.whyWeDoThis)) && (
                   <ScrollReveal delay={0.2}>
-                    <div className="bg-background/60 p-4 rounded-xl border border-border mt-6">
+                    <div className="mt-6 rounded-xl border border-accent/30 bg-background/80 p-4 shadow-[0_18px_50px_rgba(0,0,0,0.18),inset_0_1px_0_hsl(var(--accent)/0.16)] backdrop-blur-md ring-1 ring-border-default/70">
                       <h3 className="font-display font-bold text-text-primary flex items-center gap-2 text-[18px] mb-2">
                         <Heart className="w-5 h-5 text-accent" /> Tại sao chúng mình làm blog này
                       </h3>
