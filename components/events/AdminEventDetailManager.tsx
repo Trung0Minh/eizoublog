@@ -222,6 +222,7 @@ export function AdminEventDetailManager({
   const [removeTarget, setRemoveTarget] = useState<AdminEventRoom | null>(null)
   const [rooms, setRooms] = useState(event.rooms)
   const [shuffleTurns, setShuffleTurns] = useState(0)
+  const [title, setTitle] = useState(event.title)
   const [selectedTagIds, setSelectedTagIds] = useState(
     event.tags?.map(({ tag }) => tag.id) ?? [],
   )
@@ -584,6 +585,37 @@ export function AdminEventDetailManager({
           </div>
         </div>
       </section>
+
+          <section className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6 shadow-sm backdrop-blur-md">
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-[16px] font-bold text-text-primary">
+                  Event name
+                </h2>
+                <p className="mt-1 text-[13px] leading-5 text-text-secondary">
+                  This is also used as the published event article title.
+                </p>
+              </div>
+              <Button
+                aria-label="Save event name"
+                className="h-9 w-9 shrink-0 rounded-full p-0 transition-colors hover:border-accent hover:bg-accent/10 hover:text-accent"
+                disabled={isPending || title.trim().length === 0}
+                onClick={() => void patchEvent({ title: title.trim() })}
+                title="Save event name"
+                type="button"
+                variant="outline"
+              >
+                <Save aria-hidden="true" className="h-4 w-4" />
+              </Button>
+            </div>
+            <Input
+              className="h-11 rounded-[12px] border-border-default/60 bg-background/60 px-4 text-[14px] font-semibold transition-all focus:border-accent focus:bg-background focus:ring-2 focus:ring-accent/20"
+              maxLength={200}
+              onChange={(changeEvent) => setTitle(changeEvent.target.value)}
+              placeholder="Event name"
+              value={title}
+            />
+          </section>
 
           <section className="rounded-[24px] border-[2px] border-border-default bg-subtle-bg/30 p-6 shadow-sm backdrop-blur-md">
             <div className="mb-4 flex items-center justify-between">
