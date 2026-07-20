@@ -51,7 +51,7 @@ vi.mock("@/components/posts/PostReadTracker", () => ({
   ),
 }))
 
-import PostPage, { generateStaticParams } from "@/app/(public)/[slug]/page"
+import PostPage, { dynamic } from "@/app/(public)/[slug]/page"
 
 describe("PostPage analytics", () => {
   afterEach(() => {
@@ -96,11 +96,8 @@ describe("PostPage analytics", () => {
     )
   })
 
-  it("does not query the database during static slug generation", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-
-    await expect(generateStaticParams()).resolves.toEqual([])
-    expect(mocks.postFindMany).not.toHaveBeenCalled()
+  it("renders public post pages dynamically to support request cookies", () => {
+    expect(dynamic).toBe("force-dynamic")
   })
 
   it("treats included event contributors as post authors in comments", async () => {
@@ -179,10 +176,4 @@ describe("PostPage analytics", () => {
     )
   })
 
-  it("also skips static slug generation in production builds", async () => {
-    vi.stubEnv("NODE_ENV", "production")
-
-    await expect(generateStaticParams()).resolves.toEqual([])
-    expect(mocks.postFindMany).not.toHaveBeenCalled()
-  })
 })

@@ -19,11 +19,7 @@ interface PostPageProps {
   params: Promise<{ slug: string }>
 }
 
-export const revalidate = 300
-
-export async function generateStaticParams() {
-  return []
-}
+export const dynamic = "force-dynamic"
 
 export async function generateMetadata({
   params,
