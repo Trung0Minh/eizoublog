@@ -60,9 +60,9 @@ export function PostArticleView({
             </ScrollReveal>
           </header>
 
-          <article className="post-content mx-auto mt-6 w-full font-lora text-[16px] leading-[1.75] text-text-primary md:mt-12 md:text-[17.5px] md:leading-[1.8]">
+          <article className="post-content mx-auto mt-4 w-full font-lora text-[16px] leading-[1.75] text-text-primary md:mt-6 md:text-[17.5px] md:leading-[1.8]">
             <ScrollReveal delay={0.2}>
-              <div className="relative z-30 mb-8 overflow-hidden rounded-[16px] border border-border-default/60 bg-background/90 px-4 py-5 backdrop-blur-sm sm:mb-12 sm:rounded-[8px] sm:bg-subtle-bg/90 sm:p-8 md:p-12">
+              <div className="relative z-30 mb-5 overflow-hidden rounded-[16px] border border-border-default/60 bg-background/90 px-4 py-5 backdrop-blur-sm sm:mb-8 sm:rounded-[8px] sm:bg-subtle-bg/90 sm:p-8 md:p-10">
                 <PostBody content={content} />
               </div>
             </ScrollReveal>
@@ -73,7 +73,7 @@ export function PostArticleView({
               <ScrollReveal delay={0.3}>
                 <AuthorCreditList
                   authors={creditAuthors}
-                  className="mt-12 md:mt-16"
+                  className="mt-6 md:mt-8"
                 />
               </ScrollReveal>
               {children}

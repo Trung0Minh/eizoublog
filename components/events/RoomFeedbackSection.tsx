@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 
 interface CommentAuthor {
+  avatarUrl: string | null
   name: string
   username: string
 }
@@ -94,9 +95,17 @@ export function RoomFeedbackSection({
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-xs font-semibold uppercase text-muted-foreground">
-                      {comment.author.name.charAt(0)}
-                    </div>
+                    {comment.author.avatarUrl ? (
+                      <img
+                        alt={comment.author.name}
+                        className="h-7 w-7 rounded-full border border-border-default object-cover"
+                        src={comment.author.avatarUrl}
+                      />
+                    ) : (
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-xs font-semibold uppercase text-muted-foreground">
+                        {comment.author.name.charAt(0)}
+                      </div>
+                    )}
                     <div>
                       <span className="font-semibold text-text-primary text-sm">
                         {comment.author.name}

@@ -16,6 +16,9 @@ const mocks = vi.hoisted(() => ({
     awardEventRoomComment: {
       count: vi.fn(),
     },
+    post: {
+      findMany: vi.fn(),
+    },
   },
   redirect: vi.fn((path: string) => {
     throw new Error(`redirect:${path}`)
@@ -26,6 +29,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("next/navigation", () => ({
   notFound: mocks.notFound,
   redirect: mocks.redirect,
+  useRouter: () => ({ refresh: vi.fn() }),
 }))
 vi.mock("@/lib/session", () => ({ getCurrentSession: mocks.session }))
 vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }))
@@ -59,6 +63,15 @@ describe("DashboardEventRoomPage (Page A)", () => {
     })
     mocks.prisma.awardEventRoomComment.count.mockResolvedValue(0)
     mocks.prisma.awardEventRoom.findMany.mockResolvedValue([])
+    mocks.prisma.post.findMany.mockResolvedValue([
+      {
+        id: "post-1",
+        status: "DRAFT",
+        title: "My submission",
+        updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+        version: 1,
+      },
+    ])
   })
 
   it("renders the event overview and participant status", async () => {
@@ -85,15 +98,15 @@ describe("DashboardEventRoomPage (Page A)", () => {
     )
 
     expect(screen.getByText("Awards Event")).toBeVisible()
-    expect(screen.getByText("Open")).toHaveClass("text-emerald-700")
-    expect(screen.getByRole("link", { name: "Back to events" })).toHaveAttribute(
+    expect(screen.getByText("Đang mở")).toHaveClass("text-emerald-700")
+    expect(screen.getByRole("link", { name: "Quay lại danh sách sự kiện" })).toHaveAttribute(
       "href",
       "/dashboard/events",
     )
     expect(screen.getByText("Alice")).toBeVisible()
     expect(screen.getByText("My submission")).toBeVisible()
-    expect(screen.getByRole("link", { name: "Edit submission" })).toBeVisible()
-    expect(screen.getByRole("link", { name: "Preview submission" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Nộp bài dự thi" })).toBeVisible()
+    expect(screen.getByRole("link", { name: "Xem trước bài dự thi" })).toHaveAttribute(
       "href",
       "/dashboard/preview/post-1",
     )
@@ -169,7 +182,7 @@ describe("DashboardEventRoomPage (Page A)", () => {
 
     expect(screen.getByText("Mai")).toBeVisible()
     expect(screen.getByText("Shared pick")).toBeVisible()
-    expect(screen.getByRole("link", { name: /View/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Xem bài dự thi của Mai/i })).toHaveAttribute(
       "href",
       "/dashboard/events/event-1/rooms/room-3",
     )

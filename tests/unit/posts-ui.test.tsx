@@ -413,6 +413,26 @@ describe("CoverImageUpload", () => {
     expect(screen.getByText(/Tối đa 20MB/)).toBeVisible()
   })
 
+  it("shows a readable error when the upload endpoint returns plain text", async () => {
+    const user = userEvent.setup()
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response("Request Entity Too Large", { status: 413 }),
+      ),
+    )
+    render(<CoverImageUpload onChange={vi.fn()} value="" />)
+
+    await user.upload(
+      screen.getByLabelText("Tải lên ảnh bìa"),
+      new File(["large"], "cover.gif", { type: "image/gif" }),
+    )
+
+    expect(
+      await screen.findByText("Tệp quá lớn. Vui lòng chọn ảnh dưới 20MB."),
+    ).toBeVisible()
+  })
+
   it("matches the Figma dashed upload target and hover-replace cover state", () => {
     const { rerender } = render(<CoverImageUpload onChange={vi.fn()} value="" />)
 

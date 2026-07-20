@@ -58,8 +58,11 @@ export default async function ContributorsPage({ searchParams }: ContributorsPag
         <div className="text-center mb-16">
           <div className="mb-4 inline-grid grid-cols-[32px_auto_32px] items-center justify-center gap-3">
             <FourPointSparkle className="sparkle-glyph h-8 w-8 text-accent" />
-            <h1 className="text-[36px] md:text-[48px] font-display font-bold text-text-primary">
-              <TextReveal text="Tác giả" className="[&>span:last-child]:mr-0" />
+            <h1 className="text-[36px] md:text-[48px] font-display font-bold">
+              <TextReveal
+                text="Tác giả"
+                className="animate-gradient-x bg-[linear-gradient(105deg,var(--accent)_0%,var(--season-logo-secondary,var(--accent))_48%,var(--accent)_100%)] bg-clip-text text-transparent [&>span:last-child]:mr-0"
+              />
             </h1>
             <FourPointSparkle className="sparkle-glyph h-8 w-8 text-accent" />
           </div>

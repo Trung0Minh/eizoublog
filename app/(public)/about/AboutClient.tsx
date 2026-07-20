@@ -289,18 +289,19 @@ export function AboutClient({
         </div>
       )}
 
-      <main className="flex-1 w-full max-w-[1000px] mx-auto pt-8 md:pt-16 pb-32 px-4 md:px-0">
+      <main className="flex-1 w-full max-w-[1180px] mx-auto pt-8 md:pt-16 pb-32 px-4 md:px-6 xl:px-0">
         <div className={cn("bg-background/90 backdrop-blur-md border-[3px] border-border/60 rounded-[24px] p-6 md:p-12 shadow-xl relative isolate overflow-hidden", isEditing && "border-editorial/40 shadow-editorial/10")}>
           {/* Decorative Corner Flairs */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-bl-[100px] -z-10" />
           <div className="absolute bottom-0 left-0 w-40 h-40 bg-accent/10 rounded-tr-[100px] -z-10" />
 
-          <div className="flex flex-col md:flex-row gap-10 items-center md:items-start">
+          <div className="grid grid-cols-1 gap-10 md:grid-cols-[auto_minmax(0,1fr)] md:items-stretch">
 
-            <ScrollReveal delay={0.2} className="w-full md:w-[40%]">
-              <div className="relative aspect-[3/4] rounded-[16px] overflow-hidden border-4 border-white dark:border-border shadow-lg rotate-[-2deg] hover:rotate-0 transition-transform duration-300 bg-background">
+            <ScrollReveal delay={0.2} className="w-full md:h-full md:w-[min(42vw,430px)] md:self-stretch">
+              <div className="relative h-full rounded-[16px] overflow-hidden border-4 border-white dark:border-border shadow-lg rotate-[-2deg] hover:rotate-0 transition-transform duration-300 bg-background">
                  {isEditing ? (
                    <CoverImageUpload
+                     preserveAspectRatio
                      value={data.coverUrl || ""}
                      onChange={(url) => updateData((currentData) => ({ ...currentData, coverUrl: url }))}
                    />
@@ -308,22 +309,16 @@ export function AboutClient({
                    <img
                       src={data.coverUrl || "https://picsum.photos/seed/animekawaiigirl/800/1000"}
                       alt="Mascot"
-                      className="object-cover w-full h-full"
+                      className="h-auto w-full md:h-full md:w-full md:object-cover"
                       referrerPolicy="no-referrer"
                    />
-                 )}
-                 {!isEditing && (
-                   <div className="absolute -bottom-4 -right-4 bg-accent text-white w-16 h-16 rounded-full flex items-center justify-center font-display font-bold shadow-md rotate-12">
-                     Hi!
-                   </div>
                  )}
               </div>
             </ScrollReveal>
 
-            <div className="w-full md:w-[60%] flex flex-col">
+            <div className="flex w-full min-w-0 flex-col">
               <ScrollReveal>
-                <div className="flex items-center gap-2 mb-4">
-                  <FourPointSparkle className="sparkle-glyph h-6 w-6 shrink-0 text-accent" />
+                <div className="mb-4">
                   {isEditing ? (
                     <input
                       className="w-full border-none bg-transparent text-[32px] md:text-[42px] font-display font-bold text-text-primary leading-tight outline-none focus:ring-2 focus:ring-accent rounded-[8px] placeholder:text-text-tertiary"
@@ -334,7 +329,14 @@ export function AboutClient({
                   ) : (
                     <h1 className="text-[32px] md:text-[42px] font-display font-bold text-text-primary leading-tight">
                       {data.title.includes('Eizou Blog!') ? (
-                        <>Chào mừng bạn đến với <TextReveal className="text-accent" text="Eizou Blog!" /></>
+                        <>
+                          Chào mừng bạn đến với{" "}
+                          <span className="inline-flex items-center gap-2 align-baseline text-accent">
+                            <FourPointSparkle className="sparkle-glyph h-6 w-6 shrink-0" />
+                            <TextReveal className="[&>span:last-child]:mr-0" text="Eizou Blog!" />
+                            <FourPointSparkle className="sparkle-glyph h-6 w-6 shrink-0" />
+                          </span>
+                        </>
                       ) : (
                         <TextReveal className="text-accent" text={data.title} />
                       )}

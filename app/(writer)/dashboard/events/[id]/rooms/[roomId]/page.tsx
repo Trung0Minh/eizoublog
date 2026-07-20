@@ -100,7 +100,7 @@ export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
   const comments = await prisma.awardEventRoomComment.findMany({
     orderBy: { createdAt: "asc" },
     select: {
-      author: { select: { name: true, username: true } },
+      author: { select: { avatarUrl: true, name: true, username: true } },
       authorId: true,
       content: true,
       createdAt: true,

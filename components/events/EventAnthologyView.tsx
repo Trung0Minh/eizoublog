@@ -234,10 +234,10 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
       </div>
 
       <div
-        className="relative z-10 mx-auto grid w-full max-w-7xl gap-12 px-4 pt-12 sm:px-6 lg:grid-cols-[minmax(0,1000px)] lg:justify-start lg:px-10 2xl:max-w-[1360px] 2xl:grid-cols-[minmax(0,1000px)_220px] 2xl:pl-20 2xl:pr-0"
+        className="relative z-10 mx-auto grid w-full max-w-7xl gap-8 px-4 pt-6 sm:px-6 sm:pt-8 lg:grid-cols-[minmax(0,1000px)] lg:justify-start lg:px-10 2xl:max-w-[1360px] 2xl:grid-cols-[minmax(0,1000px)_220px] 2xl:pl-20 2xl:pr-0"
         data-testid="event-content-grid"
       >
-        <div className="min-w-0 space-y-8 sm:space-y-10">
+        <div className="min-w-0 space-y-6 sm:space-y-8">
           {event.coverAlt && (
             <p
               className="break-words pr-1 text-right text-[13px] font-medium italic text-text-tertiary [overflow-wrap:anywhere] md:text-[14px]"
@@ -273,7 +273,7 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
               No submitted entries are included yet.
             </div>
           ) : (
-            <div className="space-y-8 sm:space-y-10">
+            <div className="space-y-6 sm:space-y-8">
               {rooms.map((room) => (
                 <section
                   className="relative scroll-mt-24 rounded-[24px] border border-border-default/80 bg-background/90 p-5 shadow-[0_18px_60px_rgba(31,24,38,0.08)] backdrop-blur-xl dark:bg-background/80 sm:p-8 md:p-10"
@@ -326,7 +326,7 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
 
       {rooms.length > 0 && (
         <div
-          className="mx-auto grid w-full max-w-7xl gap-12 px-4 pt-12 sm:px-6 lg:grid-cols-[minmax(0,1000px)] lg:justify-start lg:px-10 2xl:max-w-[1360px] 2xl:grid-cols-[minmax(0,1000px)_220px] 2xl:pl-20 2xl:pr-0"
+          className="mx-auto grid w-full max-w-7xl gap-8 px-4 pt-8 sm:px-6 lg:grid-cols-[minmax(0,1000px)] lg:justify-start lg:px-10 2xl:max-w-[1360px] 2xl:grid-cols-[minmax(0,1000px)_220px] 2xl:pl-20 2xl:pr-0"
           data-testid="event-author-credits"
         >
           <div className="min-w-0 font-sans text-text-primary">

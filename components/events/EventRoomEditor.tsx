@@ -56,7 +56,14 @@ function getApiError(value: unknown) {
     return value.error
   }
 
-  return "Something went wrong"
+  return "Đã có lỗi xảy ra"
+}
+
+const postStatusLabel: Record<PostStatus, string> = {
+  ARCHIVED: "Đã lưu trữ",
+  DRAFT: "Bản nháp",
+  PUBLISHED: "Đã xuất bản",
+  REMOVED: "Đã gỡ",
 }
 
 export function EventRoomEditor({
@@ -200,7 +207,7 @@ export function EventRoomEditor({
                 <option value="">Chọn một bài viết nháp hoặc đã xuất bản</option>
                 {eligiblePosts.map((post) => (
                   <option key={post.id} value={post.id}>
-                    {post.title} ({post.status})
+                    {post.title} ({postStatusLabel[post.status]})
                   </option>
                 ))}
               </select>

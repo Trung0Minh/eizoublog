@@ -80,7 +80,7 @@ export async function GET(
     const comments = await prisma.awardEventRoomComment.findMany({
       orderBy: { createdAt: "asc" },
       select: {
-        author: { select: { name: true, username: true } },
+        author: { select: { avatarUrl: true, name: true, username: true } },
         authorId: true,
         content: true,
         isPrivate: true,
@@ -143,7 +143,7 @@ export async function POST(
         roomId,
       },
       select: {
-        author: { select: { name: true, username: true } },
+        author: { select: { avatarUrl: true, name: true, username: true } },
         content: true,
         isPrivate: true,
         createdAt: true,

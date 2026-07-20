@@ -23,6 +23,26 @@ function getApiError(value: unknown) {
   return "Lỗi tải lên ảnh bìa"
 }
 
+function getResponseTextError(text: string, status: number) {
+  const trimmed = text.trim()
+
+  if (status === 413 || /^request entity too large/i.test(trimmed)) {
+    return "Tệp quá lớn. Vui lòng chọn ảnh dưới 20MB."
+  }
+
+  return trimmed || "Lỗi tải lên ảnh bìa"
+}
+
+function parseJsonResponse(text: string): unknown {
+  if (!text.trim()) return null
+
+  try {
+    return JSON.parse(text) as unknown
+  } catch {
+    return null
+  }
+}
+
 function getUploadedUrl(value: unknown) {
   if (
     typeof value === "object" &&
@@ -63,10 +83,13 @@ export function CoverImageUpload({
         body: form,
         method: "POST",
       })
-      const result: unknown = await response.json()
+      const responseText = await response.text()
+      const result = parseJsonResponse(responseText)
 
       if (!response.ok) {
-        throw new Error(getApiError(result))
+        throw new Error(
+          result ? getApiError(result) : getResponseTextError(responseText, response.status),
+        )
       }
 
       const uploadedUrl = getUploadedUrl(result)
