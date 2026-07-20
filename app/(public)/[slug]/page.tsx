@@ -8,7 +8,6 @@ import { PostJsonLd } from "@/components/posts/PostJsonLd"
 import { PostReadTracker } from "@/components/posts/PostReadTracker"
 import { ReadingProgress } from "@/components/posts/ReadingProgress"
 import { ScrollReveal } from "@/components/ui/ScrollReveal"
-import { prisma } from "@/lib/prisma"
 import {
   getCachedPublishedPost,
   type PublishedPostDetail,
@@ -23,18 +22,7 @@ interface PostPageProps {
 export const revalidate = 300
 
 export async function generateStaticParams() {
-  if (process.env.NODE_ENV !== "production") {
-    return []
-  }
-
-  const posts: { slug: string }[] = await prisma.post.findMany({
-    orderBy: [{ publishedAt: "desc" }, { updatedAt: "desc" }],
-    select: { slug: true },
-    take: 20,
-    where: { status: "PUBLISHED" },
-  })
-
-  return posts.map((post) => ({ slug: post.slug }))
+  return []
 }
 
 export async function generateMetadata({

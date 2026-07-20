@@ -96,7 +96,7 @@ describe("PostPage analytics", () => {
     )
   })
 
-  it("skips static slug generation outside production", async () => {
+  it("does not query the database during static slug generation", async () => {
     vi.stubEnv("NODE_ENV", "development")
 
     await expect(generateStaticParams()).resolves.toEqual([])
@@ -179,22 +179,10 @@ describe("PostPage analytics", () => {
     )
   })
 
-  it("pre-renders the latest published post slugs in production", async () => {
+  it("also skips static slug generation in production builds", async () => {
     vi.stubEnv("NODE_ENV", "production")
-    mocks.postFindMany.mockResolvedValue([
-      { slug: "frieren-memory" },
-      { slug: "layout-of-silence" },
-    ])
 
-    await expect(generateStaticParams()).resolves.toEqual([
-      { slug: "frieren-memory" },
-      { slug: "layout-of-silence" },
-    ])
-    expect(mocks.postFindMany).toHaveBeenCalledWith({
-      orderBy: [{ publishedAt: "desc" }, { updatedAt: "desc" }],
-      select: { slug: true },
-      take: 20,
-      where: { status: "PUBLISHED" },
-    })
+    await expect(generateStaticParams()).resolves.toEqual([])
+    expect(mocks.postFindMany).not.toHaveBeenCalled()
   })
 })

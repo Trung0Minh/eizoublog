@@ -367,16 +367,11 @@ describe("CoverImageUpload", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockImplementation((url: string | URL) => {
-        if (url === "/api/upload/presigned") {
+        if (url === "/api/upload") {
           return Promise.resolve(
             new Response(
               JSON.stringify({
-                data: {
-                  files: [{
-                    publicUrl: "https://cdn.example.com/covers/cover.jpg",
-                    uploadUrl: "https://r2.example.com/covers/cover.jpg",
-                  }],
-                },
+                data: { url: "https://cdn.example.com/covers/cover.jpg" },
               }),
               { status: 201 },
             ),
@@ -403,23 +398,13 @@ describe("CoverImageUpload", () => {
         "https://cdn.example.com/covers/cover.jpg",
       )
     })
-    expect(fetch).toHaveBeenNthCalledWith(1, "/api/upload/presigned", {
-      body: JSON.stringify({
-        files: [{ name: "cover.jpg", size: 3, type: "image/jpeg" }],
-        folder: "covers",
-      }),
-      headers: { "Content-Type": "application/json" },
+    expect(fetch).toHaveBeenNthCalledWith(1, "/api/upload", {
+      body: expect.any(FormData),
       method: "POST",
     })
-    expect(fetch).toHaveBeenNthCalledWith(
-      2,
-      "https://r2.example.com/covers/cover.jpg",
-      {
-        body: expect.any(File),
-        headers: { "Content-Type": "image/jpeg" },
-        method: "PUT",
-      },
-    )
+    const form = vi.mocked(fetch).mock.calls[0]?.[1]?.body as FormData
+    expect(form.get("folder")).toBe("covers")
+    expect(form.get("file")).toBeInstanceOf(File)
   })
 
   it("advertises the 20 MB cover limit", () => {
@@ -449,6 +434,26 @@ describe("CoverImageUpload", () => {
       "w-full",
     )
     expect(screen.getByRole("button", { name: "Thay đổi ảnh bìa" })).toBeVisible()
+  })
+
+  it("can preview uploaded covers without forcing a crop aspect ratio", () => {
+    const { container } = render(
+      <CoverImageUpload
+        onChange={vi.fn()}
+        preserveAspectRatio
+        value="https://cdn.example.com/covers/portrait.jpg"
+      />,
+    )
+
+    const image = screen.getByRole("img", { name: "Ảnh bìa đã chọn" })
+
+    expect(image).toHaveClass("h-auto", "w-full")
+    expect(image).not.toHaveClass("h-full")
+    expect(image.closest(".group")).not.toHaveClass("aspect-video")
+    expect(container.querySelector('[aria-label="Cắt ảnh bìa"]')).toBeNull()
+    expect(
+      container.querySelector('[aria-label="Mở công cụ cắt ảnh"]'),
+    ).toBeNull()
   })
 })
 

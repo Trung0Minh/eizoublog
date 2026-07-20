@@ -509,10 +509,11 @@ export function IntroToSakugaClient({
             </div>
 
             {/* Mascot Hero Card */}
-            <ScrollReveal delay={0.2} className="w-full max-w-[600px] mx-auto mb-8">
-              <div className="relative aspect-[16/10] rounded-[16px] overflow-hidden border-4 border-white dark:border-border shadow-lg bg-background">
+            <ScrollReveal delay={0.2} className="w-full max-w-none mx-auto mb-8">
+              <div className="relative rounded-[16px] overflow-hidden border-4 border-white dark:border-border shadow-lg bg-background">
                 {isEditing ? (
                   <CoverImageUpload
+                    preserveAspectRatio
                     value={data.coverUrl || ""}
                     onChange={(url) => updateData(d => ({ ...d, coverUrl: url }))}
                   />
@@ -520,14 +521,9 @@ export function IntroToSakugaClient({
                   <img
                     src={data.coverUrl || "https://picsum.photos/seed/sakugamascot/800/500"}
                     alt="Mascot"
-                    className="object-cover w-full h-full"
+                    className="h-auto w-full"
                     referrerPolicy="no-referrer"
                   />
-                )}
-                {!isEditing && (
-                  <div className="absolute -bottom-4 -right-4 bg-accent text-white w-16 h-16 rounded-full flex items-center justify-center font-display font-bold shadow-md rotate-12">
-                    Start!
-                  </div>
                 )}
               </div>
             </ScrollReveal>

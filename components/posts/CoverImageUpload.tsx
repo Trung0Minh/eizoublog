@@ -5,6 +5,7 @@ import { Camera, Crop, ImagePlus, Loader2, X } from "lucide-react"
 
 interface CoverImageUploadProps {
   onChange: (url: string) => void
+  preserveAspectRatio?: boolean
   responsiveCrop?: boolean
   value: string
 }
@@ -22,31 +23,17 @@ function getApiError(value: unknown) {
   return "Lỗi tải lên ảnh bìa"
 }
 
-function getPresignedUpload(value: unknown) {
+function getUploadedUrl(value: unknown) {
   if (
     typeof value === "object" &&
     value !== null &&
     "data" in value &&
     typeof value.data === "object" &&
     value.data !== null &&
-    "files" in value.data &&
-    Array.isArray(value.data.files)
+    "url" in value.data &&
+    typeof value.data.url === "string"
   ) {
-    const upload = value.data.files[0]
-
-    if (
-      typeof upload === "object" &&
-      upload !== null &&
-      "publicUrl" in upload &&
-      typeof upload.publicUrl === "string" &&
-      "uploadUrl" in upload &&
-      typeof upload.uploadUrl === "string"
-    ) {
-      return {
-        publicUrl: upload.publicUrl,
-        uploadUrl: upload.uploadUrl,
-      }
-    }
+    return value.data.url
   }
 
   return null
@@ -54,6 +41,7 @@ function getPresignedUpload(value: unknown) {
 
 export function CoverImageUpload({
   onChange,
+  preserveAspectRatio = false,
   responsiveCrop = false,
   value,
 }: CoverImageUploadProps) {
@@ -67,12 +55,12 @@ export function CoverImageUpload({
     setUploading(true)
 
     try {
-      const response = await fetch("/api/upload/presigned", {
-        body: JSON.stringify({
-          files: [{ name: file.name, size: file.size, type: file.type }],
-          folder: "covers",
-        }),
-        headers: { "Content-Type": "application/json" },
+      const form = new FormData()
+      form.set("folder", "covers")
+      form.append("file", file)
+
+      const response = await fetch("/api/upload", {
+        body: form,
         method: "POST",
       })
       const result: unknown = await response.json()
@@ -81,23 +69,13 @@ export function CoverImageUpload({
         throw new Error(getApiError(result))
       }
 
-      const upload = getPresignedUpload(result)
+      const uploadedUrl = getUploadedUrl(result)
 
-      if (!upload) {
+      if (!uploadedUrl) {
         throw new Error("Phản hồi tải lên không bao gồm URL hợp lệ")
       }
 
-      const uploadResponse = await fetch(upload.uploadUrl, {
-        body: file,
-        headers: { "Content-Type": file.type },
-        method: "PUT",
-      })
-
-      if (!uploadResponse.ok) {
-        throw new Error("Không thể tải ảnh lên kho lưu trữ")
-      }
-
-      onChange(upload.publicUrl)
+      onChange(uploadedUrl)
     } catch (uploadError) {
       setError(
         uploadError instanceof Error
@@ -120,26 +98,44 @@ export function CoverImageUpload({
 
       {value ? (
         <div className="space-y-3">
-          <div className="group relative aspect-video w-full overflow-hidden rounded-[8px] border border-border-default bg-subtle-bg">
-            <div className="absolute inset-0 overflow-hidden">
+          <div
+            className={
+              preserveAspectRatio
+                ? "group relative w-full overflow-hidden rounded-[8px] border border-border-default bg-subtle-bg"
+                : "group relative aspect-video w-full overflow-hidden rounded-[8px] border border-border-default bg-subtle-bg"
+            }
+          >
+            <div
+              className={
+                preserveAspectRatio
+                  ? "relative overflow-hidden"
+                  : "absolute inset-0 overflow-hidden"
+              }
+            >
               <img
                 alt="Ảnh bìa đã chọn"
-                className="h-full w-full"
-                style={getCoverStyle(value)}
+                className={
+                  preserveAspectRatio ? "h-auto w-full" : "h-full w-full"
+                }
+                style={
+                  preserveAspectRatio ? undefined : getCoverStyle(value)
+                }
                 src={value.split("?")[0]}
               />
             </div>
             <div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/10 pointer-events-none" />
             
             <div className="absolute right-2 top-2 z-10 flex gap-2 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
-              <button
-                aria-label="Cắt ảnh bìa"
-                className="flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black"
-                onClick={(e) => { e.stopPropagation(); setIsCropping(true); }}
-                type="button"
-              >
-                <Crop aria-hidden="true" className="h-4 w-4" />
-              </button>
+              {!preserveAspectRatio && (
+                <button
+                  aria-label="Cắt ảnh bìa"
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black"
+                  onClick={(e) => { e.stopPropagation(); setIsCropping(true); }}
+                  type="button"
+                >
+                  <Crop aria-hidden="true" className="h-4 w-4" />
+                </button>
+              )}
               <button
                 aria-label="Thay đổi ảnh bìa"
                 className="flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black"
@@ -158,16 +154,20 @@ export function CoverImageUpload({
               </button>
             </div>
             
-            <button
-              className="absolute inset-0 z-0 h-full w-full cursor-pointer opacity-0"
-              onClick={() => setIsCropping(true)}
-              type="button"
-              aria-label="Mở công cụ cắt ảnh"
-            />
+            {!preserveAspectRatio && (
+              <button
+                className="absolute inset-0 z-0 h-full w-full cursor-pointer opacity-0"
+                onClick={() => setIsCropping(true)}
+                type="button"
+                aria-label="Mở công cụ cắt ảnh"
+              />
+            )}
             
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded bg-black/50 px-2 py-1 text-[10px] text-white opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 pointer-events-none">
-              Nhấn để căn chỉnh ảnh
-            </div>
+            {!preserveAspectRatio && (
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded bg-black/50 px-2 py-1 text-[10px] text-white opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 pointer-events-none">
+                Nhấn để căn chỉnh ảnh
+              </div>
+            )}
           </div>
         </div>
           
