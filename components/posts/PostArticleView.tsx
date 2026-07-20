@@ -33,7 +33,7 @@ export function PostArticleView({
 
       {post.coverUrl && (
         <div className="pointer-events-none relative z-0 h-0 w-full">
-          <div className="absolute left-0 right-0 top-0 h-32 bg-gradient-to-b from-background to-transparent md:h-48 lg:h-64" />
+          <div className="absolute left-0 right-0 top-[-1px] h-40 bg-[linear-gradient(to_bottom,hsl(var(--background))_0%,hsl(var(--background)/0.86)_24%,hsl(var(--background)/0.42)_62%,transparent_100%)] md:h-56 lg:h-72" />
         </div>
       )}
 

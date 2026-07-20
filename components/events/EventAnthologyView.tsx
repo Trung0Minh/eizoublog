@@ -1,6 +1,7 @@
 import type { JSONContent } from "@tiptap/react"
 import Link from "next/link"
 
+import { EventCoverParallax } from "@/components/events/EventCoverParallax"
 import { EventAnthologyTableOfContents } from "@/components/events/EventAnthologyTableOfContents"
 import { AuthorCreditList } from "@/components/posts/AuthorCreditList"
 import { PostBody } from "@/components/posts/PostBody"
@@ -177,9 +178,8 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
         )}
       >
         {event.coverUrl && (
-          <img
+          <EventCoverParallax
             alt={event.coverAlt || ""}
-            className="absolute inset-0 -z-20 h-full w-full object-cover"
             src={event.coverUrl}
           />
         )}
@@ -188,7 +188,7 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
           data-testid="event-cover-overlay"
         />
         <div
-          className="absolute inset-0 -z-10 bg-gradient-to-t from-background via-background/60 to-transparent"
+          className="absolute inset-x-0 bottom-0 top-[18%] -z-10 bg-[linear-gradient(to_top,hsl(var(--background))_0%,hsl(var(--background)/0.92)_14%,hsl(var(--background)/0.68)_36%,hsl(var(--background)/0.28)_64%,transparent_100%)]"
           data-testid="event-cover-bottom-fade"
         />
         <div className="mx-auto flex min-h-[440px] w-full max-w-7xl items-end px-4 py-12 sm:min-h-[56vh] sm:px-6 md:py-20 lg:min-h-[64vh] lg:px-10">
@@ -228,7 +228,7 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
 
       <div className="pointer-events-none relative z-0 h-0">
         <div
-          className="absolute left-0 right-0 top-0 h-32 bg-gradient-to-b from-background to-transparent md:h-48 lg:h-64"
+          className="absolute left-0 right-0 top-[-1px] h-40 bg-[linear-gradient(to_bottom,hsl(var(--background))_0%,hsl(var(--background)/0.86)_24%,hsl(var(--background)/0.42)_62%,transparent_100%)] md:h-56 lg:h-72"
           data-testid="event-hero-transition"
         />
       </div>

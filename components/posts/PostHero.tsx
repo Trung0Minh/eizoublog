@@ -49,7 +49,7 @@ export function PostHero({ post, authorUsernames }: PostHeroProps) {
         className={cn(
           "flex flex-col",
           post.coverUrl
-            ? "absolute inset-0 justify-end bg-gradient-to-t from-background via-background/60 to-transparent pb-8 md:pb-16"
+            ? "absolute inset-0 justify-end bg-[linear-gradient(to_top,hsl(var(--background))_0%,hsl(var(--background)/0.92)_14%,hsl(var(--background)/0.68)_36%,hsl(var(--background)/0.28)_64%,transparent_100%)] pb-8 md:pb-16"
             : "relative justify-center py-10 md:py-12 lg:py-14",
         )}
         data-testid="post-hero-content"
