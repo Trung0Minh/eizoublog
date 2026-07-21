@@ -261,6 +261,7 @@ export const publishedPostDetailSelect = {
   coverAlt: true,
   coverUrl: true,
   excerpt: true,
+  excerptContent: true,
   finalAwardEvent: {
     select: {
       category: { select: { name: true, slug: true } },

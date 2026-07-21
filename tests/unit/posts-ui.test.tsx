@@ -54,8 +54,10 @@ vi.mock("@/components/editor/TiptapEditor", () => ({
   TiptapEditor: ({
     children,
     editable,
+    ariaLabel,
     onChange,
   }: {
+    ariaLabel?: string
     children?: ReactNode
     editable?: boolean
     onChange?: (json: Record<string, unknown>, text: string) => void
@@ -67,7 +69,7 @@ vi.mock("@/components/editor/TiptapEditor", () => ({
         onClick={() => onChange?.({ content: [], type: "doc" }, "Plain body")}
         type="button"
       >
-        Mock editor
+        {ariaLabel ? `Mock ${ariaLabel}` : "Mock editor"}
       </button>
     </div>
   ),
@@ -596,6 +598,7 @@ describe("PostEditor", () => {
 
     await user.type(screen.getByLabelText("Tiêu đề"), "New Post")
     await user.click(screen.getByRole("button", { name: "Mock editor" }))
+    await user.click(screen.getByRole("button", { name: "Cài đặt bài viết" }))
     fireEvent.keyDown(screen.getByLabelText("Danh mục"), { key: "ArrowDown" })
     await user.click(screen.getByRole("option", { name: "Production" }))
     fireEvent.keyDown(screen.getByLabelText("Thêm đồng tác giả"), { key: "ArrowDown" })
@@ -669,10 +672,13 @@ describe("PostEditor", () => {
     )
     expect(screen.getByTestId("editor-writing-surface")).toHaveClass(
       "rounded-[8px]",
-      "sm:border",
+      "border",
+      "bg-background/45",
+      "backdrop-blur-xl",
     )
-    expect(screen.getByLabelText("Danh mục")).toBeVisible()
-    expect(screen.getByLabelText("Thêm đồng tác giả")).toBeVisible()
+    await user.click(screen.getByRole("button", { name: "Cài đặt bài viết" }))
+    expect(screen.getByLabelText("Danh mục")).toBeInTheDocument()
+    expect(screen.getByLabelText("Thêm đồng tác giả")).toBeInTheDocument()
     expect(screen.getByRole("complementary", { name: "Cài đặt bài viết" })).toHaveClass(
       "border-l",
       "right-0",
@@ -988,6 +994,7 @@ describe("PostEditor", () => {
     )
 
     await user.type(screen.getByLabelText("Tiêu đề"), "Shared Draft")
+    await user.click(screen.getByRole("button", { name: "Cài đặt bài viết" }))
     fireEvent.keyDown(screen.getByLabelText("Thêm đồng tác giả"), { key: "ArrowDown" })
     await user.click(screen.getByRole("option", { name: "Ken" }))
 

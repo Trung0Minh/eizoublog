@@ -45,28 +45,40 @@ const lowlight = createLowlight(common)
 interface TiptapEditorProps {
   children?: React.ReactNode
   content?: JSONContent
+  editorClassName?: string
   editable?: boolean
   onChange?: (json: JSONContent, text: string) => void
   onEditorReady?: (editor: Editor | null) => void
+  onFocus?: (editor: Editor) => void
   placeholder?: string
   ariaLabel?: string
   mode?: "compact" | "default" | "profile"
+  showFooterStats?: boolean
+  showToolbar?: boolean
+  spellcheckEnabled?: boolean
 }
 
 export function TiptapEditor({
   children,
   content,
+  editorClassName,
   editable = true,
   onChange,
   onEditorReady,
+  onFocus,
   placeholder = "Bắt đầu viết bài...",
   ariaLabel,
   mode = "default",
+  showFooterStats = true,
+  showToolbar = true,
+  spellcheckEnabled: controlledSpellcheckEnabled,
 }: TiptapEditorProps) {
-  const [spellcheckEnabled, setSpellcheckEnabled] = useState(false)
+  const [localSpellcheckEnabled, setLocalSpellcheckEnabled] = useState(false)
   const [pasteUploadProgress, setPasteUploadProgress] = useState<number | null>(null)
   const [isLinkModifierPressed, setIsLinkModifierPressed] = useState(false)
   const editorRef = useRef<Editor | null>(null)
+  const spellcheckEnabled =
+    controlledSpellcheckEnabled ?? localSpellcheckEnabled
   const normalizedContent = useMemo(
     () => (content ? normalizeEditorContent(content) : ""),
     [content],
@@ -78,9 +90,10 @@ export function TiptapEditor({
     editorProps: {
       attributes: {
         class: editable
-          ? mode === "compact"
-            ? "prose-editor min-h-[120px] focus:outline-none"
-            : "prose-editor min-h-[420px] focus:outline-none"
+          ? editorClassName ??
+            (mode === "compact"
+              ? "prose-editor min-h-[120px] focus:outline-none"
+              : "prose-editor min-h-[420px] focus:outline-none")
           : "prose prose-lg dark:prose-invert max-w-none focus:outline-none",
         ...(ariaLabel && { "aria-label": ariaLabel }),
         spellcheck: "false",
@@ -255,12 +268,12 @@ export function TiptapEditor({
           : "relative w-full"
       }
     >
-      {isReady && editable && (
+      {isReady && editable && showToolbar && (
         <>
           <EditorToolbar
             editor={editor!}
             onToggleSpellcheck={() =>
-              setSpellcheckEnabled((current) => !current)
+              setLocalSpellcheckEnabled((current) => !current)
             }
             spellcheckEnabled={spellcheckEnabled}
             mode={mode}
@@ -281,12 +294,15 @@ export function TiptapEditor({
       {children}
 
       {isReady ? (
-        <EditorContent editor={editor!} />
+        <EditorContent
+          editor={editor!}
+          onFocusCapture={() => onFocus?.(editor!)}
+        />
       ) : (
         <div className="prose-editor min-h-[420px]" />
       )}
 
-      {isReady && editable && mode !== "compact" && (
+      {isReady && editable && showFooterStats && mode !== "compact" && (
         <div className="mt-2 flex items-center justify-end gap-3 text-xs text-text-tertiary">
           <span>{words.toLocaleString()} từ</span>
           <span>{editor!.storage.characterCount.characters().toLocaleString()} ký tự</span>

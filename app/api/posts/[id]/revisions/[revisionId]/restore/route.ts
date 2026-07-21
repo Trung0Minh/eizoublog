@@ -19,6 +19,7 @@ const snapshotSchema = z.object({
   coverUrl: z.string().nullable().optional(),
   draftVisibility: z.enum(["PRIVATE", "CO_AUTHORS"]).optional(),
   excerpt: z.string().nullable().optional(),
+  excerptContent: z.record(z.string(), z.unknown()).nullable().optional(),
   tagIds: z.array(z.string()).optional(),
   title: z.string().trim().min(1).max(200),
 })
@@ -86,6 +87,11 @@ export async function POST(
           coverUrl: snapshot.coverUrl ?? null,
           draftVisibility: snapshot.draftVisibility ?? "PRIVATE",
           excerpt: snapshot.excerpt ?? null,
+          excerptContent:
+            snapshot.excerptContent === null ||
+            snapshot.excerptContent === undefined
+              ? Prisma.JsonNull
+              : (snapshot.excerptContent as Prisma.InputJsonObject),
           lastSavedAt: new Date(),
           moderationLockedAt: null,
           publishedAt: null,

@@ -37,6 +37,7 @@ interface EditorTopBarProps {
   isPublished: boolean
   pendingAction?: PendingAction
   previewHref?: string | null
+  canPublish?: boolean
   onToggleSettings?: () => void
   onExport?: () => void
   onHistory?: () => void
@@ -55,6 +56,7 @@ export function EditorTopBar({
   isPublished,
   pendingAction = null,
   previewHref,
+  canPublish = true,
   onToggleSettings,
   onExport,
   onHistory,
@@ -148,23 +150,25 @@ export function EditorTopBar({
       >
         {isDraftPending ? <ButtonSpinner /> : <Save aria-hidden="true" className="h-4 w-4" />}
       </Button>
-      <Button
-        aria-label={publishLabel}
-        className="h-9 w-9 rounded-full bg-accent p-0 text-white shadow-sm hover:bg-accent/90"
-        disabled={actionsDisabled}
-        onClick={onPublish}
-        size="icon"
-        title={publishLabel}
-        type="button"
-      >
-        {isPublishPending ? (
-          <ButtonSpinner />
-        ) : isPublished ? (
-          <RefreshCw aria-hidden="true" className="h-4 w-4" />
-        ) : (
-          <Send aria-hidden="true" className="h-4 w-4" />
-        )}
-      </Button>
+      {canPublish && (
+        <Button
+          aria-label={publishLabel}
+          className="h-9 w-9 rounded-full bg-accent p-0 text-white shadow-sm hover:bg-accent/90"
+          disabled={actionsDisabled}
+          onClick={onPublish}
+          size="icon"
+          title={publishLabel}
+          type="button"
+        >
+          {isPublishPending ? (
+            <ButtonSpinner />
+          ) : isPublished ? (
+            <RefreshCw aria-hidden="true" className="h-4 w-4" />
+          ) : (
+            <Send aria-hidden="true" className="h-4 w-4" />
+          )}
+        </Button>
+      )}
     </aside>
   )
 }

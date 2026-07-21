@@ -14,6 +14,7 @@ export interface PostHeroPost {
   coverAlt: string | null
   coverUrl: string | null
   excerpt: string | null
+  excerptContent?: unknown
   publishedAt: Date | string | null
   tags: { tag: { name: string; slug: string } }[]
   title: string

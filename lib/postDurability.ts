@@ -15,6 +15,7 @@ export interface PostRecoverySnapshot {
   coverUrl: string | null
   draftVisibility: "PRIVATE" | "CO_AUTHORS"
   excerpt: string | null
+  excerptContent: Prisma.JsonValue | null
   publishedAt: string | null
   removedAt: string | null
   removedFromStatus: "DRAFT" | "PUBLISHED" | "ARCHIVED" | "REMOVED" | null

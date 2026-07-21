@@ -441,12 +441,11 @@
 
   }
 
-  /* Keep seasonal artwork atmospheric while making reading surfaces solid on phones. */
+  /* Keep seasonal artwork atmospheric while making non-editor surfaces solid on phones. */
   @media (max-width: 767px) {
     .admin-workspace,
     .admin-workspace [class*="bg-background/"],
     .admin-workspace [class*="bg-subtle-bg/"],
-    body [data-editor-surface="true"],
     body [data-mobile-surface="true"] {
       background-color: hsl(var(--background) / 0.94) !important;
       backdrop-filter: none !important;
@@ -470,8 +469,42 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+  .editor-toolbar-frost {
+    background-color: transparent;
+    isolation: isolate;
+    position: relative;
+  }
 
+  .editor-toolbar-frost::before {
+    -webkit-backdrop-filter: blur(96px) saturate(220%) brightness(1.12);
+    backdrop-filter: blur(96px) saturate(220%) brightness(1.12);
+    background: hsl(var(--background) / 0.68);
+    border-radius: inherit;
+    content: "";
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+    z-index: 0;
+  }
 
+  .editor-toolbar-frost::after {
+    background: linear-gradient(
+      to bottom,
+      hsl(var(--background) / 0.82),
+      hsl(var(--background) / 0.52)
+    );
+    border-radius: inherit;
+    content: "";
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+    z-index: 0;
+  }
+
+  .editor-toolbar-frost > * {
+    position: relative;
+    z-index: 1;
+  }
 
   .prose-editor {
     color: var(--text-primary);

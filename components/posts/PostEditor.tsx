@@ -1,10 +1,12 @@
 "use client"
 
+import type { Editor } from "@tiptap/react"
 import { X, ChevronLeft } from "lucide-react"
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
 import { EditorTopBar } from "@/components/editor/EditorTopBar"
+import { EditorToolbar } from "@/components/editor/EditorToolbar"
 import {
   TiptapEditor,
   type JSONContent,
@@ -17,7 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { CoverImageUpload } from "@/components/posts/CoverImageUpload"
 import { TagInput, type TagOption } from "@/components/posts/TagInput"
@@ -59,6 +60,7 @@ interface InitialPostData {
   coverUrl: string | null
   draftVisibility?: "PRIVATE" | "CO_AUTHORS"
   excerpt: string | null
+  excerptContent?: JSONContent | null
   authorId?: string
   id: string
   status: "DRAFT" | "PUBLISHED"
@@ -68,6 +70,7 @@ interface InitialPostData {
 }
 
 interface PostEditorProps {
+  canPublish?: boolean
   canRestoreRevisions?: boolean
   categories: CategoryOption[]
   currentUserId: string
@@ -103,6 +106,7 @@ interface RecoveryDraftPayload {
   coverAlt: string
   coverUrl: string
   excerpt: string
+  excerptContent: JSONContent
   tags: TagOption[]
   title: string
 }
@@ -150,7 +154,36 @@ const emptyDoc: JSONContent = {
   type: "doc",
 }
 
+const desktopSettingsQuery = "(min-width: 1024px)"
+
+function subscribeDesktopSettings(callback: () => void) {
+  if (
+    typeof window === "undefined" ||
+    typeof window.matchMedia !== "function"
+  ) {
+    return () => undefined
+  }
+
+  const mediaQuery = window.matchMedia(desktopSettingsQuery)
+  mediaQuery.addEventListener("change", callback)
+
+  return () => mediaQuery.removeEventListener("change", callback)
+}
+
+function getDesktopSettingsSnapshot() {
+  return (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia(desktopSettingsQuery).matches
+  )
+}
+
+function getServerDesktopSettingsSnapshot() {
+  return false
+}
+
 export function PostEditor({
+  canPublish = true,
   canRestoreRevisions = false,
   categories,
   currentUserId,
@@ -172,16 +205,23 @@ export function PostEditor({
   const [coverUrl, setCoverUrl] = useState(initialData?.coverUrl ?? "")
   const [error, setError] = useState("")
   const [excerpt, setExcerpt] = useState(initialData?.excerpt ?? "")
-  const excerptRef = useRef<HTMLTextAreaElement>(null)
-
-  useEffect(() => {
-    const textarea = excerptRef.current
-    if (textarea) {
-      textarea.style.height = "auto"
-      textarea.style.height = `${textarea.scrollHeight}px`
-    }
-  }, [excerpt])
-  const [isSettingsOpen, setIsSettingsOpen] = useState(true)
+  const [excerptContent, setExcerptContent] = useState<JSONContent>(
+    initialData?.excerptContent ?? emptyDoc,
+  )
+  const [activeEditor, setActiveEditor] = useState<Editor | null>(null)
+  const [spellcheckEnabled, setSpellcheckEnabled] = useState(false)
+  const isDesktopSettingsDefault = useSyncExternalStore(
+    subscribeDesktopSettings,
+    getDesktopSettingsSnapshot,
+    getServerDesktopSettingsSnapshot,
+  )
+  const [settingsPreference, setSettingsPreference] = useState<
+    "auto" | "closed" | "open"
+  >("auto")
+  const isSettingsOpen =
+    settingsPreference === "auto"
+      ? isDesktopSettingsDefault
+      : settingsPreference === "open"
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
   const [savingAction, setSavingAction] = useState<"draft" | "publish" | null>(null)
   const [postId, setPostId] = useState<string | null>(initialData?.id ?? null)
@@ -191,6 +231,7 @@ export function PostEditor({
     initialData?.tags ?? initialTags,
   )
   const [title, setTitle] = useState(initialData?.title ?? "")
+  const titleTextareaRef = useRef<HTMLTextAreaElement>(null)
   const coAuthorStatusById = new Map(
     initialData?.coAuthors?.map((coAuthor) => [
       coAuthor.userId,
@@ -206,6 +247,7 @@ export function PostEditor({
     coverAlt,
     coverUrl,
     excerpt,
+    excerptContent,
     tagIds: selectedTags.map((tag) => tag.id),
     title,
   })
@@ -221,6 +263,15 @@ export function PostEditor({
   const canSave = title.trim().length > 0
   const hasInitialData = initialData !== undefined
   const initialExcerpt = initialData?.excerpt
+
+  useEffect(() => {
+    const textarea = titleTextareaRef.current
+    if (!textarea) return
+
+    textarea.style.height = "auto"
+    textarea.style.height = `${textarea.scrollHeight + 8}px`
+  }, [title])
+
   useEffect(() => {
     autosaveDraftRef.current = {
       categoryId,
@@ -230,10 +281,11 @@ export function PostEditor({
       coverAlt,
       coverUrl,
       excerpt,
+      excerptContent,
       tagIds: selectedTags.map((tag) => tag.id),
       title,
     }
-  }, [categoryId, coAuthorIds, content, contentText, coverAlt, coverUrl, excerpt, selectedTags, title])
+  }, [categoryId, coAuthorIds, content, contentText, coverAlt, coverUrl, excerpt, excerptContent, selectedTags, title])
 
   const performAutosave = useCallback(async () => {
     if (!postId) return
@@ -251,6 +303,7 @@ export function PostEditor({
           coverUrl: draft.coverUrl || undefined,
           draftVisibility:
             draft.coAuthorIds.length > 0 ? "CO_AUTHORS" : "PRIVATE",
+          excerptContent: draft.excerptContent,
           ...getExcerptPayload(draft.excerpt, initialExcerpt, hasInitialData),
           saveKind: "AUTO",
           tagIds: draft.tagIds,
@@ -294,9 +347,10 @@ export function PostEditor({
     coverAlt,
     coverUrl,
     excerpt,
+    excerptContent,
     tags: selectedTags,
     title,
-  }), [categoryId, coAuthorIds, content, contentText, coverAlt, coverUrl, excerpt, selectedTags, title])
+  }), [categoryId, coAuthorIds, content, contentText, coverAlt, coverUrl, excerpt, excerptContent, selectedTags, title])
   const recovery = usePostRecoveryDraft({
     isDirty,
     key: postId ? `post:${postId}` : `new:${currentUserId}`,
@@ -320,6 +374,7 @@ export function PostEditor({
     setCoverAlt(draft.coverAlt)
     setCoverUrl(draft.coverUrl)
     setExcerpt(draft.excerpt)
+    setExcerptContent(draft.excerptContent ?? emptyDoc)
     setSelectedTags(draft.tags)
     setTitle(draft.title)
     markDirtyAndAutosave()
@@ -381,6 +436,7 @@ export function PostEditor({
       coverAlt,
       coverUrl,
       excerpt,
+      excerptContent,
       tagIds: selectedTags.map((tag) => tag.id),
       title,
     }
@@ -396,6 +452,7 @@ export function PostEditor({
           coverUrl: manualDraft.coverUrl || undefined,
           draftVisibility:
             manualDraft.coAuthorIds.length > 0 ? "CO_AUTHORS" : "PRIVATE",
+          excerptContent: manualDraft.excerptContent,
           ...getExcerptPayload(
             manualDraft.excerpt,
             initialExcerpt,
@@ -517,6 +574,7 @@ export function PostEditor({
       data-testid="post-editor-shell"
     >
       <EditorTopBar
+        canPublish={canPublish}
         canSave={canSave}
         exitHref="/dashboard"
         isPending={isPending || savingAction !== null}
@@ -528,7 +586,9 @@ export function PostEditor({
         onHistory={postId ? () => setIsHistoryOpen(true) : undefined}
         pendingAction={savingAction}
         previewHref={postId ? `/dashboard/preview/${postId}` : null}
-        onToggleSettings={() => setIsSettingsOpen((current) => !current)}
+        onToggleSettings={() =>
+          setSettingsPreference(isSettingsOpen ? "closed" : "open")
+        }
       />
 
       {/* Floating Save Status Pill */}
@@ -570,7 +630,7 @@ export function PostEditor({
                 <button
                   aria-label="Đóng cài đặt bài viết"
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border-default bg-background/70 text-text-secondary lg:hidden"
-                  onClick={() => setIsSettingsOpen(false)}
+                  onClick={() => setSettingsPreference("closed")}
                   type="button"
                 >
                   <X aria-hidden="true" className="h-4 w-4" />
@@ -746,7 +806,9 @@ export function PostEditor({
             <button
               aria-label={isSettingsOpen ? "Đóng cài đặt" : "Mở cài đặt"}
               className="absolute right-4 h-10 w-10 flex items-center justify-center rounded-full border border-border-default bg-card/60 backdrop-blur-md shadow-glass text-text-secondary transition-all duration-300 hover:bg-card hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+              onClick={() =>
+                setSettingsPreference(isSettingsOpen ? "closed" : "open")
+              }
             >
               <motion.div
                 animate={{ rotate: isSettingsOpen ? 180 : 0 }}
@@ -757,9 +819,9 @@ export function PostEditor({
             </button>
           </div>
 
-          <div className="min-w-0 flex-1 w-full h-full overflow-y-auto lg:ml-20">
+          <div className="min-w-0 flex-1 w-full h-full overflow-y-auto lg:ml-20 2xl:ml-0">
             <div
-              className="mx-auto flex w-full max-w-[1000px] flex-col px-4 pb-[120px] pt-6 md:px-6 md:pt-8"
+              className="mx-auto flex w-full max-w-[1100px] flex-col px-4 pb-[120px] pt-6 md:px-6 md:pt-8"
             >
               <DurabilityBanner scope="writer" />
               {error && (
@@ -773,11 +835,11 @@ export function PostEditor({
 
               {recovery.candidate && (
                 <div
-                  className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[8px] border border-accent/30 bg-accent/5 p-3 text-sm text-text-primary"
+                  className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-[8px] border border-accent/30 bg-accent/5 px-4 py-4 text-sm text-text-primary sm:px-5"
                   role="alert"
                 >
                   <span>
-                    A newer local copy of this post was found on this device.
+                    This device has a newer unsaved copy of this post.
                   </span>
                   <span className="flex gap-2">
                     <Button onClick={recoverLocalDraft} size="sm" type="button">
@@ -796,16 +858,17 @@ export function PostEditor({
               )}
 
               <section
-                className="relative w-full bg-transparent sm:bg-subtle-bg sm:backdrop-blur-md rounded-[8px] sm:border border-transparent sm:border-border-default mb-8 md:mb-12 z-30"
+                className="relative z-30 mb-8 w-full rounded-[8px] border border-border-default/55 bg-background/45 backdrop-blur-xl max-sm:shadow-glass sm:border-border-default sm:bg-subtle-bg sm:backdrop-blur-md md:mb-12"
                 data-testid="editor-writing-surface"
               >
                 <div className="px-3 py-4 sm:p-8 md:p-12">
-                  <div className="mt-4 pb-2 md:mt-0">
+                  <div className="mt-4 pb-2 md:mt-0 md:pb-3">
                     <label className="sr-only" htmlFor="post-title">
                       Tiêu đề
                     </label>
-                    <input
-                      className="w-full border-none bg-transparent text-[32px] md:text-[40px] font-bold font-display leading-[1.2] text-text-primary outline-none placeholder:text-text-tertiary placeholder:font-normal"
+                    <textarea
+                      ref={titleTextareaRef}
+                      className="field-sizing-content min-h-[1.2lh] w-full resize-none overflow-hidden border-none bg-transparent px-0 pb-1 pt-2 font-display text-[32px] font-bold leading-[1.18] text-text-primary outline-none placeholder:font-normal placeholder:text-text-tertiary md:text-[40px]"
                       id="post-title"
                       maxLength={200}
                       onChange={(event) => {
@@ -813,39 +876,69 @@ export function PostEditor({
                         markDirtyAndAutosave()
                       }}
                       placeholder="Tiêu đề bài viết..."
+                      rows={1}
                       value={title}
                     />
                   </div>
 
-                  <div className="pb-0">
-                    <label className="sr-only" htmlFor="post-excerpt">
-                      Đoạn trích
-                    </label>
-                    <Textarea
-                      className="min-h-10 resize-none overflow-hidden border-none bg-transparent px-0 text-[16px] text-text-secondary/80 shadow-none placeholder:text-text-tertiary focus-visible:border-transparent focus-visible:ring-0 leading-relaxed"
-                      id="post-excerpt"
-                      maxLength={MAX_POST_EXCERPT_CHARACTERS}
-                      onChange={(event) => {
-                        setExcerpt(event.target.value)
+                  <div className="sticky top-0 z-40 -mx-1 mb-5">
+                    {activeEditor ? (
+                      <EditorToolbar
+                        editor={activeEditor}
+                        onToggleSpellcheck={() =>
+                          setSpellcheckEnabled((current) => !current)
+                        }
+                        spellcheckEnabled={spellcheckEnabled}
+                      />
+                    ) : (
+                      <div className="flex min-h-[48px] items-center px-3 text-[13px] text-text-tertiary">
+                        Chọn phần mô tả hoặc nội dung để dùng thanh công cụ.
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mb-7 rounded-[14px] border border-border-default/50 bg-background/25 px-4 py-4 transition-colors focus-within:border-accent/50 focus-within:bg-background/35 sm:px-5 sm:py-5">
+                    <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-text-tertiary">
+                      Mô tả
+                    </div>
+                    <TiptapEditor
+                      ariaLabel="Đoạn trích"
+                      content={excerptContent}
+                      editable
+                      editorClassName="prose-editor min-h-[96px] focus:outline-none text-[16px] leading-[1.65] text-text-secondary"
+                      onChange={(json, text) => {
+                        setExcerptContent(json)
+                        setExcerpt(text.slice(0, MAX_POST_EXCERPT_CHARACTERS))
                         markDirtyAndAutosave()
                       }}
-                      placeholder="Đoạn trích ngắn hiển thị trên trang danh sách..."
-                      ref={excerptRef}
-                      value={excerpt}
+                      onEditorReady={(editor) => {
+                        if (!activeEditor && editor) setActiveEditor(editor)
+                      }}
+                      onFocus={setActiveEditor}
+                      placeholder="Viết mô tả mở đầu cho bài viết..."
+                      showFooterStats={false}
+                      showToolbar={false}
+                      spellcheckEnabled={spellcheckEnabled}
                     />
                   </div>
 
-                  <div className="mt-0 mb-1 border-t-2 border-transparent bg-gradient-to-r from-accent/0 via-accent/30 to-accent/0 h-[2px] w-full" />
-
-                  <TiptapEditor
-                    content={content}
-                    editable
-                    onChange={(json, text) => {
-                      setContent(json)
-                      setContentText(text)
-                      markDirtyAndAutosave()
-                    }}
-                  />
+                  <div className="rounded-[14px] border border-transparent transition-colors focus-within:border-accent/35">
+                    <TiptapEditor
+                      content={content}
+                      editable
+                      onChange={(json, text) => {
+                        setContent(json)
+                        setContentText(text)
+                        markDirtyAndAutosave()
+                      }}
+                      onEditorReady={(editor) => {
+                        if (!activeEditor && editor) setActiveEditor(editor)
+                      }}
+                      onFocus={setActiveEditor}
+                      showToolbar={false}
+                      spellcheckEnabled={spellcheckEnabled}
+                    />
+                  </div>
                 </div>
               </section>
             </div>

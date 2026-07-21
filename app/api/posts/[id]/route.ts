@@ -34,6 +34,7 @@ const updateSchema = z.object({
   coverUrl: z.string().url().nullable().optional(),
   draftVisibility: z.enum(["PRIVATE", "CO_AUTHORS"]).optional(),
   excerpt: z.string().trim().max(MAX_POST_EXCERPT_CHARACTERS).optional(),
+  excerptContent: z.record(z.string(), z.unknown()).nullable().optional(),
   saveKind: z.enum(["AUTO", "MANUAL"]).optional(),
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional(),
   tagIds: z.array(z.string().min(1)).optional(),
@@ -85,6 +86,7 @@ const postDetailSelect = {
   createdAt: true,
   draftVisibility: true,
   excerpt: true,
+  excerptContent: true,
   id: true,
   lastSavedAt: true,
   publishedAt: true,
@@ -236,6 +238,7 @@ export async function PATCH(
           coverUrl: true,
           draftVisibility: true,
           excerpt: true,
+          excerptContent: true,
           version: true,
           coAuthors: { select: { userId: true, status: true } },
           tags: { select: { tagId: true } },
@@ -294,6 +297,13 @@ export async function PATCH(
         throw new RouteError("Post requires administrator review", 403)
       }
 
+      if (
+        data.status === "PUBLISHED" &&
+        activeSession.user.id !== existing.authorId
+      ) {
+        throw new RouteError("Forbidden", 403)
+      }
+
       if (data.status === "ARCHIVED" && !canUseOwnerActions) {
         throw new RouteError("Forbidden", 403)
       }
@@ -334,6 +344,7 @@ export async function PATCH(
         data.content !== undefined ||
         data.contentText !== undefined ||
         data.excerpt !== undefined ||
+        data.excerptContent !== undefined ||
         data.title !== undefined
 
       let newSlug: string | undefined
@@ -433,6 +444,12 @@ export async function PATCH(
             draftVisibility: data.draftVisibility,
           }),
           ...(data.excerpt !== undefined && { excerpt: data.excerpt || null }),
+          ...(data.excerptContent !== undefined && {
+            excerptContent:
+              data.excerptContent === null
+                ? Prisma.JsonNull
+                : (data.excerptContent as Prisma.InputJsonObject),
+          }),
           ...(shouldUpdateLastSavedAt && { lastSavedAt: new Date() }),
           ...(publishedAt !== undefined && { publishedAt }),
           ...(data.status && { status: data.status }),
@@ -477,6 +494,10 @@ export async function PATCH(
           draftVisibility: data.draftVisibility ?? existing.draftVisibility,
           excerpt:
             data.excerpt !== undefined ? data.excerpt || null : existing.excerpt,
+          excerptContent:
+            data.excerptContent !== undefined
+              ? (data.excerptContent as Prisma.JsonValue | null)
+              : (existing.excerptContent as Prisma.JsonValue | null),
           publishedAt:
             publishedAt !== undefined
               ? publishedAt?.toISOString() ?? null

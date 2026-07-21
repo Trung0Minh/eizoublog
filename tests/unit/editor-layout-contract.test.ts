@@ -31,10 +31,10 @@ describe("post editor layout contracts", () => {
     expect(titleIndex).toBeGreaterThan(writingSurfaceIndex)
   })
 
-  it("matches the public article content width", () => {
+  it("keeps the editor column wide enough for the shared toolbar", () => {
     const editor = read("components/posts/PostEditor.tsx")
 
-    expect(editor).toContain("max-w-[1000px]")
+    expect(editor).toContain("max-w-[1100px]")
     expect(editor).not.toContain("max-w-[1200px]")
   })
 

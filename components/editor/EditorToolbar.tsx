@@ -33,7 +33,7 @@ import {
   Underline,
   Undo2,
 } from "lucide-react"
-import { lazy, Suspense, useEffect, useRef, useState } from "react"
+import { lazy, Suspense, useEffect, useReducer, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 
 import { LinkEditModal } from "@/components/editor/LinkEditModal"
@@ -95,7 +95,7 @@ function ToolbarButton({
       className={[
         "flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-[7px] transition-all duration-200",
         active
-          ? "bg-accent/10 text-accent shadow-sm"
+          ? "border border-accent/45 bg-accent/18 text-accent shadow-[0_0_0_1px_hsl(var(--background)/0.55),0_8px_18px_rgba(0,0,0,0.10)] ring-1 ring-accent/20 dark:bg-accent/22 dark:shadow-[0_0_0_1px_rgba(255,255,255,0.08),0_8px_18px_rgba(0,0,0,0.35)]"
           : "text-text-secondary hover:bg-subtle-bg hover:text-text-primary hover:shadow-sm hover:scale-105",
         disabled ? "cursor-not-allowed opacity-40" : "",
       ].join(" ")}
@@ -227,6 +227,7 @@ export function EditorToolbar({
   spellcheckEnabled?: boolean
   mode?: "compact" | "default" | "profile"
 }) {
+  const [, forceToolbarRefresh] = useReducer((value: number) => value + 1, 0)
   const [showVideoModal, setShowVideoModal] = useState(false)
   const [showLinkModal, setShowLinkModal] = useState(false)
   const [showHighlightMenu, setShowHighlightMenu] = useState(false)
@@ -237,6 +238,22 @@ export function EditorToolbar({
   })
   const highlightButtonRef = useRef<HTMLDivElement>(null)
   const textColorButtonRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const refresh = () => forceToolbarRefresh()
+
+    editor.on("selectionUpdate", refresh)
+    editor.on("transaction", refresh)
+    editor.on("focus", refresh)
+    editor.on("blur", refresh)
+
+    return () => {
+      editor.off("selectionUpdate", refresh)
+      editor.off("transaction", refresh)
+      editor.off("focus", refresh)
+      editor.off("blur", refresh)
+    }
+  }, [editor])
 
   function toggleHighlightMenu() {
     const rect = highlightButtonRef.current?.getBoundingClientRect()
@@ -473,7 +490,7 @@ export function EditorToolbar({
 
   return (
     <>
-      <div className="no-scrollbar sticky top-0 z-40 mb-2 flex w-full max-w-full flex-nowrap justify-between gap-0 overflow-x-auto rounded-[16px] bg-background/80 backdrop-blur-xl px-3 py-2 border-[2px] border-border-default/50 shadow-sm transition-all duration-300">
+      <div className="editor-toolbar-frost no-scrollbar sticky top-0 z-40 mb-2 flex w-full max-w-full flex-nowrap justify-between gap-0 overflow-x-auto rounded-[16px] border border-border-default/65 px-3 py-2 shadow-glass transition-all duration-300">
         <ToolbarButton
           active={editor.isActive("bold")}
           onClick={() => editor.chain().focus().toggleBold().run()}

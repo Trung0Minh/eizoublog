@@ -47,6 +47,11 @@ export default async function DashboardPage() {
               coAuthor.userId === session.user.id &&
               coAuthor.status === "PENDING",
           )
+          const isAcceptedCoAuthor = !isOwner && post.coAuthors?.some(
+            (coAuthor) =>
+              coAuthor.userId === session.user.id &&
+              coAuthor.status === "ACCEPTED",
+          )
 
           return (
             <ScrollReveal key={post.id} index={index}>
@@ -98,8 +103,9 @@ export default async function DashboardPage() {
                           <Pencil aria-hidden="true" className="h-4 w-4" />
                         </Link>
                       </Button>
-                      {isOwner && (
+                      {(isOwner || isAcceptedCoAuthor) && (
                         <PostOwnerActions
+                          isCoAuthor={isAcceptedCoAuthor}
                           postId={post.id}
                           status={post.status}
                         />

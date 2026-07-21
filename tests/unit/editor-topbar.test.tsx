@@ -97,4 +97,21 @@ describe("EditorTopBar", () => {
     expect(spinner).toHaveClass("text-current")
     expect(spinner).not.toHaveClass("loader")
   })
+
+  it("hides publish controls when the editor cannot publish", () => {
+    render(
+      <EditorTopBar
+        canPublish={false}
+        canSave
+        exitHref="/dashboard"
+        isPending={false}
+        isPublished={false}
+        onPublish={vi.fn()}
+        onSaveDraft={vi.fn()}
+      />,
+    )
+
+    expect(screen.queryByRole("button", { name: "Xuất bản bài viết" })).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /Lưu nháp/ })).toBeVisible()
+  })
 })

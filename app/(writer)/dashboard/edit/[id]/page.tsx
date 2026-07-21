@@ -30,6 +30,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
         coverUrl: true,
         draftVisibility: true,
         excerpt: true,
+        excerptContent: true,
         id: true,
         status: true,
         tags: {
@@ -63,6 +64,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
 
   return (
     <PostEditor
+      canPublish={session.user.id === post.authorId}
       canRestoreRevisions={session.user.role === "ADMIN" || session.user.id === post.authorId}
       categories={referenceData.categories}
       currentUserId={session.user.id}
@@ -76,6 +78,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
         coverAlt: post.coverAlt,
         coverUrl: post.coverUrl,
         excerpt: post.excerpt,
+        excerptContent: post.excerptContent as JSONContent | null,
         id: post.id,
         status: post.status,
         tags: post.tags.map(({ tag }) => tag),

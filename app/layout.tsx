@@ -92,9 +92,13 @@ export default async function RootLayout({
       className={`${nunito.variable} ${mPlusRounded.variable}`}
       suppressHydrationWarning
     >
-      <head>
-        <Script id="appearance-init" strategy="beforeInteractive">
-          {`
+      <head />
+      <body className="min-h-screen font-sans bg-transparent text-text-primary antialiased selection:bg-accent/30 selection:text-accent">
+        <Script
+          id="appearance-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
               try {
                 ${getAppearanceInitScript()}
                 history.scrollRestoration = 'manual';
@@ -111,10 +115,9 @@ export default async function RootLayout({
                 }
                 document.documentElement.setAttribute('data-particles', particles);
               } catch (_) {}
-            `}
-        </Script>
-      </head>
-      <body className="min-h-screen font-sans bg-transparent text-text-primary antialiased selection:bg-accent/30 selection:text-accent">
+            `,
+          }}
+        />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

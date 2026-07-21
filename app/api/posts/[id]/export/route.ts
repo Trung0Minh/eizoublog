@@ -30,6 +30,7 @@ export async function GET(
         createdAt: true,
         draftVisibility: true,
         excerpt: true,
+        excerptContent: true,
         id: true,
         lastSavedAt: true,
         publishedAt: true,
@@ -69,6 +70,7 @@ export async function GET(
       }
     }
     visit(post.content)
+    visit(post.excerptContent)
     const { authorId, ...safePost } = post
     void authorId
 

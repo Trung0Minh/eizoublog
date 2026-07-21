@@ -2,6 +2,7 @@
 
 import { Sparkles } from "lucide-react"
 import { motion, useScroll, useTransform } from "motion/react"
+import type { JSONContent } from "@tiptap/react"
 
 import { RelativeTime } from "@/components/ui/RelativeTime"
 import { TextReveal } from "@/components/ui/TextReveal"
@@ -10,6 +11,11 @@ import { getCoverStyle } from "@/lib/cover-style"
 import { cn } from "@/lib/utils"
 import { PostEditLink } from "./PostEditLink"
 import type { PostHeroPost } from "@/types/posts"
+import { PostBody } from "@/components/posts/PostBody"
+
+function isRichSubtitle(value: unknown): value is JSONContent {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
 
 interface PostHeroProps {
   post: PostHeroPost
@@ -68,13 +74,19 @@ export function PostHero({ post, authorUsernames }: PostHeroProps) {
           )}>
             <TextReveal text={post.title} />
           </h1>
-          {post.excerpt && (
+          {isRichSubtitle(post.excerptContent) ? (
+            <ScrollReveal delay={0.15}>
+              <div className="mb-8 max-w-[90%] text-[15px] leading-[1.6] text-text-secondary md:text-[18px] [&_.ProseMirror]:!m-0 [&_.ProseMirror]:!max-w-none [&_.ProseMirror>*]:!m-0">
+                <PostBody content={post.excerptContent} />
+              </div>
+            </ScrollReveal>
+          ) : post.excerpt ? (
             <ScrollReveal delay={0.15}>
               <p className="text-[15px] md:text-[18px] text-text-secondary leading-[1.6] mb-8 max-w-[90%]">
                 {post.excerpt}
               </p>
             </ScrollReveal>
-          )}
+          ) : null}
 
           <ScrollReveal delay={0.2} className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-[12px] bg-background/95 backdrop-blur-md p-2 pr-4 rounded-full border border-border-default shadow-md select-none">

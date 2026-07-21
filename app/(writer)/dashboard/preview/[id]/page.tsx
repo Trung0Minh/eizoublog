@@ -55,6 +55,7 @@ export default async function DashboardPostPreviewPage({
       coverUrl: true,
       draftVisibility: true,
       excerpt: true,
+      excerptContent: true,
       id: true,
       publishedAt: true,
       slug: true,

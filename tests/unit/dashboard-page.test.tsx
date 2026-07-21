@@ -83,4 +83,27 @@ describe("DashboardPage", () => {
     expect(screen.queryByText("Rút bài")).not.toBeInTheDocument()
     expect(screen.queryByText("Lưu trữ")).not.toBeInTheDocument()
   })
+
+  it("lets accepted co-authors withdraw access without owner actions", async () => {
+    mocks.auth.mockResolvedValue({ user: { id: "writer-2", role: "WRITER" } })
+    mocks.prisma.$queryRaw.mockResolvedValue([
+      {
+        authorId: "writer-1",
+        coAuthors: [{ status: "ACCEPTED", userId: "writer-2" }],
+        commentCount: BigInt(0),
+        id: "post-1",
+        publishedAt: null,
+        slug: "shared-draft",
+        status: "DRAFT",
+        title: "Shared draft",
+        updatedAt: new Date("2026-06-16T00:00:00Z"),
+      },
+    ])
+
+    render(await DashboardPage())
+
+    expect(screen.getByRole("button", { name: "Rời khỏi bài viết" })).toBeVisible()
+    expect(screen.queryByRole("button", { name: "Lưu trữ" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Rút bài" })).not.toBeInTheDocument()
+  })
 })
