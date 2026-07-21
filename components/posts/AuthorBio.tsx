@@ -1,6 +1,5 @@
 import Link from "next/link"
 import type { JSONContent } from "@tiptap/react"
-import { StaticPostContent } from "@/components/posts/StaticPostContent"
 import { cn } from "@/lib/utils"
 
 interface AuthorBioAuthor {
@@ -19,24 +18,33 @@ function fallbackBio(authorName: string) {
   return `${authorName} viết về quá trình sản xuất anime, nghệ thuật kể chuyện qua hình ảnh và kỹ thuật đằng sau hoạt hình đương đại.`
 }
 
-/** Strip image/video/embed/hr nodes from Tiptap JSON so bios only show text. */
-function stripMediaNodes(node: JSONContent): JSONContent {
-  return {
-    ...node,
-    content: node.content
-      ?.filter(
-        (child) =>
-          child.type !== "image" &&
-          child.type !== "customImage" &&
-          child.type !== "imageGallery" &&
-          child.type !== "videoEmbed" &&
-          child.type !== "horizontalRule",
-      )
-      .map(stripMediaNodes),
+function getBioText(node: JSONContent): string {
+  if (node.type === "text") {
+    return node.text ?? ""
   }
+
+  return node.content?.map(getBioText).join(" ").replace(/\s+/g, " ").trim() ?? ""
+}
+
+function getAuthorBioPreview(author: AuthorBioAuthor) {
+  if (!author.bio) {
+    return fallbackBio(author.name)
+  }
+
+  if (author.bio.startsWith("{")) {
+    try {
+      return getBioText(JSON.parse(author.bio) as JSONContent) || fallbackBio(author.name)
+    } catch {
+      return author.bio
+    }
+  }
+
+  return author.bio
 }
 
 export function AuthorBio({ author, className }: AuthorBioProps) {
+  const bioPreview = getAuthorBioPreview(author)
+
   return (
     <section
       className={cn(
@@ -67,22 +75,8 @@ export function AuthorBio({ author, className }: AuthorBioProps) {
         >
           {author.name}
         </Link>
-        <div className="mb-3 text-[13px] leading-[1.6] text-text-secondary [&_.ProseMirror]:!ml-0 [&_.ProseMirror>p]:!ml-0 [&_.ProseMirror]:text-center md:[&_.ProseMirror]:text-left">
-          {(() => {
-            if (!author.bio) {
-              return <p>{fallbackBio(author.name)}</p>
-            }
-            if (author.bio.startsWith("{")) {
-              let json: JSONContent | null = null
-              try {
-                json = JSON.parse(author.bio) as JSONContent
-              } catch {}
-              if (json) {
-                return <StaticPostContent content={stripMediaNodes(json)} />
-              }
-            }
-            return <p>{author.bio}</p>
-          })()}
+        <div className="mb-3 line-clamp-4 text-[13px] leading-[1.6] text-text-secondary">
+          {bioPreview}
         </div>
         <Link
           className="text-[13px] font-medium text-accent hover:underline"

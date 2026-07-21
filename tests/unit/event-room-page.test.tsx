@@ -83,6 +83,7 @@ describe("DashboardEventRoomPage (Page A)", () => {
           id: "post-1",
           status: "DRAFT",
           title: "My submission",
+          updatedAt: new Date("2026-01-01T00:00:00.000Z"),
         },
         status: "DRAFT",
         visibility: "PRIVATE",
@@ -166,6 +167,7 @@ describe("DashboardEventRoomPage (Page A)", () => {
           id: "post-3",
           status: "DRAFT",
           title: "Shared pick",
+          updatedAt: new Date("2026-01-01T00:00:00.000Z"),
         },
         status: "SUBMITTED",
         visibility: "PARTICIPANTS",
@@ -174,7 +176,7 @@ describe("DashboardEventRoomPage (Page A)", () => {
       },
     ])
 
-    render(
+    const { container } = render(
       await DashboardEventRoomPage({
         params: Promise.resolve({ id: "event-1" }),
       }),
@@ -182,6 +184,9 @@ describe("DashboardEventRoomPage (Page A)", () => {
 
     expect(screen.getByText("Mai")).toBeVisible()
     expect(screen.getByText("Shared pick")).toBeVisible()
+    expect(
+      container.querySelector('time[dateTime="2026-01-01T00:00:00.000Z"]'),
+    ).toHaveAttribute("dateTime", "2026-01-01T00:00:00.000Z")
     expect(screen.getByRole("link", { name: /Xem bài dự thi của Mai/i })).toHaveAttribute(
       "href",
       "/dashboard/events/event-1/rooms/room-3",

@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest"
 
 vi.mock("next/navigation", () => ({
   redirect: vi.fn(),
+  usePathname: vi.fn(() => "/dashboard"),
 }))
 vi.mock("@/lib/auth", () => ({
   auth: vi.fn(async () => ({

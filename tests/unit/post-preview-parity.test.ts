@@ -11,11 +11,14 @@ describe("saved post preview parity", () => {
   it("uses the same article presentation as the published post page", () => {
     const previewPage = read("app/(writer)/dashboard/preview/[id]/page.tsx")
     const publicPage = read("app/(public)/[slug]/page.tsx")
+    const dashboardSlot = read("components/layout/DashboardDurabilitySlot.tsx")
 
     expect(previewPage).toContain("<PostArticleView")
     expect(publicPage).toContain("<PostArticleView")
     expect(previewPage).not.toContain("<PostHero")
     expect(previewPage).not.toContain("<PostBody")
+    expect(previewPage).not.toContain("-mt-")
+    expect(dashboardSlot).toContain('pathname.startsWith("/dashboard/preview/")')
   })
 
   it("loads stored event snapshots for the published event renderer", () => {

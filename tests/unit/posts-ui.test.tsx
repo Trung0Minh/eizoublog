@@ -176,6 +176,16 @@ describe("PostCard", () => {
     )
   })
 
+  it("keeps author credit bios compact", () => {
+    const source = readFileSync(
+      join(process.cwd(), "components/posts/AuthorBio.tsx"),
+      "utf8",
+    )
+
+    expect(source).toContain("line-clamp-4")
+    expect(source).toContain("getAuthorBioPreview")
+  })
+
   it("reveals post cards once with an explicit transition", () => {
     const source = readFileSync(
       join(process.cwd(), "components/posts/PostCard.tsx"),

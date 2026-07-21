@@ -10,6 +10,7 @@ import { PostBody } from "@/components/posts/PostBody"
 import { PostContentFrame } from "@/components/posts/PostContentFrame"
 import { TableOfContents } from "@/components/posts/TableOfContents"
 import { RoomFeedbackSection } from "@/components/events/RoomFeedbackSection"
+import { extractHeadings } from "@/lib/postHeadings"
 
 interface RoomDetailPageProps {
   params: Promise<{ id: string; roomId: string }>
@@ -119,6 +120,8 @@ export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
         : {}),
     },
   })
+  const selectedPostContent = room.selectedPost.content as unknown as JSONContent
+  const hasTableOfContents = extractHeadings(selectedPostContent).length > 0
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:py-10 md:px-6 lg:px-8">
@@ -200,10 +203,16 @@ export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
 
         {/* Main Content Area with sidebar Table of Contents */}
         <div className="flex w-full flex-col gap-12 xl:flex-row items-start">
-          <article className="min-w-0 flex-1 w-full max-w-[800px]">
+          <article
+            className={
+              hasTableOfContents
+                ? "min-w-0 flex-1 w-full max-w-[800px]"
+                : "min-w-0 flex-1 w-full"
+            }
+          >
             {/* Post Content */}
             <PostContentFrame>
-              <PostBody content={room.selectedPost.content as unknown as JSONContent} />
+              <PostBody content={selectedPostContent} />
             </PostContentFrame>
 
             {/* Feedback Section */}
@@ -213,9 +222,11 @@ export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
               initialComments={comments}
             />
           </article>
-          <aside className="sticky top-24 hidden max-h-[calc(100vh-120px)] w-[200px] shrink-0 self-start overflow-y-auto overscroll-contain no-scrollbar xl:block [scrollbar-gutter:stable]">
-            <TableOfContents content={room.selectedPost.content as unknown as JSONContent} />
-          </aside>
+          {hasTableOfContents && (
+            <aside className="sticky top-24 hidden max-h-[calc(100vh-120px)] w-[200px] shrink-0 self-start overflow-y-auto overscroll-contain no-scrollbar xl:block [scrollbar-gutter:stable]">
+              <TableOfContents content={selectedPostContent} />
+            </aside>
+          )}
         </div>
       </div>
     </main>

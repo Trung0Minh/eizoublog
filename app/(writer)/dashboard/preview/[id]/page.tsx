@@ -3,6 +3,7 @@ import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 
 import { PostArticleView } from "@/components/posts/PostArticleView"
+import { ReadingProgress } from "@/components/posts/ReadingProgress"
 import { canViewPost } from "@/lib/postAccess"
 import { prisma } from "@/lib/prisma"
 import { getCurrentSession } from "@/lib/session"
@@ -87,6 +88,7 @@ export default async function DashboardPostPreviewPage({
 
   return (
     <>
+      <ReadingProgress />
       <div className="pointer-events-none fixed inset-x-0 bottom-4 z-[80] flex justify-center px-4">
         <div
           className="pointer-events-auto flex max-w-full items-center gap-3 rounded-full border border-border-default bg-background/95 px-4 py-2.5 text-sm text-text-secondary shadow-lg backdrop-blur-xl"

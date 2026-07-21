@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 
+import { DashboardDurabilitySlot } from "@/components/layout/DashboardDurabilitySlot"
 import { getCurrentSession } from "@/lib/session"
-import { DurabilityBanner } from "@/components/durability/DurabilityBanner"
 
 export const metadata: Metadata = {
   robots: { follow: false, index: false },
@@ -21,9 +21,7 @@ export default async function DashboardLayout({
   }
 
   return <>
-    <div className="mx-auto w-full max-w-4xl px-4 pt-4 md:px-6 lg:px-8">
-      <DurabilityBanner scope="writer" />
-    </div>
+    <DashboardDurabilitySlot />
     {children}
   </>
 }

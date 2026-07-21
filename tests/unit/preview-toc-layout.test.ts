@@ -49,4 +49,12 @@ describe("preview table of contents layout", () => {
       expect.arrayContaining(stickyScrollClasses),
     )
   })
+
+  it("hides the event writer-room TOC and widens content when there are no headings", () => {
+    const source = read("app/(writer)/dashboard/events/[id]/rooms/[roomId]/page.tsx")
+
+    expect(source).toContain("const hasTableOfContents = extractHeadings")
+    expect(source).toContain("{hasTableOfContents && (")
+    expect(source).toContain('hasTableOfContents\n                ? "min-w-0 flex-1 w-full max-w-[800px]"\n                : "min-w-0 flex-1 w-full"')
+  })
 })

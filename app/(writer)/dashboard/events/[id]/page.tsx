@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma"
 import { getCurrentSession } from "@/lib/session"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { RelativeTime } from "@/components/ui/RelativeTime"
 
 interface DashboardEventRoomPageProps {
   params: Promise<{ id: string }>
@@ -36,6 +37,7 @@ export default async function DashboardEventRoomPage({
               id: true,
               status: true,
               title: true,
+              updatedAt: true,
               version: true,
             },
           },
@@ -78,6 +80,7 @@ export default async function DashboardEventRoomPage({
                 id: true,
                 status: true,
                 title: true,
+                updatedAt: true,
                 version: true,
               },
             },
@@ -112,6 +115,7 @@ export default async function DashboardEventRoomPage({
           id: true,
           status: true,
           title: true,
+          updatedAt: true,
           version: true,
         },
       },
@@ -232,9 +236,13 @@ export default async function DashboardEventRoomPage({
                   <p className="text-sm text-text-tertiary italic">Chưa chọn bài</p>
                 ) : (
                   <div className="space-y-2">
-                    <div className="flex items-center gap-1.5 text-sm font-medium text-text-primary">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-text-primary">
                       <FileText className="h-4 w-4 text-accent" />
-                      {ourRoom.selectedPost.title}
+                      <span>{ourRoom.selectedPost.title}</span>
+                      <RelativeTime
+                        className="text-xs font-medium text-text-tertiary"
+                        date={ourRoom.selectedPost.updatedAt}
+                      />
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {ourRoom.visibility === "PARTICIPANTS" ? (
@@ -303,24 +311,24 @@ export default async function DashboardEventRoomPage({
               {otherParticipants.map((pr) => (
                 <div
                   key={pr.id}
-                  className="flex items-start justify-between gap-3 rounded-[16px] border border-border-default/80 bg-background/60 p-4 shadow-[0_8px_28px_rgba(31,24,38,0.06)] backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-1 hover:border-accent/40 hover:bg-background/85 hover:shadow-lg dark:border-white/10 dark:bg-background/40 dark:hover:bg-background/60 sm:items-center sm:gap-4 sm:p-5"
+                  className="flex items-start justify-between gap-3 rounded-[16px] border border-border-default/80 bg-background/60 p-4 shadow-sm backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-background/85 hover:shadow-lg dark:border-white/10 dark:bg-background/40 dark:hover:bg-background/60 sm:items-center sm:gap-6 sm:p-6"
                 >
-                  <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
+                  <div className="flex min-w-0 flex-1 items-start gap-3 sm:gap-4">
                     {pr.writer.avatarUrl ? (
                       <img
                         src={pr.writer.avatarUrl}
                         alt={pr.writer.name}
-                        className="h-11 w-11 shrink-0 rounded-full border border-border-default object-cover"
+                        className="h-12 w-12 shrink-0 rounded-full border-2 border-accent/20 object-cover"
                       />
                     ) : (
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border-default bg-subtle-bg text-sm font-bold uppercase text-text-secondary">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-accent/20 bg-accent/10 text-lg font-bold uppercase text-accent">
                         {pr.writer.name.charAt(0)}
                       </div>
                     )}
-                    <div className="min-w-0 space-y-1.5">
-                      <div className="text-sm font-bold text-text-primary">
+                    <div className="min-w-0 space-y-1">
+                      <div className="text-base font-semibold text-text-primary">
                         {pr.writer.name}{" "}
-                        <span className="ml-1 text-xs font-medium text-text-secondary">
+                        <span className="ml-1 text-xs font-medium text-text-secondary align-baseline">
                           @{pr.writer.username}
                         </span>
                       </div>
@@ -330,24 +338,28 @@ export default async function DashboardEventRoomPage({
                         </Badge>
                       )}
                       {!pr.postId || !pr.selectedPost ? (
-                        <p className="text-xs font-medium italic text-text-secondary">Chưa chọn bài</p>
+                        <p className="text-sm italic text-text-tertiary">Chưa chọn bài</p>
                       ) : (
-                        <div className="space-y-1">
-                          <div className="flex min-w-0 items-center gap-1.5 text-xs font-semibold text-text-secondary">
-                            <FileText className="h-3.5 w-3.5 shrink-0 text-accent" />
-                            <span className="truncate">{pr.selectedPost.title}</span>
+                        <div className="space-y-2">
+                          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-text-primary">
+                            <FileText className="h-4 w-4 shrink-0 text-accent" />
+                            <span>{pr.selectedPost.title}</span>
+                            <RelativeTime
+                              className="shrink-0 text-xs font-medium text-text-tertiary"
+                              date={pr.selectedPost.updatedAt}
+                            />
                           </div>
                           <div className="flex flex-wrap gap-1.5">
                             {pr.visibility === "PARTICIPANTS" ? (
                               <Badge
-                                className="border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/15 text-[10px] px-2 py-0"
+                                className="border-emerald-500/20 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/15 dark:text-emerald-400"
                                 variant="outline"
                               >
                                 Chia sẻ
                               </Badge>
                             ) : (
                               <Badge
-                                className="border-border bg-muted text-muted-foreground hover:bg-muted text-[10px] px-2 py-0"
+                                className="border-border bg-muted text-muted-foreground hover:bg-muted"
                                 variant="outline"
                               >
                                 Riêng tư
@@ -356,7 +368,7 @@ export default async function DashboardEventRoomPage({
 
                             {pr.status === "SUBMITTED" && (
                               <Badge
-                                className="border-sky-500/20 bg-sky-500/10 text-sky-600 dark:text-sky-400 hover:bg-sky-500/15 text-[10px] px-2 py-0"
+                                className="border-sky-500/20 bg-sky-500/10 text-sky-600 hover:bg-sky-500/15 dark:text-sky-400"
                                 variant="outline"
                               >
                                 Đã gửi
@@ -368,7 +380,7 @@ export default async function DashboardEventRoomPage({
                     </div>
                   </div>
 
-                  <div className="flex shrink-0 items-center justify-end">
+                  <div className="flex shrink-0 flex-wrap justify-end gap-2">
                     {pr.postId && pr.selectedPost && pr.visibility === "PARTICIPANTS" ? (
                       <Button asChild size="icon" variant="outline">
                         <Link
