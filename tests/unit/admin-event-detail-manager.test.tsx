@@ -144,7 +144,7 @@ describe("AdminEventDetailManager", () => {
     expect(screen.getByText(/2 feedback comments/i)).toBeVisible()
     expect(screen.getByTitle("Preview selected post")).toHaveAttribute(
       "href",
-      "/dashboard/preview/post-1",
+      "/dashboard/events/event-1/rooms/room-1",
     )
     expect(screen.getByRole("link", { name: "Preview final event" })).toHaveAttribute(
       "href",
@@ -192,7 +192,7 @@ describe("AdminEventDetailManager", () => {
     expect(screen.queryByText("No source post selected yet.")).not.toBeInTheDocument()
     expect(screen.getByRole("link", { name: "Preview selected post" })).toHaveAttribute(
       "href",
-      "/dashboard/preview/post-1",
+      "/dashboard/events/event-1/rooms/room-1",
     )
   })
 

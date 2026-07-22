@@ -24,7 +24,10 @@ import { common, createLowlight } from "lowlight"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 
-import { normalizeEditorContent } from "@/components/editor/content"
+import {
+  normalizeEditorContent,
+  stripPastedTextColors,
+} from "@/components/editor/content"
 import { getClipboardImageFiles } from "@/components/editor/clipboardImages"
 import { getModifiedClickLink } from "@/components/editor/editorLinks"
 import { EditorToolbar } from "@/components/editor/EditorToolbar"
@@ -149,6 +152,7 @@ export function TiptapEditor({
 
         return true
       },
+      transformPastedHTML: stripPastedTextColors,
     },
     extensions: [
       StarterKit.configure({
@@ -211,7 +215,7 @@ export function TiptapEditor({
     ],
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
-      onChange?.(editor.getJSON(), editor.getText())
+      onChange?.(normalizeEditorContent(editor.getJSON()), editor.getText())
     },
   })
 

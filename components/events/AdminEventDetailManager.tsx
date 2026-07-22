@@ -891,7 +891,8 @@ export function AdminEventDetailManager({
                     {room.selectedPost || room.submittedPostId ? (
                       <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-[8px] text-text-secondary hover:bg-accent/10 hover:text-accent">
                         <Link
-                          href={`/dashboard/preview/${room.selectedPost?.id ?? room.submittedPostId}`}
+                          aria-label="Preview selected post"
+                          href={`/dashboard/events/${event.id}/rooms/${room.id}`}
                           title="Preview selected post"
                         >
                           <Eye aria-hidden="true" className="h-4 w-4" />

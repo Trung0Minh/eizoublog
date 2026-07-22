@@ -205,15 +205,21 @@ describe("EventAnthologyView", () => {
       "lg:grid-cols-[minmax(0,1000px)]",
       "2xl:grid-cols-[minmax(0,1000px)_220px]",
     )
+    expect(screen.getByTestId("event-hero-grid")).toHaveClass(
+      "max-w-7xl",
+      "lg:grid-cols-[minmax(0,1000px)]",
+      "2xl:grid-cols-[minmax(0,1000px)_220px]",
+      "2xl:pl-20",
+    )
+    expect(screen.getByTestId("event-hero-main-column")).toContainElement(
+      screen.getByRole("heading", { name: "Collected perspectives" }),
+    )
     expect(screen.getByText("The complete introduction.")).toHaveClass(
       "w-full",
       "max-w-none",
     )
-    expect(screen.getByTestId("event-cover-bottom-fade")).toHaveClass(
-      "bg-gradient-to-t",
-      "from-background",
-      "via-background/60",
-      "to-transparent",
+    expect(screen.getByTestId("event-cover-bottom-fade").className).toContain(
+      "bg-[linear-gradient(to_top",
     )
   })
 
@@ -431,10 +437,8 @@ describe("EventAnthologyView", () => {
     expect(within(authorCredits).queryByText("Draft Writer")).not.toBeInTheDocument()
     expect(within(authorCredits).queryByText("Removed Writer")).not.toBeInTheDocument()
     expect(container.querySelector("header")).not.toHaveClass("border-b")
-    expect(screen.getByTestId("event-hero-transition")).toHaveClass(
-      "bg-gradient-to-b",
-      "from-background",
-      "to-transparent",
+    expect(screen.getByTestId("event-hero-transition").className).toContain(
+      "bg-[linear-gradient(to_bottom",
     )
     expect(screen.getAllByTestId("event-contributor-block")).toHaveLength(2)
     expect(screen.getAllByTestId("event-contributor-block")[0].querySelector("h2")).toHaveTextContent(

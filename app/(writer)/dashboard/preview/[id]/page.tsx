@@ -80,18 +80,6 @@ export default async function DashboardPostPreviewPage({
     notFound()
   }
 
-  const eventRoom = await prisma.awardEventRoom.findFirst({
-    select: {
-      eventId: true,
-      id: true,
-    },
-    where: { postId: post.id },
-  })
-
-  if (eventRoom) {
-    redirect(`/dashboard/events/${eventRoom.eventId}/rooms/${eventRoom.id}`)
-  }
-
   const content = post.content as JSONContent
   const authorUsernames = [
     post.author.username,

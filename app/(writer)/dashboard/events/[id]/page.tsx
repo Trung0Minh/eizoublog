@@ -280,7 +280,7 @@ export default async function DashboardEventRoomPage({
                 <Button asChild size="icon" variant="outline">
                   <Link
                     aria-label="Xem trước bài dự thi"
-                    href={`/dashboard/preview/${ourRoom.selectedPost.id}`}
+                    href={`/dashboard/events/${event.id}/rooms/${ourRoom.id}`}
                     title="Xem trước bài dự thi"
                   >
                     <Eye aria-hidden="true" className="h-4 w-4" />

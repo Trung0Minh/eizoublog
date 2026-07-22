@@ -243,6 +243,19 @@ describe("Post detail responsive components", () => {
     )
   })
 
+  it("reserves the desktop table-of-contents lane in the hero when the article has headings", () => {
+    render(<PostHero hasTableOfContents post={post} />)
+
+    expect(screen.getByTestId("post-hero-main-column")).toHaveClass(
+      "max-w-[1000px]",
+    )
+    expect(screen.getByTestId("post-hero-toc-spacer")).toHaveClass(
+      "ml-10",
+      "w-[200px]",
+      "xl:block",
+    )
+  })
+
   it("centers the post body in a wider article lane", () => {
     const { container } = render(
       <PostBody content={{ content: [], type: "doc" }} />,

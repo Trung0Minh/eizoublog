@@ -39,6 +39,7 @@ import { createPortal } from "react-dom"
 import { LinkEditModal } from "@/components/editor/LinkEditModal"
 import { MediaUpload } from "@/components/editor/MediaUpload"
 import { VideoEmbedModal } from "@/components/editor/VideoEmbedModal"
+import { EDITOR_TEXT_COLORS } from "@/components/editor/content"
 import { serializeGalleryImages } from "@/components/editor/gallery"
 
 const HIGHLIGHT_COLORS = [
@@ -50,17 +51,6 @@ const HIGHLIGHT_COLORS = [
   { color: "#bbf7d0", label: "green" },
   { color: "#ddd6fe", label: "violet" },
   { color: "#e5e7eb", label: "gray" },
-]
-
-const TEXT_COLORS = [
-  { color: "#dc2626", label: "red" },
-  { color: "#ea580c", label: "orange" },
-  { color: "#ca8a04", label: "amber" },
-  { color: "#16a34a", label: "green" },
-  { color: "#0891b2", label: "cyan" },
-  { color: "#2563eb", label: "blue" },
-  { color: "#7c3aed", label: "violet" },
-  { color: "#db2777", label: "pink" },
 ]
 
 const FullEmojiPicker = lazy(() =>
@@ -240,6 +230,10 @@ export function EditorToolbar({
   const textColorButtonRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    if (typeof editor.on !== "function" || typeof editor.off !== "function") {
+      return
+    }
+
     const refresh = () => forceToolbarRefresh()
 
     editor.on("selectionUpdate", refresh)
@@ -343,7 +337,7 @@ export function EditorToolbar({
             top: highlightMenuPosition.top,
           }}
         >
-          {TEXT_COLORS.map(({ color, label }) => (
+          {EDITOR_TEXT_COLORS.map(({ color, label }) => (
             <button
               aria-label={`Text color ${label}`}
               className={[

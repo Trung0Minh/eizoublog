@@ -191,8 +191,11 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
           className="absolute inset-x-0 bottom-0 top-[18%] -z-10 bg-[linear-gradient(to_top,hsl(var(--background))_0%,hsl(var(--background)/0.92)_14%,hsl(var(--background)/0.68)_36%,hsl(var(--background)/0.28)_64%,transparent_100%)]"
           data-testid="event-cover-bottom-fade"
         />
-        <div className="mx-auto flex min-h-[440px] w-full max-w-7xl items-end px-4 py-12 sm:min-h-[56vh] sm:px-6 md:py-20 lg:min-h-[64vh] lg:px-10">
-          <div className="max-w-6xl">
+        <div
+          className="mx-auto grid min-h-[440px] w-full max-w-7xl items-end gap-8 px-4 py-12 sm:min-h-[56vh] sm:px-6 md:py-20 lg:min-h-[64vh] lg:grid-cols-[minmax(0,1000px)] lg:justify-start lg:px-10 2xl:max-w-[1360px] 2xl:grid-cols-[minmax(0,1000px)_220px] 2xl:pl-20 2xl:pr-0"
+          data-testid="event-hero-grid"
+        >
+          <div className="min-w-0" data-testid="event-hero-main-column">
             {(event.category || (event.tags?.length ?? 0) > 0) && (
               <div className="mb-4 flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-accent">
                 {event.category && (

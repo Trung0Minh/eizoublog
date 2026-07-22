@@ -109,7 +109,7 @@ describe("DashboardEventRoomPage (Page A)", () => {
     expect(screen.getByRole("button", { name: "Nộp bài dự thi" })).toBeVisible()
     expect(screen.getByRole("link", { name: "Xem trước bài dự thi" })).toHaveAttribute(
       "href",
-      "/dashboard/preview/post-1",
+      "/dashboard/events/event-1/rooms/room-1",
     )
     expect(screen.queryByRole("link", { name: "View feedback" })).not.toBeInTheDocument()
   })

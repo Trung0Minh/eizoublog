@@ -12,9 +12,12 @@ describe("published post width contract", () => {
     const hero = read("components/posts/PostHero.tsx")
     const articleView = read("components/posts/PostArticleView.tsx")
 
+    expect(hero).toContain("max-w-[1440px]")
     expect(hero).toContain("max-w-[1000px]")
+    expect(hero).toContain("post-hero-toc-spacer")
+    expect(articleView).toContain("hasTableOfContents={hasTableOfContents}")
     expect(articleView).toContain('className="w-full max-w-[1000px]')
-    expect(articleView).toContain('className="post-content mx-auto mt-6')
+    expect(articleView).toContain('className="post-content mx-auto mt-4')
     expect(articleView).toContain('className="mx-auto w-full font-lora')
   })
 

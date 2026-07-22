@@ -29,7 +29,11 @@ export function PostArticleView({
 
   return (
     <div className="contents" data-testid="post-article-view">
-      <PostHero post={post} authorUsernames={authorUsernames} />
+      <PostHero
+        authorUsernames={authorUsernames}
+        hasTableOfContents={hasTableOfContents}
+        post={post}
+      />
 
       {post.coverUrl && (
         <div className="pointer-events-none relative z-0 h-0 w-full">
