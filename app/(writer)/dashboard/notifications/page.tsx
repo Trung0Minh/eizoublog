@@ -32,6 +32,28 @@ function excerpt(value: string) {
   return trimmed.length > 140 ? `${trimmed.slice(0, 137)}...` : trimmed
 }
 
+interface EventRoomCommentNotification {
+  author: {
+    name: string
+    username: string
+  }
+  content: string
+  createdAt: Date | string
+  event: {
+    id: string
+    title: string
+  }
+  id: string
+  room: {
+    id: string
+    title: string
+  }
+}
+
+function isEventRoomComment(value: unknown): value is EventRoomCommentNotification {
+  return typeof value === "object" && value !== null && "room" in value && "event" in value
+}
+
 function timestamp(value: Date | string) {
   return value instanceof Date ? value.getTime() : Date.parse(value)
 }
@@ -227,10 +249,22 @@ export default async function NotificationsPage({
                     )}
 
                     {item.kind === "comment" && (
-                      <>
-                        <p className="font-medium text-text-primary">{item.value.authorName} đã bình luận trong “{item.value.post.title}”</p>
-                        <p className="mt-1 text-sm leading-6 text-text-secondary">{excerpt(item.value.content)}</p>
-                      </>
+                      isEventRoomComment(item.value) ? (
+                        <>
+                          <p className="font-medium text-text-primary">
+                            {item.value.author.name} đã gửi feedback trong “{item.value.room.title}”
+                          </p>
+                          <p className="mt-1 text-sm leading-6 text-text-secondary">
+                            {item.value.event.title}
+                          </p>
+                          <p className="mt-1 text-sm leading-6 text-text-secondary">{excerpt(item.value.content)}</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="font-medium text-text-primary">{item.value.authorName} đã bình luận trong “{item.value.post.title}”</p>
+                          <p className="mt-1 text-sm leading-6 text-text-secondary">{excerpt(item.value.content)}</p>
+                        </>
+                      )
                     )}
 
                     {item.kind === "event" && (() => {
@@ -294,7 +328,16 @@ export default async function NotificationsPage({
                     {item.kind === "invite" && <CoAuthorInviteActions postId={item.value.postId} />}
                     {item.kind === "comment" && (
                       <Button asChild size="sm" variant="outline">
-                        <ViewLink commentId={item.value.id} href={`/${item.value.post.slug}#comment-${item.value.id}`}>Xem</ViewLink>
+                        {isEventRoomComment(item.value) ? (
+                          <ViewLink
+                            eventRoomCommentId={item.value.id}
+                            href={`/dashboard/events/${item.value.event.id}/rooms/${item.value.room.id}`}
+                          >
+                            Xem
+                          </ViewLink>
+                        ) : (
+                          <ViewLink commentId={item.value.id} href={`/${item.value.post.slug}#comment-${item.value.id}`}>Xem</ViewLink>
+                        )}
                       </Button>
                     )}
                     {item.kind === "event" && item.value.type !== "POST_MODERATION" && item.value.type !== "DURABILITY_ALERT" && isRecord(item.value.data) && stringValue(item.value.data.postId) && (

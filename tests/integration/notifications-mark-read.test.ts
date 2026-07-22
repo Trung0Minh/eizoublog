@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 const mocks = vi.hoisted(() => ({
   getActiveSession: vi.fn(),
   markCommentRead: vi.fn(),
+  markEventRoomCommentRead: vi.fn(),
   markNotificationRead: vi.fn(),
 }))
 
@@ -13,6 +14,7 @@ vi.mock("@/lib/authz", () => ({
 
 vi.mock("@/lib/notifications", () => ({
   markCommentRead: mocks.markCommentRead,
+  markEventRoomCommentRead: mocks.markEventRoomCommentRead,
   markNotificationRead: mocks.markNotificationRead,
 }))
 
@@ -39,6 +41,7 @@ describe("POST /api/user/notifications/mark-read", () => {
     vi.clearAllMocks()
     mocks.getActiveSession.mockResolvedValue(writerSession)
     mocks.markCommentRead.mockResolvedValue({ count: 1 })
+    mocks.markEventRoomCommentRead.mockResolvedValue({ count: 1 })
     mocks.markNotificationRead.mockResolvedValue({ count: 1 })
   })
 
@@ -74,6 +77,23 @@ describe("POST /api/user/notifications/mark-read", () => {
     expect(mocks.markCommentRead).not.toHaveBeenCalled()
   })
 
+  it("marks event room feedback as read if eventRoomCommentId is provided", async () => {
+    const response = await POST(
+      postRequest({ eventRoomCommentId: "event-comment-123" }),
+    )
+
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toEqual({
+      data: { success: true },
+    })
+    expect(mocks.markEventRoomCommentRead).toHaveBeenCalledWith(
+      "event-comment-123",
+      "writer-1",
+    )
+    expect(mocks.markCommentRead).not.toHaveBeenCalled()
+    expect(mocks.markNotificationRead).not.toHaveBeenCalled()
+  })
+
   it("marks both as read if both commentId and notificationId are provided", async () => {
     const response = await POST(
       postRequest({ commentId: "comment-123", notificationId: "notification-123" }),
@@ -92,7 +112,7 @@ describe("POST /api/user/notifications/mark-read", () => {
 
     expect(response.status).toBe(400)
     await expect(response.json()).resolves.toEqual({
-      error: "Missing commentId or notificationId",
+      error: "Missing commentId, eventRoomCommentId, or notificationId",
     })
   })
 
@@ -111,6 +131,15 @@ describe("POST /api/user/notifications/mark-read", () => {
     expect(response.status).toBe(400)
     await expect(response.json()).resolves.toEqual({
       error: "Invalid notificationId format",
+    })
+  })
+
+  it("fails if eventRoomCommentId is not a string", async () => {
+    const response = await POST(postRequest({ eventRoomCommentId: true }))
+
+    expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toEqual({
+      error: "Invalid eventRoomCommentId format",
     })
   })
 

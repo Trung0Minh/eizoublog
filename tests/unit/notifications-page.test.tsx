@@ -154,6 +154,39 @@ describe("NotificationsPage", () => {
       .toBeDisabled()
   })
 
+  it("shows event submission feedback in the comments feed", async () => {
+    mocks.getNotifications.mockResolvedValue({
+      pendingInvites: [],
+      responseEvents: [],
+      unreadComments: [
+        {
+          author: { name: "Admin", username: "admin" },
+          content: "Please tighten the third paragraph.",
+          createdAt: new Date("2026-07-22T04:00:00Z"),
+          event: { id: "event-1", title: "Awards" },
+          id: "event-comment-1",
+          room: { id: "room-1", title: "My submission" },
+        },
+      ],
+    })
+
+    render(
+      await NotificationsPage({
+        searchParams: Promise.resolve({ type: "comments" }),
+      }),
+    )
+
+    expect(screen.getByText("Admin đã gửi feedback trong “My submission”")).toBeVisible()
+    expect(screen.getByText("Awards")).toBeVisible()
+    expect(screen.getByText("Please tighten the third paragraph.")).toBeVisible()
+    expect(screen.getByRole("link", { name: "Xem" })).toHaveAttribute(
+      "href",
+      "/dashboard/events/event-1/rooms/room-1",
+    )
+    expect(screen.getByRole("button", { name: "Đánh dấu tất cả đã đọc" }))
+      .toBeEnabled()
+  })
+
   describe("ViewLink component", () => {
     it("calls the mark-read API, dispatches event, and navigates on click for commentId", async () => {
       const fetchSpy = vi.spyOn(global, "fetch").mockResolvedValue({
@@ -231,6 +264,38 @@ describe("NotificationsPage", () => {
 
       fetchSpy.mockRestore()
       dispatchSpy.mockRestore()
+    })
+
+    it("calls the mark-read API for eventRoomCommentId", async () => {
+      const fetchSpy = vi.spyOn(global, "fetch").mockResolvedValue({
+        ok: true,
+        json: async () => ({ data: { success: true } }),
+      } as Response)
+
+      render(
+        <ViewLink eventRoomCommentId="event-comment-1" href="/dashboard/events/event-1/rooms/room-1">
+          Test Event Feedback Link
+        </ViewLink>,
+      )
+
+      fireEvent.click(screen.getByRole("link", { name: "Test Event Feedback Link" }))
+
+      expect(fetchSpy).toHaveBeenCalledWith("/api/user/notifications/mark-read", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ eventRoomCommentId: "event-comment-1" }),
+        keepalive: true,
+      })
+
+      await waitFor(() => {
+        expect(mocks.router.push).toHaveBeenCalledWith(
+          "/dashboard/events/event-1/rooms/room-1",
+        )
+      })
+
+      fetchSpy.mockRestore()
     })
   })
 })

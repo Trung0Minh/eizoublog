@@ -3,6 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 const mocks = vi.hoisted(() => ({
   prisma: {
     $queryRaw: vi.fn(),
+    awardEventRoomComment: {
+      updateMany: vi.fn(),
+    },
     comment: {
       count: vi.fn(),
       findMany: vi.fn(),
@@ -27,6 +30,7 @@ import {
   createCoAuthorResponseNotification,
   getNotificationCounts,
   getNotifications,
+  markEventRoomCommentRead,
   markUnreadCommentsRead,
   markNotificationsRead,
   markCommentRead,
@@ -37,6 +41,7 @@ describe("notification queries", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.prisma.$queryRaw.mockResolvedValue([])
+    mocks.prisma.awardEventRoomComment.updateMany.mockResolvedValue({ count: 0 })
     mocks.prisma.comment.count.mockResolvedValue(0)
     mocks.prisma.comment.findMany.mockResolvedValue([])
     mocks.prisma.comment.updateMany.mockResolvedValue({ count: 0 })
@@ -54,6 +59,7 @@ describe("notification queries", () => {
         pendingInvites: BigInt(2),
         responseEvents: BigInt(4),
         unreadComments: BigInt(3),
+        unreadEventRoomComments: BigInt(1),
       },
     ])
 
@@ -65,8 +71,8 @@ describe("notification queries", () => {
     ).resolves.toEqual({
       pendingInvites: 2,
       responseEvents: 4,
-      total: 9,
-      unreadComments: 3,
+      total: 10,
+      unreadComments: 4,
     })
 
     expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(1)
@@ -103,11 +109,19 @@ describe("notification queries", () => {
       id: "notification-1",
       type: "COAUTHOR_ACCEPTED",
     }
+    const eventRoomComment = {
+      author: { name: "Admin", username: "admin" },
+      content: "Please tighten this paragraph.",
+      createdAt: new Date("2026-06-16T06:00:00Z"),
+      event: { id: "event-1", title: "Awards" },
+      id: "event-comment-1",
+      room: { id: "room-1", title: "Submission" },
+    }
     mocks.prisma.$queryRaw.mockResolvedValueOnce([
       {
         pendingInvites: [invite],
         responseEvents: [responseEvent],
-        unreadComments: [comment],
+        unreadComments: [comment, eventRoomComment],
       },
     ])
 
@@ -119,7 +133,7 @@ describe("notification queries", () => {
     ).resolves.toEqual({
       pendingInvites: [invite],
       responseEvents: [responseEvent],
-      unreadComments: [comment],
+      unreadComments: [comment, eventRoomComment],
     })
 
     expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(1)
@@ -134,13 +148,14 @@ describe("notification queries", () => {
 
   it("marks unread comments read across authored and accepted co-authored posts", async () => {
     mocks.prisma.comment.updateMany.mockResolvedValue({ count: 4 })
+    mocks.prisma.awardEventRoomComment.updateMany.mockResolvedValue({ count: 2 })
 
     await expect(
       markUnreadCommentsRead({
         email: "mina@example.com",
         id: "writer-1",
       }),
-    ).resolves.toEqual({ count: 4 })
+    ).resolves.toEqual({ count: 6 })
 
     expect(mocks.prisma.comment.updateMany).toHaveBeenCalledWith({
       data: { isRead: true },
@@ -159,6 +174,14 @@ describe("notification queries", () => {
           status: { notIn: ["ARCHIVED", "REMOVED"] },
         },
         status: "APPROVED",
+      },
+    })
+    expect(mocks.prisma.awardEventRoomComment.updateMany).toHaveBeenCalledWith({
+      data: { isRead: true },
+      where: {
+        authorId: { not: "writer-1" },
+        isRead: false,
+        room: { writerId: "writer-1" },
       },
     })
   })
@@ -204,6 +227,24 @@ describe("notification queries", () => {
           status: { notIn: ["ARCHIVED", "REMOVED"] },
         },
         status: "APPROVED",
+      },
+    })
+  })
+
+  it("marks a single event room feedback comment read if authorized", async () => {
+    mocks.prisma.awardEventRoomComment.updateMany.mockResolvedValue({ count: 1 })
+
+    await expect(
+      markEventRoomCommentRead("event-comment-123", "writer-1"),
+    ).resolves.toEqual({ count: 1 })
+
+    expect(mocks.prisma.awardEventRoomComment.updateMany).toHaveBeenCalledWith({
+      data: { isRead: true },
+      where: {
+        authorId: { not: "writer-1" },
+        id: "event-comment-123",
+        isRead: false,
+        room: { writerId: "writer-1" },
       },
     })
   })

@@ -69,6 +69,24 @@ export type NotificationComment = Prisma.CommentGetPayload<{
   select: typeof notificationCommentSelect
 }>
 
+export interface NotificationEventRoomComment {
+  author: {
+    name: string
+    username: string
+  }
+  content: string
+  createdAt: Date | string
+  event: {
+    id: string
+    title: string
+  }
+  id: string
+  room: {
+    id: string
+    title: string
+  }
+}
+
 export type NotificationInvite = Prisma.PostAuthorGetPayload<{
   select: typeof notificationInviteSelect
 }>
@@ -96,12 +114,13 @@ interface NotificationCountsRow {
   pendingInvites: DbCount
   responseEvents: DbCount
   unreadComments: DbCount
+  unreadEventRoomComments: DbCount
 }
 
 interface NotificationsRow {
   pendingInvites: NotificationInvite[]
   responseEvents: NotificationEvent[]
-  unreadComments: NotificationComment[]
+  unreadComments: Array<NotificationComment | NotificationEventRoomComment>
 }
 
 function countToNumber(value: DbCount) {
@@ -140,6 +159,14 @@ export async function getNotificationCounts(user: NotificationUser) {
       ) AS "unreadComments",
       (
         SELECT COUNT(*)
+        FROM award_event_room_comments arc
+        JOIN award_event_rooms room ON room.id = arc."roomId"
+        WHERE room."writerId" = ${user.id}
+          AND arc."authorId" <> ${user.id}
+          AND arc."isRead" = false
+      ) AS "unreadEventRoomComments",
+      (
+        SELECT COUNT(*)
         FROM post_authors pa
         JOIN posts p ON p.id = pa."postId"
         WHERE pa."userId" = ${user.id}
@@ -155,56 +182,94 @@ export async function getNotificationCounts(user: NotificationUser) {
   `
 
   const unreadComments = countToNumber(counts?.unreadComments)
+  const unreadEventRoomComments = countToNumber(counts?.unreadEventRoomComments)
   const pendingInvites = countToNumber(counts?.pendingInvites)
   const responseEvents = countToNumber(counts?.responseEvents)
 
   return {
     pendingInvites,
     responseEvents,
-    total: unreadComments + pendingInvites + responseEvents,
-    unreadComments,
+    total: unreadComments + unreadEventRoomComments + pendingInvites + responseEvents,
+    unreadComments: unreadComments + unreadEventRoomComments,
   }
 }
 
 export async function getNotifications(user: NotificationUser) {
   const [row] = await prisma.$queryRaw<NotificationsRow[]>`
     SELECT
-      COALESCE(
-        (
-          SELECT json_agg(item ORDER BY (item->>'createdAt') DESC)
-          FROM (
-            SELECT json_build_object(
-              'authorName', c."authorName",
-              'content', c.content,
-              'createdAt', c."createdAt",
-              'id', c.id,
-              'post', json_build_object(
-                'slug', p.slug,
-                'title', p.title
-              )
-            ) AS item
-            FROM comments c
-            JOIN posts p ON p.id = c."postId"
-            WHERE c."authorEmail" <> ${user.email}
-              AND c."isRead" = false
-              AND c.status = 'APPROVED'
-              AND p.status NOT IN ('ARCHIVED', 'REMOVED')
-              AND (
-                p."authorId" = ${user.id}
-                OR EXISTS (
-                  SELECT 1
-                  FROM post_authors accepted_author
-                  WHERE accepted_author."postId" = p.id
-                    AND accepted_author."userId" = ${user.id}
-                    AND accepted_author.status = 'ACCEPTED'
+      (
+        COALESCE(
+          (
+            SELECT jsonb_agg(item ORDER BY (item->>'createdAt') DESC)
+            FROM (
+              SELECT jsonb_build_object(
+                'authorName', c."authorName",
+                'content', c.content,
+                'createdAt', c."createdAt",
+                'id', c.id,
+                'post', jsonb_build_object(
+                  'slug', p.slug,
+                  'title', p.title
                 )
-              )
-            ORDER BY c."createdAt" DESC
-            LIMIT 25
-          ) comments
-        ),
-        '[]'::json
-      ) AS "unreadComments",
+              ) AS item
+              FROM comments c
+              JOIN posts p ON p.id = c."postId"
+              WHERE c."authorEmail" <> ${user.email}
+                AND c."isRead" = false
+                AND c.status = 'APPROVED'
+                AND p.status NOT IN ('ARCHIVED', 'REMOVED')
+                AND (
+                  p."authorId" = ${user.id}
+                  OR EXISTS (
+                    SELECT 1
+                    FROM post_authors accepted_author
+                    WHERE accepted_author."postId" = p.id
+                      AND accepted_author."userId" = ${user.id}
+                      AND accepted_author.status = 'ACCEPTED'
+                  )
+                )
+              ORDER BY c."createdAt" DESC
+              LIMIT 25
+            ) comments
+          ),
+          '[]'::jsonb
+        ) ||
+        COALESCE(
+          (
+            SELECT jsonb_agg(item ORDER BY (item->>'createdAt') DESC)
+            FROM (
+              SELECT jsonb_build_object(
+                'author', jsonb_build_object(
+                  'name', author.name,
+                  'username', author.username
+                ),
+                'content', arc.content,
+                'createdAt', arc."createdAt",
+                'event', jsonb_build_object(
+                  'id', event.id,
+                  'title', event.title
+                ),
+                'id', arc.id,
+                'room', jsonb_build_object(
+                  'id', room.id,
+                  'title', COALESCE(room."submittedPostTitle", selected_post.title, 'Bài dự thi')
+                )
+              ) AS item
+              FROM award_event_room_comments arc
+              JOIN award_event_rooms room ON room.id = arc."roomId"
+              JOIN award_events event ON event.id = room."eventId"
+              JOIN users author ON author.id = arc."authorId"
+              LEFT JOIN posts selected_post ON selected_post.id = room."postId"
+              WHERE room."writerId" = ${user.id}
+                AND arc."authorId" <> ${user.id}
+                AND arc."isRead" = false
+              ORDER BY arc."createdAt" DESC
+              LIMIT 25
+            ) event_room_comments
+          ),
+          '[]'::jsonb
+        )
+      )::json AS "unreadComments",
       COALESCE(
         (
           SELECT json_agg(item ORDER BY (item->'post'->>'updatedAt') DESC)
@@ -261,10 +326,22 @@ export async function getNotifications(user: NotificationUser) {
 }
 
 export async function markUnreadCommentsRead(user: NotificationUser) {
-  return prisma.comment.updateMany({
-    data: { isRead: true },
-    where: unreadCommentWhere(user),
-  })
+  const [comments, eventRoomComments] = await Promise.all([
+    prisma.comment.updateMany({
+      data: { isRead: true },
+      where: unreadCommentWhere(user),
+    }),
+    prisma.awardEventRoomComment.updateMany({
+      data: { isRead: true },
+      where: {
+        authorId: { not: user.id },
+        isRead: false,
+        room: { writerId: user.id },
+      },
+    }),
+  ])
+
+  return { count: comments.count + eventRoomComments.count }
 }
 
 export async function markNotificationsRead(userId: string) {
@@ -280,6 +357,18 @@ export async function markCommentRead(commentId: string, user: NotificationUser)
     where: {
       ...unreadCommentWhere(user),
       id: commentId,
+    },
+  })
+}
+
+export async function markEventRoomCommentRead(commentId: string, userId: string) {
+  return prisma.awardEventRoomComment.updateMany({
+    data: { isRead: true },
+    where: {
+      authorId: { not: userId },
+      id: commentId,
+      isRead: false,
+      room: { writerId: userId },
     },
   })
 }

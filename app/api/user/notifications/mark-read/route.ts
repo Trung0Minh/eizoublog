@@ -1,5 +1,9 @@
 import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
-import { markCommentRead, markNotificationRead } from "@/lib/notifications"
+import {
+  markCommentRead,
+  markEventRoomCommentRead,
+  markNotificationRead,
+} from "@/lib/notifications"
 
 export async function POST(request: Request) {
   try {
@@ -9,18 +13,22 @@ export async function POST(request: Request) {
       return unauthorizedResponse()
     }
 
-    let body: { commentId?: string; notificationId?: string } = {}
+    let body: {
+      commentId?: string
+      eventRoomCommentId?: string
+      notificationId?: string
+    } = {}
     try {
       body = await request.json()
     } catch {
       return Response.json({ error: "Invalid JSON body" }, { status: 400 })
     }
 
-    const { commentId, notificationId } = body
+    const { commentId, eventRoomCommentId, notificationId } = body
 
-    if (!commentId && !notificationId) {
+    if (!commentId && !eventRoomCommentId && !notificationId) {
       return Response.json(
-        { error: "Missing commentId or notificationId" },
+        { error: "Missing commentId, eventRoomCommentId, or notificationId" },
         { status: 400 },
       )
     }
@@ -39,10 +47,21 @@ export async function POST(request: Request) {
       )
     }
 
+    if (eventRoomCommentId && typeof eventRoomCommentId !== "string") {
+      return Response.json(
+        { error: "Invalid eventRoomCommentId format" },
+        { status: 400 },
+      )
+    }
+
     const promises: Promise<unknown>[] = []
 
     if (commentId) {
       promises.push(markCommentRead(commentId, activeSession.user))
+    }
+
+    if (eventRoomCommentId) {
+      promises.push(markEventRoomCommentRead(eventRoomCommentId, activeSession.user.id))
     }
 
     if (notificationId) {

@@ -85,18 +85,6 @@ export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
     notFound()
   }
 
-  // If the owner is viewing, mark all comments written by others as read
-  if (isOwner) {
-    await prisma.awardEventRoomComment.updateMany({
-      data: { isRead: true },
-      where: {
-        authorId: { not: session.user.id },
-        isRead: false,
-        roomId,
-      },
-    })
-  }
-
   // Fetch comments matching privacy visibility rules
   const comments = await prisma.awardEventRoomComment.findMany({
     orderBy: { createdAt: "asc" },

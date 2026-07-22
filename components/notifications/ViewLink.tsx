@@ -6,11 +6,13 @@ import { ComponentProps, MouseEvent } from "react"
 
 interface ViewLinkProps extends ComponentProps<typeof Link> {
   commentId?: string
+  eventRoomCommentId?: string
   notificationId?: string
 }
 
 export function ViewLink({
   commentId,
+  eventRoomCommentId,
   notificationId,
   href,
   onClick,
@@ -27,8 +29,13 @@ export function ViewLink({
       onClick(e)
     }
 
-    const body: { commentId?: string; notificationId?: string } = {}
+    const body: {
+      commentId?: string
+      eventRoomCommentId?: string
+      notificationId?: string
+    } = {}
     if (commentId) body.commentId = commentId
+    if (eventRoomCommentId) body.eventRoomCommentId = eventRoomCommentId
     if (notificationId) body.notificationId = notificationId
 
     const hasTarget = props.target && props.target !== "_self"
@@ -40,7 +47,7 @@ export function ViewLink({
       hasTarget
     ) {
       // Let browser handle native new tab/window behavior
-      if (commentId || notificationId) {
+      if (commentId || eventRoomCommentId || notificationId) {
         fetch("/api/user/notifications/mark-read", {
           method: "POST",
           headers: {
@@ -58,7 +65,7 @@ export function ViewLink({
     // Normal client-side SPA navigation - non-blocking
     e.preventDefault()
 
-    if (commentId || notificationId) {
+    if (commentId || eventRoomCommentId || notificationId) {
       fetch("/api/user/notifications/mark-read", {
         method: "POST",
         headers: {
