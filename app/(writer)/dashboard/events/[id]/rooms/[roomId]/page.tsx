@@ -186,7 +186,7 @@ export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
 
         {/* Post Image */}
         {room.selectedPost.coverUrl && (
-          <div className="relative aspect-video w-full overflow-hidden bg-subtle-bg rounded-[8px] border border-border-default">
+          <div className="relative aspect-video w-full overflow-hidden rounded-[8px] border border-border-default bg-subtle-bg">
             <div className="absolute inset-0 overflow-hidden">
               <img
                 alt={room.selectedPost.title}
@@ -198,6 +198,12 @@ export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
                 src={room.selectedPost.coverUrl.split("?")[0]}
               />
             </div>
+          </div>
+        )}
+
+        {hasTableOfContents && (
+          <div className="xl:hidden">
+            <TableOfContents collapsible content={selectedPostContent} />
           </div>
         )}
 

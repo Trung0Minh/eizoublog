@@ -6,6 +6,9 @@ const mocks = vi.hoisted(() => ({
     throw new Error("notFound")
   }),
   prisma: {
+    awardEventRoom: {
+      findFirst: vi.fn(),
+    },
     post: {
       findUnique: vi.fn(),
     },
@@ -88,6 +91,7 @@ describe("DashboardPostPreviewPage", () => {
       user: { id: "admin-1", role: "ADMIN" },
     })
     mocks.prisma.post.findUnique.mockResolvedValue(post)
+    mocks.prisma.awardEventRoom.findFirst.mockResolvedValue(null)
   })
 
   it("renders a private draft post in read-only mode for admins", async () => {
@@ -112,5 +116,18 @@ describe("DashboardPostPreviewPage", () => {
         params: Promise.resolve({ id: "post-1" }),
       }),
     ).rejects.toThrow("notFound")
+  })
+
+  it("opens event submissions in their event-entry view", async () => {
+    mocks.prisma.awardEventRoom.findFirst.mockResolvedValue({
+      eventId: "event-1",
+      id: "room-1",
+    })
+
+    await expect(
+      DashboardPostPreviewPage({
+        params: Promise.resolve({ id: "post-1" }),
+      }),
+    ).rejects.toThrow("redirect:/dashboard/events/event-1/rooms/room-1")
   })
 })

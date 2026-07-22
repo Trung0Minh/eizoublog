@@ -11,7 +11,7 @@ function getTocAsideClasses(relativePath: string) {
   const source = relativePath.includes("dashboard/preview")
     ? read("components/posts/PostArticleView.tsx")
     : read(relativePath)
-  const tocIndex = source.indexOf("<TableOfContents")
+  const tocIndex = source.lastIndexOf("<TableOfContents")
   const asideIndex = source.lastIndexOf('<aside className="', tocIndex)
   const classStart = asideIndex + '<aside className="'.length
   const classEnd = source.indexOf('"', classStart)
@@ -56,5 +56,31 @@ describe("preview table of contents layout", () => {
     expect(source).toContain("const hasTableOfContents = extractHeadings")
     expect(source).toContain("{hasTableOfContents && (")
     expect(source).toContain('hasTableOfContents\n                ? "min-w-0 flex-1 w-full max-w-[800px]"\n                : "min-w-0 flex-1 w-full"')
+  })
+
+  it("omits the event-entry media block when the submission has no cover", () => {
+    const source = read("app/(writer)/dashboard/events/[id]/rooms/[roomId]/page.tsx")
+
+    expect(source).toContain(
+      "{/* Post Image */}\n        {room.selectedPost.coverUrl && (\n          <div",
+    )
+  })
+
+  it("shows the event-entry table of contents before the article on mobile", () => {
+    const source = read("app/(writer)/dashboard/events/[id]/rooms/[roomId]/page.tsx")
+
+    expect(source).toContain(
+      '{hasTableOfContents && (\n          <div className="xl:hidden">',
+    )
+    expect(source).toContain("<TableOfContents collapsible")
+  })
+
+  it("shows the saved-post table of contents in a mobile card", () => {
+    const source = read("components/posts/PostArticleView.tsx")
+
+    expect(source).toContain(
+      '{hasTableOfContents && (\n            <div className="xl:hidden">',
+    )
+    expect(source).toContain("<TableOfContents collapsible")
   })
 })
