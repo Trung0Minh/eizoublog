@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
-import { ChevronLeft, Eye, FileText, Lock } from "lucide-react"
+import { ChevronLeft, Eye, FileText, Lock, Pencil } from "lucide-react"
 
 import { EventRoomEditor } from "@/components/events/EventRoomEditor"
 import { joinAwardEvent } from "@/lib/awardEventService"
@@ -277,15 +277,26 @@ export default async function DashboardEventRoomPage({
 
             <div className="flex shrink-0 flex-wrap justify-end gap-2">
               {ourRoom.postId && ourRoom.selectedPost && (
-                <Button asChild size="icon" variant="outline">
-                  <Link
-                    aria-label="Xem trước bài dự thi"
-                    href={`/dashboard/events/${event.id}/rooms/${ourRoom.id}`}
-                    title="Xem trước bài dự thi"
-                  >
-                    <Eye aria-hidden="true" className="h-4 w-4" />
-                  </Link>
-                </Button>
+                <>
+                  <Button asChild size="icon" variant="outline">
+                    <Link
+                      aria-label="Chỉnh sửa bài dự thi"
+                      href={`/dashboard/edit/${ourRoom.selectedPost.id}`}
+                      title="Chỉnh sửa bài dự thi"
+                    >
+                      <Pencil aria-hidden="true" className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button asChild size="icon" variant="outline">
+                    <Link
+                      aria-label="Xem trước bài dự thi"
+                      href={`/dashboard/events/${event.id}/rooms/${ourRoom.id}`}
+                      title="Xem trước bài dự thi"
+                    >
+                      <Eye aria-hidden="true" className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </>
               )}
             </div>
           </div>

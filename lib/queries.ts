@@ -35,6 +35,7 @@ const sidebarCategorySelect = {
 const recentPostSelect = {
   publishedAt: true,
   slug: true,
+  status: true,
   title: true,
 } satisfies Prisma.PostSelect
 
@@ -262,6 +263,7 @@ export const publishedPostDetailSelect = {
   coverUrl: true,
   excerpt: true,
   excerptContent: true,
+  featuredAt: true,
   finalAwardEvent: {
     select: {
       category: { select: { name: true, slug: true } },
@@ -297,6 +299,7 @@ export const publishedPostDetailSelect = {
   id: true,
   publishedAt: true,
   slug: true,
+  status: true,
   tags: {
     select: {
       tag: { select: { name: true, slug: true } },
@@ -316,6 +319,7 @@ export interface PublishedPostListItem {
   coverAlt: string | null
   coverUrl: string | null
   excerpt: string | null
+  featuredAt: Date | null
   publishedAt: Date | null
   slug: string
   tags: { tag: { id: string; name: string; slug: string } }[]
@@ -337,6 +341,7 @@ export interface AdminPostListItem {
   _count: { comments: number }
   author: { name: string; username: string }
   id: string
+  featuredAt: Date | null
   publishedAt: Date | null
   removedAt: Date | null
   slug: string
@@ -392,6 +397,7 @@ interface AdminPostRow {
   authorUsername: string | null
   commentCount: DbCount
   id: string | null
+  featuredAt: Date | null
   publishedAt: Date | null
   removedAt: Date | null
   slug: string | null
@@ -428,6 +434,7 @@ interface PublishedPostListRow {
   eventIntro: unknown
   eventIntroText: string | null
   excerpt: string | null
+  featuredAt: Date | null
   publishedAt: Date | null
   slug: string | null
   tags: PublishedPostListItem["tags"]
@@ -559,9 +566,10 @@ async function getPublishedPostListBySql(
   page: number,
   pageSize: number,
   sort: PostListSort = "latest",
+  orderOverride?: Prisma.Sql,
 ) {
   const offset = (page - 1) * pageSize
-  const orderBy = getPublishedPostOrderSql(sort)
+  const orderBy = orderOverride ?? getPublishedPostOrderSql(sort)
   const rows =
     sort === "comments"
       ? await prisma.$queryRaw<PublishedPostListRow[]>`
@@ -575,6 +583,7 @@ async function getPublishedPostListBySql(
               final_event.intro AS "eventIntro",
               final_event."introText" AS "eventIntroText",
               p.excerpt,
+              p."featuredAt",
               p."publishedAt",
               p.slug,
               p.title,
@@ -620,6 +629,7 @@ async function getPublishedPostListBySql(
             p."eventIntro",
             p."eventIntroText",
             p.excerpt,
+            p."featuredAt",
             p."publishedAt",
             p.slug,
             COALESCE(tags.items, '[]'::json) AS tags,
@@ -672,6 +682,7 @@ async function getPublishedPostListBySql(
               final_event.intro AS "eventIntro",
               final_event."introText" AS "eventIntroText",
               p.excerpt,
+              p."featuredAt",
               p."publishedAt",
               p.slug,
               p.title,
@@ -711,6 +722,7 @@ async function getPublishedPostListBySql(
             p."eventIntro",
             p."eventIntroText",
             p.excerpt,
+            p."featuredAt",
             p."publishedAt",
             p.slug,
             COALESCE(tags.items, '[]'::json) AS tags,
@@ -773,6 +785,7 @@ async function getPublishedPostListBySql(
       coverAlt: row.coverAlt,
       coverUrl: row.coverUrl,
       excerpt: resolvePublishedPostExcerpt(row),
+      featuredAt: row.featuredAt,
       publishedAt: row.publishedAt,
       slug: row.slug,
       tags: row.tags,
@@ -822,6 +835,34 @@ export const getCachedPublishedPosts = unstable_cache(
     )
   },
   ["published-posts"],
+  { revalidate: 300, tags: ["posts"] },
+)
+
+export const getCachedHomeCarouselPosts = unstable_cache(
+  async () => {
+    const featured = await getPublishedPostListBySql(
+      Prisma.sql`
+        p.status = 'PUBLISHED'
+        AND p."featuredAt" IS NOT NULL
+      `,
+      1,
+      10,
+      "latest",
+      Prisma.sql`ORDER BY p."featuredAt" DESC NULLS LAST, p."publishedAt" DESC NULLS LAST, p."updatedAt" DESC`,
+    )
+    const slotsRemaining = Math.max(10 - featured.posts.length, 0)
+
+    if (slotsRemaining === 0) {
+      return featured.posts.slice(0, 10)
+    }
+
+    const latest = await getCachedPublishedPosts(1, 10, "latest")
+    const seenSlugs = new Set(featured.posts.map((post) => post.slug))
+    const fallbackPosts = latest.posts.filter((post) => !seenSlugs.has(post.slug))
+
+    return [...featured.posts, ...fallbackPosts].slice(0, 10)
+  },
+  ["home-carousel-posts"],
   { revalidate: 300, tags: ["posts"] },
 )
 
@@ -1103,6 +1144,7 @@ export const getCachedAdminPosts = unstable_cache(
           p.title,
           p.slug,
           p.status::text AS status,
+          p."featuredAt",
           p."publishedAt",
           p."removedAt",
           p."updatedAt",
@@ -1135,6 +1177,7 @@ export const getCachedAdminPosts = unstable_cache(
           p.title,
           p.slug,
           p.status::text AS status,
+          p."featuredAt",
           p."publishedAt",
           p."removedAt",
           p."updatedAt",
@@ -1184,6 +1227,7 @@ export const getCachedAdminPosts = unstable_cache(
         _count: { comments: countToNumber(row.commentCount) },
         author: { name: row.authorName, username: row.authorUsername },
         id: row.id,
+        featuredAt: row.featuredAt,
         publishedAt: row.publishedAt,
         removedAt: row.removedAt,
         slug: row.slug,
@@ -1683,10 +1727,7 @@ export async function getHomePageData({
 }) {
   const listDataPromise = getCachedPublishedPosts(page, 10, sort, archive)
   const sidebarDataPromise = getCachedSidebarData()
-  const carouselPostsPromise =
-    page === 1 && sort === "latest" && !archive
-      ? listDataPromise.then(({ posts }) => posts.slice(0, 5))
-      : getCachedPublishedPosts(1, 5, "latest").then(({ posts }) => posts)
+  const carouselPostsPromise = getCachedHomeCarouselPosts()
 
   const [listData, sidebarData, carouselPosts] = await Promise.all([
     listDataPromise,

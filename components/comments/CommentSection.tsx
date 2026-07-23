@@ -80,6 +80,17 @@ export function CommentSection({
     )
   }
 
+  function handleHiddenComment(commentId: string) {
+    setComments((currentComments) =>
+      currentComments
+        .filter((comment) => comment.id !== commentId)
+        .map((comment) => ({
+          ...comment,
+          replies: comment.replies.filter((reply) => reply.id !== commentId),
+        })),
+    )
+  }
+
   return (
     <section className="relative z-30 mt-8 overflow-hidden rounded-[16px] border border-border-default/60 bg-background/90 px-4 py-5 font-sans backdrop-blur-sm sm:mt-12 sm:rounded-[8px] sm:bg-subtle-bg/90 sm:p-8 md:p-10" id="comments">
       <div className="mb-4">
@@ -109,6 +120,7 @@ export function CommentSection({
             postId={postId}
             postSlug={postSlug}
             isAuthenticated={isAuthenticated}
+            onHide={handleHiddenComment}
             postAuthorUsernames={postAuthorUsernames}
           />
         </div>

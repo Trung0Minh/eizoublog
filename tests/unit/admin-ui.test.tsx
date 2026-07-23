@@ -310,6 +310,47 @@ describe("admin client components", () => {
     expect(routerMocks.refresh).not.toHaveBeenCalled()
   })
 
+  it("marks a published post as featured from the admin posts row", async () => {
+    const user = userEvent.setup()
+    const featuredAt = "2026-07-23T05:42:00.000Z"
+    const fetchMock = vi.fn().mockResolvedValue(
+      okResponse({
+        data: { featuredAt, id: "post-1" },
+      }),
+    )
+    vi.stubGlobal("fetch", fetchMock)
+
+    render(
+      <AdminPostsTable
+        posts={[
+          {
+            _count: { comments: 2 },
+            author: { name: "Mina", username: "mina" },
+            featuredAt: null,
+            id: "post-1",
+            publishedAt: new Date("2026-01-01T00:00:00Z"),
+            slug: "published-post",
+            status: "PUBLISHED",
+            title: "Published post",
+            updatedAt: new Date("2026-01-02T00:00:00Z"),
+          },
+        ]}
+      />,
+    )
+
+    await user.click(screen.getAllByRole("button", { name: "Mark as featured" })[0])
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/admin/posts/post-1/featured", {
+      body: JSON.stringify({ featured: true }),
+      headers: { "Content-Type": "application/json" },
+      method: "PATCH",
+    })
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Remove featured post" })).toBeVisible()
+    })
+    expect(screen.getByText("Featured")).toBeVisible()
+  })
+
   it("renders admin posts as mobile cards without a forced desktop-width table", () => {
     render(
       <AdminPostsTable

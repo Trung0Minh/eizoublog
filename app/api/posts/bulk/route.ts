@@ -80,6 +80,7 @@ export async function POST(request: Request) {
         prepared.flatMap(({ action, post, transition }) => [
           tx.post.update({
             data: {
+              featuredAt: transition.toStatus === "PUBLISHED" ? undefined : null,
               moderationLockedAt: transition.moderationLockedAt,
               publishedAt: transition.publishedAt,
               ...(transition.removedAt !== undefined && { removedAt: transition.removedAt }),

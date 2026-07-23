@@ -67,6 +67,7 @@ export async function POST(
     const transition = getPostModerationTransition(input.action, post)
     const updatedPostPromise = prisma.post.update({
       data: {
+        featuredAt: transition.toStatus === "PUBLISHED" ? undefined : null,
         moderationLockedAt: transition.moderationLockedAt,
         publishedAt: transition.publishedAt,
         ...(transition.removedAt !== undefined && { removedAt: transition.removedAt }),

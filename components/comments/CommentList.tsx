@@ -1,17 +1,21 @@
 "use client"
 
 import { useState } from "react"
-import { Reply } from "lucide-react"
+import { Loader2, Reply, ShieldAlert } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
+import { toast } from "sonner"
 
 import { CommentForm } from "@/components/comments/CommentForm"
 import { RoleBadges } from "@/components/profile/RoleBadges"
 import { Button } from "@/components/ui/button"
+import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog"
 import { RelativeTime } from "@/components/ui/RelativeTime"
+import { useAdminAccess } from "@/lib/clientSession"
 import type { CommentWithReplies, PublicComment } from "@/types"
 
 interface CommentListProps {
   comments: CommentWithReplies[]
+  onHide?: (commentId: string) => void
   onReply: (comment: CommentWithReplies) => void
   postId: string
   postSlug?: string
@@ -33,11 +37,110 @@ function avatarColor(name: string) {
   return colors[total % colors.length]
 }
 
+function getApiError(value: unknown) {
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "error" in value &&
+    typeof value.error === "string"
+  ) {
+    return value.error
+  }
+
+  return "Vui lòng thử lại."
+}
+
+function CommentAdminActions({
+  comment,
+  onHide,
+}: {
+  comment: PublicComment
+  onHide?: (commentId: string) => void
+}) {
+  const isAdmin = useAdminAccess()
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [pending, setPending] = useState(false)
+
+  if (!isAdmin) {
+    return null
+  }
+
+  async function hideComment() {
+    setPending(true)
+
+    try {
+      const response = await fetch(`/api/comments/${comment.id}`, {
+        method: "DELETE",
+      })
+      const result: unknown = await response.json()
+
+      if (!response.ok) {
+        throw new Error(getApiError(result))
+      }
+
+      setConfirmOpen(false)
+      onHide?.(comment.id)
+      toast.success("Đã đánh dấu là spam", {
+        description: `Bình luận của ${comment.authorName} đã được ẩn.`,
+      })
+    } catch (error) {
+      toast.error("Không thể ẩn bình luận", {
+        description: error instanceof Error ? error.message : "Vui lòng thử lại.",
+      })
+    } finally {
+      setPending(false)
+    }
+  }
+
+  return (
+    <>
+      <Button
+        aria-label={`Đánh dấu bình luận của ${comment.authorName} là spam`}
+        className="h-7 w-7 rounded-[8px] p-0 text-text-tertiary transition-colors hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-400"
+        disabled={pending}
+        onClick={() => setConfirmOpen(true)}
+        size="icon"
+        title="Đánh dấu spam"
+        type="button"
+        variant="ghost"
+      >
+        {pending ? (
+          <Loader2 aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <ShieldAlert aria-hidden="true" className="h-3.5 w-3.5" />
+        )}
+      </Button>
+      <ConfirmationDialog
+        cancelLabel="Giữ hiển thị"
+        confirmLabel="Đánh dấu spam"
+        description={
+          <>
+            Ẩn bình luận của{" "}
+            <strong className="text-text-primary">{comment.authorName}</strong>:
+            <span className="mt-2 block line-clamp-3 rounded-[8px] border border-border-default bg-subtle-bg/60 p-3 text-[13px]">
+              {comment.content}
+            </span>
+          </>
+        }
+        icon={ShieldAlert}
+        onConfirm={() => void hideComment()}
+        onOpenChange={setConfirmOpen}
+        open={confirmOpen}
+        pending={pending}
+        title="Đánh dấu bình luận là spam?"
+        tone="warning"
+      />
+    </>
+  )
+}
+
 function CommentBubble({
   comment,
+  onHide,
   postAuthorUsernames = [],
 }: {
   comment: PublicComment
+  onHide?: (commentId: string) => void
   postAuthorUsernames?: string[]
 }) {
   const isPostAuthor = comment.author?.username && postAuthorUsernames.includes(comment.author.username)
@@ -61,24 +164,27 @@ function CommentBubble({
         </div>
       )}
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-          <span className="text-[13px] font-semibold text-text-primary">
-            {comment.authorName}
-          </span>
-          {isPostAuthor && (
-            <span className="rounded-[4px] bg-zinc-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
-              Tác giả
+        <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <span className="text-[13px] font-semibold text-text-primary">
+              {comment.authorName}
             </span>
-          )}
-          <RoleBadges
-            displayRoleColor={comment.author?.displayRoleColor ?? null}
-            displayRoleName={comment.author?.displayRoleName ?? null}
-            role={role ?? ""}
-          />
-          <RelativeTime
-            className="text-[12px] text-text-tertiary"
-            date={comment.createdAt}
-          />
+            {isPostAuthor && (
+              <span className="rounded-[4px] bg-zinc-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+                Tác giả
+              </span>
+            )}
+            <RoleBadges
+              displayRoleColor={comment.author?.displayRoleColor ?? null}
+              displayRoleName={comment.author?.displayRoleName ?? null}
+              role={role ?? ""}
+            />
+            <RelativeTime
+              className="text-[12px] text-text-tertiary"
+              date={comment.createdAt}
+            />
+          </div>
+          <CommentAdminActions comment={comment} onHide={onHide} />
         </div>
         <p className="mt-1 whitespace-pre-wrap break-words text-[14px] leading-[1.6] text-text-secondary">
           {comment.content}
@@ -90,6 +196,7 @@ function CommentBubble({
 
 function CommentThread({
   comment,
+  onHide,
   onReply,
   postId,
   postSlug,
@@ -97,6 +204,7 @@ function CommentThread({
   postAuthorUsernames,
 }: {
   comment: CommentWithReplies
+  onHide?: (commentId: string) => void
   onReply: (comment: CommentWithReplies) => void
   postId: string
   postSlug?: string
@@ -115,7 +223,11 @@ function CommentThread({
       className="scroll-mt-24 border-t border-border-default pt-4 first:border-t-0 first:pt-0"
       id={`comment-${comment.id}`}
     >
-      <CommentBubble comment={comment} postAuthorUsernames={postAuthorUsernames} />
+      <CommentBubble
+        comment={comment}
+        onHide={onHide}
+        postAuthorUsernames={postAuthorUsernames}
+      />
       <div className="mt-1 pl-11">
         <Button
           aria-label={`Trả lời bình luận của ${comment.authorName}`}
@@ -159,7 +271,11 @@ function CommentThread({
               id={`comment-${reply.id}`}
               key={reply.id}
             >
-              <CommentBubble comment={reply} postAuthorUsernames={postAuthorUsernames} />
+              <CommentBubble
+                comment={reply}
+                onHide={onHide}
+                postAuthorUsernames={postAuthorUsernames}
+              />
             </article>
           ))}
         </div>
@@ -170,6 +286,7 @@ function CommentThread({
 
 export function CommentList({
   comments,
+  onHide,
   onReply,
   postId,
   postSlug,
@@ -182,6 +299,7 @@ export function CommentList({
         <CommentThread
           comment={comment}
           key={comment.id}
+          onHide={onHide}
           onReply={onReply}
           postId={postId}
           postSlug={postSlug}

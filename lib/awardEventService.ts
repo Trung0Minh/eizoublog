@@ -280,6 +280,7 @@ export async function unpublishAwardEventPost(eventId: string) {
 
   const post = await prisma.post.update({
     data: {
+      featuredAt: null,
       moderationLockedAt: null,
       publishedAt: null,
       removedAt: null,

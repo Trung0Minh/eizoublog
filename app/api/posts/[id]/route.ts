@@ -450,6 +450,7 @@ export async function PATCH(
                 ? Prisma.JsonNull
                 : (data.excerptContent as Prisma.InputJsonObject),
           }),
+          ...(data.status && nextStatus !== "PUBLISHED" && { featuredAt: null }),
           ...(shouldUpdateLastSavedAt && { lastSavedAt: new Date() }),
           ...(publishedAt !== undefined && { publishedAt }),
           ...(data.status && { status: data.status }),

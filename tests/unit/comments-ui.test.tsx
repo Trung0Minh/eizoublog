@@ -5,13 +5,27 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 const analyticsMocks = vi.hoisted(() => ({
   trackEvent: vi.fn(),
 }))
+const clientSessionMocks = vi.hoisted(() => ({
+  isAdmin: false,
+}))
 
 vi.mock("@/lib/analytics", () => ({
   trackEvent: analyticsMocks.trackEvent,
 }))
+vi.mock("@/lib/clientSession", () => ({
+  clearSessionUserCache: () => {
+    clientSessionMocks.isAdmin = false
+  },
+  useAdminAccess: () => clientSessionMocks.isAdmin,
+  useSessionUser: () => ({
+    status: "guest",
+    user: null,
+  }),
+}))
 
 import { CommentForm } from "@/components/comments/CommentForm"
 import { CommentSection } from "@/components/comments/CommentSection"
+import { clearSessionUserCache } from "@/lib/clientSession"
 import type { CommentWithReplies } from "@/types"
 
 const topComment: CommentWithReplies = {
@@ -40,6 +54,8 @@ const topComment: CommentWithReplies = {
 describe("CommentForm", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.unstubAllGlobals()
+    clearSessionUserCache()
   })
 
   it("posts a comment with privacy copy and success feedback", async () => {
@@ -290,5 +306,59 @@ describe("CommentSection", () => {
     const init = fetchMock.mock.calls[0]?.[1] as RequestInit | undefined
     const body = JSON.parse(String(init?.body)) as Record<string, unknown>
     expect(body.parentId).toBe("comment-1")
+  })
+
+  it("lets admins mark a public comment as spam in place", async () => {
+    clientSessionMocks.isAdmin = true
+    const user = userEvent.setup()
+    const fetchMock = vi.fn().mockImplementation((input: RequestInfo | URL) => {
+      const url = String(input)
+
+      if (url.endsWith("/api/auth/session")) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              user: {
+                avatarUrl: null,
+                name: "Admin",
+                role: "ADMIN",
+                username: "admin",
+              },
+            }),
+          ),
+        )
+      }
+
+      if (url.endsWith("/api/comments/comment-1")) {
+        return Promise.resolve(
+          new Response(JSON.stringify({ data: { message: "Comment hidden" } })),
+        )
+      }
+
+      return Promise.resolve(new Response(JSON.stringify({ data: null })))
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    render(
+      <CommentSection
+        initialComments={[topComment]}
+        postId="post-1"
+        postSlug="frieren-memory"
+      />,
+    )
+
+    await user.click(
+      await screen.findByRole("button", {
+        name: "Đánh dấu bình luận của Mina là spam",
+      }),
+    )
+    await user.click(screen.getByRole("button", { name: "Đánh dấu spam" }))
+
+    await waitFor(() => {
+      expect(screen.queryByText("<script>alert(1)</script>")).not.toBeInTheDocument()
+    })
+    expect(fetchMock).toHaveBeenCalledWith("/api/comments/comment-1", {
+      method: "DELETE",
+    })
   })
 })

@@ -7,6 +7,7 @@ import {
   RotateCcw,
   Send,
   ShieldX,
+  Star,
   Trash2,
   Undo2,
 } from "lucide-react"
@@ -26,6 +27,7 @@ interface AdminPost {
   _count: { comments: number }
   author: { name: string; username: string }
   id: string
+  featuredAt?: Date | string | null
   publishedAt: Date | null
   removedAt?: Date | null
   slug: string
@@ -113,6 +115,7 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
   const [deleteTarget, setDeleteTarget] = useState<AdminPost | null>(null)
   const [deleteConfirmation, setDeleteConfirmation] = useState("")
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [featuringId, setFeaturingId] = useState<string | null>(null)
   const [currentTime] = useState(() => Date.now())
 
   const keepStatusInCurrentFilter = (
@@ -280,6 +283,13 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
           ? result.data.status
           : fallbackStatus
       updatePostStatusesLocally(new Set([post.id]), nextStatus)
+      if (nextStatus !== "PUBLISHED") {
+        setVisiblePosts((current) =>
+          current.map((item) =>
+            item.id === post.id ? { ...item, featuredAt: null } : item,
+          ),
+        )
+      }
       setModerationTarget(null)
       setModerationReason("")
       toast.success("Post moderation updated", { description: post.title })
@@ -289,6 +299,58 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
       })
     } finally {
       setModeratingId(null)
+    }
+  }
+
+  function getFeaturedAt(value: unknown): string | null {
+    if (
+      typeof value === "object" &&
+      value !== null &&
+      "data" in value &&
+      typeof value.data === "object" &&
+      value.data !== null &&
+      "featuredAt" in value.data &&
+      (typeof value.data.featuredAt === "string" || value.data.featuredAt === null)
+    ) {
+      return value.data.featuredAt
+    }
+
+    return null
+  }
+
+  async function toggleFeatured(post: AdminPost) {
+    if (post.status !== "PUBLISHED") return
+
+    const featured = !post.featuredAt
+    setFeaturingId(post.id)
+
+    try {
+      const response = await fetch(`/api/admin/posts/${post.id}/featured`, {
+        body: JSON.stringify({ featured }),
+        headers: { "Content-Type": "application/json" },
+        method: "PATCH",
+      })
+      const result: unknown = await response.json()
+
+      if (!response.ok) {
+        throw new Error(getApiError(result))
+      }
+
+      const featuredAt = getFeaturedAt(result)
+      setVisiblePosts((current) =>
+        current.map((item) =>
+          item.id === post.id ? { ...item, featuredAt } : item,
+        ),
+      )
+      toast.success(featured ? "Added to featured posts" : "Removed from featured posts", {
+        description: post.title,
+      })
+    } catch (error) {
+      toast.error("Featured update failed", {
+        description: error instanceof Error ? error.message : post.title,
+      })
+    } finally {
+      setFeaturingId(null)
     }
   }
 
@@ -355,7 +417,7 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
 
       <div className="w-full px-0 pb-4 sm:px-2 md:overflow-x-auto">
         <div className="flex min-w-0 flex-col gap-2 md:min-w-[750px]" data-testid="admin-posts-list">
-          <div className="hidden h-10 items-center px-6 text-[11px] font-bold uppercase tracking-[0.1em] text-text-tertiary md:flex lg:grid lg:grid-cols-[36px_minmax(0,1fr)_140px_100px_120px_80px_80px]">
+          <div className="hidden h-10 items-center px-6 text-[11px] font-bold uppercase tracking-[0.1em] text-text-tertiary md:flex lg:grid lg:grid-cols-[36px_minmax(0,1fr)_140px_100px_90px_120px_80px_80px]">
             <div className="flex items-center md:mr-4 lg:mr-0">
               <input
                 type="checkbox"
@@ -367,6 +429,7 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
             <div className="min-w-0 pr-4 md:flex-1 lg:flex-none">Title</div>
             <div className="w-[140px] shrink-0">Author</div>
             <div className="w-[100px] shrink-0">Status</div>
+            <div className="w-[90px] shrink-0">Feature</div>
             <Link 
               href={createSortLink(currentSort === "oldest" ? "latest" : "oldest")}
               className="hidden items-center gap-1 hover:text-text-primary transition-colors cursor-pointer lg:flex"
@@ -397,7 +460,7 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
 
               return (
                 <div
-                  className={`group relative flex flex-col items-stretch rounded-[20px] border border-transparent bg-subtle-bg/20 p-4 transition-all duration-300 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10 md:flex-row md:items-center md:pl-6 lg:grid lg:grid-cols-[36px_minmax(0,1fr)_140px_100px_120px_80px_80px] lg:items-center lg:px-6 ${selectedIds.has(post.id) ? "border-accent/30 bg-accent/5 ring-1 ring-accent/20" : ""} animate-in fade-in slide-in-from-bottom-2`}
+                  className={`group relative flex flex-col items-stretch rounded-[20px] border border-transparent bg-subtle-bg/20 p-4 transition-all duration-300 hover:border-accent/30 hover:bg-white/60 hover:shadow-md dark:hover:bg-white/10 md:flex-row md:items-center md:pl-6 lg:grid lg:grid-cols-[36px_minmax(0,1fr)_140px_100px_90px_120px_80px_80px] lg:items-center lg:px-6 ${selectedIds.has(post.id) ? "border-accent/30 bg-accent/5 ring-1 ring-accent/20" : ""} animate-in fade-in slide-in-from-bottom-2`}
                   data-testid={`admin-post-row-${post.id}`}
                   style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
                   key={post.id}
@@ -434,6 +497,33 @@ export function AdminPostsTable({ posts }: { posts: AdminPost[] }) {
 
                   <div className="absolute right-4 top-4 w-fit shrink-0 lg:static lg:ml-0 lg:mt-0">
                     <AdminStatusBadge status={statusLabel} />
+                  </div>
+
+                  <div className="mt-3 flex pl-8 lg:mt-0 lg:pl-0">
+                    <button
+                      aria-label={post.featuredAt ? "Remove featured post" : "Mark as featured"}
+                      className={`inline-flex h-7 w-fit items-center gap-1.5 rounded-full border px-2.5 text-[11px] font-bold transition-colors ${
+                        post.featuredAt
+                          ? "border-accent/35 bg-accent/10 text-accent hover:bg-accent/15"
+                          : "border-border-default/70 bg-background/60 text-text-tertiary hover:border-accent/30 hover:text-accent"
+                      } disabled:cursor-not-allowed disabled:opacity-45`}
+                      disabled={post.status !== "PUBLISHED" || featuringId === post.id}
+                      onClick={() => void toggleFeatured(post)}
+                      title={
+                        post.status !== "PUBLISHED"
+                          ? "Only published posts can be featured"
+                          : post.featuredAt
+                            ? "Remove from featured posts"
+                            : "Mark as featured"
+                      }
+                      type="button"
+                    >
+                      <Star
+                        aria-hidden="true"
+                        className={`h-3.5 w-3.5 ${post.featuredAt ? "fill-current" : ""}`}
+                      />
+                      <span>{post.featuredAt ? "Featured" : "Feature"}</span>
+                    </button>
                   </div>
 
                   <div className="hidden text-[12px] text-text-secondary lg:block">

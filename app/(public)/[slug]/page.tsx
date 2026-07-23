@@ -4,6 +4,7 @@ import type { JSONContent } from "@tiptap/react"
 
 import { CommentSection } from "@/components/comments/CommentSection"
 import { PostArticleView } from "@/components/posts/PostArticleView"
+import { PostInlineActions } from "@/components/posts/PostInlineActions"
 import { PostJsonLd } from "@/components/posts/PostJsonLd"
 import { PostReadTracker } from "@/components/posts/PostReadTracker"
 import { ReadingProgress } from "@/components/posts/ReadingProgress"
@@ -70,10 +71,19 @@ export default async function PostPage({ params }: PostPageProps) {
   const content = post.content as JSONContent
 
   if (post.finalAwardEvent) {
+    const event = post.finalAwardEvent
+    const roomEditHrefByUsername = Object.fromEntries(
+      event.rooms
+        .filter((room) => room.selectedPost && room.selectedPost.status !== "REMOVED")
+        .map((room) => [
+          room.writer.username,
+          `/dashboard/edit/${room.selectedPost?.id}`,
+        ]),
+    )
     const eventAuthorUsernames = Array.from(
       new Set([
         ...authors,
-        ...post.finalAwardEvent.rooms
+        ...event.rooms
           .filter(
             ({ selectedPost }) =>
               selectedPost && selectedPost.status !== "REMOVED",
@@ -95,7 +105,19 @@ export default async function PostPage({ params }: PostPageProps) {
           updatedAt={post.updatedAt}
         />
         <PostReadTracker slug={post.slug} title={post.title} />
-        <EventAnthologyView event={post.finalAwardEvent} />
+        <EventAnthologyView
+          event={event}
+          postActions={
+            <PostInlineActions
+              authorUsernames={authors}
+              editHrefByUsername={roomEditHrefByUsername}
+              eventSettingsHref={`/admin/events/${event.id}`}
+              featuredAt={post.featuredAt}
+              postId={post.id}
+              status={post.status}
+            />
+          }
+        />
         <div
           className="mx-auto grid w-full max-w-7xl gap-12 px-4 pb-24 sm:px-6 lg:grid-cols-[minmax(0,1000px)] lg:justify-start lg:px-10 2xl:max-w-[1360px] 2xl:grid-cols-[minmax(0,1000px)_220px] 2xl:pl-20 2xl:pr-0"
           data-testid="event-comments"

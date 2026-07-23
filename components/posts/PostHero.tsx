@@ -9,7 +9,7 @@ import { TextReveal } from "@/components/ui/TextReveal"
 import { ScrollReveal } from "@/components/ui/ScrollReveal"
 import { getCoverStyle } from "@/lib/cover-style"
 import { cn } from "@/lib/utils"
-import { PostEditLink } from "./PostEditLink"
+import { PostInlineActions } from "@/components/posts/PostInlineActions"
 import type { PostHeroPost } from "@/types/posts"
 import { PostBody } from "@/components/posts/PostBody"
 
@@ -138,7 +138,14 @@ export function PostHero({
               </div>
 
               {authorUsernames && (
-                <PostEditLink authorUsernames={authorUsernames} postId={post.id} />
+                <>
+                  <PostInlineActions
+                    authorUsernames={authorUsernames}
+                    featuredAt={post.featuredAt}
+                    postId={post.id}
+                    status={post.status}
+                  />
+                </>
               )}
             </ScrollReveal>
           </div>

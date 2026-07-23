@@ -98,6 +98,7 @@ const post = {
   excerpt: "A compact summary of the article.",
   publishedAt: new Date("2024-04-01T00:00:00Z"),
   slug: "frieren-animation",
+  status: "PUBLISHED" as const,
   tags: [{ tag: { id: "tag-1", name: "Sakuga", slug: "sakuga" } }],
   title: "Frieren Animation",
   category: { id: "category-1", name: "Production", slug: "production" },

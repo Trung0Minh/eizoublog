@@ -1,5 +1,6 @@
 import type { JSONContent } from "@tiptap/react"
 import Link from "next/link"
+import type { ReactNode } from "react"
 
 import { EventCoverParallax } from "@/components/events/EventCoverParallax"
 import { EventAnthologyTableOfContents } from "@/components/events/EventAnthologyTableOfContents"
@@ -47,6 +48,7 @@ interface EventAnthologyViewProps {
     tags?: Array<{ tag: { name: string; slug: string } }>
     title: string
   }
+  postActions?: ReactNode
   preview?: boolean
 }
 
@@ -86,7 +88,7 @@ function EventContributorAttribution({
   return (
     <div
       aria-label="Event contributors"
-      className="mt-7 flex w-fit max-w-full items-center gap-3 rounded-full border border-border-default bg-background/95 p-2 pr-4 shadow-md backdrop-blur-md"
+      className="flex w-fit max-w-full items-center gap-3 rounded-full border border-border-default bg-background/95 p-2 pr-4 shadow-md backdrop-blur-md"
     >
       <div className="flex shrink-0 items-center">
         {writers.map((writer, index) => (
@@ -117,7 +119,11 @@ function EventContributorAttribution({
   )
 }
 
-export function EventAnthologyView({ event, preview = false }: EventAnthologyViewProps) {
+export function EventAnthologyView({
+  event,
+  postActions,
+  preview = false,
+}: EventAnthologyViewProps) {
   const normalizedRooms: Array<AwardEventPostRoom & {
     writer: AwardEventPostRoom["writer"] & {
       avatarUrl: string | null
@@ -220,10 +226,21 @@ export function EventAnthologyView({ event, preview = false }: EventAnthologyVie
             <h1 className="max-w-6xl font-display text-4xl font-bold leading-[0.98] tracking-[-0.04em] text-text-primary sm:text-6xl lg:text-7xl">
               {event.title}
             </h1>
-            {rooms.length > 0 && (
-              <EventContributorAttribution
-                writers={rooms.map(({ writer }) => writer)}
-              />
+            {(rooms.length > 0 || postActions) && (
+              <div className="mt-7 flex w-fit max-w-full flex-wrap items-center gap-3">
+                <div className="min-w-0">
+                  {rooms.length > 0 && (
+                    <EventContributorAttribution
+                      writers={rooms.map(({ writer }) => writer)}
+                    />
+                  )}
+                </div>
+                {postActions && (
+                  <div className="min-h-[44px] min-w-[44px] shrink-0">
+                    {postActions}
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>

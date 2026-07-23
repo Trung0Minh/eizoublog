@@ -15,7 +15,10 @@ export interface PostHeroPost {
   coverUrl: string | null
   excerpt: string | null
   excerptContent?: unknown
+  featuredAt?: Date | string | null
   publishedAt: Date | string | null
+  status?: "ARCHIVED" | "DRAFT" | "PUBLISHED" | "REMOVED"
+  slug: string
   tags: { tag: { name: string; slug: string } }[]
   title: string
 }
