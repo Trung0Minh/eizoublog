@@ -158,6 +158,174 @@ describe("ResourcesClient", () => {
     )
   })
 
+  it("adds a new source with a new category from the editor panel", async () => {
+    const user = userEvent.setup()
+
+    render(
+      <ResourcesClient
+        appName="Anime Blog"
+        initialPage={{
+          content: {
+            description: "Useful links",
+            resources: [
+              {
+                category: "Blog",
+                description: "First",
+                domain: "First",
+                logo: "",
+                url: "https://first.test",
+              },
+            ],
+            title: "Nguồn tham khảo",
+          },
+        }}
+        isAdmin
+      />,
+    )
+
+    await user.click(screen.getByRole("button", { name: "Chỉnh sửa trang" }))
+    await user.click(screen.getByRole("button", { name: "Nguồn mới" }))
+    await user.clear(screen.getByLabelText("URL"))
+    await user.type(screen.getByLabelText("URL"), "https://podcast.test")
+    await user.clear(screen.getByLabelText("Tên nguồn"))
+    await user.type(screen.getByLabelText("Tên nguồn"), "Anime Podcast")
+    await user.click(screen.getByRole("button", { name: "Chọn phân loại" }))
+    await user.type(screen.getByLabelText("Tạo phân loại từ menu"), "Podcast")
+    await user.click(screen.getByRole("button", { name: "Tạo phân loại" }))
+    await user.type(screen.getByLabelText("Mô tả"), "Nguồn audio mới")
+    await user.click(screen.getByRole("button", { name: "Thêm vào danh sách" }))
+    await user.click(screen.getByRole("button", { name: "Lưu trang" }))
+
+    await waitFor(() => {
+      const lastCall = mockFetch.mock.calls[mockFetch.mock.calls.length - 1]
+      const parsedBody = JSON.parse(lastCall[1].body)
+      expect(parsedBody.content.resources).toContainEqual({
+        category: "Podcast",
+        description: "Nguồn audio mới",
+        domain: "Anime Podcast",
+        logo: "",
+        url: "https://podcast.test",
+      })
+    })
+  })
+
+  it("filters the editor list by category chips", async () => {
+    const user = userEvent.setup()
+
+    render(
+      <ResourcesClient
+        appName="Anime Blog"
+        initialPage={{
+          content: {
+            description: "Useful links",
+            resources: [
+              {
+                category: "Blog",
+                description: "Blog source",
+                domain: "Blog Source",
+                logo: "",
+                url: "https://blog-source.test",
+              },
+              {
+                category: "Database",
+                description: "Database source",
+                domain: "Database Source",
+                logo: "",
+                url: "https://database-source.test",
+              },
+            ],
+            title: "Nguồn tham khảo",
+          },
+        }}
+        isAdmin
+      />,
+    )
+
+    await user.click(screen.getByRole("button", { name: "Chỉnh sửa trang" }))
+    await user.click(screen.getByRole("button", { name: "Database1" }))
+
+    expect(screen.getByTestId("resource-editor-card-Database Source")).toBeVisible()
+    expect(screen.queryByTestId("resource-editor-card-Blog Source")).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "Tất cả2" }))
+
+    expect(screen.getByTestId("resource-editor-card-Database Source")).toBeVisible()
+    expect(screen.getByTestId("resource-editor-card-Blog Source")).toBeVisible()
+  })
+
+  it("moves resources within the visible filtered category before saving", async () => {
+    const user = userEvent.setup()
+
+    render(
+      <ResourcesClient
+        appName="Anime Blog"
+        initialPage={{
+          content: {
+            description: "Useful links",
+            resources: [
+              {
+                category: "Blog",
+                description: "First blog",
+                domain: "First Blog",
+                logo: "",
+                url: "https://first-blog.test",
+              },
+              {
+                category: "Database",
+                description: "Database",
+                domain: "Database",
+                logo: "",
+                url: "https://database.test",
+              },
+              {
+                category: "Blog",
+                description: "Second blog",
+                domain: "Second Blog",
+                logo: "",
+                url: "https://second-blog.test",
+              },
+            ],
+            title: "Nguồn tham khảo",
+          },
+        }}
+        isAdmin
+      />,
+    )
+
+    await user.click(screen.getByRole("button", { name: "Chỉnh sửa trang" }))
+    await user.click(screen.getByRole("button", { name: "Blog2" }))
+    await user.click(screen.getByRole("button", { name: "Đưa First Blog xuống" }))
+    await user.click(screen.getByRole("button", { name: "Lưu trang" }))
+
+    await waitFor(() => {
+      const lastCall = mockFetch.mock.calls[mockFetch.mock.calls.length - 1]
+      const parsedBody = JSON.parse(lastCall[1].body)
+      expect(parsedBody.content.resources).toEqual([
+        {
+          category: "Database",
+          description: "Database",
+          domain: "Database",
+          logo: "",
+          url: "https://database.test",
+        },
+        {
+          category: "Blog",
+          description: "Second blog",
+          domain: "Second Blog",
+          logo: "",
+          url: "https://second-blog.test",
+        },
+        {
+          category: "Blog",
+          description: "First blog",
+          domain: "First Blog",
+          logo: "",
+          url: "https://first-blog.test",
+        },
+      ])
+    })
+  })
+
   it("uses PNG replacements for legacy duplicated logos and keeps Bluesky SVG", () => {
     render(
       <ResourcesClient
@@ -233,7 +401,7 @@ describe("ResourcesClient", () => {
     ).toHaveAttribute("href", "https://blog.sakugabooru.com/")
   })
 
-  it("keeps the admin editing toolbar inside mobile viewport gutters", async () => {
+  it("keeps the admin editing actions in the page flow", async () => {
     const user = userEvent.setup()
 
     render(
@@ -251,10 +419,10 @@ describe("ResourcesClient", () => {
       .parentElement
 
     expect(toolbar).toHaveClass(
-      "inset-x-4",
-      "max-w-xl",
-      "sm:left-1/2",
-      "sm:right-auto",
+      "mb-6",
+      "flex",
+      "sm:flex-row",
+      "sm:justify-between",
     )
   })
 })
