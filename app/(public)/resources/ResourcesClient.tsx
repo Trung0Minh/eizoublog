@@ -658,7 +658,10 @@ export function ResourcesClient({
         </div>
 
         {isEditing && (
-          <div className="mb-6 flex flex-col gap-3 rounded-[20px] border border-border-default bg-background/90 p-3 shadow-lg backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:p-4">
+          <div
+            className="mb-6 flex flex-col gap-3 rounded-[20px] border border-border-default bg-background/90 p-3 shadow-lg backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:p-4"
+            data-inline-editor-bar
+          >
             <h2 className="min-w-0 text-[12px] font-bold uppercase tracking-widest text-editorial sm:text-sm">
               Đang chỉnh sửa Nguồn tham khảo
             </h2>

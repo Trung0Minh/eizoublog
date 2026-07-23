@@ -3,10 +3,19 @@
 import { useEffect, useRef, useState } from 'react';
 import type { PointerEvent } from 'react';
 import { ArrowUp } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 export function BackToTop() {
   const [isVisible, setIsVisible] = useState(false);
+  const [hasInlineEditorBar, setHasInlineEditorBar] = useState(false);
   const didHandlePointerRef = useRef(false);
+  const pathname = usePathname();
+
+  const isEditorRoute =
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/dashboard/edit') ||
+    pathname.startsWith('/dashboard/new') ||
+    pathname.includes('/edit');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -16,6 +25,19 @@ export function BackToTop() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    const updateInlineEditorState = () => {
+      setHasInlineEditorBar(Boolean(document.querySelector('[data-inline-editor-bar]')));
+    };
+
+    updateInlineEditorState();
+
+    const observer = new MutationObserver(updateInlineEditorState);
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => observer.disconnect();
+  }, [pathname]);
 
   const scrollToTop = () => {
     const scrollTarget = document.scrollingElement ?? document.documentElement;
@@ -47,6 +69,10 @@ export function BackToTop() {
 
     scrollToTop();
   };
+
+  if (isEditorRoute || hasInlineEditorBar) {
+    return null;
+  }
 
   return (
     <button

@@ -253,7 +253,10 @@ export function AboutClient({
       )}
 
       {isEditing && (
-        <div className="fixed inset-x-4 bottom-4 z-[100] mx-auto flex max-w-xl items-center justify-between gap-3 rounded-[20px] border-[2px] border-border-default bg-background/95 px-3 py-2 shadow-2xl backdrop-blur-md animate-in slide-in-from-bottom-8 sm:bottom-8 sm:left-1/2 sm:right-auto sm:w-max sm:max-w-[calc(100vw-4rem)] sm:-translate-x-1/2 sm:gap-8 sm:rounded-full sm:px-6 sm:py-3">
+        <div
+          className="fixed inset-x-4 bottom-4 z-[100] mx-auto flex max-w-xl items-center justify-between gap-3 rounded-[20px] border-[2px] border-border-default bg-background/95 px-3 py-2 shadow-2xl backdrop-blur-md animate-in slide-in-from-bottom-8 sm:bottom-8 sm:left-1/2 sm:right-auto sm:w-max sm:max-w-[calc(100vw-4rem)] sm:-translate-x-1/2 sm:gap-8 sm:rounded-full sm:px-6 sm:py-3"
+          data-inline-editor-bar
+        >
           <h2 className="min-w-0 truncate whitespace-nowrap text-[11px] font-bold uppercase tracking-widest text-editorial sm:text-sm">
             Đang chỉnh sửa...
           </h2>
