@@ -77,6 +77,9 @@ import {
   getCachedPublishedPost,
   getCachedPublishedPosts,
   getCachedProfileUser,
+  getCachedPublicArchives,
+  getCachedPublicCategories,
+  getCachedPublicComments,
   getCachedSearchResults,
   getCachedSearchTaxonomy,
   getCachedSidebarData,
@@ -255,17 +258,65 @@ describe("cached Prisma query helpers", () => {
     expect(mocks.prisma.post.count).not.toHaveBeenCalled()
   })
 
-  it("caches sidebar data behind posts and categories tags", async () => {
-    mocks.prisma.category.findMany.mockResolvedValue([{ slug: "analysis" }])
-    mocks.prisma.post.findMany.mockResolvedValue([{ slug: "recent" }])
+  it("caches sidebar data behind posts, comments, and categories tags", async () => {
+    mocks.prisma.category.findMany.mockResolvedValue(
+      Array.from({ length: 6 }, (_, index) => ({
+        slug: `analysis-${index + 1}`,
+      })),
+    )
+    mocks.prisma.post.findMany.mockResolvedValue(
+      Array.from({ length: 5 }, (_, index) => ({
+        slug: `recent-${index + 1}`,
+      })),
+    )
+    mocks.prisma.comment.findMany.mockResolvedValue(
+      Array.from({ length: 6 }, (_, index) => ({
+        id: `comment-${index + 1}`,
+      })),
+    )
     mocks.prisma.$queryRaw.mockResolvedValue([
       { count: BigInt(2), month: "2026-06" },
+      { count: BigInt(1), month: "2026-05" },
+      { count: BigInt(1), month: "2026-04" },
+      { count: BigInt(1), month: "2026-03" },
+      { count: BigInt(1), month: "2026-02" },
+      { count: BigInt(1), month: "2026-01" },
     ])
 
     await expect(getCachedSidebarData()).resolves.toEqual({
-      archives: [{ count: 2, month: "2026-06" }],
-      categories: [{ slug: "analysis" }],
-      recentPosts: [{ slug: "recent" }],
+      archives: [
+        { count: 2, month: "2026-06" },
+        { count: 1, month: "2026-05" },
+        { count: 1, month: "2026-04" },
+        { count: 1, month: "2026-03" },
+        { count: 1, month: "2026-02" },
+      ],
+      categories: [
+        { slug: "analysis-1" },
+        { slug: "analysis-2" },
+        { slug: "analysis-3" },
+        { slug: "analysis-4" },
+        { slug: "analysis-5" },
+      ],
+      hasMore: {
+        archives: true,
+        categories: true,
+        recentComments: true,
+      },
+      recentComments: [
+        { id: "comment-1" },
+        { id: "comment-2" },
+        { id: "comment-3" },
+        { id: "comment-4" },
+        { id: "comment-5" },
+      ],
+      recentPosts: [
+        { slug: "recent-1" },
+        { slug: "recent-2" },
+        { slug: "recent-3" },
+        { slug: "recent-4" },
+        { slug: "recent-5" },
+      ],
     })
 
     expect(mocks.prisma.category.findMany).toHaveBeenCalledWith(
@@ -277,10 +328,38 @@ describe("cached Prisma query helpers", () => {
         where: { posts: { some: { status: "PUBLISHED" } } },
       }),
     )
+    expect(mocks.prisma.category.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ take: 6 }),
+    )
+    expect(mocks.prisma.post.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ take: 5 }),
+    )
+    expect(mocks.prisma.comment.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        select: expect.objectContaining({
+          authorName: true,
+          content: true,
+          createdAt: true,
+          id: true,
+          post: expect.objectContaining({
+            select: { slug: true, title: true },
+          }),
+        }),
+        take: 6,
+        where: {
+          post: { status: "PUBLISHED" },
+          status: "APPROVED",
+        },
+      }),
+    )
+    const commentSelect =
+      mocks.prisma.comment.findMany.mock.calls[0]?.[0].select
+    expect(commentSelect).not.toHaveProperty("authorEmail")
     expect(mocks.prisma.$queryRaw).toHaveBeenCalled()
     expect(mocks.cacheEntries).toContainEqual({
       keyParts: ["sidebar-data"],
-      options: { revalidate: 300, tags: ["posts", "categories"] },
+      options: { revalidate: 300, tags: ["posts", "categories", "comments"] },
     })
   })
 
@@ -368,6 +447,84 @@ describe("cached Prisma query helpers", () => {
     expect(mocks.cacheEntries).toContainEqual({
       keyParts: ["search-taxonomy"],
       options: { revalidate: 300, tags: ["categories", "tags", "posts"] },
+    })
+  })
+
+  it("caches public category and archive index data", async () => {
+    mocks.prisma.category.findMany.mockResolvedValue([
+      { _count: { posts: 2 }, name: "Analysis", slug: "analysis" },
+    ])
+    mocks.prisma.$queryRaw.mockResolvedValueOnce([
+      { count: BigInt(4), month: "2026-07" },
+    ])
+
+    await expect(getCachedPublicCategories()).resolves.toEqual([
+      { count: 2, name: "Analysis", slug: "analysis" },
+    ])
+    await expect(getCachedPublicArchives()).resolves.toEqual([
+      { count: 4, month: "2026-07" },
+    ])
+
+    expect(mocks.prisma.category.findMany).toHaveBeenCalledWith({
+      orderBy: { name: "asc" },
+      select: expect.objectContaining({
+        _count: expect.any(Object),
+        name: true,
+        slug: true,
+      }),
+      where: { posts: { some: { status: "PUBLISHED" } } },
+    })
+    expect(mocks.cacheEntries).toContainEqual({
+      keyParts: ["public-categories"],
+      options: { revalidate: 300, tags: ["categories", "posts"] },
+    })
+    expect(mocks.cacheEntries).toContainEqual({
+      keyParts: ["public-archives"],
+      options: { revalidate: 300, tags: ["posts"] },
+    })
+  })
+
+  it("caches public comments without exposing private email addresses", async () => {
+    mocks.prisma.comment.findMany.mockResolvedValue([
+      {
+        authorName: "Mina",
+        content: "Comment",
+        createdAt: new Date("2026-07-01T00:00:00Z"),
+        id: "comment-1",
+        post: { slug: "essay", title: "Essay" },
+      },
+    ])
+    mocks.prisma.comment.count.mockResolvedValue(1)
+
+    await expect(getCachedPublicComments(2, 10)).resolves.toEqual({
+      comments: [
+        {
+          authorName: "Mina",
+          content: "Comment",
+          createdAt: new Date("2026-07-01T00:00:00Z"),
+          id: "comment-1",
+          post: { slug: "essay", title: "Essay" },
+        },
+      ],
+      total: 1,
+    })
+
+    expect(mocks.prisma.comment.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        skip: 10,
+        take: 10,
+        where: {
+          post: { status: "PUBLISHED" },
+          status: "APPROVED",
+        },
+      }),
+    )
+    const commentSelect =
+      mocks.prisma.comment.findMany.mock.calls[0]?.[0].select
+    expect(commentSelect).not.toHaveProperty("authorEmail")
+    expect(mocks.cacheEntries).toContainEqual({
+      keyParts: ["public-comments"],
+      options: { revalidate: 300, tags: ["posts", "comments"] },
     })
   })
 

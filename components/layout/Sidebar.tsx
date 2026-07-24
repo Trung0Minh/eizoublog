@@ -15,7 +15,22 @@ interface SidebarProps {
     slug: string
   }[]
   className?: string
+  hasMore?: {
+    archives?: boolean
+    categories?: boolean
+    recentComments?: boolean
+  }
   newsletter?: React.ReactNode
+  recentComments?: {
+    authorName: string
+    content: string
+    createdAt: Date
+    id: string
+    post: {
+      slug: string
+      title: string
+    }
+  }[]
   recentPosts: {
     publishedAt: Date | null
     slug: string
@@ -23,16 +38,23 @@ interface SidebarProps {
   }[]
 }
 
+const SIDEBAR_ITEM_LIMIT = 5
+
 export function Sidebar({
   archives = [],
   categories,
   className,
+  hasMore,
   newsletter,
+  recentComments = [],
   recentPosts,
 }: SidebarProps) {
-  const visibleCategories = categories.filter(
-    (category) => category._count.posts > 0,
-  )
+  const visibleArchives = archives.slice(0, SIDEBAR_ITEM_LIMIT)
+  const visibleCategories = categories
+    .filter((category) => category._count.posts > 0)
+    .slice(0, SIDEBAR_ITEM_LIMIT)
+  const visibleRecentComments = recentComments.slice(0, SIDEBAR_ITEM_LIMIT)
+  const visibleRecentPosts = recentPosts.slice(0, SIDEBAR_ITEM_LIMIT)
 
   return (
     <aside
@@ -45,28 +67,10 @@ export function Sidebar({
         <SidebarSection title="Bản tin">{newsletter}</SidebarSection>
       )}
 
-      {visibleCategories.length > 0 && (
-        <SidebarSection title="Danh mục">
-          <ul className="flex flex-col gap-3 text-[13px]">
-            {visibleCategories.map((category) => (
-              <li key={category.id} className="flex flex-col">
-                <Link
-                  className="flex justify-between text-text-primary hover:text-accent cursor-pointer group transition-transform duration-200 hover:translate-x-1.5"
-                  href={`/category/${category.slug}`}
-                >
-                  <span className="group-hover:text-accent transition-colors">{category.name}</span>
-                  <span className="text-text-tertiary">{category._count.posts}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </SidebarSection>
-      )}
-
-      {recentPosts.length > 0 && (
+      {visibleRecentPosts.length > 0 && (
         <SidebarSection title="Bài viết gần đây">
           <ul className="flex flex-col gap-4">
-            {recentPosts.map((post) => (
+            {visibleRecentPosts.map((post) => (
               <li key={post.slug} className="flex flex-col group cursor-pointer">
                 <Link
                   className="text-[13px] text-text-primary group-hover:text-accent leading-tight line-clamp-2 transition-all duration-200 group-hover:translate-x-1.5"
@@ -86,10 +90,62 @@ export function Sidebar({
         </SidebarSection>
       )}
 
-      {archives.length > 0 && (
+      {visibleRecentComments.length > 0 && (
+        <SidebarSection title="Bình luận gần đây">
+          <ul className="flex flex-col gap-4">
+            {visibleRecentComments.map((comment) => (
+              <li key={comment.id} className="flex flex-col group cursor-pointer">
+                <Link
+                  className="flex flex-col text-text-primary transition-all duration-200 hover:text-accent group-hover:translate-x-1.5"
+                  href={`/${comment.post.slug}#comment-${comment.id}`}
+                >
+                  <span className="text-[13px] leading-tight line-clamp-2">
+                    <span className="font-medium">{comment.authorName}</span>
+                    {": "}
+                    {comment.content}
+                  </span>
+                  <span className="mt-1 text-[12px] leading-tight text-text-secondary line-clamp-1 group-hover:text-accent">
+                    {comment.post.title}
+                  </span>
+                </Link>
+                <RelativeTime
+                  className="text-[12px] text-text-secondary mt-1 transition-all duration-200 group-hover:translate-x-1.5"
+                  date={comment.createdAt}
+                />
+              </li>
+            ))}
+          </ul>
+          {hasMore?.recentComments && (
+            <SidebarMoreLink href="/comments" label="bình luận" />
+          )}
+        </SidebarSection>
+      )}
+
+      {visibleCategories.length > 0 && (
+        <SidebarSection title="Danh mục">
+          <ul className="flex flex-col gap-3 text-[13px]">
+            {visibleCategories.map((category) => (
+              <li key={category.id} className="flex flex-col">
+                <Link
+                  className="flex justify-between text-text-primary hover:text-accent cursor-pointer group transition-transform duration-200 hover:translate-x-1.5"
+                  href={`/category/${category.slug}`}
+                >
+                  <span className="group-hover:text-accent transition-colors">{category.name}</span>
+                  <span className="text-text-tertiary">{category._count.posts}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {hasMore?.categories && (
+            <SidebarMoreLink href="/category" label="danh mục" />
+          )}
+        </SidebarSection>
+      )}
+
+      {visibleArchives.length > 0 && (
         <SidebarSection title="Lưu trữ">
           <ul className="flex flex-col gap-3 text-[13px]">
-            {archives.map((archive) => (
+            {visibleArchives.map((archive) => (
               <li key={archive.month}>
                 <Link
                   className="flex justify-between text-text-primary hover:text-accent cursor-pointer group transition-transform duration-200 hover:translate-x-1.5"
@@ -101,6 +157,9 @@ export function Sidebar({
               </li>
             ))}
           </ul>
+          {hasMore?.archives && (
+            <SidebarMoreLink href="/archive" label="lưu trữ" />
+          )}
         </SidebarSection>
       )}
     </aside>
@@ -120,6 +179,17 @@ function formatArchiveMonth(month: string) {
   }
 
   return `${monthPart}/${yearPart}`
+}
+
+function SidebarMoreLink({ href, label }: { href: string; label: string }) {
+  return (
+    <Link
+      className="mt-4 inline-flex w-fit text-[12px] font-medium text-accent transition-transform duration-200 hover:translate-x-1"
+      href={href}
+    >
+      Xem thêm <span className="sr-only">{label}</span>
+    </Link>
+  )
 }
 
 function SidebarSection({

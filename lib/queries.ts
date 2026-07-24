@@ -39,6 +39,19 @@ const recentPostSelect = {
   title: true,
 } satisfies Prisma.PostSelect
 
+const sidebarRecentCommentSelect = {
+  authorName: true,
+  content: true,
+  createdAt: true,
+  id: true,
+  post: {
+    select: {
+      slug: true,
+      title: true,
+    },
+  },
+} satisfies Prisma.CommentSelect
+
 const commandCategorySelect = {
   id: true,
   name: true,
@@ -343,6 +356,25 @@ export type PublicCategory = Prisma.CategoryGetPayload<{
 export type PublicTag = Prisma.TagGetPayload<{
   select: typeof publicTagSelect
 }>
+export type SidebarRecentComment = Prisma.CommentGetPayload<{
+  select: typeof sidebarRecentCommentSelect
+}>
+export interface PublicCommentListItem {
+  authorName: string
+  content: string
+  createdAt: Date
+  id: string
+  post: { slug: string; title: string }
+}
+export interface PublicCategoryListItem {
+  count: number
+  name: string
+  slug: string
+}
+export interface PublicArchiveListItem {
+  count: number
+  month: string
+}
 export interface AdminPostListItem {
   _count: { comments: number }
   author: { name: string; username: string }
@@ -428,6 +460,11 @@ interface AdminCommentRow {
 interface AdminCommentCountsRow {
   approvedComments: DbCount
   spamComments: DbCount
+}
+
+interface PublicArchiveRow {
+  count: DbCount
+  month: string | null
 }
 
 interface PublishedPostListRow {
@@ -874,17 +911,29 @@ export const getCachedHomeCarouselPosts = unstable_cache(
 
 export const getCachedSidebarData = unstable_cache(
   async () => {
-    const [categories, recentPosts, archiveRows] = await Promise.all([
+    const sidebarLimit = 5
+    const lookaheadLimit = sidebarLimit + 1
+    const [categories, recentPosts, recentComments, archiveRows] = await Promise.all([
       prisma.category.findMany({
         orderBy: { name: "asc" },
         select: sidebarCategorySelect,
+        take: lookaheadLimit,
         where: { posts: { some: { status: "PUBLISHED" } } },
       }),
       prisma.post.findMany({
         orderBy: [{ publishedAt: "desc" }, { updatedAt: "desc" }],
         select: recentPostSelect,
-        take: 5,
+        take: sidebarLimit,
         where: { status: "PUBLISHED" },
+      }),
+      prisma.comment.findMany({
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        select: sidebarRecentCommentSelect,
+        take: lookaheadLimit,
+        where: {
+          post: { status: "PUBLISHED" },
+          status: "APPROVED",
+        },
       }),
       prisma.$queryRaw<SidebarArchiveRow[]>`
         SELECT
@@ -895,19 +944,29 @@ export const getCachedSidebarData = unstable_cache(
           AND "publishedAt" IS NOT NULL
         GROUP BY date_trunc('month', "publishedAt")
         ORDER BY date_trunc('month', "publishedAt") DESC
-        LIMIT 12
+        LIMIT ${lookaheadLimit}
       `,
     ])
 
-    const archives = archiveRows.map((archive) => ({
+    const archives = archiveRows.slice(0, sidebarLimit).map((archive) => ({
       count: Number(archive.count),
       month: archive.month,
     }))
 
-    return { archives, categories, recentPosts }
+    return {
+      archives,
+      categories: categories.slice(0, sidebarLimit),
+      hasMore: {
+        archives: archiveRows.length > sidebarLimit,
+        categories: categories.length > sidebarLimit,
+        recentComments: recentComments.length > sidebarLimit,
+      },
+      recentComments: recentComments.slice(0, sidebarLimit),
+      recentPosts,
+    }
   },
   ["sidebar-data"],
-  { revalidate: 300, tags: ["posts", "categories"] },
+  { revalidate: 300, tags: ["posts", "categories", "comments"] },
 )
 
 export const getCachedCommandCategories = unstable_cache(
@@ -1001,6 +1060,78 @@ export const getCachedSearchTaxonomy = unstable_cache(
   },
   ["search-taxonomy"],
   { revalidate: 300, tags: ["categories", "tags", "posts"] },
+)
+
+export const getCachedPublicCategories = unstable_cache(
+  async (): Promise<PublicCategoryListItem[]> => {
+    const categories = await prisma.category.findMany({
+      orderBy: { name: "asc" },
+      select: searchCategoryWithCountSelect,
+      where: { posts: { some: { status: "PUBLISHED" } } },
+    })
+
+    return categories.map((category) => ({
+      count: category._count.posts,
+      name: category.name,
+      slug: category.slug,
+    }))
+  },
+  ["public-categories"],
+  { revalidate: 300, tags: ["categories", "posts"] },
+)
+
+export const getCachedPublicArchives = unstable_cache(
+  async (): Promise<PublicArchiveListItem[]> => {
+    const archiveRows = await prisma.$queryRaw<PublicArchiveRow[]>`
+      SELECT
+        to_char(date_trunc('month', "publishedAt"), 'YYYY-MM') AS month,
+        COUNT(*) AS count
+      FROM posts
+      WHERE status = 'PUBLISHED'
+        AND "publishedAt" IS NOT NULL
+      GROUP BY date_trunc('month', "publishedAt")
+      ORDER BY date_trunc('month', "publishedAt") DESC
+    `
+
+    return archiveRows
+      .filter((archive): archive is PublicArchiveRow & { month: string } =>
+        archive.month !== null,
+      )
+      .map((archive) => ({
+        count: countToNumber(archive.count),
+        month: archive.month,
+      }))
+  },
+  ["public-archives"],
+  { revalidate: 300, tags: ["posts"] },
+)
+
+export const getCachedPublicComments = unstable_cache(
+  async (page: number, pageSize: number) => {
+    const offset = (page - 1) * pageSize
+    const [comments, total] = await prisma.$transaction([
+      prisma.comment.findMany({
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        select: sidebarRecentCommentSelect,
+        skip: offset,
+        take: pageSize,
+        where: {
+          post: { status: "PUBLISHED" },
+          status: "APPROVED",
+        },
+      }),
+      prisma.comment.count({
+        where: {
+          post: { status: "PUBLISHED" },
+          status: "APPROVED",
+        },
+      }),
+    ])
+
+    return { comments, total }
+  },
+  ["public-comments"],
+  { revalidate: 300, tags: ["posts", "comments"] },
 )
 
 export const getCachedEditorReferenceData = unstable_cache(

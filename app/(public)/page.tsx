@@ -112,7 +112,9 @@ function HomeSidebar({
     <Sidebar
       archives={data.archives}
       categories={data.categories}
+      hasMore={data.hasMore}
       newsletter={<NewsletterForm />}
+      recentComments={data.recentComments}
       recentPosts={data.recentPosts}
     />
   )

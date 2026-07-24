@@ -753,7 +753,7 @@ describe("MobileNav", () => {
 })
 
 describe("Sidebar", () => {
-  it("renders newsletter content, categories, and recent posts", () => {
+  it("renders newsletter first, followed by recent posts, comments, categories, and archives", () => {
     render(
       <Sidebar
         archives={[
@@ -777,6 +777,18 @@ describe("Sidebar", () => {
           },
         ]}
         newsletter={<form aria-label="Newsletter signup" />}
+        recentComments={[
+          {
+            authorName: "Mina",
+            content: "A thoughtful note about the episode.",
+            createdAt: new Date("2024-04-02T00:00:00Z"),
+            id: "comment-1",
+            post: {
+              slug: "frieren",
+              title: "Frieren and the passage of time",
+            },
+          },
+        ]}
         recentPosts={[
           {
             publishedAt: new Date("2024-04-01T00:00:00Z"),
@@ -788,6 +800,14 @@ describe("Sidebar", () => {
     )
 
     expect(screen.getByRole("form", { name: "Newsletter signup" })).toBeVisible()
+    const headings = screen.getAllByRole("heading").map((heading) => heading.textContent)
+    expect(headings).toEqual([
+      "Bản tin",
+      "Bài viết gần đây",
+      "Bình luận gần đây",
+      "Danh mục",
+      "Lưu trữ",
+    ])
     expect(screen.getByRole("link", { name: /Production/ })).toHaveAttribute(
       "href",
       "/category/production",
@@ -796,10 +816,98 @@ describe("Sidebar", () => {
     expect(
       screen.getByRole("link", { name: "Frieren and the passage of time" }),
     ).toHaveAttribute("href", "/frieren")
+    expect(screen.getByRole("link", { name: /A thoughtful note/ })).toHaveAttribute(
+      "href",
+      "/frieren#comment-comment-1",
+    )
     expect(screen.getByRole("link", { name: /06\/2026/ })).toHaveAttribute(
       "href",
       "/archive/2026-06",
     )
+  })
+
+  it("limits sidebar lists to five items and only shows more links when available", () => {
+    render(
+      <Sidebar
+        archives={Array.from({ length: 6 }, (_, index) => ({
+          count: index + 1,
+          month: `2026-${String(index + 1).padStart(2, "0")}`,
+        }))}
+        categories={Array.from({ length: 6 }, (_, index) => ({
+          _count: { posts: index + 1 },
+          id: `category-${index + 1}`,
+          name: `Category ${index + 1}`,
+          slug: `category-${index + 1}`,
+        }))}
+        hasMore={{
+          archives: true,
+          categories: true,
+          recentComments: true,
+        }}
+        recentComments={Array.from({ length: 6 }, (_, index) => ({
+          authorName: `Reader ${index + 1}`,
+          content: `Comment ${index + 1}`,
+          createdAt: new Date(`2024-04-0${(index % 5) + 1}T00:00:00Z`),
+          id: `comment-${index + 1}`,
+          post: {
+            slug: `post-${index + 1}`,
+            title: `Post ${index + 1}`,
+          },
+        }))}
+        recentPosts={Array.from({ length: 6 }, (_, index) => ({
+          publishedAt: new Date(`2024-04-0${(index % 5) + 1}T00:00:00Z`),
+          slug: `post-${index + 1}`,
+          title: `Recent Post ${index + 1}`,
+        }))}
+      />,
+    )
+
+    expect(screen.queryByText("Recent Post 6")).not.toBeInTheDocument()
+    expect(screen.queryByText("Comment 6")).not.toBeInTheDocument()
+    expect(screen.queryByText("Category 6")).not.toBeInTheDocument()
+    expect(screen.queryByRole("link", { name: /06\/2026/ })).not.toBeInTheDocument()
+
+    expect(screen.getByRole("link", { name: "Xem thêm bình luận" })).toHaveAttribute(
+      "href",
+      "/comments",
+    )
+    expect(screen.getByRole("link", { name: "Xem thêm danh mục" })).toHaveAttribute(
+      "href",
+      "/category",
+    )
+    expect(screen.getByRole("link", { name: "Xem thêm lưu trữ" })).toHaveAttribute(
+      "href",
+      "/archive",
+    )
+    expect(screen.queryByRole("link", { name: "Xem thêm bài viết" })).not.toBeInTheDocument()
+  })
+
+  it("hides more links when sidebar sections have no additional items", () => {
+    render(
+      <Sidebar
+        archives={[{ count: 1, month: "2026-06" }]}
+        categories={[
+          {
+            _count: { posts: 1 },
+            id: "category-1",
+            name: "Production",
+            slug: "production",
+          },
+        ]}
+        recentComments={[
+          {
+            authorName: "Mina",
+            content: "Only visible comment",
+            createdAt: new Date("2024-04-02T00:00:00Z"),
+            id: "comment-1",
+            post: { slug: "frieren", title: "Frieren" },
+          },
+        ]}
+        recentPosts={[]}
+      />,
+    )
+
+    expect(screen.queryByRole("link", { name: /^Xem thêm/ })).not.toBeInTheDocument()
   })
 
   it("uses zoom-friendly responsive sidebar widths", () => {
