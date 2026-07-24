@@ -19,11 +19,10 @@ interface AdminCommentsPageProps {
 const PAGE_SIZE = 30
 const COMMENT_TABS: Array<{
   href: string
-  key: "APPROVED" | "PENDING" | "SPAM"
+  key: CommentStatus
   label: string
 }> = [
-  { href: "/admin/comments?status=PENDING", key: "PENDING", label: "Chờ duyệt" },
-  { href: "/admin/comments", key: "APPROVED", label: "Đã duyệt" },
+  { href: "/admin/comments", key: "APPROVED", label: "Tất cả" },
   { href: "/admin/comments?status=SPAM", key: "SPAM", label: "Spam" },
 ]
 
@@ -33,13 +32,9 @@ function parsePage(value?: string) {
   return Number.isFinite(page) && page > 0 ? page : 1
 }
 
-function parseStatus(value?: string): CommentStatus | "PENDING" {
+function parseStatus(value?: string): CommentStatus {
   if (value === "SPAM") {
     return "SPAM"
-  }
-
-  if (value === "PENDING") {
-    return "PENDING"
   }
 
   return "APPROVED"
@@ -52,16 +47,13 @@ export default async function AdminCommentsPage({
   const page = parsePage(pageParam)
   const status = parseStatus(statusParam)
 
-  const [{ approvedComments, pendingComments, spamComments }, commentsData] =
+  const [{ approvedComments, spamComments }, commentsData] =
     await Promise.all([
       getCachedAdminCommentCounts(),
-      status === "PENDING"
-        ? Promise.resolve({ comments: [], total: 0 })
-        : getCachedAdminComments(page, status, PAGE_SIZE),
+      getCachedAdminComments(page, status, PAGE_SIZE),
     ])
   const tabCounts = {
     APPROVED: approvedComments,
-    PENDING: pendingComments,
     SPAM: spamComments,
   }
 

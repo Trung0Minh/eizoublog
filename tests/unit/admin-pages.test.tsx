@@ -335,9 +335,14 @@ describe("admin server pages", () => {
     expect(screen.getByTestId("admin-comments-table")).toHaveTextContent(
       "1 comments",
     )
-    expect(screen.getByRole("link", { name: /Đã duyệt/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Tất cả/ })).toHaveAttribute(
       "aria-current",
       "page",
+    )
+    expect(screen.queryByRole("link", { name: /Chờ duyệt/ })).not.toBeInTheDocument()
+    expect(screen.getByRole("link", { name: /Spam/ })).toHaveAttribute(
+      "href",
+      "/admin/comments?status=SPAM",
     )
     expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(2)
   })

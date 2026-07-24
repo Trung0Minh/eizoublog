@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, ShieldAlert, Trash2 } from "lucide-react"
+import { ShieldAlert, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -47,7 +47,7 @@ export function AdminCommentsTable({
 }: {
   comments: AdminComment[]
   emptyLabel?: string
-  status?: "APPROVED" | "PENDING" | "SPAM"
+  status?: "APPROVED" | "SPAM"
 }) {
   const router = useRouter()
   const [spammingId, setSpammingId] = useState<string | null>(null)
@@ -135,22 +135,6 @@ export function AdminCommentsTable({
           </div>
 
           <div className="mt-4 flex shrink-0 items-center gap-1 sm:mt-0 transition-opacity opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
-            {status === "PENDING" && (
-              <>
-                <button className="flex h-8 items-center gap-1.5 rounded-[8px] bg-[#15803d]/10 px-3 text-[12px] font-bold text-[#15803d] transition-colors hover:bg-[#15803d]/20 dark:bg-[#4ade80]/10 dark:text-[#4ade80] dark:hover:bg-[#4ade80]/20">
-                  <Check aria-hidden="true" className="h-4 w-4" />
-                  Duyệt
-                </button>
-                <button
-                  className="flex h-8 w-8 items-center justify-center rounded-[8px] text-text-secondary transition-colors hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-400"
-                  title="Đánh dấu là spam"
-                  type="button"
-                >
-                  <ShieldAlert aria-hidden="true" className="h-4 w-4" />
-                </button>
-              </>
-            )}
-
             {status === "APPROVED" && (
               <Button
                 aria-label="Đánh dấu là spam"
@@ -171,7 +155,6 @@ export function AdminCommentsTable({
                 className="flex h-8 items-center gap-1.5 rounded-[8px] px-3 text-[12px] font-semibold text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary"
                 type="button"
               >
-                <Check aria-hidden="true" className="h-4 w-4" />
                 Không phải spam
               </button>
             )}
