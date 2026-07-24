@@ -5,8 +5,14 @@ const mocks = vi.hoisted(() => ({
   getCachedPublishedPost: vi.fn(),
   postFindMany: vi.fn(),
   postFindUnique: vi.fn(),
+  router: {
+    refresh: vi.fn(),
+  },
 }))
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => mocks.router,
+}))
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     post: {

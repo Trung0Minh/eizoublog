@@ -296,10 +296,11 @@ describe("cached Prisma query helpers", () => {
     expect(mocks.prisma.category.findMany).toHaveBeenCalledWith({
       orderBy: { name: "asc" },
       select: { id: true, name: true, slug: true },
+      where: { posts: { some: { status: "PUBLISHED" } } },
     })
     expect(mocks.cacheEntries).toContainEqual({
       keyParts: ["command-categories"],
-      options: { revalidate: 300, tags: ["categories"] },
+      options: { revalidate: 300, tags: ["categories", "posts"] },
     })
   })
 
@@ -337,10 +338,13 @@ describe("cached Prisma query helpers", () => {
       contentText: "About",
     })
     mocks.prisma.category.findMany.mockResolvedValue([
-      { name: "Analysis", slug: "analysis" },
+      { _count: { posts: 2 }, name: "Analysis", slug: "analysis" },
     ])
     mocks.prisma.tag.findMany.mockResolvedValue([
-      { name: "Sakuga", slug: "sakuga" },
+      { _count: { posts: 3 }, name: "Sakuga", slug: "sakuga" },
+    ])
+    mocks.prisma.$queryRaw.mockResolvedValueOnce([
+      { count: BigInt(4), month: "2026-07" },
     ])
 
     await expect(getCachedSitePage("about")).resolves.toEqual({
@@ -348,8 +352,9 @@ describe("cached Prisma query helpers", () => {
       contentText: "About",
     })
     await expect(getCachedSearchTaxonomy()).resolves.toEqual({
-      categories: [{ name: "Analysis", slug: "analysis" }],
-      tags: [{ name: "Sakuga", slug: "sakuga" }],
+      archives: [{ count: 4, month: "2026-07" }],
+      categories: [{ count: 2, name: "Analysis", slug: "analysis" }],
+      tags: [{ count: 3, name: "Sakuga", slug: "sakuga" }],
     })
 
     expect(mocks.prisma.sitePage.findUnique).toHaveBeenCalledWith({
@@ -362,7 +367,7 @@ describe("cached Prisma query helpers", () => {
     })
     expect(mocks.cacheEntries).toContainEqual({
       keyParts: ["search-taxonomy"],
-      options: { revalidate: 300, tags: ["categories", "tags"] },
+      options: { revalidate: 300, tags: ["categories", "tags", "posts"] },
     })
   })
 
@@ -913,7 +918,18 @@ describe("cached Prisma query helpers", () => {
       .mockResolvedValueOnce([{ id: "post-1", slug: "essay" }])
       .mockResolvedValueOnce([{ count: 1 }])
 
-    await expect(getCachedSearchResults("sakuga:*", 2, 5)).resolves.toEqual({
+    await expect(
+      getCachedSearchResults(
+        {
+          canUseFuzzy: true,
+          displayQuery: "sakuga",
+          normalizedQuery: "sakuga",
+          prefixTsQuery: "sakuga:*",
+        },
+        2,
+        5,
+      ),
+    ).resolves.toEqual({
       results: [{ id: "post-1", slug: "essay" }],
       total: 1,
     })

@@ -314,6 +314,7 @@ describe("admin server pages", () => {
       ])
       .mockResolvedValueOnce([
         {
+          authorRole: null,
           authorName: "Reader",
           content: "Good note",
           createdAt: new Date("2026-01-01T00:00:00Z"),
@@ -334,7 +335,7 @@ describe("admin server pages", () => {
     expect(screen.getByTestId("admin-comments-table")).toHaveTextContent(
       "1 comments",
     )
-    expect(screen.getByRole("link", { name: /Approved/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Đã duyệt/ })).toHaveAttribute(
       "aria-current",
       "page",
     )

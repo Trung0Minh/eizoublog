@@ -6,6 +6,16 @@ const mocks = vi.hoisted(() => ({
   },
 }))
 
+function flattenSql(value: unknown): string {
+  if (typeof value === "string") return value
+  if (Array.isArray(value)) return value.map(flattenSql).join(" ")
+  if (typeof value !== "object" || value === null) return ""
+
+  return Object.values(value)
+    .map(flattenSql)
+    .join(" ")
+}
+
 vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }))
 vi.mock("next/cache", () => ({
   unstable_cache:
@@ -23,7 +33,7 @@ describe("search API", () => {
     vi.clearAllMocks()
   })
 
-  it("returns empty results for an empty query without hitting the database", async () => {
+  it("returns empty results for an empty query without filters", async () => {
     const response = await GET(new Request("https://example.test/api/search"))
 
     expect(response.status).toBe(200)
@@ -69,8 +79,38 @@ describe("search API", () => {
       },
     })
 
-    const firstQuery = String(mocks.prisma.$queryRaw.mock.calls[0]?.[0])
+    const firstQuery = flattenSql(mocks.prisma.$queryRaw.mock.calls[0])
     expect(firstQuery).toContain("p.status = 'PUBLISHED'")
+    expect(firstQuery).toContain("websearch_to_tsquery")
+    expect(firstQuery).toContain("to_tsquery")
+    expect(firstQuery).toContain("similarity")
     expect(firstQuery).toContain("ts_headline")
+  })
+
+  it("supports filter-only search with multi-tag OR and archive filters", async () => {
+    mocks.prisma.$queryRaw
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ count: 0 }])
+
+    const response = await GET(
+      new Request(
+        "https://example.test/api/search?category=analysis&tags=mappa&tags=ufotable&tag=legacy&archive=2026-07",
+      ),
+    )
+
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toMatchObject({
+      data: {
+        pagination: { limit: 10, page: 1, total: 0, totalPages: 0 },
+        query: "",
+        results: [],
+      },
+    })
+
+    const firstQuery = flattenSql(mocks.prisma.$queryRaw.mock.calls[0])
+    expect(firstQuery).toContain("t.slug IN")
+    expect(firstQuery).toContain('p."publishedAt" >=')
+    expect(firstQuery).toContain('p."publishedAt" <')
+    expect(firstQuery).not.toContain("websearch_to_tsquery")
   })
 })

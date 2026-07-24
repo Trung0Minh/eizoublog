@@ -352,6 +352,7 @@ describe("unpublishAwardEventPost", () => {
     })
     expect(mocks.prisma.post.update).toHaveBeenCalledWith({
       data: {
+        featuredAt: null,
         moderationLockedAt: null,
         publishedAt: null,
         removedAt: null,

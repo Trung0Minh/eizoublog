@@ -7,9 +7,15 @@ const mocks = vi.hoisted(() => ({
   notFound: vi.fn(() => {
     throw new Error("not-found")
   }),
+  router: {
+    replace: vi.fn(),
+  },
 }))
 
-vi.mock("next/navigation", () => ({ notFound: mocks.notFound }))
+vi.mock("next/navigation", () => ({
+  notFound: mocks.notFound,
+  useRouter: () => mocks.router,
+}))
 vi.mock("@/components/posts/PostList", () => ({
   PostList: () => <div data-testid="post-list" />,
 }))

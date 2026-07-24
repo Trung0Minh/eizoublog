@@ -4,15 +4,18 @@ import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 
 describe("getHomePageData", () => {
-  it("reuses the default post list promise for homepage carousel posts", () => {
+  it("loads the post list, sidebar data, and carousel posts together", () => {
     const source = readFileSync(join(process.cwd(), "lib/queries.ts"), "utf8")
 
     expect(source).toContain(
       'const listDataPromise = getCachedPublishedPosts(page, 10, sort, archive)',
     )
-    expect(source).toContain('page === 1 && sort === "latest" && !archive')
+    expect(source).toContain("const sidebarDataPromise = getCachedSidebarData()")
     expect(source).toContain(
-      "listDataPromise.then(({ posts }) => posts.slice(0, 5))",
+      "const carouselPostsPromise = getCachedHomeCarouselPosts()",
+    )
+    expect(source).toContain(
+      "const [listData, sidebarData, carouselPosts] = await Promise.all([",
     )
   })
 })

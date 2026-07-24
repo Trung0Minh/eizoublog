@@ -8,7 +8,7 @@ interface PaginationProps {
   page: number
   pageSize: number
   prefetch?: boolean
-  query?: Record<string, number | string | undefined>
+  query?: Record<string, number | string | string[] | undefined>
   total: number
 }
 
@@ -28,12 +28,18 @@ function getPageWindow(page: number, totalPages: number) {
 
 function buildPageHref(
   page: number,
-  query?: Record<string, number | string | undefined>,
+  query?: Record<string, number | string | string[] | undefined>,
 ) {
   const searchParams = new URLSearchParams()
 
   for (const [key, value] of Object.entries(query ?? {})) {
-    if (value !== undefined && String(value).trim()) {
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        if (item.trim()) {
+          searchParams.append(key, item)
+        }
+      }
+    } else if (value !== undefined && String(value).trim()) {
       searchParams.set(key, String(value))
     }
   }

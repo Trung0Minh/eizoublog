@@ -21,7 +21,7 @@ import {
 import { SITE_PAGES_CACHE_TAG, getPostDetailCacheTag } from "@/lib/cacheTags"
 import type { PostListSort } from "@/lib/postListSort"
 import { prisma } from "@/lib/prisma"
-import type { SearchResult } from "@/lib/search"
+import type { PreparedSearchQuery, SearchFilters, SearchResult } from "@/lib/search"
 
 const sidebarCategorySelect = {
   _count: {
@@ -45,15 +45,21 @@ const commandCategorySelect = {
   slug: true,
 } satisfies Prisma.CategorySelect
 
-const searchCategorySelect = {
-  name: true,
-  slug: true,
-} satisfies Prisma.CategorySelect
-
 const searchTagSelect = {
+  _count: {
+    select: { posts: { where: { post: { status: "PUBLISHED" } } } },
+  },
   name: true,
   slug: true,
 } satisfies Prisma.TagSelect
+
+const searchCategoryWithCountSelect = {
+  _count: {
+    select: { posts: { where: { status: "PUBLISHED" } } },
+  },
+  name: true,
+  slug: true,
+} satisfies Prisma.CategorySelect
 
 const sitePageSelect = {
   content: true,
@@ -909,9 +915,10 @@ export const getCachedCommandCategories = unstable_cache(
     prisma.category.findMany({
       orderBy: { name: "asc" },
       select: commandCategorySelect,
+      where: { posts: { some: { status: "PUBLISHED" } } },
     }),
   ["command-categories"],
-  { revalidate: 300, tags: ["categories"] },
+  { revalidate: 300, tags: ["categories", "posts"] },
 )
 
 export async function getCachedPublishedPost(slug: string) {
@@ -952,21 +959,48 @@ export const getCachedSitePage = unstable_cache(
 
 export const getCachedSearchTaxonomy = unstable_cache(
   async () => {
-    const [categories, tags] = await Promise.all([
+    const [categories, tags, archiveRows] = await Promise.all([
       prisma.category.findMany({
         orderBy: { name: "asc" },
-        select: searchCategorySelect,
+        select: searchCategoryWithCountSelect,
+        where: { posts: { some: { status: "PUBLISHED" } } },
       }),
       prisma.tag.findMany({
         orderBy: { name: "asc" },
         select: searchTagSelect,
+        where: { posts: { some: { post: { status: "PUBLISHED" } } } },
       }),
+      prisma.$queryRaw<SidebarArchiveRow[]>`
+        SELECT
+          to_char(date_trunc('month', "publishedAt"), 'YYYY-MM') AS month,
+          COUNT(*) AS count
+        FROM posts
+        WHERE status = 'PUBLISHED'
+          AND "publishedAt" IS NOT NULL
+        GROUP BY date_trunc('month', "publishedAt")
+        ORDER BY date_trunc('month', "publishedAt") DESC
+      `,
     ])
 
-    return { categories, tags }
+    return {
+      archives: archiveRows.map((archive) => ({
+        count: Number(archive.count),
+        month: archive.month,
+      })),
+      categories: categories.map((category) => ({
+        count: category._count.posts,
+        name: category.name,
+        slug: category.slug,
+      })),
+      tags: tags.map((tag) => ({
+        count: tag._count.posts,
+        name: tag.name,
+        slug: tag.slug,
+      })),
+    }
   },
   ["search-taxonomy"],
-  { revalidate: 300, tags: ["categories", "tags"] },
+  { revalidate: 300, tags: ["categories", "tags", "posts"] },
 )
 
 export const getCachedEditorReferenceData = unstable_cache(
@@ -1647,66 +1681,212 @@ export const getCachedAuthorPosts = unstable_cache(
 
 export const getCachedSearchResults = unstable_cache(
   async (
-    tsQuery: string,
+    searchQuery: PreparedSearchQuery,
     page: number,
     pageSize: number,
-    categorySlug?: string,
-    tagSlug?: string,
+    filters: SearchFilters = { tagSlugs: [] },
   ) => {
     const offset = (page - 1) * pageSize
-    const categoryCondition = categorySlug
+    const archiveRange = getArchiveMonthRange(filters.archive)
+    const hasTextSearch = Boolean(searchQuery.normalizedQuery)
+    const categoryCondition = filters.categorySlug
       ? Prisma.sql`AND EXISTS (
           SELECT 1 FROM categories c
-          WHERE c.id = p."categoryId" AND c.slug = ${categorySlug}
+          WHERE c.id = p."categoryId" AND c.slug = ${filters.categorySlug}
         )`
       : Prisma.empty
 
-    const tagCondition = tagSlug
+    const tagCondition = filters.tagSlugs.length > 0
       ? Prisma.sql`AND EXISTS (
           SELECT 1 FROM post_tags pt
           JOIN tags t ON t.id = pt."tagId"
-          WHERE pt."postId" = p.id AND t.slug = ${tagSlug}
+          WHERE pt."postId" = p.id AND t.slug IN (${Prisma.join(filters.tagSlugs)})
+        )`
+      : Prisma.empty
+    const archiveCondition = archiveRange
+      ? Prisma.sql`AND p."publishedAt" >= ${archiveRange.start} AND p."publishedAt" < ${archiveRange.end}`
+      : Prisma.empty
+    const textMatchCondition = hasTextSearch
+      ? Prisma.sql`AND (
+          p.search_vector @@ si.web_query
+          OR (si.prefix_query IS NOT NULL AND p.search_vector @@ si.prefix_query)
+          OR (
+            si.can_fuzzy
+            AND (
+              lower(public.search_unaccent(p.title)) % si.needle
+              OR lower(public.search_unaccent(COALESCE(p.excerpt, ''))) % si.needle
+              OR lower(public.search_unaccent(COALESCE(p."contentText", ''))) % si.needle
+              OR word_similarity(si.needle, lower(public.search_unaccent(p.title))) >= 0.45
+              OR word_similarity(si.needle, lower(public.search_unaccent(COALESCE(p.excerpt, '')))) >= 0.45
+              OR word_similarity(si.needle, lower(public.search_unaccent(COALESCE(p."contentText", '')))) >= 0.55
+            )
+          )
         )`
       : Prisma.empty
 
+    if (!hasTextSearch) {
+      const [results, countResult] = await Promise.all([
+        prisma.$queryRaw<SearchResult[]>`
+          SELECT
+            p.id,
+            p.title,
+            p.slug,
+            p.excerpt,
+            p."coverUrl",
+            p."publishedAt",
+            u.name AS "authorName",
+            u.username AS "authorUsername",
+            u."avatarUrl" AS "authorAvatarUrl",
+            0 AS rank,
+            NULL AS snippet
+          FROM posts p
+          JOIN users u ON u.id = p."authorId"
+          WHERE
+            p.status = 'PUBLISHED'
+            ${categoryCondition}
+            ${tagCondition}
+            ${archiveCondition}
+          ORDER BY p."publishedAt" DESC
+          LIMIT ${pageSize}
+          OFFSET ${offset}
+        `,
+        prisma.$queryRaw<[{ count: bigint }]>`
+          SELECT COUNT(*) AS count
+          FROM posts p
+          WHERE
+            p.status = 'PUBLISHED'
+            ${categoryCondition}
+            ${tagCondition}
+            ${archiveCondition}
+        `,
+      ])
+      const total = Number(countResult[0]?.count ?? 0)
+
+      return { results, total }
+    }
+
     const [results, countResult] = await Promise.all([
       prisma.$queryRaw<SearchResult[]>`
+        WITH search_input AS (
+          SELECT
+            ${hasTextSearch}::boolean AS has_text,
+            CASE
+              WHEN ${hasTextSearch} THEN websearch_to_tsquery('simple', ${searchQuery.normalizedQuery})
+              ELSE NULL
+            END AS web_query,
+            CASE
+              WHEN ${hasTextSearch} AND ${searchQuery.prefixTsQuery} <> '' THEN to_tsquery('simple', ${searchQuery.prefixTsQuery})
+              ELSE NULL
+            END AS prefix_query,
+            ${searchQuery.normalizedQuery}::text AS needle,
+            ${searchQuery.canUseFuzzy}::boolean AS can_fuzzy
+        ),
+        ranked AS (
+          SELECT
+            p.id,
+            p.title,
+            p.slug,
+            p.excerpt,
+            p."coverUrl",
+            p."publishedAt",
+            u.name AS "authorName",
+            u.username AS "authorUsername",
+            u."avatarUrl" AS "authorAvatarUrl",
+            CASE
+              WHEN si.web_query IS NULL THEN 0
+              ELSE ts_rank_cd(p.search_vector, si.web_query)
+            END AS full_text_rank,
+            CASE
+              WHEN si.prefix_query IS NULL THEN 0
+              ELSE ts_rank_cd(p.search_vector, si.prefix_query)
+            END AS prefix_rank,
+            similarity(lower(public.search_unaccent(p.title)), si.needle) AS title_similarity,
+            similarity(lower(public.search_unaccent(COALESCE(p.excerpt, ''))), si.needle) AS excerpt_similarity,
+            similarity(lower(public.search_unaccent(COALESCE(p."contentText", ''))), si.needle) AS content_similarity,
+            si.has_text AND lower(public.search_unaccent(p.title)) = si.needle AS exact_title_match,
+            si.has_text AND lower(public.search_unaccent(p.title)) LIKE '%' || si.needle || '%' AS title_contains,
+            si.has_text AND lower(public.search_unaccent(COALESCE(p.excerpt, ''))) LIKE '%' || si.needle || '%' AS excerpt_contains,
+            si.has_text AND lower(public.search_unaccent(COALESCE(p."contentText", ''))) LIKE '%' || si.needle || '%' AS content_contains,
+            CASE
+              WHEN
+                (
+                  si.web_query IS NOT NULL
+                  AND p.search_vector @@ si.web_query
+                )
+                OR (
+                  si.prefix_query IS NOT NULL
+                  AND p.search_vector @@ si.prefix_query
+                )
+              THEN ts_headline(
+                'simple',
+                COALESCE(p."contentText", ''),
+                si.web_query,
+                'MaxWords=34, MinWords=12, StartSel=<mark>, StopSel=</mark>, HighlightAll=false'
+              )
+              ELSE NULL
+            END AS snippet
+          FROM posts p
+          JOIN users u ON u.id = p."authorId"
+          CROSS JOIN search_input si
+          WHERE
+            p.status = 'PUBLISHED'
+            ${textMatchCondition}
+            ${categoryCondition}
+            ${tagCondition}
+            ${archiveCondition}
+        )
         SELECT
-          p.id,
-          p.title,
-          p.slug,
-          p.excerpt,
-          p."coverUrl",
-          p."publishedAt",
-          u.name AS "authorName",
-          u.username AS "authorUsername",
-          u."avatarUrl" AS "authorAvatarUrl",
-          ts_rank(p.search_vector, to_tsquery('simple', ${tsQuery})) AS rank,
-          ts_headline(
-            'simple',
-            COALESCE(p."contentText", ''),
-            to_tsquery('simple', ${tsQuery}),
-            'MaxWords=34, MinWords=12, StartSel=<mark>, StopSel=</mark>, HighlightAll=false'
-          ) AS snippet
-        FROM posts p
-        JOIN users u ON u.id = p."authorId"
-        WHERE
-          p.status = 'PUBLISHED'
-          AND p.search_vector @@ to_tsquery('simple', ${tsQuery})
-          ${categoryCondition}
-          ${tagCondition}
-        ORDER BY rank DESC, p."publishedAt" DESC
+          id,
+          title,
+          slug,
+          excerpt,
+          "coverUrl",
+          "publishedAt",
+          "authorName",
+          "authorUsername",
+          "authorAvatarUrl",
+          (
+            CASE WHEN exact_title_match THEN 6 ELSE 0 END
+            + CASE WHEN title_contains THEN 4 ELSE 0 END
+            + CASE WHEN excerpt_contains THEN 2 ELSE 0 END
+            + CASE WHEN content_contains THEN 0.75 ELSE 0 END
+            + full_text_rank * 3
+            + prefix_rank * 2
+            + title_similarity * 1.5
+            + excerpt_similarity
+            + content_similarity * 0.3
+          ) AS rank,
+          snippet
+        FROM ranked
+        ORDER BY
+          rank DESC,
+          "publishedAt" DESC
         LIMIT ${pageSize}
         OFFSET ${offset}
       `,
       prisma.$queryRaw<[{ count: bigint }]>`
+        WITH search_input AS (
+          SELECT
+            CASE
+              WHEN ${hasTextSearch} THEN websearch_to_tsquery('simple', ${searchQuery.normalizedQuery})
+              ELSE NULL
+            END AS web_query,
+            CASE
+              WHEN ${hasTextSearch} AND ${searchQuery.prefixTsQuery} <> '' THEN to_tsquery('simple', ${searchQuery.prefixTsQuery})
+              ELSE NULL
+            END AS prefix_query,
+            ${searchQuery.normalizedQuery}::text AS needle,
+            ${searchQuery.canUseFuzzy}::boolean AS can_fuzzy
+        )
         SELECT COUNT(*) AS count
         FROM posts p
+        CROSS JOIN search_input si
         WHERE
           p.status = 'PUBLISHED'
-          AND p.search_vector @@ to_tsquery('simple', ${tsQuery})
+          ${textMatchCondition}
           ${categoryCondition}
           ${tagCondition}
+          ${archiveCondition}
       `,
     ])
     const total = Number(countResult[0]?.count ?? 0)

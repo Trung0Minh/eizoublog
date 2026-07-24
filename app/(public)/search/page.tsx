@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 
 import { PageContainer } from "@/components/layout/PageContainer"
+import { SearchFilters } from "@/components/search/SearchFilters"
 import { SearchPageTracker } from "@/components/search/SearchPageTracker"
 import { TextReveal } from "@/components/ui/TextReveal"
 import { ScrollReveal } from "@/components/ui/ScrollReveal"
@@ -9,14 +10,22 @@ import { Pagination } from "@/components/ui/Pagination"
 import { RelativeTime } from "@/components/ui/RelativeTime"
 import { getCachedSearchResults, getCachedSearchTaxonomy } from "@/lib/queries"
 import {
-  buildSearchQuery,
+  getHighlightedSearchSegments,
+  prepareSearchQuery,
   sanitizeSearchSnippet,
   type SearchResult,
 } from "@/lib/search"
 import { buildMetadata } from "@/lib/seo"
 
 interface SearchPageProps {
-  searchParams: Promise<{ page?: string; q?: string; category?: string; tag?: string }>
+  searchParams: Promise<{
+    archive?: string
+    category?: string
+    page?: string
+    q?: string
+    tag?: string
+    tags?: string | string[]
+  }>
 }
 
 const PAGE_SIZE = 10
@@ -24,6 +33,15 @@ const PAGE_SIZE = 10
 function parsePage(value: string | undefined) {
   const page = Number.parseInt(value ?? "1", 10)
   return Number.isFinite(page) && page > 0 ? page : 1
+}
+
+function parseSelectedTags(value: string | string[] | undefined, legacyTag?: string) {
+  return Array.from(
+    new Set([
+      ...(Array.isArray(value) ? value : value ? [value] : []),
+      ...(legacyTag ? [legacyTag] : []),
+    ]),
+  ).filter(Boolean)
 }
 
 export async function generateMetadata({
@@ -39,11 +57,17 @@ export async function generateMetadata({
   })
 }
 
-function EmptySearchState({ query }: { query: string }) {
+function EmptySearchState({
+  hasCriteria,
+  query,
+}: {
+  hasCriteria: boolean
+  query: string
+}) {
   return (
     <div className="rounded-[8px] border border-dashed p-8 text-center">
       <p className="text-sm text-muted-foreground">
-        {query
+        {query || hasCriteria
           ? "Không có bài viết nào khớp với tìm kiếm của bạn. Thử ít từ khóa hơn hoặc dùng từ khóa khác."
           : "Nhập từ khóa để tìm kiếm bài viết."}
       </p>
@@ -51,8 +75,41 @@ function EmptySearchState({ query }: { query: string }) {
   )
 }
 
-function SearchResultCard({ result }: { result: SearchResult }) {
+function HighlightedText({
+  className,
+  query,
+  text,
+}: {
+  className?: string
+  query: string
+  text: string
+}) {
+  const segments = getHighlightedSearchSegments(text, query)
+
+  return (
+    <>
+      {segments.map((segment, index) =>
+        segment.highlight ? (
+          <mark className={className} key={`${segment.text}-${index}`}>
+            {segment.text}
+          </mark>
+        ) : (
+          segment.text
+        ),
+      )}
+    </>
+  )
+}
+
+function SearchResultCard({
+  query,
+  result,
+}: {
+  query: string
+  result: SearchResult
+}) {
   const snippet = sanitizeSearchSnippet(result.snippet)
+  const fallbackSnippet = result.excerpt?.trim()
 
   return (
     <article className="border-t py-5 first:border-t-0">
@@ -68,20 +125,32 @@ function SearchResultCard({ result }: { result: SearchResult }) {
         )}
         <div className="min-w-0 flex-1">
           <Link
-            className="text-lg font-semibold leading-snug tracking-tight transition-colors hover:text-editorial"
+            className="text-lg font-semibold leading-snug tracking-tight transition-colors hover:text-accent"
             href={`/${result.slug}`}
           >
-            {result.title}
+            <HighlightedText
+              className="rounded px-0.5 text-text-primary ring-1 ring-accent/20 [background-color:color-mix(in_srgb,var(--accent)_22%,transparent)]"
+              query={query}
+              text={result.title}
+            />
           </Link>
           <p className="mt-1 text-xs text-muted-foreground">
             {result.authorName} · <RelativeTime date={result.publishedAt} />
           </p>
-          {snippet && (
+          {snippet ? (
             <p
-              className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground [&_mark]:rounded [&_mark]:bg-editorial/20 [&_mark]:px-0.5 [&_mark]:text-foreground"
+              className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground [&_mark]:rounded [&_mark]:px-0.5 [&_mark]:text-text-primary [&_mark]:ring-1 [&_mark]:ring-accent/20 [&_mark]:[background-color:color-mix(in_srgb,var(--accent)_22%,transparent)]"
               dangerouslySetInnerHTML={{ __html: snippet }}
             />
-          )}
+          ) : fallbackSnippet ? (
+            <p className="mt-3 line-clamp-3 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
+              <HighlightedText
+                className="rounded px-0.5 text-text-primary ring-1 ring-accent/20 [background-color:color-mix(in_srgb,var(--accent)_22%,transparent)]"
+                query={query}
+                text={fallbackSnippet}
+              />
+            </p>
+          ) : null}
         </div>
       </div>
     </article>
@@ -89,26 +158,31 @@ function SearchResultCard({ result }: { result: SearchResult }) {
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const [{ page: pageParam, q, category, tag }, taxonomy] = await Promise.all([
+  const [{ archive, page: pageParam, q, category, tag, tags: tagsParam }, taxonomy] = await Promise.all([
     searchParams,
     getCachedSearchTaxonomy(),
   ])
-  const { categories, tags } = taxonomy
+  const { archives, categories, tags } = taxonomy
 
   const query = (q ?? "").trim()
   const page = parsePage(pageParam)
-  const tsQuery = buildSearchQuery(query)
+  const searchQuery = prepareSearchQuery(query)
+  const selectedTags = parseSelectedTags(tagsParam, tag)
+  const hasFilters = Boolean(category || archive || selectedTags.length > 0)
 
   let results: SearchResult[] = []
   let total = 0
 
-  if (query && tsQuery) {
+  if (searchQuery.normalizedQuery || hasFilters) {
     const searchData = await getCachedSearchResults(
-      tsQuery,
+      searchQuery,
       page,
       PAGE_SIZE,
-      category,
-      tag,
+      {
+        archive,
+        categorySlug: category,
+        tagSlugs: selectedTags,
+      },
     )
     results = searchData.results
     total = searchData.total
@@ -119,94 +193,40 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       {query && <SearchPageTracker query={query} />}
       
       <ScrollReveal>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-editorial">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-accent">
           Tìm kiếm kho lưu trữ
         </p>
         <h1 className="mt-2 text-[32px] font-bold leading-tight tracking-tight">
           <TextReveal text={query ? `Kết quả cho "${query}"` : "Tìm kiếm"} />
         </h1>
-        {query && (
+        {(query || hasFilters) && (
           <p className="mt-2 text-sm text-muted-foreground">
             Tìm thấy {total} kết quả
           </p>
         )}
       </ScrollReveal>
 
-      {/* Beautiful Search Form with Category & Tag Filters */}
-      <ScrollReveal delay={0.1}>
-        <div className="mt-8 mb-10 rounded-[24px] border-[2px] border-border-default bg-background/80 backdrop-blur-md p-6 sm:p-8 shadow-sm">
-          <form action="/search" method="GET" className="flex flex-col gap-4 md:flex-row md:items-end">
-            <div className="flex-1 space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-text-tertiary" htmlFor="search-q">
-                Từ khóa tìm kiếm
-              </label>
-              <input
-                id="search-q"
-                name="q"
-                type="text"
-                defaultValue={query}
-                placeholder="Nhập từ khóa tìm kiếm..."
-                className="w-full h-10 rounded-[12px] border-[2px] border-border-default bg-background px-4 text-[14px] focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all"
-              />
-            </div>
-
-            <div className="w-full md:w-[200px] space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-text-tertiary" htmlFor="search-category">
-                Danh mục
-              </label>
-              <select
-                id="search-category"
-                name="category"
-                defaultValue={category ?? ""}
-                className="w-full h-10 rounded-[12px] border-[2px] border-border-default bg-background px-3 text-[14px] focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all cursor-pointer"
-              >
-                <option value="">Tất cả danh mục</option>
-                {categories.map((c) => (
-                  <option key={c.slug} value={c.slug}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="w-full md:w-[200px] space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-text-tertiary" htmlFor="search-tag">
-                Thẻ
-              </label>
-              <select
-                id="search-tag"
-                name="tag"
-                defaultValue={tag ?? ""}
-                className="w-full h-10 rounded-[12px] border-[2px] border-border-default bg-background px-3 text-[14px] focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all cursor-pointer"
-              >
-                <option value="">Tất cả thẻ</option>
-                {tags.map((t) => (
-                  <option key={t.slug} value={t.slug}>
-                    #{t.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <button
-              type="submit"
-              className="h-10 rounded-full bg-accent hover:bg-accent/95 px-6 font-display font-bold text-white text-[14px] tracking-wide shadow-sm hover:shadow-md transition-all flex items-center justify-center shrink-0"
-            >
-              Tìm kiếm
-            </button>
-          </form>
-        </div>
+      <ScrollReveal className="relative z-20" delay={0.1}>
+        <SearchFilters
+          archives={archives}
+          categories={categories}
+          initialArchive={archive}
+          initialCategory={category}
+          initialQuery={query}
+          initialTags={selectedTags}
+          tags={tags}
+        />
       </ScrollReveal>
 
-      {query ? (
-        <ScrollReveal delay={0.2}>
-          <div>
+      {query || hasFilters ? (
+        <ScrollReveal className="relative z-0" delay={0.2}>
+          <div className="rounded-[16px] border-[2px] border-border-default bg-background/90 p-4 shadow-sm backdrop-blur-md sm:p-6">
           {results.length === 0 ? (
-            <EmptySearchState query={query} />
+            <EmptySearchState hasCriteria={hasFilters} query={query} />
           ) : (
             <div>
               {results.map((result) => (
-                <SearchResultCard key={result.id} result={result} />
+                <SearchResultCard key={result.id} query={query} result={result} />
               ))}
             </div>
           )}
@@ -215,13 +235,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           <Pagination
             page={page}
             pageSize={PAGE_SIZE}
-            query={{ q: query, category, tag }}
+            query={{ archive, category, q: query, tags: selectedTags }}
             total={total}
           />
         </ScrollReveal>
       ) : (
         <ScrollReveal delay={0.2}>
-          <EmptySearchState query={query} />
+          <EmptySearchState hasCriteria={false} query={query} />
         </ScrollReveal>
       )}
     </PageContainer>

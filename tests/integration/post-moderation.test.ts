@@ -84,6 +84,7 @@ describe("POST /api/admin/posts/[id]/moderation", () => {
     expect(response.status).toBe(200)
     expect(mocks.prisma.post.update).toHaveBeenCalledWith({
       data: {
+        featuredAt: null,
         moderationLockedAt: expect.any(Date),
         publishedAt: null,
         removedFromStatus: null,
