@@ -28,6 +28,9 @@ interface SearchFiltersProps {
   tags: FilterOption[]
 }
 
+const selectedFilterChipClass =
+  "inline-flex max-w-full items-center gap-1.5 rounded-full border border-accent/20 px-3 py-1 text-xs font-semibold text-text-primary ring-1 ring-accent/10 transition-colors hover:border-accent/40 hover:text-accent [background-color:color-mix(in_srgb,var(--accent)_12%,transparent)]"
+
 function formatArchiveLabel(month: string) {
   if (!/^\d{4}-\d{2}$/.test(month)) {
     return month
@@ -131,6 +134,14 @@ export function SearchFilters({
     )
   }
 
+  function toggleCategory(slug: string) {
+    setSelectedCategory((current) => (current === slug ? "" : slug))
+  }
+
+  function toggleArchive(month: string) {
+    setSelectedArchive((current) => (current === month ? "" : month))
+  }
+
   return (
     <div className="mb-10 mt-8 rounded-[16px] border-[2px] border-border-default bg-background/90 p-4 shadow-sm backdrop-blur-md sm:p-6">
       <form action="/search" className="space-y-5" method="GET">
@@ -190,7 +201,7 @@ export function SearchFilters({
                     <button
                       className="flex w-full items-center justify-between gap-3 rounded-[8px] px-3 py-2 text-left text-sm transition-colors hover:bg-subtle-bg"
                       key={category.slug}
-                      onClick={() => setSelectedCategory(category.slug)}
+                      onClick={() => toggleCategory(category.slug)}
                       type="button"
                     >
                       <span className="min-w-0 truncate">
@@ -286,7 +297,7 @@ export function SearchFilters({
                   <button
                     className="flex w-full items-center justify-between gap-3 rounded-[8px] px-3 py-2 text-left text-sm transition-colors hover:bg-subtle-bg"
                     key={archive.month}
-                    onClick={() => setSelectedArchive(archive.month)}
+                    onClick={() => toggleArchive(archive.month)}
                     type="button"
                   >
                     <span>
@@ -303,30 +314,53 @@ export function SearchFilters({
           </div>
         </div>
 
-        {selectedTagOptions.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {selectedTagOptions.map((tag) => (
-              <button
-                className="inline-flex items-center gap-1 rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent transition-colors hover:bg-accent/15"
-                key={tag.slug}
-                onClick={() => toggleTag(tag.slug)}
-                type="button"
-              >
-                #{tag.name}
-                <X className="h-3 w-3" />
-              </button>
-            ))}
-          </div>
-        )}
-
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           {hasActiveFilters ? (
-            <Link
-              className="inline-flex h-10 items-center justify-center rounded-full px-4 text-sm font-semibold text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary"
-              href="/search"
-            >
-              Xóa bộ lọc
-            </Link>
+            <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+              <Link
+                className="inline-flex h-9 shrink-0 items-center justify-center rounded-full px-3 text-sm font-semibold text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary"
+                href="/search"
+              >
+                Xóa bộ lọc
+              </Link>
+              <div className="flex min-w-0 flex-wrap gap-2">
+                {selectedCategoryOption && (
+                  <button
+                    className={selectedFilterChipClass}
+                    onClick={() => setSelectedCategory("")}
+                    type="button"
+                  >
+                    <span className="min-w-0 truncate">
+                      Danh mục: {selectedCategoryOption.name}
+                    </span>
+                    <X className="h-3 w-3 shrink-0" />
+                  </button>
+                )}
+                {selectedArchiveOption && (
+                  <button
+                    className={selectedFilterChipClass}
+                    onClick={() => setSelectedArchive("")}
+                    type="button"
+                  >
+                    <span className="min-w-0 truncate">
+                      Tháng: {formatArchiveLabel(selectedArchiveOption.month)}
+                    </span>
+                    <X className="h-3 w-3 shrink-0" />
+                  </button>
+                )}
+                {selectedTagOptions.map((tag) => (
+                  <button
+                    className={selectedFilterChipClass}
+                    key={tag.slug}
+                    onClick={() => toggleTag(tag.slug)}
+                    type="button"
+                  >
+                    <span className="min-w-0 truncate">#{tag.name}</span>
+                    <X className="h-3 w-3 shrink-0" />
+                  </button>
+                ))}
+              </div>
+            </div>
           ) : (
             <span className="text-sm text-text-tertiary">
               Dùng bộ lọc để tìm theo danh mục, thẻ hoặc tháng xuất bản.
