@@ -77,6 +77,25 @@ function moderationTitle(action: string) {
   }
 }
 
+function reviewHref(data: Prisma.JsonObject) {
+  const postId = stringValue(data.postId)
+  const requestId = stringValue(data.reviewRequestId)
+  const context = stringValue(data.context)
+
+  if (!postId || !requestId) return ""
+
+  if (context === "AWARD_EVENT_ROOM") {
+    const eventId = stringValue(data.eventId)
+    const eventRoomId = stringValue(data.eventRoomId)
+
+    return eventId && eventRoomId
+      ? `/dashboard/events/${eventId}/rooms/${eventRoomId}?reviewRequest=${requestId}`
+      : ""
+  }
+
+  return `/dashboard/preview/${postId}?reviewRequest=${requestId}`
+}
+
 const categoryMeta = {
   collaboration: {
     icon: PenLine,
@@ -130,7 +149,9 @@ export default async function NotificationsPage({
       value: invite,
     })),
     ...responseEvents.map((event) => ({
-      category: event.type === "POST_MODERATION"
+      category: event.type === "POST_MODERATION" ||
+        event.type === "POST_REVIEW_DECISION" ||
+        event.type === "POST_REVIEW_REQUEST"
         ? "moderation" as const
         : event.type === "DURABILITY_ALERT"
           ? "system" as const
@@ -272,6 +293,49 @@ export default async function NotificationsPage({
                       const postId = stringValue(data.postId)
                       const postTitle = stringValue(data.postTitle) || "bài viết"
 
+                      if (item.value.type === "POST_REVIEW_REQUEST") {
+                        const href = reviewHref(data)
+                        return (
+                          <>
+                            <p className="font-medium text-text-primary">
+                              Bài viết cần admin duyệt
+                            </p>
+                            <p className="mt-1 text-sm text-text-secondary">
+                              “{postTitle}” đang chờ duyệt trước khi cập nhật.
+                            </p>
+                            {href && (
+                              <ViewLink className="mt-3 inline-flex text-sm font-semibold text-editorial hover:underline" href={href} notificationId={item.value.id}>
+                                Xem bản cần duyệt
+                              </ViewLink>
+                            )}
+                          </>
+                        )
+                      }
+
+                      if (item.value.type === "POST_REVIEW_DECISION") {
+                        const status = stringValue(data.status)
+                        const reason = stringValue(data.reason)
+                        const accepted = status === "ACCEPTED"
+                        return (
+                          <>
+                            <p className="font-medium text-text-primary">
+                              {accepted
+                                ? "Bản cập nhật đã được duyệt"
+                                : "Bản cập nhật bị từ chối"}
+                            </p>
+                            <p className="mt-1 text-sm text-text-secondary">“{postTitle}”</p>
+                            {reason && (
+                              <blockquote className="mt-3 border-l-2 border-amber-500/70 pl-3 text-sm leading-6 text-text-primary">{reason}</blockquote>
+                            )}
+                            {!accepted && postId && (
+                              <ViewLink className="mt-3 inline-flex text-sm font-semibold text-editorial hover:underline" href={`/dashboard/edit/${postId}`} notificationId={item.value.id}>
+                                Chỉnh sửa lại
+                              </ViewLink>
+                            )}
+                          </>
+                        )
+                      }
+
                       if (item.value.type === "POST_MODERATION") {
                         const action = stringValue(data.action)
                         const reason = stringValue(data.reason)
@@ -340,7 +404,13 @@ export default async function NotificationsPage({
                         )}
                       </Button>
                     )}
-                    {item.kind === "event" && item.value.type !== "POST_MODERATION" && item.value.type !== "DURABILITY_ALERT" && isRecord(item.value.data) && stringValue(item.value.data.postId) && (
+                    {item.kind === "event" &&
+                      item.value.type !== "POST_MODERATION" &&
+                      item.value.type !== "DURABILITY_ALERT" &&
+                      item.value.type !== "POST_REVIEW_DECISION" &&
+                      item.value.type !== "POST_REVIEW_REQUEST" &&
+                      isRecord(item.value.data) &&
+                      stringValue(item.value.data.postId) && (
                       <Button asChild size="sm" variant="outline">
                         <ViewLink href={`/dashboard/edit/${stringValue(item.value.data.postId)}`} notificationId={item.value.id}>Xem</ViewLink>
                       </Button>

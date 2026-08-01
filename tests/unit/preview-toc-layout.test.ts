@@ -64,7 +64,7 @@ describe("preview table of contents layout", () => {
     const source = read("app/(writer)/dashboard/events/[id]/rooms/[roomId]/page.tsx")
 
     expect(source).toContain(
-      "{/* Post Image */}\n        {room.selectedPost.coverUrl && (\n          <div",
+      "{/* Post Image */}\n        {selectedPostCoverUrl && (\n          <div",
     )
   })
 

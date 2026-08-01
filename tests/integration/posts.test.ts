@@ -16,6 +16,11 @@ const mocks = vi.hoisted(() => {
       updateMany: vi.fn(),
     },
     postAuditEvent: { create: vi.fn() },
+    postReviewRequest: {
+      create: vi.fn(),
+      findFirst: vi.fn(),
+      update: vi.fn(),
+    },
     postRevision: {
       create: vi.fn(),
       deleteMany: vi.fn(),
@@ -27,7 +32,11 @@ const mocks = vi.hoisted(() => {
       findMany: vi.fn(),
       upsert: vi.fn(),
     },
+    notification: {
+      createMany: vi.fn(),
+    },
     user: {
+      findMany: vi.fn(),
       findUnique: vi.fn(),
     },
     postAuthor: {
@@ -84,6 +93,9 @@ describe("posts API", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.prisma.postTag.findMany.mockResolvedValue([])
+    mocks.prisma.postReviewRequest.create.mockResolvedValue({ id: "review-1" })
+    mocks.prisma.postReviewRequest.findFirst.mockResolvedValue(null)
+    mocks.prisma.user.findMany.mockResolvedValue([{ id: "admin-1" }])
     mocks.auth.mockResolvedValue(null)
     mocks.prisma.user.findUnique.mockImplementation(async (query: unknown) => {
       const where =
@@ -591,6 +603,87 @@ describe("single post API", () => {
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/dashboard")
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin")
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/posts")
+  })
+
+  it("creates an admin review request when a writer publishes a locked post", async () => {
+    mocks.auth.mockResolvedValue({
+      user: { id: "writer-1", role: "WRITER" },
+    })
+    mocks.prisma.awardEventRoom.findFirst.mockResolvedValue({ id: "room-1" })
+    mocks.prisma.post.findUnique.mockResolvedValue({
+      authorId: "writer-1",
+      categoryId: null,
+      coAuthors: [],
+      content: { content: [], type: "doc" },
+      contentText: "Saved body",
+      coverAlt: null,
+      coverUrl: null,
+      draftVisibility: "PRIVATE",
+      excerpt: null,
+      excerptContent: null,
+      id: "post-1",
+      moderationLockedAt: new Date("2026-08-01T00:00:00.000Z"),
+      publishedAt: null,
+      removedAt: null,
+      removedFromStatus: null,
+      slug: "locked-post",
+      status: "DRAFT",
+      tags: [],
+      title: "Locked post",
+      version: 7,
+    })
+
+    const response = await PATCH(
+      jsonRequest(
+        "https://example.test/api/posts/post-1",
+        {
+          baseVersion: 7,
+          content: { content: [{ text: "Updated body", type: "text" }], type: "doc" },
+          contentText: "Updated body",
+          eventId: "event-1",
+          eventRoomId: "room-1",
+          reviewContext: "AWARD_EVENT_ROOM",
+          status: "PUBLISHED",
+          title: "Updated locked post",
+        },
+        "PATCH",
+      ),
+      routeContext("post-1"),
+    )
+
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toMatchObject({
+      data: {
+        id: "post-1",
+        reviewRequested: true,
+        slug: "locked-post",
+        version: 7,
+      },
+    })
+    expect(mocks.prisma.post.update).not.toHaveBeenCalled()
+    expect(mocks.prisma.postReviewRequest.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        context: "AWARD_EVENT_ROOM",
+        eventId: "event-1",
+        eventRoomId: "room-1",
+        postId: "post-1",
+        requesterId: "writer-1",
+        snapshot: expect.objectContaining({
+          contentText: "Updated body",
+          status: "PUBLISHED",
+          title: "Updated locked post",
+        }),
+      }),
+      select: { id: true },
+    })
+    expect(mocks.prisma.notification.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          type: "POST_REVIEW_REQUEST",
+          userId: "admin-1",
+        }),
+      ],
+    })
   })
 
   it("rejects publishing an owned draft if contentText is empty", async () => {

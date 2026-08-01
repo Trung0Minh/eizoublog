@@ -130,6 +130,82 @@ describe("NotificationsPage", () => {
     )
   })
 
+  it("links review request notifications to normal and event previews", async () => {
+    mocks.getNotifications.mockResolvedValue({
+      pendingInvites: [],
+      responseEvents: [
+        {
+          createdAt: new Date("2026-08-01T05:00:00Z"),
+          data: {
+            context: "NORMAL_POST",
+            postId: "post-1",
+            postTitle: "Normal review",
+            reviewRequestId: "review-1",
+            status: "PENDING",
+          },
+          id: "notification-1",
+          type: "POST_REVIEW_REQUEST",
+        },
+        {
+          createdAt: new Date("2026-08-01T06:00:00Z"),
+          data: {
+            context: "AWARD_EVENT_ROOM",
+            eventId: "event-1",
+            eventRoomId: "room-1",
+            postId: "post-2",
+            postTitle: "Event review",
+            reviewRequestId: "review-2",
+            status: "PENDING",
+          },
+          id: "notification-2",
+          type: "POST_REVIEW_REQUEST",
+        },
+      ],
+      unreadComments: [],
+    })
+
+    render(await NotificationsPage({ searchParams: Promise.resolve({ type: "moderation" }) }))
+
+    expect(screen.getAllByText("Bài viết cần admin duyệt")).toHaveLength(2)
+    expect(screen.getAllByRole("link", { name: "Xem bản cần duyệt" })[0])
+      .toHaveAttribute(
+        "href",
+        "/dashboard/events/event-1/rooms/room-1?reviewRequest=review-2",
+      )
+    expect(screen.getAllByRole("link", { name: "Xem bản cần duyệt" })[1])
+      .toHaveAttribute("href", "/dashboard/preview/post-1?reviewRequest=review-1")
+  })
+
+  it("shows declined review decisions with the admin reason", async () => {
+    mocks.getNotifications.mockResolvedValue({
+      pendingInvites: [],
+      responseEvents: [
+        {
+          createdAt: new Date("2026-08-01T05:00:00Z"),
+          data: {
+            actorName: "Admin",
+            context: "NORMAL_POST",
+            postId: "post-1",
+            postTitle: "Normal review",
+            reason: "Please revise the ending.",
+            reviewRequestId: "review-1",
+            status: "DECLINED",
+          },
+          id: "notification-1",
+          type: "POST_REVIEW_DECISION",
+        },
+      ],
+      unreadComments: [],
+    })
+
+    render(await NotificationsPage({ searchParams: Promise.resolve({ type: "moderation" }) }))
+
+    expect(screen.getByText("Bản cập nhật bị từ chối")).toBeVisible()
+    expect(screen.getByText("Please revise the ending.")).toBeVisible()
+    expect(screen.getByRole("link", { name: "Chỉnh sửa lại" }))
+      .toHaveAttribute("href", "/dashboard/edit/post-1")
+  })
+
   it("disables the global read button when only pending invites remain", async () => {
     mocks.getNotifications.mockResolvedValue({
       pendingInvites: [

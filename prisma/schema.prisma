@@ -28,6 +28,8 @@ model User {
 
   posts              Post[]                  @relation("PostPrimaryAuthor")
   coAuthoredPosts    PostAuthor[]
+  postReviewRequests PostReviewRequest[]     @relation("PostReviewRequester")
+  postReviewDecisions PostReviewRequest[]    @relation("PostReviewDecider")
   accounts           Account[]
   sessions           Session[]
   invitesSent        Invite[]                @relation("InviteCreatedBy")
@@ -159,6 +161,7 @@ model Post {
   category           Category?                @relation(fields: [categoryId], references: [id])
   tags               PostTag[]
   comments           Comment[]
+  postReviewRequests PostReviewRequest[]
   finalAwardEvent    AwardEvent?              @relation("AwardEventFinalPost")
   awardEventRooms    AwardEventRoom[]         @relation("AwardEventRoomSelectedPost")
   searchVector       Unsupported("tsvector")? @map("search_vector")
@@ -399,6 +402,45 @@ enum NotificationType {
   COAUTHOR_DECLINED
   DURABILITY_ALERT
   POST_MODERATION
+  POST_REVIEW_DECISION
+  POST_REVIEW_REQUEST
+}
+
+model PostReviewRequest {
+  id                   String                    @id @default(cuid())
+  postId               String
+  requesterId          String
+  status               PostReviewRequestStatus   @default(PENDING)
+  context              PostReviewRequestContext
+  eventId              String?
+  eventRoomId          String?
+  snapshot             Json
+  requestedPostVersion Int
+  decidedById          String?
+  decidedAt            DateTime?
+  decisionReason       String?                   @db.Text
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+
+  post      Post  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  requester User  @relation("PostReviewRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  decider   User? @relation("PostReviewDecider", fields: [decidedById], references: [id], onDelete: SetNull)
+
+  @@index([postId, status, createdAt(sort: Desc)])
+  @@index([requesterId, status, createdAt(sort: Desc)])
+  @@index([status, createdAt(sort: Desc)])
+  @@map("post_review_requests")
+}
+
+enum PostReviewRequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum PostReviewRequestContext {
+  NORMAL_POST
+  AWARD_EVENT_ROOM
 }
 
 enum PostRevisionKind {

@@ -8,22 +8,31 @@ import { getCurrentSession } from "@/lib/session"
 import { getCoverStyle } from "@/lib/cover-style"
 import { PostBody } from "@/components/posts/PostBody"
 import { PostContentFrame } from "@/components/posts/PostContentFrame"
+import { PostReviewActions } from "@/components/posts/PostReviewActions"
 import { TableOfContents } from "@/components/posts/TableOfContents"
 import { RoomFeedbackSection } from "@/components/events/RoomFeedbackSection"
 import { extractHeadings } from "@/lib/postHeadings"
+import { parsePostReviewSnapshot } from "@/lib/postReviewRequests"
 
 interface RoomDetailPageProps {
   params: Promise<{ id: string; roomId: string }>
+  searchParams?: Promise<{ reviewRequest?: string }>
 }
 
-export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
+export default async function RoomDetailPage({
+  params,
+  searchParams,
+}: RoomDetailPageProps) {
   const session = await getCurrentSession()
 
   if (!session) {
     redirect("/login")
   }
 
-  const { id: eventId, roomId } = await params
+  const [{ id: eventId, roomId }, query] = await Promise.all([
+    params,
+    searchParams ?? Promise.resolve({} as { reviewRequest?: string }),
+  ])
 
   // Fetch the room with writer details, selected post and event details
   const room = await prisma.awardEventRoom.findUnique({
@@ -108,8 +117,27 @@ export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
         : {}),
     },
   })
-  const selectedPostContent = room.selectedPost.content as unknown as JSONContent
+  const reviewRequest = query.reviewRequest && isAdmin
+    ? await prisma.postReviewRequest.findFirst({
+        select: { id: true, snapshot: true },
+        where: {
+          context: "AWARD_EVENT_ROOM",
+          eventId,
+          eventRoomId: room.id,
+          id: query.reviewRequest,
+          postId: room.selectedPost.id,
+          status: "PENDING",
+        },
+      })
+    : null
+  const reviewSnapshot = reviewRequest
+    ? parsePostReviewSnapshot(reviewRequest.snapshot)
+    : null
+  const selectedPostContent = (reviewSnapshot?.content ??
+    room.selectedPost.content) as unknown as JSONContent
   const hasTableOfContents = extractHeadings(selectedPostContent).length > 0
+  const selectedPostTitle = reviewSnapshot?.title ?? room.selectedPost.title
+  const selectedPostCoverUrl = reviewSnapshot?.coverUrl ?? room.selectedPost.coverUrl
 
   return (
     <main className="mx-auto w-full max-w-[1360px] px-4 py-8 sm:px-6 sm:py-10 lg:px-10 2xl:pl-20 2xl:pr-0">
@@ -132,7 +160,7 @@ export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
               {room.event.title}
             </span>
             <h1 className="text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
-              {room.selectedPost.title}
+              {selectedPostTitle}
             </h1>
           </div>
 
@@ -173,21 +201,23 @@ export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
         </div>
 
         {/* Post Image */}
-        {room.selectedPost.coverUrl && (
+        {selectedPostCoverUrl && (
           <div className="relative aspect-video w-full overflow-hidden rounded-[8px] border border-border-default bg-subtle-bg">
             <div className="absolute inset-0 overflow-hidden">
               <img
-                alt={room.selectedPost.title}
+                alt={selectedPostTitle}
                 className="h-full w-full"
-                style={getCoverStyle(room.selectedPost.coverUrl)}
+                style={getCoverStyle(selectedPostCoverUrl)}
                 decoding="async"
                 fetchPriority="high"
                 loading="eager"
-                src={room.selectedPost.coverUrl.split("?")[0]}
+                src={selectedPostCoverUrl.split("?")[0]}
               />
             </div>
           </div>
         )}
+
+        {reviewRequest && <PostReviewActions requestId={reviewRequest.id} />}
 
         {hasTableOfContents && (
           <div className="2xl:hidden">

@@ -76,11 +76,17 @@ interface PostEditorProps {
   currentUserId: string
   initialData?: InitialPostData
   initialTags?: TagOption[]
+  reviewContext?: {
+    eventId: string
+    eventRoomId: string
+    type: "AWARD_EVENT_ROOM"
+  }
   writers: WriterOption[]
 }
 
 interface PostMutationResponse {
   id: string
+  reviewRequested?: boolean
   slug: string
   version: number | null
 }
@@ -138,6 +144,8 @@ function getPostResponse(value: unknown): PostMutationResponse | null {
   ) {
     return {
       id: value.data.id,
+      reviewRequested:
+        "reviewRequested" in value.data && value.data.reviewRequested === true,
       slug: value.data.slug,
       version:
         "version" in value.data && typeof value.data.version === "number"
@@ -189,6 +197,7 @@ export function PostEditor({
   currentUserId,
   initialData,
   initialTags = [],
+  reviewContext,
   writers,
 }: PostEditorProps) {
   const router = useRouter()
@@ -453,6 +462,11 @@ export function PostEditor({
           draftVisibility:
             manualDraft.coAuthorIds.length > 0 ? "CO_AUTHORS" : "PRIVATE",
           excerptContent: manualDraft.excerptContent,
+          ...(reviewContext && {
+            eventId: reviewContext.eventId,
+            eventRoomId: reviewContext.eventRoomId,
+            reviewContext: reviewContext.type,
+          }),
           ...getExcerptPayload(
             manualDraft.excerpt,
             initialExcerpt,
@@ -493,6 +507,13 @@ export function PostEditor({
       })
 
       if (status === "PUBLISHED") {
+        if (post.reviewRequested) {
+          markSavedThrough(savingGeneration)
+          recovery.discard()
+          setError("Đã gửi bản cập nhật cho admin duyệt.")
+          return
+        }
+
         markSavedThrough(savingGeneration)
         recovery.discard()
         isNavigatingAway = true
