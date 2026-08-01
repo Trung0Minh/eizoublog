@@ -29,7 +29,7 @@ export function getPostModerationTransition(
 
   if (action === "UNPUBLISH" && post.status === "PUBLISHED") {
     return {
-      moderationLockedAt: now,
+      moderationLockedAt: null,
       publishedAt: null,
       removedAt: undefined,
       removedFromStatus: null,

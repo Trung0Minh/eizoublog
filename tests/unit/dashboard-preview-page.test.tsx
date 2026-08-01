@@ -9,9 +9,6 @@ const mocks = vi.hoisted(() => ({
     post: {
       findUnique: vi.fn(),
     },
-    postReviewRequest: {
-      findFirst: vi.fn(),
-    },
   },
   redirect: vi.fn((path: string) => {
     throw new Error(`redirect:${path}`)
@@ -52,12 +49,6 @@ vi.mock("@/components/posts/PostArticleView", () => ({
     </div>
   ),
 }))
-vi.mock("@/components/posts/PostReviewActions", () => ({
-  PostReviewActions: ({ requestId }: { requestId: string }) => (
-    <div data-testid="post-review-actions">{requestId}</div>
-  ),
-}))
-
 import DashboardPostPreviewPage from "@/app/(writer)/dashboard/preview/[id]/page"
 
 const post = {
@@ -96,7 +87,6 @@ describe("DashboardPostPreviewPage", () => {
       user: { id: "admin-1", role: "ADMIN" },
     })
     mocks.prisma.post.findUnique.mockResolvedValue(post)
-    mocks.prisma.postReviewRequest.findFirst.mockResolvedValue(null)
   })
 
   it("renders a private draft post in read-only mode for admins", async () => {
@@ -134,45 +124,5 @@ describe("DashboardPostPreviewPage", () => {
     expect(mocks.redirect).not.toHaveBeenCalledWith(
       expect.stringContaining("/dashboard/events/"),
     )
-  })
-
-  it("renders pending normal post review actions for admins", async () => {
-    mocks.prisma.postReviewRequest.findFirst.mockResolvedValue({
-      id: "review-1",
-      snapshot: {
-        authorId: "writer-1",
-        categoryId: null,
-        coAuthorIds: [],
-        content: {
-          content: [{ text: "Review body", type: "text" }],
-          type: "doc",
-        },
-        contentText: "Review body",
-        coverAlt: null,
-        coverUrl: null,
-        draftVisibility: "PRIVATE",
-        excerpt: null,
-        excerptContent: null,
-        publishedAt: null,
-        removedAt: null,
-        removedFromStatus: null,
-        slug: "draft-post",
-        status: "PUBLISHED",
-        tagIds: [],
-        title: "Review title",
-        version: 3,
-      },
-    })
-
-    render(
-      await DashboardPostPreviewPage({
-        params: Promise.resolve({ id: "post-1" }),
-        searchParams: Promise.resolve({ reviewRequest: "review-1" }),
-      }),
-    )
-
-    expect(screen.getByTestId("post-review-actions")).toHaveTextContent("review-1")
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Review title")
-    expect(screen.getByText("Review body")).toBeVisible()
   })
 })

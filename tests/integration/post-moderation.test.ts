@@ -76,7 +76,7 @@ describe("POST /api/admin/posts/[id]/moderation", () => {
     expect(mocks.prisma.post.update).not.toHaveBeenCalled()
   })
 
-  it("unpublishes, locks the post, and notifies its author with the reason", async () => {
+  it("unpublishes without locking the post and notifies its author with the reason", async () => {
     const response = await POST(request("UNPUBLISH", "Please add sources."), {
       params: Promise.resolve({ id: "post-1" }),
     })
@@ -85,7 +85,7 @@ describe("POST /api/admin/posts/[id]/moderation", () => {
     expect(mocks.prisma.post.update).toHaveBeenCalledWith({
       data: {
         featuredAt: null,
-        moderationLockedAt: expect.any(Date),
+        moderationLockedAt: null,
         publishedAt: null,
         removedFromStatus: null,
         status: "DRAFT",

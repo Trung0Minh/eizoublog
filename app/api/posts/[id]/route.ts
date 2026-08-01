@@ -13,10 +13,6 @@ import {
 import { revalidatePostMutationPaths } from "@/lib/postRevalidation"
 import { prisma } from "@/lib/prisma"
 import { MAX_POST_EXCERPT_CHARACTERS } from "@/lib/postLimits"
-import {
-  createPostReviewRequestWithClient,
-  PostReviewRequestError,
-} from "@/lib/postReviewRequests"
 import { ensureUniqueSlug, generateSlug } from "@/lib/utils"
 
 class RouteError extends Error {
@@ -37,11 +33,8 @@ const updateSchema = z.object({
   coverAlt: z.string().max(200).optional(),
   coverUrl: z.string().url().nullable().optional(),
   draftVisibility: z.enum(["PRIVATE", "CO_AUTHORS"]).optional(),
-  eventId: z.string().min(1).optional(),
-  eventRoomId: z.string().min(1).optional(),
   excerpt: z.string().trim().max(MAX_POST_EXCERPT_CHARACTERS).optional(),
   excerptContent: z.record(z.string(), z.unknown()).nullable().optional(),
-  reviewContext: z.enum(["NORMAL_POST", "AWARD_EVENT_ROOM"]).optional(),
   saveKind: z.enum(["AUTO", "MANUAL"]).optional(),
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional(),
   tagIds: z.array(z.string().min(1)).optional(),
@@ -298,74 +291,6 @@ export async function PATCH(
 
       if (
         data.status === "PUBLISHED" &&
-        existing.moderationLockedAt &&
-        activeSession.user.role !== "ADMIN"
-      ) {
-        if (activeSession.user.id !== existing.authorId) {
-          throw new RouteError("Forbidden", 403)
-        }
-
-        const reviewContext =
-          data.reviewContext === "AWARD_EVENT_ROOM" && data.eventId && data.eventRoomId
-            ? "AWARD_EVENT_ROOM"
-            : "NORMAL_POST"
-        await createPostReviewRequestWithClient(tx, {
-          context: reviewContext,
-          eventId: reviewContext === "AWARD_EVENT_ROOM" ? data.eventId : null,
-          eventRoomId:
-            reviewContext === "AWARD_EVENT_ROOM" ? data.eventRoomId : null,
-          postId: existing.id,
-          requestedPostVersion: existing.version,
-          requesterId: activeSession.user.id,
-          snapshot: {
-            authorId: existing.authorId,
-            categoryId:
-              data.categoryId !== undefined ? data.categoryId : existing.categoryId,
-            coAuthorIds:
-              data.coAuthorIds ??
-              (existing.coAuthors ?? []).map(({ userId }) => userId),
-            content: (data.content ?? existing.content) as Prisma.JsonValue,
-            contentText:
-              data.contentText !== undefined
-                ? data.contentText.trim() || null
-                : existing.contentText,
-            coverAlt:
-              data.coverAlt !== undefined
-                ? data.coverAlt.trim() || null
-                : existing.coverAlt,
-            coverUrl:
-              data.coverUrl !== undefined ? data.coverUrl : existing.coverUrl,
-            draftVisibility: data.draftVisibility ?? existing.draftVisibility,
-            excerpt:
-              data.excerpt !== undefined ? data.excerpt || null : existing.excerpt,
-            excerptContent:
-              data.excerptContent !== undefined
-                ? (data.excerptContent as Prisma.JsonValue | null)
-                : (existing.excerptContent as Prisma.JsonValue | null),
-            publishedAt: existing.publishedAt?.toISOString() ?? null,
-            removedAt: existing.removedAt?.toISOString() ?? null,
-            removedFromStatus: existing.removedFromStatus,
-            slug: existing.slug,
-            status: "PUBLISHED",
-            tagIds: data.tagIds ?? (existing.tags ?? []).map(({ tagId }) => tagId),
-            title: data.title ?? existing.title,
-            version: existing.version,
-          },
-        })
-
-        return {
-          id: existing.id,
-          lastSavedAt: null,
-          reviewRequested: true,
-          slug: existing.slug,
-          status: existing.status,
-          updatedAt: new Date(),
-          version: existing.version,
-        }
-      }
-
-      if (
-        data.status === "PUBLISHED" &&
         activeSession.user.id !== existing.authorId
       ) {
         throw new RouteError("Forbidden", 403)
@@ -520,6 +445,10 @@ export async function PATCH(
           ...(data.status && nextStatus !== "PUBLISHED" && { featuredAt: null }),
           ...(shouldUpdateLastSavedAt && { lastSavedAt: new Date() }),
           ...(publishedAt !== undefined && { publishedAt }),
+          ...(data.status === "PUBLISHED" && {
+            moderationLockedAt: null,
+            removedFromStatus: null,
+          }),
           ...(data.status && { status: data.status }),
           ...(data.title && { title: data.title }),
           ...(newSlug && { slug: newSlug }),
@@ -617,10 +546,6 @@ export async function PATCH(
     }
 
     if (error instanceof RouteError) {
-      return Response.json({ error: error.message }, { status: error.status })
-    }
-
-    if (error instanceof PostReviewRequestError) {
       return Response.json({ error: error.message }, { status: error.status })
     }
 

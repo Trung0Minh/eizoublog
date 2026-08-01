@@ -8,16 +8,10 @@ import { getCurrentSession } from "@/lib/session"
 
 interface EditPostPageProps {
   params: Promise<{ id: string }>
-  searchParams: Promise<{
-    eventId?: string
-    eventRoomId?: string
-    reviewContext?: string
-  }>
 }
 
 export default async function EditPostPage({
   params,
-  searchParams,
 }: EditPostPageProps) {
   const session = await getCurrentSession()
 
@@ -25,7 +19,7 @@ export default async function EditPostPage({
     redirect("/login")
   }
 
-  const [{ id }, query] = await Promise.all([params, searchParams])
+  const { id } = await params
   const [post, referenceData] = await Promise.all([
     prisma.post.findUnique({
       select: {
@@ -76,17 +70,6 @@ export default async function EditPostPage({
       canRestoreRevisions={session.user.role === "ADMIN" || session.user.id === post.authorId}
       categories={referenceData.categories}
       currentUserId={session.user.id}
-      reviewContext={
-        query.reviewContext === "AWARD_EVENT_ROOM" &&
-        query.eventId &&
-        query.eventRoomId
-          ? {
-              eventId: query.eventId,
-              eventRoomId: query.eventRoomId,
-              type: "AWARD_EVENT_ROOM",
-            }
-          : undefined
-      }
       initialData={{
         categoryId: post.categoryId,
         coAuthorIds: post.coAuthors.map(({ userId }) => userId),

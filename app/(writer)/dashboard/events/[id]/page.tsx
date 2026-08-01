@@ -281,7 +281,7 @@ export default async function DashboardEventRoomPage({
                   <Button asChild size="icon" variant="outline">
                     <Link
                       aria-label="Chỉnh sửa bài dự thi"
-                      href={`/dashboard/edit/${ourRoom.selectedPost.id}?reviewContext=AWARD_EVENT_ROOM&eventId=${event.id}&eventRoomId=${ourRoom.id}`}
+                      href={`/dashboard/edit/${ourRoom.selectedPost.id}`}
                       title="Chỉnh sửa bài dự thi"
                     >
                       <Pencil aria-hidden="true" className="h-4 w-4" />
