@@ -55,7 +55,9 @@ describe("preview table of contents layout", () => {
 
     expect(source).toContain("const hasTableOfContents = extractHeadings")
     expect(source).toContain("{hasTableOfContents && (")
-    expect(source).toContain('hasTableOfContents\n                ? "min-w-0 flex-1 w-full max-w-[800px]"\n                : "min-w-0 flex-1 w-full"')
+    expect(source).toContain("lg:grid-cols-[minmax(0,1000px)]")
+    expect(source).toContain("2xl:grid-cols-[minmax(0,1000px)_220px]")
+    expect(source).not.toContain("max-w-[800px]")
   })
 
   it("omits the event-entry media block when the submission has no cover", () => {
@@ -70,7 +72,7 @@ describe("preview table of contents layout", () => {
     const source = read("app/(writer)/dashboard/events/[id]/rooms/[roomId]/page.tsx")
 
     expect(source).toContain(
-      '{hasTableOfContents && (\n          <div className="xl:hidden">',
+      '{hasTableOfContents && (\n          <div className="2xl:hidden">',
     )
     expect(source).toContain("<TableOfContents collapsible")
   })

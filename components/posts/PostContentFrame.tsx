@@ -14,7 +14,7 @@ export function PostContentFrame({
   return (
     <div
       className={cn(
-        "rounded-[8px] border border-border-default bg-background px-5 py-6 shadow-sm md:px-8 md:py-8",
+        "rounded-[24px] border border-border-default/80 bg-background/90 p-5 shadow-[0_18px_60px_rgba(31,24,38,0.08)] backdrop-blur-xl dark:bg-background/80 sm:p-8 md:p-10",
         className,
       )}
     >

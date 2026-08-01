@@ -112,7 +112,7 @@ export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
   const hasTableOfContents = extractHeadings(selectedPostContent).length > 0
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:py-10 md:px-6 lg:px-8">
+    <main className="mx-auto w-full max-w-[1360px] px-4 py-8 sm:px-6 sm:py-10 lg:px-10 2xl:pl-20 2xl:pr-0">
       {/* Back navigation */}
       <div className="mb-6">
         <Link
@@ -190,20 +190,14 @@ export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
         )}
 
         {hasTableOfContents && (
-          <div className="xl:hidden">
+          <div className="2xl:hidden">
             <TableOfContents collapsible content={selectedPostContent} />
           </div>
         )}
 
         {/* Main Content Area with sidebar Table of Contents */}
-        <div className="flex w-full flex-col gap-12 xl:flex-row items-start">
-          <article
-            className={
-              hasTableOfContents
-                ? "min-w-0 flex-1 w-full max-w-[800px]"
-                : "min-w-0 flex-1 w-full"
-            }
-          >
+        <div className="grid w-full gap-8 lg:grid-cols-[minmax(0,1000px)] lg:justify-start 2xl:grid-cols-[minmax(0,1000px)_220px]">
+          <article className="min-w-0 w-full">
             {/* Post Content */}
             <PostContentFrame>
               <PostBody content={selectedPostContent} />
@@ -217,7 +211,7 @@ export default async function RoomDetailPage({ params }: RoomDetailPageProps) {
             />
           </article>
           {hasTableOfContents && (
-            <aside className="sticky top-24 hidden max-h-[calc(100vh-120px)] w-[200px] shrink-0 self-start overflow-y-auto overscroll-contain no-scrollbar xl:block [scrollbar-gutter:stable]">
+            <aside className="sticky top-24 hidden max-h-[calc(100vh-120px)] w-[220px] shrink-0 self-start overflow-y-auto overscroll-contain no-scrollbar 2xl:block [scrollbar-gutter:stable]">
               <TableOfContents content={selectedPostContent} />
             </aside>
           )}
