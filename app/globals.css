@@ -728,6 +728,10 @@
     margin-top: 1.6em;
   }
 
+  .post-content .ProseMirror > :where(h2, h3, h4):first-child {
+    margin-top: 0;
+  }
+
   .post-content a {
     border-bottom: 1px solid transparent;
     color: var(--accent);
