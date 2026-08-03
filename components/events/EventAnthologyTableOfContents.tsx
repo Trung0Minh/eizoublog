@@ -33,21 +33,29 @@ export function EventAnthologyTableOfContents({
     groups[0] ? [groups[0].writer.id] : [],
   )
   const linkRefs = useRef(new Map<string, HTMLAnchorElement>())
+  const pendingNavigationRef = useRef(false)
+  const pendingNavigationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   function navigateToHeading(
     event: MouseEvent<HTMLAnchorElement>,
     id: string,
   ) {
-    if (!collapsible) return
-
     event.preventDefault()
-    setMobileOpen(false)
+    setActiveId(id)
+    pendingNavigationRef.current = true
+    if (pendingNavigationTimerRef.current) {
+      clearTimeout(pendingNavigationTimerRef.current)
+    }
+    if (collapsible) setMobileOpen(false)
     window.history.pushState(null, "", `#${id}`)
     window.requestAnimationFrame(() => {
       document.getElementById(id)?.scrollIntoView({
         behavior: "smooth",
         block: "start",
       })
+      pendingNavigationTimerRef.current = setTimeout(() => {
+        pendingNavigationRef.current = false
+      }, 900)
     })
   }
 
@@ -62,6 +70,8 @@ export function EventAnthologyTableOfContents({
 
     const observer = new IntersectionObserver(
       (entries) => {
+        if (pendingNavigationRef.current) return
+
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return
 
@@ -85,7 +95,12 @@ export function EventAnthologyTableOfContents({
       if (element) observer.observe(element)
     })
 
-    return () => observer.disconnect()
+    return () => {
+      observer.disconnect()
+      if (pendingNavigationTimerRef.current) {
+        clearTimeout(pendingNavigationTimerRef.current)
+      }
+    }
   }, [headings])
 
   useEffect(() => {

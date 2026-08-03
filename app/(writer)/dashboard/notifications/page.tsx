@@ -4,6 +4,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 
 import { MarkCommentsReadButton } from "@/components/notifications/MarkCommentsReadButton"
+import { MarkNotificationReadButton } from "@/components/notifications/MarkNotificationReadButton"
 import { ViewLink } from "@/components/notifications/ViewLink"
 import { CoAuthorInviteActions } from "@/components/posts/CoAuthorInviteActions"
 import { Button } from "@/components/ui/button"
@@ -152,7 +153,13 @@ export default async function NotificationsPage({
   const visibleFeed = selectedCategory === "all"
     ? feed
     : selectedCategory === "unread"
-      ? feed.filter((item) => item.kind !== "event" || !item.value.readAt)
+      ? feed.filter((item) =>
+          item.kind === "event"
+            ? !item.value.readAt
+            : item.kind === "comment"
+              ? !item.value.isRead
+              : true,
+        )
       : feed.filter((item) => item.category === selectedCategory)
   const filters: Array<{
     category: NotificationCategory | "all" | "unread"
@@ -227,7 +234,9 @@ export default async function NotificationsPage({
                   data-testid={`notification-${item.id}`}
                   key={`${item.kind}-${item.id}`}
                 >
-                  {(item.kind !== "event" || !item.value.readAt) && (
+                  {((item.kind === "event" && !item.value.readAt) ||
+                    (item.kind === "comment" && !item.value.isRead) ||
+                    item.kind === "invite") && (
                     <span aria-hidden="true" className="absolute left-3 top-3 h-2 w-2 rounded-full bg-accent shadow-[0_0_8px_var(--accent)]" />
                   )}
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border-default bg-background/70 text-accent">
@@ -324,21 +333,35 @@ export default async function NotificationsPage({
                     })()}
                   </div>
 
-                  <div className="col-start-2 sm:col-auto sm:pt-1">
+                  <div className="col-start-2 flex flex-wrap items-center gap-2 sm:col-auto sm:justify-end sm:pt-1">
                     {item.kind === "invite" && <CoAuthorInviteActions postId={item.value.postId} />}
                     {item.kind === "comment" && (
-                      <Button asChild size="sm" variant="outline">
-                        {isEventRoomComment(item.value) ? (
-                          <ViewLink
-                            eventRoomCommentId={item.value.id}
-                            href={`/dashboard/events/${item.value.event.id}/rooms/${item.value.room.id}`}
-                          >
-                            Xem
-                          </ViewLink>
-                        ) : (
-                          <ViewLink commentId={item.value.id} href={`/${item.value.post.slug}#comment-${item.value.id}`}>Xem</ViewLink>
-                        )}
-                      </Button>
+                      <>
+                        <MarkNotificationReadButton
+                          isRead={item.value.isRead}
+                          {...(isEventRoomComment(item.value)
+                            ? { eventRoomCommentId: item.value.id }
+                            : { commentId: item.value.id })}
+                        />
+                        <Button asChild size="sm" variant="outline">
+                          {isEventRoomComment(item.value) ? (
+                            <ViewLink
+                              eventRoomCommentId={item.value.id}
+                              href={`/dashboard/events/${item.value.event.id}/rooms/${item.value.room.id}`}
+                            >
+                              Xem
+                            </ViewLink>
+                          ) : (
+                            <ViewLink commentId={item.value.id} href={`/${item.value.post.slug}#comment-${item.value.id}`}>Xem</ViewLink>
+                          )}
+                        </Button>
+                      </>
+                    )}
+                    {item.kind === "event" && (
+                      <MarkNotificationReadButton
+                        isRead={Boolean(item.value.readAt)}
+                        notificationId={item.value.id}
+                      />
                     )}
                     {item.kind === "event" &&
                       item.value.type !== "POST_MODERATION" &&

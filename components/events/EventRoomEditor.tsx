@@ -5,8 +5,7 @@ import type {
   AwardEventRoomVisibility,
   PostStatus,
 } from "@prisma/client"
-import { CheckCircle2, ExternalLink, FileText, Send, Users } from "lucide-react"
-import Link from "next/link"
+import { CheckCircle2, ChevronDown, FileText, Send, Users } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
@@ -89,7 +88,7 @@ export function EventRoomEditor({
     (!submittedPostId ||
       submittedPostId !== postId ||
       (selectedEligiblePost?.version ?? 0) > (submittedPostVersion ?? 0))
-  const actionLabel = status === "SUBMITTED" ? "Cập nhật bài dự thi" : "Nộp bài dự thi"
+  const actionLabel = status === "SUBMITTED" ? "Cập nhật bài tham gia" : "Gửi bài tham gia"
 
   async function submit() {
     setError("")
@@ -141,7 +140,7 @@ export function EventRoomEditor({
             </div>
             <div className="min-w-0">
               <p className="text-sm font-bold text-text-primary">
-                {status === "SUBMITTED" ? "Bài dự thi đã được gửi" : "Chọn bài cho sự kiện"}
+                {status === "SUBMITTED" ? "Bài tham gia đã được gửi" : "Chọn bài cho sự kiện"}
               </p>
               {updateAvailable && (
                 <span className="mt-1 inline-flex rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-300">
@@ -167,23 +166,12 @@ export function EventRoomEditor({
               <Send aria-hidden="true" className="h-4 w-4" />
               <span>{actionLabel}</span>
             </Button>
-            {event.finalPost?.status === "PUBLISHED" && (
-              <Button asChild className="h-10 w-10 rounded-[13px] sm:h-11 sm:w-11 sm:rounded-[14px]" size="icon" variant="outline">
-                <Link
-                  aria-label="Mở bài viết công khai"
-                  href={`/${event.finalPost.slug}`}
-                  title="Mở bài viết công khai"
-                >
-                  <ExternalLink aria-hidden="true" className="h-4 w-4" />
-                </Link>
-              </Button>
-            )}
           </div>
         </div>
 
         {controlsDisabled && (
           <div className="mx-5 mt-5 rounded-[14px] border border-border-default bg-muted/50 p-4 text-sm text-text-secondary sm:mx-7">
-            Sự kiện này đã đóng, bài dự thi hiện chỉ ở chế độ xem.
+            Sự kiện này đã đóng, bài tham gia hiện chỉ ở chế độ xem.
           </div>
         )}
 
@@ -197,38 +185,50 @@ export function EventRoomEditor({
                 <FileText aria-hidden="true" className="h-3.5 w-3.5 text-accent" />
                 Bài viết được chọn
               </span>
-              <select
-                className="h-12 w-full rounded-[14px] border border-border-default bg-background px-4 text-sm font-semibold text-text-primary outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/15"
-                disabled={controlsDisabled || isPending}
-                id="submission-post"
-                onChange={(changeEvent) => setPostId(changeEvent.target.value)}
-                value={postId}
-              >
-                <option value="">Chọn một bài viết nháp hoặc đã xuất bản</option>
-                {eligiblePosts.map((post) => (
-                  <option key={post.id} value={post.id}>
-                    {post.title} ({postStatusLabel[post.status]})
-                  </option>
-                ))}
-              </select>
+              <span className="relative block">
+                <select
+                  className="h-12 w-full appearance-none rounded-[14px] border border-border-default bg-background px-4 pr-11 text-sm font-semibold text-text-primary outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/15"
+                  disabled={controlsDisabled || isPending}
+                  id="submission-post"
+                  onChange={(changeEvent) => setPostId(changeEvent.target.value)}
+                  value={postId}
+                >
+                  <option value="">Chọn một bài viết nháp hoặc đã xuất bản</option>
+                  {eligiblePosts.map((post) => (
+                    <option key={post.id} value={post.id}>
+                      {post.title} ({postStatusLabel[post.status]})
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  aria-hidden="true"
+                  className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary"
+                />
+              </span>
             </label>
             <label className="block" htmlFor="submission-visibility">
               <span className="mb-2 flex min-h-5 items-center gap-2 text-xs font-bold uppercase leading-none tracking-[0.12em] text-text-tertiary">
                 <Users aria-hidden="true" className="h-3.5 w-3.5 text-accent" />
                 Ai có thể xem
               </span>
-              <select
-                className="h-12 w-full rounded-[14px] border border-border-default bg-background px-4 text-sm font-semibold text-text-primary outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/15"
-                disabled={controlsDisabled || isPending}
-                id="submission-visibility"
-                onChange={(changeEvent) =>
-                  setVisibility(changeEvent.target.value as AwardEventRoomVisibility)
-                }
-                value={visibility}
-              >
-                <option value="PRIVATE">Chỉ tôi và quản trị viên</option>
-                <option value="PARTICIPANTS">Tất cả người tham gia</option>
-              </select>
+              <span className="relative block">
+                <select
+                  className="h-12 w-full appearance-none rounded-[14px] border border-border-default bg-background px-4 pr-11 text-sm font-semibold text-text-primary outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/15"
+                  disabled={controlsDisabled || isPending}
+                  id="submission-visibility"
+                  onChange={(changeEvent) =>
+                    setVisibility(changeEvent.target.value as AwardEventRoomVisibility)
+                  }
+                  value={visibility}
+                >
+                  <option value="PRIVATE">Chỉ tôi và quản trị viên</option>
+                  <option value="PARTICIPANTS">Tất cả người tham gia</option>
+                </select>
+                <ChevronDown
+                  aria-hidden="true"
+                  className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary"
+                />
+              </span>
             </label>
           </div>
         </div>

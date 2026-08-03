@@ -46,9 +46,9 @@ describe("EventRoomEditor", () => {
     expect(screen.getByLabelText("Bài viết được chọn")).toBeVisible()
     expect(screen.getByRole("option", { name: /Draft pick/i })).toBeVisible()
     expect(screen.queryByTestId("event-editor")).not.toBeInTheDocument()
-    expect(screen.getByRole("button", { name: /Nộp bài/i })).toBeVisible()
+    expect(screen.getByRole("button", { name: /Gửi bài/i })).toBeVisible()
     expect(screen.getByTestId("submission-header")).toContainElement(
-      screen.getByRole("button", { name: /Nộp bài/i }),
+      screen.getByRole("button", { name: /Gửi bài/i }),
     )
     expect(screen.getByTestId("submission-header")).toHaveClass(
       "flex-col",
@@ -97,7 +97,7 @@ describe("EventRoomEditor", () => {
       />,
     )
 
-    expect(screen.getByRole("button", { name: "Cập nhật bài dự thi" })).toBeVisible()
+    expect(screen.getByRole("button", { name: "Cập nhật bài tham gia" })).toBeVisible()
     expect(screen.queryByText("Có bản cập nhật")).not.toBeInTheDocument()
   })
 
@@ -132,5 +132,44 @@ describe("EventRoomEditor", () => {
     )
 
     expect(screen.getByText("Có bản cập nhật")).toBeVisible()
+  })
+
+  it("does not render the public event post shortcut inside the editor controls", () => {
+    render(
+      <EventRoomEditor
+        eligiblePosts={[
+          {
+            id: "post-1",
+            status: "DRAFT",
+            title: "Draft pick",
+            updatedAt: new Date("2026-06-17T00:00:00.000Z"),
+            version: 1,
+          },
+        ]}
+        event={{
+          finalPost: { slug: "published-event", status: "PUBLISHED" },
+          id: "event-1",
+          status: "OPEN",
+          title: "Awards",
+        }}
+        room={{
+          id: "room-1",
+          postId: "post-1",
+          selectedPost: {
+            id: "post-1",
+            status: "DRAFT",
+            title: "Draft pick",
+            version: 1,
+          },
+          status: "SUBMITTED",
+          submittedPostId: "post-1",
+          submittedPostVersion: 1,
+          visibility: "PRIVATE",
+        }}
+      />,
+    )
+
+    expect(screen.queryByRole("link", { name: "Mở bài viết công khai" }))
+      .not.toBeInTheDocument()
   })
 })

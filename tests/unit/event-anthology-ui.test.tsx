@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
 import { EventAnthologyTableOfContents } from "@/components/events/EventAnthologyTableOfContents"
@@ -9,7 +9,14 @@ vi.mock("@/components/posts/PostBody", () => ({
 }))
 
 describe("EventAnthologyTableOfContents", () => {
-  it("opens and closes writer outlines independently", () => {
+  it("opens and closes writer outlines independently", async () => {
+    const pushStateSpy = vi.spyOn(window.history, "pushState").mockImplementation(() => {})
+    const scrollIntoView = vi.fn()
+    const writerBElement = document.createElement("section")
+    writerBElement.id = "event-room-b"
+    writerBElement.scrollIntoView = scrollIntoView
+    document.body.appendChild(writerBElement)
+
     render(
       <EventAnthologyTableOfContents
         headings={[
@@ -26,6 +33,13 @@ describe("EventAnthologyTableOfContents", () => {
 
     fireEvent.click(screen.getByRole("link", { name: "Writer B" }))
 
+    expect(pushStateSpy).toHaveBeenCalledWith(null, "", "#event-room-b")
+    await waitFor(() => {
+      expect(scrollIntoView).toHaveBeenCalledWith({
+        behavior: "smooth",
+        block: "start",
+      })
+    })
     expect(screen.getByRole("link", { name: "Opening A" })).toBeInTheDocument()
     expect(screen.getByRole("link", { name: "Opening B" })).toBeInTheDocument()
 
@@ -37,6 +51,9 @@ describe("EventAnthologyTableOfContents", () => {
 
     expect(screen.getByRole("link", { name: "Opening A" })).toBeInTheDocument()
     expect(screen.queryByRole("link", { name: "Opening B" })).not.toBeInTheDocument()
+
+    writerBElement.remove()
+    pushStateSpy.mockRestore()
   })
 
   it("keeps the controlled mobile contents panel in normal document flow", () => {

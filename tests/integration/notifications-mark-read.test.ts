@@ -3,8 +3,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 const mocks = vi.hoisted(() => ({
   getActiveSession: vi.fn(),
   markCommentRead: vi.fn(),
+  markCommentUnread: vi.fn(),
   markEventRoomCommentRead: vi.fn(),
+  markEventRoomCommentUnread: vi.fn(),
   markNotificationRead: vi.fn(),
+  markNotificationUnread: vi.fn(),
 }))
 
 vi.mock("@/lib/authz", () => ({
@@ -14,8 +17,11 @@ vi.mock("@/lib/authz", () => ({
 
 vi.mock("@/lib/notifications", () => ({
   markCommentRead: mocks.markCommentRead,
+  markCommentUnread: mocks.markCommentUnread,
   markEventRoomCommentRead: mocks.markEventRoomCommentRead,
+  markEventRoomCommentUnread: mocks.markEventRoomCommentUnread,
   markNotificationRead: mocks.markNotificationRead,
+  markNotificationUnread: mocks.markNotificationUnread,
 }))
 
 import { POST } from "@/app/api/user/notifications/mark-read/route"
@@ -41,8 +47,11 @@ describe("POST /api/user/notifications/mark-read", () => {
     vi.clearAllMocks()
     mocks.getActiveSession.mockResolvedValue(writerSession)
     mocks.markCommentRead.mockResolvedValue({ count: 1 })
+    mocks.markCommentUnread.mockResolvedValue({ count: 1 })
     mocks.markEventRoomCommentRead.mockResolvedValue({ count: 1 })
+    mocks.markEventRoomCommentUnread.mockResolvedValue({ count: 1 })
     mocks.markNotificationRead.mockResolvedValue({ count: 1 })
+    mocks.markNotificationUnread.mockResolvedValue({ count: 1 })
   })
 
   it("rejects unauthorized requests", async () => {
@@ -75,6 +84,48 @@ describe("POST /api/user/notifications/mark-read", () => {
     })
     expect(mocks.markNotificationRead).toHaveBeenCalledWith("notification-123", "writer-1")
     expect(mocks.markCommentRead).not.toHaveBeenCalled()
+  })
+
+  it("marks a notification as unread when read is false", async () => {
+    const response = await POST(
+      postRequest({ notificationId: "notification-123", read: false }),
+    )
+
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toEqual({
+      data: { success: true },
+    })
+    expect(mocks.markNotificationUnread).toHaveBeenCalledWith(
+      "notification-123",
+      "writer-1",
+    )
+    expect(mocks.markNotificationRead).not.toHaveBeenCalled()
+  })
+
+  it("marks a comment as unread when read is false", async () => {
+    const response = await POST(
+      postRequest({ commentId: "comment-123", read: false }),
+    )
+
+    expect(response.status).toBe(200)
+    expect(mocks.markCommentUnread).toHaveBeenCalledWith(
+      "comment-123",
+      writerSession.user,
+    )
+    expect(mocks.markCommentRead).not.toHaveBeenCalled()
+  })
+
+  it("marks event room feedback as unread when read is false", async () => {
+    const response = await POST(
+      postRequest({ eventRoomCommentId: "event-comment-123", read: false }),
+    )
+
+    expect(response.status).toBe(200)
+    expect(mocks.markEventRoomCommentUnread).toHaveBeenCalledWith(
+      "event-comment-123",
+      "writer-1",
+    )
+    expect(mocks.markEventRoomCommentRead).not.toHaveBeenCalled()
   })
 
   it("marks event room feedback as read if eventRoomCommentId is provided", async () => {
@@ -140,6 +191,15 @@ describe("POST /api/user/notifications/mark-read", () => {
     expect(response.status).toBe(400)
     await expect(response.json()).resolves.toEqual({
       error: "Invalid eventRoomCommentId format",
+    })
+  })
+
+  it("fails if read is not a boolean", async () => {
+    const response = await POST(postRequest({ notificationId: "notification-1", read: "yes" }))
+
+    expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toEqual({
+      error: "Invalid read format",
     })
   })
 

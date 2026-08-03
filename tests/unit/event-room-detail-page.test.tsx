@@ -41,7 +41,19 @@ vi.mock("@/components/posts/TableOfContents", () => ({
   TableOfContents: () => <nav data-testid="toc" />,
 }))
 vi.mock("@/components/events/RoomFeedbackSection", () => ({
-  RoomFeedbackSection: () => <section data-testid="room-feedback" />,
+  RoomFeedbackSection: ({
+    canSubmit,
+    disabledReason,
+  }: {
+    canSubmit?: boolean
+    disabledReason?: string
+  }) => (
+    <section
+      data-can-submit={String(canSubmit)}
+      data-disabled-reason={disabledReason}
+      data-testid="room-feedback"
+    />
+  ),
 }))
 import RoomDetailPage from "@/app/(writer)/dashboard/events/[id]/rooms/[roomId]/page"
 
@@ -59,6 +71,7 @@ describe("RoomDetailPage", () => {
     mocks.prisma.awardEventRoom.findUnique.mockResolvedValue({
       event: {
         id: "event-1",
+        status: "OPEN",
         title: "Awards Event",
       },
       eventId: "event-1",
@@ -107,5 +120,61 @@ describe("RoomDetailPage", () => {
       }),
     )
     expect(mocks.prisma.awardEventRoomComment.updateMany).not.toHaveBeenCalled()
+  })
+
+  it("uses the full detail width when the selected post has no table of contents", async () => {
+    render(
+      await RoomDetailPage({
+        params: Promise.resolve({ id: "event-1", roomId: "room-1" }),
+      }),
+    )
+
+    expect(screen.getByTestId("room-detail-content-grid")).toHaveClass(
+      "lg:grid-cols-[minmax(0,1fr)]",
+    )
+    expect(screen.queryByTestId("toc")).not.toBeInTheDocument()
+  })
+
+  it("disables new feedback when the event is closed", async () => {
+    mocks.prisma.awardEventRoom.findUnique.mockResolvedValue({
+      event: {
+        id: "event-1",
+        status: "CLOSED",
+        title: "Awards Event",
+      },
+      eventId: "event-1",
+      id: "room-1",
+      selectedPost: {
+        content: emptyDoc,
+        coverUrl: null,
+        id: "post-1",
+        status: "DRAFT",
+        title: "Submitted Post",
+      },
+      visibility: "PRIVATE",
+      writer: {
+        avatarUrl: null,
+        bio: null,
+        id: "writer-1",
+        name: "Alice",
+        username: "alice",
+      },
+      writerId: "writer-1",
+    })
+
+    render(
+      await RoomDetailPage({
+        params: Promise.resolve({ id: "event-1", roomId: "room-1" }),
+      }),
+    )
+
+    expect(screen.getByTestId("room-feedback")).toHaveAttribute(
+      "data-can-submit",
+      "false",
+    )
+    expect(screen.getByTestId("room-feedback")).toHaveAttribute(
+      "data-disabled-reason",
+      "Sự kiện đã đóng nên không thể gửi feedback mới.",
+    )
   })
 })

@@ -7,10 +7,9 @@ export interface NotificationUser {
   id: string
 }
 
-function unreadCommentWhere(user: NotificationUser) {
+function commentNotificationWhere(user: NotificationUser) {
   return {
     authorEmail: { not: user.email },
-    isRead: false,
     post: {
       OR: [
         { authorId: user.id },
@@ -26,11 +25,19 @@ function unreadCommentWhere(user: NotificationUser) {
   } satisfies Prisma.CommentWhereInput
 }
 
+function unreadCommentWhere(user: NotificationUser) {
+  return {
+    ...commentNotificationWhere(user),
+    isRead: false,
+  } satisfies Prisma.CommentWhereInput
+}
+
 export const notificationCommentSelect = {
   authorName: true,
   content: true,
   createdAt: true,
   id: true,
+  isRead: true,
   post: {
     select: {
       slug: true,
@@ -81,6 +88,7 @@ export interface NotificationEventRoomComment {
     title: string
   }
   id: string
+  isRead: boolean
   room: {
     id: string
     title: string
@@ -207,6 +215,7 @@ export async function getNotifications(user: NotificationUser) {
                 'content', c.content,
                 'createdAt', c."createdAt",
                 'id', c.id,
+                'isRead', c."isRead",
                 'post', jsonb_build_object(
                   'slug', p.slug,
                   'title', p.title
@@ -215,7 +224,6 @@ export async function getNotifications(user: NotificationUser) {
               FROM comments c
               JOIN posts p ON p.id = c."postId"
               WHERE c."authorEmail" <> ${user.email}
-                AND c."isRead" = false
                 AND c.status = 'APPROVED'
                 AND p.status NOT IN ('ARCHIVED', 'REMOVED')
                 AND (
@@ -250,9 +258,10 @@ export async function getNotifications(user: NotificationUser) {
                   'title', event.title
                 ),
                 'id', arc.id,
+                'isRead', arc."isRead",
                 'room', jsonb_build_object(
                   'id', room.id,
-                  'title', COALESCE(room."submittedPostTitle", selected_post.title, 'Bài dự thi')
+                  'title', COALESCE(room."submittedPostTitle", selected_post.title, 'Bài tham gia')
                 )
               ) AS item
               FROM award_event_room_comments arc
@@ -262,7 +271,6 @@ export async function getNotifications(user: NotificationUser) {
               LEFT JOIN posts selected_post ON selected_post.id = room."postId"
               WHERE room."writerId" = ${user.id}
                 AND arc."authorId" <> ${user.id}
-                AND arc."isRead" = false
               ORDER BY arc."createdAt" DESC
               LIMIT 25
             ) event_room_comments
@@ -361,6 +369,17 @@ export async function markCommentRead(commentId: string, user: NotificationUser)
   })
 }
 
+export async function markCommentUnread(commentId: string, user: NotificationUser) {
+  return prisma.comment.updateMany({
+    data: { isRead: false },
+    where: {
+      ...commentNotificationWhere(user),
+      id: commentId,
+      isRead: true,
+    },
+  })
+}
+
 export async function markEventRoomCommentRead(commentId: string, userId: string) {
   return prisma.awardEventRoomComment.updateMany({
     data: { isRead: true },
@@ -373,6 +392,18 @@ export async function markEventRoomCommentRead(commentId: string, userId: string
   })
 }
 
+export async function markEventRoomCommentUnread(commentId: string, userId: string) {
+  return prisma.awardEventRoomComment.updateMany({
+    data: { isRead: false },
+    where: {
+      authorId: { not: userId },
+      id: commentId,
+      isRead: true,
+      room: { writerId: userId },
+    },
+  })
+}
+
 export async function markNotificationRead(notificationId: string, userId: string) {
   return prisma.notification.updateMany({
     data: { readAt: new Date() },
@@ -380,6 +411,17 @@ export async function markNotificationRead(notificationId: string, userId: strin
       id: notificationId,
       userId,
       readAt: null,
+    },
+  })
+}
+
+export async function markNotificationUnread(notificationId: string, userId: string) {
+  return prisma.notification.updateMany({
+    data: { readAt: null },
+    where: {
+      id: notificationId,
+      userId,
+      readAt: { not: null },
     },
   })
 }

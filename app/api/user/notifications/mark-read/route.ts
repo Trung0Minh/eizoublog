@@ -1,8 +1,11 @@
 import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
 import {
   markCommentRead,
+  markCommentUnread,
   markEventRoomCommentRead,
+  markEventRoomCommentUnread,
   markNotificationRead,
+  markNotificationUnread,
 } from "@/lib/notifications"
 
 export async function POST(request: Request) {
@@ -17,6 +20,7 @@ export async function POST(request: Request) {
       commentId?: string
       eventRoomCommentId?: string
       notificationId?: string
+      read?: boolean
     } = {}
     try {
       body = await request.json()
@@ -24,7 +28,7 @@ export async function POST(request: Request) {
       return Response.json({ error: "Invalid JSON body" }, { status: 400 })
     }
 
-    const { commentId, eventRoomCommentId, notificationId } = body
+    const { commentId, eventRoomCommentId, notificationId, read = true } = body
 
     if (!commentId && !eventRoomCommentId && !notificationId) {
       return Response.json(
@@ -54,18 +58,37 @@ export async function POST(request: Request) {
       )
     }
 
+    if (typeof read !== "boolean") {
+      return Response.json(
+        { error: "Invalid read format" },
+        { status: 400 },
+      )
+    }
+
     const promises: Promise<unknown>[] = []
 
     if (commentId) {
-      promises.push(markCommentRead(commentId, activeSession.user))
+      promises.push(
+        read
+          ? markCommentRead(commentId, activeSession.user)
+          : markCommentUnread(commentId, activeSession.user),
+      )
     }
 
     if (eventRoomCommentId) {
-      promises.push(markEventRoomCommentRead(eventRoomCommentId, activeSession.user.id))
+      promises.push(
+        read
+          ? markEventRoomCommentRead(eventRoomCommentId, activeSession.user.id)
+          : markEventRoomCommentUnread(eventRoomCommentId, activeSession.user.id),
+      )
     }
 
     if (notificationId) {
-      promises.push(markNotificationRead(notificationId, activeSession.user.id))
+      promises.push(
+        read
+          ? markNotificationRead(notificationId, activeSession.user.id)
+          : markNotificationUnread(notificationId, activeSession.user.id),
+      )
     }
 
     if (promises.length > 0) {

@@ -30,4 +30,22 @@ describe("RoomFeedbackSection", () => {
       "https://cdn.example.com/avatars/mina.png",
     )
   })
+
+  it("shows why new feedback is disabled", () => {
+    render(
+      <RoomFeedbackSection
+        canSubmit={false}
+        disabledReason="Sự kiện đã đóng nên không thể gửi feedback mới."
+        eventId="event-1"
+        roomId="room-1"
+        initialComments={[]}
+      />,
+    )
+
+    expect(
+      screen.getByText("Sự kiện đã đóng nên không thể gửi feedback mới."),
+    ).toBeVisible()
+    expect(screen.getByLabelText("Leave your feedback")).toBeDisabled()
+    expect(screen.getByRole("button", { name: "Submit feedback" })).toBeDisabled()
+  })
 })

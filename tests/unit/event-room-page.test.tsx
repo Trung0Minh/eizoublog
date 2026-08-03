@@ -106,8 +106,8 @@ describe("DashboardEventRoomPage (Page A)", () => {
     )
     expect(screen.getByText("Alice")).toBeVisible()
     expect(screen.getByText("My submission")).toBeVisible()
-    expect(screen.getByRole("button", { name: "Nộp bài dự thi" })).toBeVisible()
-    expect(screen.getByRole("link", { name: "Xem trước bài dự thi" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Gửi bài tham gia" })).toBeVisible()
+    expect(screen.getByRole("link", { name: "Xem trước bài tham gia" })).toHaveAttribute(
       "href",
       "/dashboard/events/event-1/rooms/room-1",
     )
@@ -187,9 +187,51 @@ describe("DashboardEventRoomPage (Page A)", () => {
     expect(
       container.querySelector('time[dateTime="2026-01-01T00:00:00.000Z"]'),
     ).toHaveAttribute("dateTime", "2026-01-01T00:00:00.000Z")
-    expect(screen.getByRole("link", { name: /Xem bài dự thi của Mai/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Xem bài tham gia của Mai/i })).toHaveAttribute(
       "href",
       "/dashboard/events/event-1/rooms/room-3",
+    )
+  })
+
+  it("shows private participant previews to admins", async () => {
+    mocks.session.mockResolvedValue({
+      user: { id: "admin-1", name: "Admin", role: "ADMIN", avatarUrl: null },
+    })
+    mocks.prisma.awardEventRoom.findMany.mockResolvedValue([
+      {
+        id: "room-1",
+        postId: null,
+        selectedPost: null,
+        status: "DRAFT",
+        visibility: "PRIVATE",
+        writer: { id: "admin-1", name: "Admin", username: "admin", avatarUrl: null },
+        writerIntro: null,
+      },
+      {
+        id: "room-4",
+        postId: "post-4",
+        selectedPost: {
+          id: "post-4",
+          status: "DRAFT",
+          title: "Private pick",
+          updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+        },
+        status: "SUBMITTED",
+        visibility: "PRIVATE",
+        writer: { id: "writer-4", name: "Duc", username: "duc", avatarUrl: null },
+        writerIntro: null,
+      },
+    ])
+
+    render(
+      await DashboardEventRoomPage({
+        params: Promise.resolve({ id: "event-1" }),
+      }),
+    )
+
+    expect(screen.getByRole("link", { name: /Xem bài tham gia của Duc/i })).toHaveAttribute(
+      "href",
+      "/dashboard/events/event-1/rooms/room-4",
     )
   })
 })

@@ -11,6 +11,7 @@ import { PostContentFrame } from "@/components/posts/PostContentFrame"
 import { TableOfContents } from "@/components/posts/TableOfContents"
 import { RoomFeedbackSection } from "@/components/events/RoomFeedbackSection"
 import { extractHeadings } from "@/lib/postHeadings"
+import { cn } from "@/lib/utils"
 
 interface RoomDetailPageProps {
   params: Promise<{ id: string; roomId: string }>
@@ -33,6 +34,7 @@ export default async function RoomDetailPage({
       event: {
         select: {
           id: true,
+          status: true,
           title: true,
         },
       },
@@ -114,6 +116,11 @@ export default async function RoomDetailPage({
   const hasTableOfContents = extractHeadings(selectedPostContent).length > 0
   const selectedPostTitle = room.selectedPost.title
   const selectedPostCoverUrl = room.selectedPost.coverUrl
+  const canLeaveFeedback = room.event.status !== "CLOSED"
+  const feedbackDisabledReason =
+    room.event.status === "CLOSED"
+      ? "Sự kiện đã đóng nên không thể gửi feedback mới."
+      : undefined
 
   return (
     <main className="mx-auto w-full max-w-[1360px] px-4 py-8 sm:px-6 sm:py-10 lg:px-10 2xl:pl-20 2xl:pr-0">
@@ -200,7 +207,15 @@ export default async function RoomDetailPage({
         )}
 
         {/* Main Content Area with sidebar Table of Contents */}
-        <div className="grid w-full gap-8 lg:grid-cols-[minmax(0,1000px)] lg:justify-start 2xl:grid-cols-[minmax(0,1000px)_220px]">
+        <div
+          className={cn(
+            "grid w-full gap-8 lg:justify-start",
+            hasTableOfContents
+              ? "lg:grid-cols-[minmax(0,1000px)] 2xl:grid-cols-[minmax(0,1000px)_220px]"
+              : "lg:grid-cols-[minmax(0,1fr)]",
+          )}
+          data-testid="room-detail-content-grid"
+        >
           <article className="min-w-0 w-full">
             {/* Post Content */}
             <PostContentFrame>
@@ -209,6 +224,8 @@ export default async function RoomDetailPage({
 
             {/* Feedback Section */}
             <RoomFeedbackSection
+              canSubmit={canLeaveFeedback}
+              disabledReason={feedbackDisabledReason}
               eventId={eventId}
               roomId={roomId}
               initialComments={comments}

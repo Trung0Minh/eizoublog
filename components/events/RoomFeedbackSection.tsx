@@ -23,12 +23,16 @@ interface Comment {
 }
 
 interface RoomFeedbackSectionProps {
+  canSubmit?: boolean
+  disabledReason?: string
   eventId: string
   roomId: string
   initialComments: Comment[]
 }
 
 export function RoomFeedbackSection({
+  canSubmit = true,
+  disabledReason,
   eventId,
   roomId,
   initialComments,
@@ -122,7 +126,7 @@ export function RoomFeedbackSection({
                         variant="outline"
                       >
                         <Lock className="h-2.5 w-2.5" />
-                        🔒 Private Feedback
+                        Private Feedback
                       </Badge>
                     )}
                     <RelativeTime
@@ -144,6 +148,11 @@ export function RoomFeedbackSection({
         onSubmit={handleCommentSubmit}
         className="space-y-4"
       >
+        {!canSubmit && disabledReason && (
+          <div className="rounded-[8px] border border-border-default bg-muted/45 p-3 text-xs font-medium text-text-secondary">
+            {disabledReason}
+          </div>
+        )}
         {submitError && (
           <div className="rounded-[6px] border border-destructive/20 bg-destructive/5 p-3 text-xs text-destructive flex items-center gap-2">
             <AlertCircle className="h-4 w-4 shrink-0" />
@@ -159,6 +168,7 @@ export function RoomFeedbackSection({
             Leave your feedback
           </label>
           <Textarea
+            disabled={!canSubmit}
             id="comment-content"
             placeholder="Write your constructive feedback, critiques, or thoughts..."
             value={commentContent}
@@ -174,6 +184,7 @@ export function RoomFeedbackSection({
             <input
               type="checkbox"
               checked={isPrivate}
+              disabled={!canSubmit}
               onChange={(e) => setIsPrivate(e.target.checked)}
               className="h-4 w-4 rounded border-border-strong accent-[var(--accent)] cursor-pointer"
             />
@@ -182,7 +193,7 @@ export function RoomFeedbackSection({
 
           <Button
             type="submit"
-            disabled={isSubmitting || !commentContent.trim()}
+            disabled={!canSubmit || isSubmitting || !commentContent.trim()}
             size="sm"
             className="px-4 font-semibold"
           >

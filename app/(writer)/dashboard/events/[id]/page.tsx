@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
-import { ChevronLeft, Eye, FileText, Lock, Pencil } from "lucide-react"
+import { ChevronLeft, ExternalLink, Eye, FileText, Lock, Pencil } from "lucide-react"
 
 import { EventRoomEditor } from "@/components/events/EventRoomEditor"
 import { joinAwardEvent } from "@/lib/awardEventService"
@@ -140,6 +140,7 @@ export default async function DashboardEventRoomPage({
 
   // Separate current user's room and other participants' rooms
   const ourRoom = participantRooms.find((pr) => pr.writer.id === session.user.id) || room
+  const isAdmin = session.user.role === "ADMIN"
   const otherParticipants = participantRooms.filter(
     (pr) =>
       pr.writer.id !== session.user.id &&
@@ -195,7 +196,10 @@ export default async function DashboardEventRoomPage({
         <div className="flex gap-2">
           {event.finalPost?.status === "PUBLISHED" && (
             <Button asChild size="sm" variant="outline">
-              <Link href={`/${event.finalPost.slug}`}>Bài viết công khai</Link>
+              <Link className="gap-2" href={`/${event.finalPost.slug}`}>
+                <ExternalLink aria-hidden="true" className="h-4 w-4" />
+                Bài viết công khai
+              </Link>
             </Button>
           )}
         </div>
@@ -280,18 +284,18 @@ export default async function DashboardEventRoomPage({
                 <>
                   <Button asChild size="icon" variant="outline">
                     <Link
-                      aria-label="Chỉnh sửa bài dự thi"
+                      aria-label="Chỉnh sửa bài tham gia"
                       href={`/dashboard/edit/${ourRoom.selectedPost.id}`}
-                      title="Chỉnh sửa bài dự thi"
+                      title="Chỉnh sửa bài tham gia"
                     >
                       <Pencil aria-hidden="true" className="h-4 w-4" />
                     </Link>
                   </Button>
                   <Button asChild size="icon" variant="outline">
                     <Link
-                      aria-label="Xem trước bài dự thi"
+                      aria-label="Xem trước bài tham gia"
                       href={`/dashboard/events/${event.id}/rooms/${ourRoom.id}`}
-                      title="Xem trước bài dự thi"
+                      title="Xem trước bài tham gia"
                     >
                       <Eye aria-hidden="true" className="h-4 w-4" />
                     </Link>
@@ -392,12 +396,14 @@ export default async function DashboardEventRoomPage({
                   </div>
 
                   <div className="flex shrink-0 flex-wrap justify-end gap-2">
-                    {pr.postId && pr.selectedPost && pr.visibility === "PARTICIPANTS" ? (
+                    {pr.postId &&
+                    pr.selectedPost &&
+                    (pr.visibility === "PARTICIPANTS" || isAdmin) ? (
                       <Button asChild size="icon" variant="outline">
                         <Link
-                          aria-label={`Xem bài dự thi của ${pr.writer.name}`}
+                          aria-label={`Xem bài tham gia của ${pr.writer.name}`}
                           href={`/dashboard/events/${id}/rooms/${pr.id}`}
-                          title={`Xem bài dự thi của ${pr.writer.name}`}
+                          title={`Xem bài tham gia của ${pr.writer.name}`}
                         >
                           <Eye aria-hidden="true" className="h-4 w-4" />
                         </Link>

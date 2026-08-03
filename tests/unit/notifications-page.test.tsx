@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import type { AnchorHTMLAttributes } from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -87,6 +87,9 @@ describe("NotificationsPage", () => {
 
     expect(responseLink).toHaveAttribute("href", "/dashboard/edit/post-1")
     expect(viewLink).toHaveAttribute("href", "/dashboard/edit/post-1")
+    expect(
+      screen.getByRole("button", { name: "Đánh dấu đã đọc" }),
+    ).toBeVisible()
     expect(screen.getByRole("button", { name: "Đánh dấu tất cả đã đọc" }))
       .toBeEnabled()
     expect(screen.getByRole("link", { name: "Tất cả" })).toBeVisible()
@@ -128,6 +131,9 @@ describe("NotificationsPage", () => {
       "href",
       "/dashboard/edit/post-1",
     )
+    expect(
+      screen.getByRole("button", { name: "Đánh dấu đã đọc" }),
+    ).toBeVisible()
   })
 
   it("disables the global read button when only pending invites remain", async () => {
@@ -165,6 +171,7 @@ describe("NotificationsPage", () => {
           createdAt: new Date("2026-07-22T04:00:00Z"),
           event: { id: "event-1", title: "Awards" },
           id: "event-comment-1",
+          isRead: false,
           room: { id: "room-1", title: "My submission" },
         },
       ],
@@ -183,8 +190,57 @@ describe("NotificationsPage", () => {
       "href",
       "/dashboard/events/event-1/rooms/room-1",
     )
+    expect(
+      screen.getByRole("button", { name: "Đánh dấu đã đọc" }),
+    ).toBeVisible()
     expect(screen.getByRole("button", { name: "Đánh dấu tất cả đã đọc" }))
       .toBeEnabled()
+  })
+
+  it("keeps read comments in all notifications but hides them from unread", async () => {
+    mocks.getNotifications.mockResolvedValue({
+      pendingInvites: [],
+      responseEvents: [],
+      unreadComments: [
+        {
+          authorName: "Reader",
+          content: "Already handled.",
+          createdAt: new Date("2026-07-22T04:00:00Z"),
+          id: "comment-1",
+          isRead: true,
+          post: { slug: "essay", title: "Essay" },
+        },
+      ],
+    })
+
+    render(await NotificationsPage({ searchParams: Promise.resolve({}) }))
+
+    expect(screen.getByText("Reader đã bình luận trong “Essay”")).toBeVisible()
+    expect(screen.getByRole("button", { name: "Đánh dấu chưa đọc" })).toBeVisible()
+
+    cleanup()
+    mocks.getNotifications.mockResolvedValue({
+      pendingInvites: [],
+      responseEvents: [],
+      unreadComments: [
+        {
+          authorName: "Reader",
+          content: "Already handled.",
+          createdAt: new Date("2026-07-22T04:00:00Z"),
+          id: "comment-1",
+          isRead: true,
+          post: { slug: "essay", title: "Essay" },
+        },
+      ],
+    })
+
+    render(
+      await NotificationsPage({
+        searchParams: Promise.resolve({ type: "unread" }),
+      }),
+    )
+
+    expect(screen.getByText("Không có thông báo trong mục này.")).toBeVisible()
   })
 
   describe("ViewLink component", () => {
