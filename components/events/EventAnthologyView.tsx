@@ -321,7 +321,10 @@ export function EventAnthologyView({
                     </h2>
                   </div>
 
-                  <article className="post-content min-w-0 font-lora text-[16px] leading-[1.8] text-text-primary sm:text-[17.5px]">
+                  <article
+                    className="event-entry-content post-content min-w-0 font-lora text-[16px] leading-[1.8] text-text-primary sm:text-[17.5px]"
+                    data-testid="event-entry-content"
+                  >
                     <PostBody
                       content={namespaceAwardEventPostContent(
                         room.selectedPost?.content ?? { type: "doc", content: [] },

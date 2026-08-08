@@ -197,6 +197,62 @@ describe("EventAnthologyView", () => {
     )
   })
 
+  it("scopes intentional blank-line spacing to event entry bodies", () => {
+    render(
+      <EventAnthologyView
+        event={{
+          coverAlt: null,
+          coverUrl: null,
+          intro: { content: [], type: "doc" },
+          introText: null,
+          rooms: [
+            {
+              id: "room-a",
+              order: 0,
+              selectedPost: {
+                content: {
+                  content: [
+                    {
+                      content: [{ text: "Opening line.", type: "text" }],
+                      type: "paragraph",
+                    },
+                    { type: "paragraph" },
+                    {
+                      content: [{ text: "New entry.", type: "text" }],
+                      type: "paragraph",
+                    },
+                  ],
+                  type: "doc",
+                },
+                id: "post-a",
+                status: "DRAFT",
+                title: "Submitted post",
+              },
+              status: "SUBMITTED",
+              submittedContent: null,
+              submittedPostId: null,
+              submittedPostTitle: null,
+              submittedWriterIntro: null,
+              writer: {
+                avatarUrl: null,
+                bio: null,
+                name: "Writer A",
+                username: "writer-a",
+              },
+              writerIntro: null,
+            },
+          ],
+          title: "Collected perspectives",
+        }}
+      />,
+    )
+
+    expect(screen.getByTestId("event-entry-content")).toHaveClass(
+      "event-entry-content",
+      "post-content",
+    )
+  })
+
   it("keeps the original desktop shell while letting the intro fill its card", () => {
     render(
       <EventAnthologyView

@@ -440,9 +440,10 @@ function renderNode(node: JSONContent, key: string): ReactNode {
     }
     case "paragraph": {
       const children = renderChildren(node)
+      const isEmpty = children.length === 0
       return (
-        <p key={key} style={alignStyle}>
-          {children.length > 0 ? children : <br />}
+        <p data-empty={isEmpty ? "true" : undefined} key={key} style={alignStyle}>
+          {isEmpty ? <br /> : children}
         </p>
       )
     }

@@ -68,6 +68,29 @@ describe("StaticPostContent", () => {
     )
   })
 
+  it("marks intentional blank paragraphs for scoped spacing fixes", () => {
+    const content: JSONContent = {
+      content: [
+        {
+          content: [{ text: "Before the pause.", type: "text" }],
+          type: "paragraph",
+        },
+        { type: "paragraph" },
+        {
+          content: [{ text: "After the pause.", type: "text" }],
+          type: "paragraph",
+        },
+      ],
+      type: "doc",
+    }
+
+    const { container } = render(<StaticPostContent content={content} />)
+
+    expect(container.querySelector('p[data-empty="true"]')).toContainHTML("<br")
+    expect(screen.getByText("Before the pause.")).toBeVisible()
+    expect(screen.getByText("After the pause.")).toBeVisible()
+  })
+
   it("ignores saved text colors in public rendering", () => {
     const content: JSONContent = {
       content: [
