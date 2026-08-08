@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { useRouter } from "next/navigation"
 
 import { EditorTopBar } from "@/components/editor/EditorTopBar"
+import { EditorTableOfContents } from "@/components/editor/EditorTableOfContents"
 import { EditorToolbar } from "@/components/editor/EditorToolbar"
 import {
   TiptapEditor,
@@ -30,6 +31,7 @@ import { usePostRecoveryDraft } from "@/hooks/usePostRecoveryDraft"
 import { useWarnUnsaved } from "@/hooks/useWarnUnsaved"
 import { cn } from "@/lib/utils"
 import { MAX_POST_EXCERPT_CHARACTERS } from "@/lib/postLimits"
+import { extractHeadings } from "@/lib/postHeadings"
 
 interface CategoryOption {
   id: string
@@ -209,6 +211,7 @@ export function PostEditor({
     initialData?.excerptContent ?? emptyDoc,
   )
   const [activeEditor, setActiveEditor] = useState<Editor | null>(null)
+  const [bodyEditor, setBodyEditor] = useState<Editor | null>(null)
   const [spellcheckEnabled, setSpellcheckEnabled] = useState(false)
   const isDesktopSettingsDefault = useSyncExternalStore(
     subscribeDesktopSettings,
@@ -261,6 +264,7 @@ export function PostEditor({
     return queued
   }, [])
   const canSave = title.trim().length > 0
+  const hasOutline = useMemo(() => extractHeadings(content).length > 0, [content])
   const hasInitialData = initialData !== undefined
   const initialExcerpt = initialData?.excerpt
 
@@ -363,6 +367,15 @@ export function PostEditor({
     markDirty()
     scheduleDebounce()
   }, [markDirty, scheduleDebounce])
+
+  const handleBodyEditorReady = useCallback((editor: Editor | null) => {
+    setBodyEditor(editor)
+    setActiveEditor((current) => current ?? editor)
+  }, [])
+
+  const handleExcerptEditorReady = useCallback((editor: Editor | null) => {
+    setActiveEditor((current) => current ?? editor)
+  }, [])
 
   const recoverLocalDraft = useCallback(() => {
     const draft = recovery.accept()
@@ -790,22 +803,24 @@ export function PostEditor({
           )}
         </AnimatePresence>
 
-        {/* Content + toggle button — wrapped together so they shift in sync with the panel.
-             margin-right matches the panel's duration/easing exactly, so all three elements
-             (panel slide, button, content) animate as one coordinated unit. */}
+        {/* Content shifts only slightly when the settings drawer opens, while
+             the toggle parks just outside the drawer edge. */}
         <div
           className={cn(
             "flex min-w-0 flex-1 h-full",
-            "transition-[margin-left] duration-300",
-            isSettingsOpen ? "lg:mr-[320px] xl:mr-[360px]" : "mr-0",
+            "transition-[margin-right] duration-300",
+            isSettingsOpen ? "lg:mr-20 xl:mr-24" : "mr-0",
           )}
           style={{ transitionTimingFunction: "cubic-bezier(0.32, 0.72, 0, 1)" }}
         >
           {/* Robust zero-width tracker for the toggle button */}
-          <div className="hidden lg:flex w-0 relative h-full items-center z-[60] order-last">
+          <div className="pointer-events-none fixed inset-y-0 right-0 z-[60] hidden w-0 items-center lg:flex">
             <button
               aria-label={isSettingsOpen ? "Đóng cài đặt" : "Mở cài đặt"}
-              className="absolute right-4 h-10 w-10 flex items-center justify-center rounded-full border border-border-default bg-card/60 backdrop-blur-md shadow-glass text-text-secondary transition-all duration-300 hover:bg-card hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className={cn(
+                "pointer-events-auto absolute right-4 flex h-10 w-10 items-center justify-center rounded-full border border-border-default bg-card/60 text-text-secondary shadow-glass backdrop-blur-md transition-all duration-300 hover:bg-card hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                isSettingsOpen && "lg:right-[336px] xl:right-[376px]",
+              )}
               onClick={() =>
                 setSettingsPreference(isSettingsOpen ? "closed" : "open")
               }
@@ -820,8 +835,24 @@ export function PostEditor({
           </div>
 
           <div className="min-w-0 flex-1 w-full h-full overflow-y-auto lg:ml-20 2xl:ml-0">
+            {hasOutline && (
+              <aside
+                className={cn(
+                  "hidden 2xl:fixed 2xl:bottom-6 2xl:top-6 2xl:z-20 2xl:block 2xl:w-40 2xl:overflow-y-auto 2xl:transition-[left] 2xl:duration-300",
+                  isSettingsOpen
+                    ? "2xl:left-[max(4.5rem,calc((100vw_-_1100px)_/_2_-_232px))]"
+                    : "2xl:left-[max(4.5rem,calc((100vw_-_1100px)_/_2_-_184px))]",
+                )}
+              >
+                <EditorTableOfContents content={content} editor={bodyEditor} />
+              </aside>
+            )}
+
             <div
-              className="mx-auto flex w-full max-w-[1100px] flex-col px-4 pb-[120px] pt-6 md:px-6 md:pt-8"
+              className={cn(
+                "mx-auto flex w-full flex-col px-4 pb-[120px] pt-6 md:px-6 md:pt-8",
+                "max-w-[1100px]",
+              )}
             >
               <DurabilityBanner scope="writer" />
               {error && (
@@ -857,90 +888,103 @@ export function PostEditor({
                 </div>
               )}
 
-              <section
-                className="relative z-30 mb-8 w-full rounded-[8px] border border-border-default/55 bg-background/45 backdrop-blur-xl max-sm:shadow-glass sm:border-border-default sm:bg-subtle-bg sm:backdrop-blur-md md:mb-12"
-                data-testid="editor-writing-surface"
+              <div
+                className={cn(
+                  "relative min-w-0",
+                )}
               >
-                <div className="px-3 py-4 sm:p-8 md:p-12">
-                  <div className="mt-4 pb-2 md:mt-0 md:pb-3">
-                    <label className="sr-only" htmlFor="post-title">
-                      Tiêu đề
-                    </label>
-                    <textarea
-                      ref={titleTextareaRef}
-                      className="field-sizing-content min-h-[1.2lh] w-full resize-none overflow-hidden border-none bg-transparent px-0 pb-1 pt-2 font-display text-[32px] font-bold leading-[1.18] text-text-primary outline-none placeholder:font-normal placeholder:text-text-tertiary md:text-[40px]"
-                      id="post-title"
-                      maxLength={200}
-                      onChange={(event) => {
-                        setTitle(event.target.value)
-                        markDirtyAndAutosave()
-                      }}
-                      placeholder="Tiêu đề bài viết..."
-                      rows={1}
-                      value={title}
-                    />
-                  </div>
+                <div className="min-w-0">
+                  <EditorTableOfContents
+                    className="mb-4 2xl:hidden"
+                    collapsible
+                    content={content}
+                    editor={bodyEditor}
+                  />
 
-                  <div className="sticky top-0 z-40 -mx-1 mb-5">
-                    {activeEditor ? (
-                      <EditorToolbar
-                        editor={activeEditor}
-                        onToggleSpellcheck={() =>
-                          setSpellcheckEnabled((current) => !current)
-                        }
-                        spellcheckEnabled={spellcheckEnabled}
-                      />
-                    ) : (
-                      <div className="flex min-h-[48px] items-center px-3 text-[13px] text-text-tertiary">
-                        Chọn phần mô tả hoặc nội dung để dùng thanh công cụ.
+                  <section
+                    className="relative z-30 mb-8 w-full rounded-[8px] border border-border-default/55 bg-background/45 backdrop-blur-xl max-sm:shadow-glass sm:border-border-default sm:bg-subtle-bg sm:backdrop-blur-md md:mb-12"
+                    data-testid="editor-writing-surface"
+                  >
+                    <div className="px-3 py-4 sm:p-8 md:p-12">
+                      <div className="mt-4 pb-2 md:mt-0 md:pb-3">
+                        <label className="sr-only" htmlFor="post-title">
+                          Tiêu đề
+                        </label>
+                        <textarea
+                          ref={titleTextareaRef}
+                          className="field-sizing-content min-h-[1.2lh] w-full resize-none overflow-hidden border-none bg-transparent px-0 pb-1 pt-2 font-display text-[32px] font-bold leading-[1.18] text-text-primary outline-none placeholder:font-normal placeholder:text-text-tertiary md:text-[40px]"
+                          id="post-title"
+                          maxLength={200}
+                          onChange={(event) => {
+                            setTitle(event.target.value)
+                            markDirtyAndAutosave()
+                          }}
+                          placeholder="Tiêu đề bài viết..."
+                          rows={1}
+                          value={title}
+                        />
                       </div>
-                    )}
-                  </div>
 
-                  <div className="mb-7 rounded-[14px] border border-border-default/50 bg-background/25 px-4 py-4 transition-colors focus-within:border-accent/50 focus-within:bg-background/35 sm:px-5 sm:py-5">
-                    <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-text-tertiary">
-                      Mô tả
+                      <div className="sticky top-0 z-40 -mx-1 mb-5">
+                        {activeEditor ? (
+                          <EditorToolbar
+                            editor={activeEditor}
+                            onToggleSpellcheck={() =>
+                              setSpellcheckEnabled((current) => !current)
+                            }
+                            spellcheckEnabled={spellcheckEnabled}
+                          />
+                        ) : (
+                          <div className="flex min-h-[48px] items-center px-3 text-[13px] text-text-tertiary">
+                            Chọn phần mô tả hoặc nội dung để dùng thanh công cụ.
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mb-7 rounded-[14px] border border-border-default/50 bg-background/25 px-4 py-4 transition-colors focus-within:border-accent/50 focus-within:bg-background/35 sm:px-5 sm:py-5">
+                        <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-text-tertiary">
+                          Mô tả
+                        </div>
+                        <TiptapEditor
+                          ariaLabel="Đoạn trích"
+                          content={excerptContent}
+                          editable
+                          editorClassName="prose-editor min-h-[96px] focus:outline-none text-[16px] leading-[1.65] text-text-secondary"
+                          onChange={(json, text) => {
+                            setExcerptContent(json)
+                            setExcerpt(
+                              text.slice(0, MAX_POST_EXCERPT_CHARACTERS),
+                            )
+                            markDirtyAndAutosave()
+                          }}
+                          onEditorReady={handleExcerptEditorReady}
+                          onFocus={setActiveEditor}
+                          placeholder="Viết mô tả mở đầu cho bài viết..."
+                          showFooterStats={false}
+                          showToolbar={false}
+                          spellcheckEnabled={spellcheckEnabled}
+                        />
+                      </div>
+
+                      <div className="rounded-[14px] border border-transparent transition-colors focus-within:border-accent/35">
+                        <TiptapEditor
+                          content={content}
+                          editable
+                          onChange={(json, text) => {
+                            setContent(json)
+                            setContentText(text)
+                            markDirtyAndAutosave()
+                          }}
+                          onEditorReady={handleBodyEditorReady}
+                          onFocus={setActiveEditor}
+                          showToolbar={false}
+                          spellcheckEnabled={spellcheckEnabled}
+                        />
+                      </div>
                     </div>
-                    <TiptapEditor
-                      ariaLabel="Đoạn trích"
-                      content={excerptContent}
-                      editable
-                      editorClassName="prose-editor min-h-[96px] focus:outline-none text-[16px] leading-[1.65] text-text-secondary"
-                      onChange={(json, text) => {
-                        setExcerptContent(json)
-                        setExcerpt(text.slice(0, MAX_POST_EXCERPT_CHARACTERS))
-                        markDirtyAndAutosave()
-                      }}
-                      onEditorReady={(editor) => {
-                        if (!activeEditor && editor) setActiveEditor(editor)
-                      }}
-                      onFocus={setActiveEditor}
-                      placeholder="Viết mô tả mở đầu cho bài viết..."
-                      showFooterStats={false}
-                      showToolbar={false}
-                      spellcheckEnabled={spellcheckEnabled}
-                    />
-                  </div>
-
-                  <div className="rounded-[14px] border border-transparent transition-colors focus-within:border-accent/35">
-                    <TiptapEditor
-                      content={content}
-                      editable
-                      onChange={(json, text) => {
-                        setContent(json)
-                        setContentText(text)
-                        markDirtyAndAutosave()
-                      }}
-                      onEditorReady={(editor) => {
-                        if (!activeEditor && editor) setActiveEditor(editor)
-                      }}
-                      onFocus={setActiveEditor}
-                      showToolbar={false}
-                      spellcheckEnabled={spellcheckEnabled}
-                    />
-                  </div>
+                  </section>
                 </div>
-              </section>
+              </div>
             </div>
           </div>
         </div>
