@@ -174,6 +174,60 @@ describe("admin client components", () => {
     expect(screen.queryByRole("button", { name: /^Categories$/ })).not.toBeInTheDocument()
   })
 
+  it("opens the tag edit form when the category tab was active", async () => {
+    const user = userEvent.setup()
+    const fetchMock = vi.fn().mockResolvedValue(
+      okResponse({
+        data: {
+          _count: { posts: 2 },
+          id: "tag-1",
+          name: "Direction",
+          slug: "direction",
+        },
+      }),
+    )
+    vi.stubGlobal("fetch", fetchMock)
+
+    render(
+      <AdminContentManager
+        categories={[
+          {
+            _count: { posts: 1 },
+            description: null,
+            id: "category-1",
+            name: "Analysis",
+            slug: "analysis",
+          },
+        ]}
+        tags={[
+          {
+            _count: { posts: 2 },
+            id: "tag-1",
+            name: "Sakuga",
+            slug: "sakuga",
+          },
+        ]}
+      />,
+    )
+
+    await user.click(screen.getByRole("button", { name: "Edit tag Sakuga" }))
+
+    expect(screen.getByRole("heading", { name: "Edit Tag" })).toBeVisible()
+    const nameInput = screen.getByLabelText("Name")
+    expect(nameInput).toHaveValue("Sakuga")
+
+    await user.clear(nameInput)
+    await user.type(nameInput, "Direction")
+    await user.click(screen.getByRole("button", { name: "Save changes" }))
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/admin/content/tags/tag-1", {
+      body: JSON.stringify({ name: "Direction" }),
+      headers: { "Content-Type": "application/json" },
+      method: "PATCH",
+    })
+    await waitFor(() => expect(routerMocks.refresh).toHaveBeenCalled())
+  })
+
   it("opens event management from the event name without a settings button", () => {
     render(
       <AdminEventsManager

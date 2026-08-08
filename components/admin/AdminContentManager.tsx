@@ -427,6 +427,8 @@ export function AdminContentManager({
                       <Button
                         aria-label={`Edit category ${category.name}`}
                         onClick={() => {
+                          setActiveTab("categories")
+                          setEditingTagId(null)
                           setEditingCategoryId(category.id)
                           setCategoryForm({
                             description: category.description ?? "",
@@ -519,6 +521,8 @@ export function AdminContentManager({
                       <Button
                         aria-label={`Edit tag ${tag.name}`}
                         onClick={() => {
+                          setActiveTab("tags")
+                          setEditingCategoryId(null)
                           setEditingTagId(tag.id)
                           setTagForm({ name: tag.name })
                           setIsModalOpen(true)

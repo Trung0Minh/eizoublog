@@ -1,5 +1,6 @@
 import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/react"
-import { useRef, type CSSProperties, type SyntheticEvent } from "react"
+import { AnimatePresence } from "motion/react"
+import { useRef, useState, type CSSProperties, type SyntheticEvent } from "react"
 import {
   AlignCenter,
   AlignLeft,
@@ -10,10 +11,12 @@ import {
   RotateCw,
   Trash2,
   Type,
+  ZoomIn,
 } from "lucide-react"
 
 import { GalleryAddMediaButton } from "@/components/editor/GalleryAddMediaButton"
 import { serializeGalleryImages } from "@/components/editor/gallery"
+import { ImageLightbox } from "@/components/posts/ImageLightbox"
 
 function normalizeRotation(value: unknown) {
   return typeof value === "number" && Number.isFinite(value)
@@ -60,6 +63,7 @@ function getRotatedImageFit(attrs: Record<string, unknown>) {
 export function ImageNodeView(props: NodeViewProps) {
   const { node, updateAttributes, selected } = props
   const captionRef = useRef<HTMLElement>(null)
+  const [zoomOpen, setZoomOpen] = useState(false)
   const rotation = rawRotation(node.attrs.rotation)
   const flipX = node.attrs.flipX === true
   const flipY = node.attrs.flipY === true
@@ -169,6 +173,14 @@ export function ImageNodeView(props: NodeViewProps) {
 
           <div className="mx-1 h-4 w-px bg-border-default" />
           <button
+            className="rounded p-1.5 text-sm text-text-secondary hover:bg-subtle-bg hover:text-text-primary"
+            onClick={() => setZoomOpen(true)}
+            title="Zoom image"
+            type="button"
+          >
+            <ZoomIn className="h-4 w-4" />
+          </button>
+          <button
             className={`rounded p-1.5 text-sm hover:bg-subtle-bg ${
               node.attrs.showCaption ? "bg-subtle-bg text-text-primary" : "text-text-secondary"
             }`}
@@ -254,6 +266,26 @@ export function ImageNodeView(props: NodeViewProps) {
       >
         <NodeViewContent />
       </figcaption>
+      <AnimatePresence>
+        {zoomOpen && typeof node.attrs.src === "string" ? (
+          <ImageLightbox
+            images={[
+              {
+                alt:
+                  typeof node.attrs.alt === "string"
+                    ? node.attrs.alt
+                    : "Expanded post image",
+                caption: node.textContent.trim() || undefined,
+                src: node.attrs.src,
+                transform: imageTransform,
+                transformOrigin: "center",
+              },
+            ]}
+            initialIndex={0}
+            onClose={() => setZoomOpen(false)}
+          />
+        ) : null}
+      </AnimatePresence>
     </NodeViewWrapper>
   )
 }

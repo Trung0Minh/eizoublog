@@ -932,9 +932,13 @@ describe("PostBody", () => {
         {
           attrs: {
             alt: "First frame",
+            flipX: true,
+            naturalHeight: 900,
+            naturalWidth: 600,
+            rotation: 270,
             src: "https://cdn.example.com/content-images/scene-a.webp",
           },
-          type: "image",
+          type: "customImage",
         },
         {
           attrs: {
@@ -959,6 +963,15 @@ describe("PostBody", () => {
     expect(
       screen.getByRole("dialog", { name: "Image viewer" }),
     ).toBeVisible()
+    expect(
+      within(screen.getByRole("dialog", { name: "Image viewer" })).getByRole(
+        "img",
+        { name: "First frame" },
+      ),
+    ).toHaveStyle({
+      transform: "rotate(270deg) scale(-0.6666666666666666, 0.6666666666666666)",
+      transformOrigin: "center",
+    })
     expect(screen.getByText("1 / 2")).toBeVisible()
 
     await user.keyboard("{ArrowRight}")

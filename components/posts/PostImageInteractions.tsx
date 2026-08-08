@@ -77,6 +77,8 @@ export function PostImageInteractions({
         alt: image.alt,
         caption: getImageCaption(image),
         src: image.src,
+        transform: image.style.transform || undefined,
+        transformOrigin: image.style.transformOrigin || undefined,
       })),
       index,
     })

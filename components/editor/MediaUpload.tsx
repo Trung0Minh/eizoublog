@@ -200,25 +200,34 @@ export function MediaUpload({
   return (
     <>
       <button
-        className="relative flex h-[30px] w-[30px] overflow-hidden items-center justify-center rounded-[5px] text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary disabled:opacity-40"
+        aria-busy={uploadProgress !== null}
+        aria-label={
+          uploadProgress !== null
+            ? `Uploading media ${uploadProgress}%`
+            : "Insert media"
+        }
+        className="relative flex h-[30px] w-[30px] items-center justify-center rounded-[5px] text-text-secondary transition-colors hover:bg-subtle-bg hover:text-text-primary disabled:cursor-wait disabled:opacity-100"
         disabled={uploadProgress !== null}
         onMouseDown={(event) => {
           event.preventDefault()
           inputRef.current?.click()
         }}
-        title="Insert media"
+        title={uploadProgress !== null ? "Uploading media" : "Insert media"}
         type="button"
       >
         {uploadProgress !== null ? (
-          <>
-            <div 
-              className="absolute bottom-0 left-0 bg-accent/35 transition-all duration-200"
-              style={{ height: `${uploadProgress}%`, width: '100%' }}
-            />
-            <span className="relative z-10 rounded-full bg-accent px-1.5 py-0.5 text-[11px] font-extrabold leading-none text-accent-foreground shadow-sm ring-1 ring-accent/70">
-              {uploadProgress}%
-            </span>
-          </>
+          <span
+            aria-valuemax={100}
+            aria-valuemin={0}
+            aria-valuenow={uploadProgress}
+            className="relative flex h-5 w-5 items-center justify-center"
+            role="progressbar"
+          >
+            <span className="absolute inset-0 rounded-full border-2 border-accent/25" />
+            <span className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-r-accent border-t-accent [filter:drop-shadow(0_0_4px_var(--accent))]" />
+            <span className="h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_6px_var(--accent)]" />
+            <span className="sr-only">Uploading media {uploadProgress}%</span>
+          </span>
         ) : (
           <ImageIcon aria-hidden="true" className="h-[15px] w-[15px]" />
         )}

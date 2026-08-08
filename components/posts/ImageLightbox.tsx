@@ -8,7 +8,13 @@ import {
   ZoomOut,
 } from "lucide-react"
 import { motion } from "motion/react"
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react"
+import {
+  useCallback,
+  useEffect,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+} from "react"
 import { createPortal } from "react-dom"
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
 
@@ -16,6 +22,8 @@ export interface LightboxImage {
   alt: string
   caption?: string
   src: string
+  transform?: string
+  transformOrigin?: CSSProperties["transformOrigin"]
 }
 
 interface ImageLightboxProps {
@@ -175,16 +183,24 @@ export function ImageLightbox({
                 wrapperStyle={{ width: "100%", height: "100%" }}
                 contentStyle={{ width: "100%", height: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}
               >
-                <motion.img
+                <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.2 }}
-                  alt={current.alt || "Expanded post image"}
-                  className="max-h-[80vh] max-w-[90vw] select-none rounded object-contain"
-                  draggable={false}
-                  src={current.src}
-                />
+                  className="flex max-h-[80vh] max-w-[90vw] items-center justify-center"
+                >
+                  <img
+                    alt={current.alt || "Expanded post image"}
+                    className="max-h-[80vh] max-w-[90vw] select-none rounded object-contain"
+                    draggable={false}
+                    src={current.src}
+                    style={{
+                      transform: current.transform,
+                      transformOrigin: current.transformOrigin,
+                    }}
+                  />
+                </motion.div>
               </TransformComponent>
             </div>
           </>
