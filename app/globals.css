@@ -700,9 +700,34 @@
     margin: 0;
   }
 
-  .event-entry-content .ProseMirror > p[data-empty="true"] {
-    margin-block: 0.45em;
-    min-height: 1.8em;
+  .event-entry-post-content {
+    font-family: var(--font-inter), system-ui, sans-serif;
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+
+  @media (min-width: 768px) {
+    .post-content.event-entry-post-content {
+      font-size: 1rem;
+      line-height: 1.65;
+    }
+  }
+
+  .post-content.event-entry-post-content ul,
+  .post-content.event-entry-post-content ol {
+    margin-bottom: 0.8em;
+    margin-top: 0.8em;
+  }
+
+  .post-content.event-entry-post-content blockquote {
+    margin-bottom: 1.2em;
+    margin-top: 1.2em;
+    padding: 0.85em 1.1em;
+  }
+
+  .post-content.event-entry-post-content hr {
+    margin-bottom: 2.5em;
+    margin-top: 2.5em;
   }
 
   .post-content h2 {
@@ -765,6 +790,16 @@
   .post-content .ProseMirror > figure:not(.float-left):not(.float-right) {
     margin: 2em auto;
     max-width: 100%;
+  }
+
+  .post-content.event-entry-post-content .ProseMirror > figure[data-type="video-embed"] {
+    margin: 0.5rem 0;
+    max-width: 100%;
+  }
+
+  .post-content.event-entry-post-content .ProseMirror > figure[data-type="image"][data-align="center"] {
+    margin-bottom: 0.5rem;
+    margin-top: 0.5rem;
   }
 
   @media (min-width: 768px) {

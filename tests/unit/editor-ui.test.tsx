@@ -767,6 +767,27 @@ describe("PostBody", () => {
     expect(paragraphs[2]).toHaveTextContent("Middle paragraph")
   })
 
+  it("passes custom content classes to the interactive post body wrapper", () => {
+    const { container } = render(
+      <PostBody
+        content={{
+          content: [
+            {
+              content: [{ text: "Event entry body", type: "text" }],
+              type: "paragraph",
+            },
+          ],
+          type: "doc",
+        }}
+        contentClassName="event-entry-post-content"
+      />,
+    )
+
+    expect(container.querySelector(".post-content")).toHaveClass(
+      "event-entry-post-content",
+    )
+  })
+
   it("renders static Tiptap JSON without mounting the editor", () => {
     const content = {
       content: [

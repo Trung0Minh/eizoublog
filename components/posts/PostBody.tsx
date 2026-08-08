@@ -6,13 +6,14 @@ import { trimRichTextBoundaries } from "@/lib/richTextBoundaries"
 
 interface PostBodyProps {
   content: JSONContent
+  contentClassName?: string
 }
 
-export function PostBody({ content }: PostBodyProps) {
+export function PostBody({ content, contentClassName }: PostBodyProps) {
   const trimmedContent = trimRichTextBoundaries(content)
 
   return (
-    <PostImageInteractions>
+    <PostImageInteractions className={contentClassName}>
       <StaticPostContent content={trimmedContent} />
     </PostImageInteractions>
   )

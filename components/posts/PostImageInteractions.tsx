@@ -9,6 +9,7 @@ import {
   ImageLightbox,
   type LightboxImage,
 } from "@/components/posts/ImageLightbox"
+import { cn } from "@/lib/utils"
 
 interface LightboxState {
   images: LightboxImage[]
@@ -27,8 +28,10 @@ function getImageCaption(image: HTMLImageElement) {
 
 export function PostImageInteractions({
   children,
+  className,
 }: {
   children: ReactNode
+  className?: string
 }) {
   const contentRef = useRef<HTMLDivElement>(null)
   const [lightbox, setLightbox] = useState<LightboxState | null>(null)
@@ -89,7 +92,7 @@ export function PostImageInteractions({
   return (
     <>
       <div
-        className="post-content mx-auto w-full"
+        className={cn("post-content mx-auto w-full", className)}
         onClick={(event) => openLightboxFromTarget(event.target)}
         onKeyDown={(event) => {
           if (event.key !== "Enter" && event.key !== " ") {

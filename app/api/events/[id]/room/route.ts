@@ -2,6 +2,7 @@ import { ZodError, z } from "zod"
 
 import {
   AwardEventError,
+  regenerateEventPostIfExists,
   updateAwardEventRoom,
 } from "@/lib/awardEventService"
 import { getActiveSession, unauthorizedResponse } from "@/lib/authz"
@@ -87,6 +88,10 @@ export async function PATCH(
       visibility: data.visibility,
       writerId: activeSession.user.id,
     })
+
+    if (data.status === "SUBMITTED") {
+      await regenerateEventPostIfExists(id)
+    }
 
     return Response.json({ data: room })
   } catch (error) {

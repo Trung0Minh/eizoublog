@@ -1,11 +1,16 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
-import { describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { EventAnthologyTableOfContents } from "@/components/events/EventAnthologyTableOfContents"
 import { EventAnthologyView } from "@/components/events/EventAnthologyView"
 
+const postBodyMock = vi.hoisted(() => vi.fn())
+
 vi.mock("@/components/posts/PostBody", () => ({
-  PostBody: () => <div>Entry body</div>,
+  PostBody: (props: { contentClassName?: string }) => {
+    postBodyMock(props)
+    return <div data-content-class-name={props.contentClassName}>Entry body</div>
+  },
 }))
 
 describe("EventAnthologyTableOfContents", () => {
@@ -87,6 +92,10 @@ describe("EventAnthologyTableOfContents", () => {
 })
 
 describe("EventAnthologyView", () => {
+  beforeEach(() => {
+    postBodyMock.mockClear()
+  })
+
   it("keeps writer introductions out of the open author rail", () => {
     render(
       <EventAnthologyView
@@ -249,7 +258,10 @@ describe("EventAnthologyView", () => {
 
     expect(screen.getByTestId("event-entry-content")).toHaveClass(
       "event-entry-content",
-      "post-content",
+    )
+    expect(screen.getByText("Entry body")).toHaveAttribute(
+      "data-content-class-name",
+      "event-entry-post-content",
     )
   })
 
