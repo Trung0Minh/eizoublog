@@ -1,13 +1,84 @@
 import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/react"
-import { useRef } from "react"
-import { AlignCenter, AlignLeft, AlignRight, Trash2, Type } from "lucide-react"
+import { useRef, type CSSProperties, type SyntheticEvent } from "react"
+import {
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
+  FlipHorizontal2,
+  FlipVertical2,
+  RotateCcw,
+  RotateCw,
+  Trash2,
+  Type,
+} from "lucide-react"
 
 import { GalleryAddMediaButton } from "@/components/editor/GalleryAddMediaButton"
 import { serializeGalleryImages } from "@/components/editor/gallery"
 
+function normalizeRotation(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value)
+    ? ((value % 360) + 360) % 360
+    : 0
+}
+
+function rawRotation(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0
+}
+
+function positiveNumber(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) && value > 0
+    ? value
+    : null
+}
+
+function getRotatedImageFit(attrs: Record<string, unknown>) {
+  const rotation = normalizeRotation(attrs.rotation)
+  const naturalWidth = positiveNumber(attrs.naturalWidth)
+  const naturalHeight = positiveNumber(attrs.naturalHeight)
+  const isQuarterTurn = rotation === 90 || rotation === 270
+
+  if (!isQuarterTurn || !naturalWidth || !naturalHeight) {
+    return {
+      imageScale: 1,
+      wrapperStyle: undefined,
+    }
+  }
+
+  return {
+    imageScale: naturalWidth / naturalHeight,
+    wrapperStyle: {
+      alignItems: "center",
+      aspectRatio: `${naturalHeight} / ${naturalWidth}`,
+      display: "flex",
+      justifyContent: "center",
+      overflow: "hidden",
+      width: "100%",
+    } satisfies CSSProperties,
+  }
+}
+
 export function ImageNodeView(props: NodeViewProps) {
   const { node, updateAttributes, selected } = props
   const captionRef = useRef<HTMLElement>(null)
+  const rotation = rawRotation(node.attrs.rotation)
+  const flipX = node.attrs.flipX === true
+  const flipY = node.attrs.flipY === true
+  const { imageScale, wrapperStyle } = getRotatedImageFit(node.attrs)
+  const imageTransform = `rotate(${rotation}deg) scale(${imageScale * (flipX ? -1 : 1)}, ${imageScale * (flipY ? -1 : 1)})`
+  const handleImageLoad = (event: SyntheticEvent<HTMLImageElement>) => {
+    const { naturalHeight, naturalWidth } = event.currentTarget
+
+    if (naturalWidth <= 0 || naturalHeight <= 0) {
+      return
+    }
+
+    if (
+      node.attrs.naturalWidth !== naturalWidth ||
+      node.attrs.naturalHeight !== naturalHeight
+    ) {
+      updateAttributes({ naturalHeight, naturalWidth })
+    }
+  }
 
   return (
     <NodeViewWrapper
@@ -56,6 +127,44 @@ export function ImageNodeView(props: NodeViewProps) {
             type="button"
           >
             <AlignRight className="h-4 w-4" />
+          </button>
+
+          <div className="mx-1 h-4 w-px bg-border-default" />
+          <button
+            className="rounded p-1.5 text-sm text-text-secondary hover:bg-subtle-bg hover:text-text-primary"
+            onClick={() => updateAttributes({ rotation: rotation - 90 })}
+            title="Rotate left"
+            type="button"
+          >
+            <RotateCcw className="h-4 w-4" />
+          </button>
+          <button
+            className="rounded p-1.5 text-sm text-text-secondary hover:bg-subtle-bg hover:text-text-primary"
+            onClick={() => updateAttributes({ rotation: rotation + 90 })}
+            title="Rotate right"
+            type="button"
+          >
+            <RotateCw className="h-4 w-4" />
+          </button>
+          <button
+            className={`rounded p-1.5 text-sm hover:bg-subtle-bg ${
+              flipX ? "bg-subtle-bg text-text-primary" : "text-text-secondary"
+            }`}
+            onClick={() => updateAttributes({ flipX: !flipX })}
+            title="Flip horizontal"
+            type="button"
+          >
+            <FlipHorizontal2 className="h-4 w-4" />
+          </button>
+          <button
+            className={`rounded p-1.5 text-sm hover:bg-subtle-bg ${
+              flipY ? "bg-subtle-bg text-text-primary" : "text-text-secondary"
+            }`}
+            onClick={() => updateAttributes({ flipY: !flipY })}
+            title="Flip vertical"
+            type="button"
+          >
+            <FlipVertical2 className="h-4 w-4" />
           </button>
 
           <div className="mx-1 h-4 w-px bg-border-default" />
@@ -123,13 +232,20 @@ export function ImageNodeView(props: NodeViewProps) {
         </div>
       )}
 
-      <img
-        alt={node.attrs.alt || "Image"}
-        className={`!m-0 h-auto w-full rounded-md object-contain transition-all ${
-          selected ? "ring-2 ring-accent" : ""
-        }`}
-        src={node.attrs.src}
-      />
+      <div className="w-full" style={wrapperStyle}>
+        <img
+          alt={node.attrs.alt || "Image"}
+          className={`!m-0 h-auto w-full rounded-md object-contain transition-[box-shadow,transform] duration-200 ease-out ${
+            selected ? "ring-2 ring-accent" : ""
+          }`}
+          onLoad={handleImageLoad}
+          src={node.attrs.src}
+          style={{
+            transform: imageTransform,
+            transformOrigin: "center",
+          }}
+        />
+      </div>
       <figcaption
         ref={captionRef}
         className={`editor-media-caption mt-1 w-full text-center text-sm ${

@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import type { JSONContent } from "@tiptap/react"
 
@@ -8,6 +9,20 @@ import { getCurrentSession } from "@/lib/session"
 
 interface EditPostPageProps {
   params: Promise<{ id: string }>
+}
+
+export async function generateMetadata({
+  params,
+}: EditPostPageProps): Promise<Metadata> {
+  const { id } = await params
+  const post = await prisma.post.findUnique({
+    select: { title: true },
+    where: { id },
+  })
+
+  return {
+    title: post?.title ?? "Chỉnh sửa bài viết",
+  }
 }
 
 export default async function EditPostPage({

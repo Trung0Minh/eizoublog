@@ -3,10 +3,14 @@ import { redirect } from "next/navigation"
 
 import { DashboardDurabilitySlot } from "@/components/layout/DashboardDurabilitySlot"
 import { getCurrentSession } from "@/lib/session"
+import { getAppName } from "@/lib/seo"
 
 export const metadata: Metadata = {
   robots: { follow: false, index: false },
-  title: "Bảng điều khiển",
+  title: {
+    default: "Bảng điều khiển",
+    template: `%s | ${getAppName()}`,
+  },
 }
 
 export default async function DashboardLayout({

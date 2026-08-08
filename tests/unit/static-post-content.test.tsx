@@ -236,6 +236,39 @@ describe("StaticPostContent", () => {
     expect(screen.queryByText("Hidden memory caption")).not.toBeInTheDocument()
   })
 
+  it("applies saved rotation and flip transforms to single images", () => {
+    const content: JSONContent = {
+      content: [
+        {
+          attrs: {
+            alt: "Transformed frame",
+            flipX: true,
+            flipY: true,
+            naturalHeight: 900,
+            naturalWidth: 600,
+            rotation: 270,
+            src: "https://cdn.example.com/transformed.webp",
+          },
+          type: "customImage",
+        },
+      ],
+      type: "doc",
+    }
+
+    render(<StaticPostContent content={content} />)
+
+    const image = screen.getByRole("img", { name: "Transformed frame" })
+
+    expect(image.parentElement).toHaveStyle({
+      aspectRatio: "900 / 600",
+      overflow: "hidden",
+    })
+    expect(image).toHaveStyle({
+      transform: "rotate(270deg) scale(-0.6666666666666666, -0.6666666666666666)",
+      transformOrigin: "center",
+    })
+  })
+
   it("hides gallery captions when caption visibility is disabled", () => {
     const content: JSONContent = {
       content: [

@@ -5,6 +5,7 @@ import TextStyle from "@tiptap/extension-text-style"
 import { describe, expect, it } from "vitest"
 
 import {
+  CustomImageExtension,
   GalleryExtension,
   HeadingWithIdExtension,
   ListItemExtension,
@@ -274,6 +275,43 @@ describe("GalleryExtension", () => {
     expect(html.match(/<figcaption/g)).toHaveLength(2)
     expect(html).toContain('aria-hidden="true"')
     expect(html).toContain("Visible clip caption")
+    editor.destroy()
+  })
+})
+
+describe("CustomImageExtension", () => {
+  it("serializes image rotation and flips", () => {
+    const editor = new Editor({
+      content: {
+        content: [
+          {
+            attrs: {
+              alt: "Rotated frame",
+              flipX: true,
+              flipY: true,
+              naturalHeight: 800,
+              naturalWidth: 1200,
+              rotation: 90,
+              src: "https://cdn.example.com/rotated.webp",
+            },
+            type: "customImage",
+          },
+        ],
+        type: "doc",
+      },
+      extensions: [StarterKit, CustomImageExtension],
+    })
+
+    const html = editor.getHTML()
+
+    expect(html).toContain('data-rotation="90"')
+    expect(html).toContain('data-flip-x="true"')
+    expect(html).toContain('data-flip-y="true"')
+    expect(html).toContain('data-natural-width="1200"')
+    expect(html).toContain('data-natural-height="800"')
+    expect(html).toContain("aspect-ratio: 800 / 1200")
+    expect(html).toContain("overflow: hidden")
+    expect(html).toContain("rotate(90deg) scale(-1.5, -1.5)")
     editor.destroy()
   })
 })

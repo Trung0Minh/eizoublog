@@ -156,6 +156,8 @@ const emptyDoc: JSONContent = {
   type: "doc",
 }
 
+const editorTabAppName = process.env.NEXT_PUBLIC_APP_NAME ?? "Eizou Blog"
+
 const desktopSettingsQuery = "(min-width: 1024px)"
 
 function subscribeDesktopSettings(callback: () => void) {
@@ -274,6 +276,11 @@ export function PostEditor({
 
     textarea.style.height = "auto"
     textarea.style.height = `${textarea.scrollHeight + 8}px`
+  }, [title])
+
+  useEffect(() => {
+    const tabTitle = title.trim() || "Bài viết mới"
+    document.title = `${tabTitle} | ${editorTabAppName}`
   }, [title])
 
   useEffect(() => {

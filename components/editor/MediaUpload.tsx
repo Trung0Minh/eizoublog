@@ -215,7 +215,7 @@ export function MediaUpload({
               className="absolute bottom-0 left-0 bg-accent/35 transition-all duration-200"
               style={{ height: `${uploadProgress}%`, width: '100%' }}
             />
-            <span className="relative z-10 rounded-full bg-background/95 px-1.5 py-0.5 text-[11px] font-extrabold leading-none text-text-primary shadow-sm ring-1 ring-border-default/70">
+            <span className="relative z-10 rounded-full bg-accent px-1.5 py-0.5 text-[11px] font-extrabold leading-none text-accent-foreground shadow-sm ring-1 ring-accent/70">
               {uploadProgress}%
             </span>
           </>

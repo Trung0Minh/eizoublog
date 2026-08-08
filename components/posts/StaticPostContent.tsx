@@ -35,6 +35,65 @@ function numberAttr(
   return typeof value === "number" ? value : undefined
 }
 
+function booleanAttr(attrs: Record<string, unknown>, name: string) {
+  const value = attrs[name]
+  return value === true || value === "true"
+}
+
+function normalizeImageRotation(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value)
+    ? ((value % 360) + 360) % 360
+    : 0
+}
+
+function positiveNumberAttr(
+  attrs: Record<string, unknown>,
+  name: string,
+): number | undefined {
+  const value = attrs[name]
+  return typeof value === "number" && Number.isFinite(value) && value > 0
+    ? value
+    : undefined
+}
+
+function getRotatedImageFit(attrs: Record<string, unknown>) {
+  const rotation = normalizeImageRotation(attrs.rotation)
+  const naturalWidth = positiveNumberAttr(attrs, "naturalWidth")
+  const naturalHeight = positiveNumberAttr(attrs, "naturalHeight")
+  const isQuarterTurn = rotation === 90 || rotation === 270
+
+  if (!isQuarterTurn || !naturalWidth || !naturalHeight) {
+    return {
+      imageScale: 1,
+      wrapperStyle: undefined,
+    }
+  }
+
+  return {
+    imageScale: naturalWidth / naturalHeight,
+    wrapperStyle: {
+      alignItems: "center",
+      aspectRatio: `${naturalHeight} / ${naturalWidth}`,
+      display: "flex",
+      justifyContent: "center",
+      overflow: "hidden",
+      width: "100%",
+    } satisfies CSSProperties,
+  }
+}
+
+function imageTransformStyle(attrs: Record<string, unknown>): CSSProperties {
+  const rotation = normalizeImageRotation(attrs.rotation)
+  const { imageScale } = getRotatedImageFit(attrs)
+  const scaleX = booleanAttr(attrs, "flipX") ? -1 : 1
+  const scaleY = booleanAttr(attrs, "flipY") ? -1 : 1
+
+  return {
+    transform: `rotate(${rotation}deg) scale(${imageScale * scaleX}, ${imageScale * scaleY})`,
+    transformOrigin: "center",
+  }
+}
+
 function textAlignStyle(value: string | undefined): CSSProperties | undefined {
   if (
     value === "left" ||
@@ -144,6 +203,7 @@ function renderImage(node: JSONContent, key: string) {
   const caption = getNodeText(node)
   const align = stringAttr(attrs, "align") || "center"
   const width = stringAttr(attrs, "width") || "100%"
+  const { wrapperStyle } = getRotatedImageFit(attrs)
 
   const alignClass = align === "left"
     ? "float-left mr-6 mb-4 mt-2 clear-left"
@@ -162,13 +222,16 @@ function renderImage(node: JSONContent, key: string) {
         maxWidth: "100%",
       }}
     >
-      <img
-        alt={stringAttr(attrs, "alt") || caption || ""}
-        className="!m-0 h-auto w-full rounded-md object-contain"
-        decoding="async"
-        loading="lazy"
-        src={src}
-      />
+      <div className="w-full" style={wrapperStyle}>
+        <img
+          alt={stringAttr(attrs, "alt") || caption || ""}
+          className="!m-0 h-auto w-full rounded-md object-contain"
+          decoding="async"
+          loading="lazy"
+          src={src}
+          style={imageTransformStyle(attrs)}
+        />
+      </div>
       {caption && captionIsVisible(attrs) ? (
         <figcaption className="media-caption">{caption}</figcaption>
       ) : null}

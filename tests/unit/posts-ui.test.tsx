@@ -612,6 +612,7 @@ describe("PostEditor", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.useRealTimers()
+    document.title = "Bảng điều khiển | Eizou Blog"
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
@@ -623,6 +624,27 @@ describe("PostEditor", () => {
         ),
       ),
     )
+  })
+
+  it("uses the current post title for the browser tab while editing", async () => {
+    const user = userEvent.setup()
+    render(
+      <PostEditor
+        categories={[]}
+        currentUserId="writer-1"
+        writers={[]}
+      />,
+    )
+
+    await waitFor(() => {
+      expect(document.title).toBe("Bài viết mới | Eizou Blog")
+    })
+
+    await user.type(screen.getByLabelText("Tiêu đề"), "Water Magician")
+
+    await waitFor(() => {
+      expect(document.title).toBe("Water Magician | Eizou Blog")
+    })
   })
 
   it("posts editor content and redirects to the published slug", async () => {
