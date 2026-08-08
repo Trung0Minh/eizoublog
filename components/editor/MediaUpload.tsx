@@ -212,10 +212,12 @@ export function MediaUpload({
         {uploadProgress !== null ? (
           <>
             <div 
-              className="absolute bottom-0 left-0 bg-accent/20 transition-all duration-200" 
+              className="absolute bottom-0 left-0 bg-accent/35 transition-all duration-200"
               style={{ height: `${uploadProgress}%`, width: '100%' }}
             />
-            <span className="relative z-10 text-[10px] font-bold text-accent">{uploadProgress}%</span>
+            <span className="relative z-10 rounded-full bg-background/95 px-1.5 py-0.5 text-[11px] font-extrabold leading-none text-text-primary shadow-sm ring-1 ring-border-default/70">
+              {uploadProgress}%
+            </span>
           </>
         ) : (
           <ImageIcon aria-hidden="true" className="h-[15px] w-[15px]" />
