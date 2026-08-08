@@ -186,6 +186,27 @@ function renderImageGallery(node: JSONContent, key: string) {
     return null
   }
 
+  if (images.length === 1) {
+    const [image] = images
+
+    return renderImage(
+      {
+        attrs: {
+          align: "center",
+          alt: getGalleryImageAlt(image),
+          showCaption: image.showCaption,
+          src: image.url,
+          width: "100%",
+        },
+        content: image.caption
+          ? [{ text: image.caption, type: "text" }]
+          : undefined,
+        type: "customImage",
+      },
+      key,
+    )
+  }
+
   const hasVisibleCaption = images.some(
     (image) => image.caption && image.showCaption !== false,
   )

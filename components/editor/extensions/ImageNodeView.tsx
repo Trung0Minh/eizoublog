@@ -1,6 +1,6 @@
 import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/react"
 import { useRef } from "react"
-import { AlignCenter, AlignLeft, AlignRight, Maximize, Trash2, Type } from "lucide-react"
+import { AlignCenter, AlignLeft, AlignRight, Trash2, Type } from "lucide-react"
 
 import { GalleryAddMediaButton } from "@/components/editor/GalleryAddMediaButton"
 import { serializeGalleryImages } from "@/components/editor/gallery"
@@ -56,17 +56,6 @@ export function ImageNodeView(props: NodeViewProps) {
             type="button"
           >
             <AlignRight className="h-4 w-4" />
-          </button>
-
-          <button
-            className={`rounded p-1.5 text-sm hover:bg-subtle-bg ${
-              node.attrs.width === "100vw" ? "bg-subtle-bg text-text-primary" : "text-text-secondary"
-            }`}
-            onClick={() => updateAttributes({ align: "center", width: "100vw" })}
-            title="Full Width"
-            type="button"
-          >
-            <Maximize className="h-4 w-4" />
           </button>
 
           <div className="mx-1 h-4 w-px bg-border-default" />

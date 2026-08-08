@@ -181,6 +181,37 @@ describe("StaticPostContent", () => {
     expect(screen.getAllByRole("img")).toHaveLength(2)
   })
 
+  it("renders one-image galleries as normal single images", () => {
+    const content: JSONContent = {
+      content: [
+        {
+          attrs: {
+            images: JSON.stringify([
+              {
+                alt: "Only frame",
+                caption: "Single image caption",
+                showCaption: true,
+                url: "https://cdn.example.com/only-frame.webp",
+              },
+            ]),
+          },
+          type: "imageGallery",
+        },
+      ],
+      type: "doc",
+    }
+
+    const { container } = render(<StaticPostContent content={content} />)
+
+    expect(container.querySelector(".image-gallery")).toBeNull()
+    expect(container.querySelector('figure[data-type="image"]')).not.toBeNull()
+    expect(screen.getByRole("img", { name: "Only frame" })).toHaveAttribute(
+      "src",
+      "https://cdn.example.com/only-frame.webp",
+    )
+    expect(screen.getByText("Single image caption")).toBeInTheDocument()
+  })
+
   it("hides single image captions when caption visibility is disabled", () => {
     const content: JSONContent = {
       content: [

@@ -150,6 +150,7 @@ describe("GalleryExtension", () => {
             attrs: {
               images: JSON.stringify([
                 { alt: "Frame", caption: "", url: "https://cdn.example.com/frame.webp" },
+                { alt: "Frame 2", caption: "", url: "https://cdn.example.com/frame-2.webp" },
               ]),
               layout: "horizontal",
             },
@@ -163,6 +164,40 @@ describe("GalleryExtension", () => {
 
     expect(editor.getHTML()).toContain('data-layout="horizontal"')
     expect(editor.getHTML()).toContain("image-gallery__horizontal")
+    editor.destroy()
+  })
+
+  it("serializes one-image galleries as normal image figures", () => {
+    const editor = new Editor({
+      content: {
+        content: [
+          {
+            attrs: {
+              images: JSON.stringify([
+                {
+                  alt: "Only frame",
+                  caption: "Single frame caption",
+                  showCaption: true,
+                  url: "https://cdn.example.com/only-frame.webp",
+                },
+              ]),
+            },
+            type: "imageGallery",
+          },
+        ],
+        type: "doc",
+      },
+      extensions: [StarterKit, GalleryExtension],
+    })
+
+    const html = editor.getHTML()
+
+    expect(html).toContain('data-type="image"')
+    expect(html).not.toContain('data-type="image-gallery"')
+    expect(html).not.toContain("image-gallery__grid")
+    expect(html).toContain('src="https://cdn.example.com/only-frame.webp"')
+    expect(html).toContain('alt="Only frame"')
+    expect(html).toContain("Single frame caption")
     editor.destroy()
   })
 

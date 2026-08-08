@@ -2,7 +2,7 @@
 
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react"
 import { GalleryHorizontal, Grid2X2, GripVertical, Trash2, Type } from "lucide-react"
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from "react"
 
 import {
   getGalleryImageAlt,
@@ -15,8 +15,8 @@ import {
 import { GalleryAddMediaButton } from "@/components/editor/GalleryAddMediaButton"
 import { isNativeVideo, toVideoEmbedUrl } from "@/components/editor/video"
 
-export function ImageGalleryBlock({ node, updateAttributes, editor, selected, deleteNode }: NodeViewProps) {
-  const images = parseGalleryImages(node.attrs.images)
+export function ImageGalleryBlock({ node, updateAttributes, editor, selected, deleteNode, getPos }: NodeViewProps) {
+  const images = useMemo(() => parseGalleryImages(node.attrs.images), [node.attrs.images])
   const columns = node.attrs.columns || 2
   const layout = normalizeGalleryLayout(node.attrs.layout)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
@@ -37,14 +37,61 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
     updateAttributes({ images: serializeGalleryImages(newImages) })
   }
 
+  const replaceGalleryWithImage = useCallback((image: GalleryImage, shouldFocus = false) => {
+    const position = typeof getPos === "function" ? getPos() : undefined
+    const imageType = editor.schema.nodes.customImage
+
+    if (typeof position !== "number" || !imageType) {
+      return false
+    }
+
+    const captionContent = image.caption
+      ? editor.schema.text(image.caption)
+      : undefined
+    const imageNode = imageType.create(
+      {
+        align: "center",
+        alt: image.alt,
+        showCaption: image.showCaption,
+        src: image.url,
+        width: "100%",
+      },
+      captionContent,
+    )
+
+    editor.view.dispatch(
+      editor.state.tr.replaceWith(
+        position,
+        position + node.nodeSize,
+        imageNode,
+      ),
+    )
+    if (shouldFocus) {
+      editor.commands.focus()
+    }
+
+    return true
+  }, [editor, getPos, node.nodeSize])
+
   function removeImage(index: number) {
     const newImages = images.filter((_, i) => i !== index)
     if (newImages.length === 0) {
       deleteNode()
+    } else if (newImages.length === 1) {
+      const [image] = newImages
+      if (!replaceGalleryWithImage(image, true)) {
+        updateAttributes({ images: serializeGalleryImages(newImages) })
+      }
     } else {
       updateAttributes({ images: serializeGalleryImages(newImages) })
     }
   }
+
+  useEffect(() => {
+    if (images.length === 1) {
+      replaceGalleryWithImage(images[0])
+    }
+  }, [images, replaceGalleryWithImage])
 
   function reorderImage(fromIndex: number, toIndex: number) {
     const reordered = reorderGalleryImages(images, fromIndex, toIndex)

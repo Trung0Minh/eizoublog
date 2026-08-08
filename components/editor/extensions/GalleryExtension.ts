@@ -89,6 +89,38 @@ export const GalleryExtension = Node.create({
     delete renderedAttributes.columns
     delete renderedAttributes.layout
 
+    if (images.length === 1) {
+      const [image] = images
+      const showCaption = image.caption && image.showCaption !== false
+
+      return [
+        "figure",
+        mergeAttributes(renderedAttributes, {
+          "data-align": "center",
+          "data-type": "image",
+          class: "relative flex flex-col items-center justify-center clear-both",
+          style: "width: 100%; max-width: 100%",
+        }),
+        [
+          "img",
+          {
+            alt: getGalleryImageAlt(image),
+            class: "!m-0 h-auto w-full rounded-md object-contain",
+            src: image.url,
+          },
+        ],
+        ...(showCaption
+          ? [
+              [
+                "figcaption",
+                { class: "media-caption" },
+                image.caption,
+              ],
+            ]
+          : []),
+      ]
+    }
+
     return [
       "div",
       mergeAttributes(renderedAttributes, {
