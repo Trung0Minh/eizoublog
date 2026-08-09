@@ -57,6 +57,7 @@ interface TiptapEditorProps {
   placeholder?: string
   ariaLabel?: string
   mode?: "compact" | "default" | "profile"
+  presentation?: "article" | "embedded"
   showFooterStats?: boolean
   showToolbar?: boolean
   spellcheckEnabled?: boolean
@@ -73,6 +74,7 @@ export function TiptapEditor({
   placeholder = "Bắt đầu viết bài...",
   ariaLabel,
   mode = "default",
+  presentation = "embedded",
   showFooterStats = true,
   showToolbar = true,
   spellcheckEnabled: controlledSpellcheckEnabled,
@@ -97,7 +99,7 @@ export function TiptapEditor({
           ? editorClassName ??
             (mode === "compact"
               ? "prose-editor min-h-[120px] focus:outline-none"
-              : "prose-editor min-h-[420px] focus:outline-none")
+              : `${presentation === "article" ? "post-rich-text " : ""}prose-editor min-h-[420px] focus:outline-none`)
           : "prose prose-lg dark:prose-invert max-w-none focus:outline-none",
         ...(ariaLabel && { "aria-label": ariaLabel }),
         spellcheck: "false",
@@ -305,7 +307,7 @@ export function TiptapEditor({
           onFocusCapture={() => onFocus?.(editor!)}
         />
       ) : (
-        <div className="prose-editor min-h-[420px]" />
+        <div className={`${presentation === "article" ? "post-rich-text " : ""}prose-editor min-h-[420px]`} />
       )}
 
       {isReady && editable && showFooterStats && mode !== "compact" && (

@@ -29,13 +29,14 @@ describe("StaticPostContent", () => {
 
     const { container } = render(<StaticPostContent content={content} />)
 
-    expect(
-      Array.from(container.querySelectorAll("h3"), (heading) => heading.id),
-    ).toEqual([
+    const headings = Array.from(container.querySelectorAll("h3"))
+
+    expect(headings.map((heading) => heading.id)).toEqual([
       "de-cu-danh-du",
       "de-cu-danh-du-2",
       "de-cu-danh-du-3",
     ])
+    headings.forEach((heading) => expect(heading).toHaveClass("scroll-mt-24"))
   })
 
   it("makes inserted links visually identifiable", () => {
@@ -335,7 +336,7 @@ describe("StaticPostContent", () => {
     expect(image.parentElement).toHaveStyle({
       aspectRatio: "900 / 600",
     })
-    expect(image.parentElement).not.toHaveStyle({ overflow: "hidden" })
+    expect(image.parentElement).toHaveStyle({ overflow: "hidden" })
     expect(image).toHaveStyle({
       transform: "rotate(270deg) scale(-0.6666666666666666, -0.6666666666666666)",
       transformOrigin: "center",
@@ -450,7 +451,7 @@ describe("StaticPostContent", () => {
     expect(screen.queryByText("Hidden video caption")).not.toBeInTheDocument()
   })
 
-  it("lets native videos use their intrinsic aspect ratio", () => {
+  it("reserves a stable fallback aspect ratio for legacy native videos", () => {
     const content: JSONContent = {
       content: [
         {
@@ -464,9 +465,32 @@ describe("StaticPostContent", () => {
     const { container } = render(<StaticPostContent content={content} />)
     const video = screen.getByTitle("Embedded video")
 
-    expect(video).toHaveClass("h-auto", "w-full")
-    expect(video).not.toHaveClass("object-contain", "absolute")
+    expect(video).toHaveClass("absolute", "object-contain")
+    expect(video.parentElement).toHaveAttribute("data-native-video-frame")
+    expect(video.parentElement).toHaveStyle({ aspectRatio: "16 / 9" })
     expect(container.querySelector(".aspect-video")).toBeNull()
+  })
+
+  it("uses saved native-video dimensions before metadata loads", () => {
+    const content: JSONContent = {
+      content: [
+        {
+          attrs: {
+            naturalHeight: 1080,
+            naturalWidth: 1920,
+            url: "https://cdn.example.com/landscape.mp4",
+          },
+          type: "videoEmbed",
+        },
+      ],
+      type: "doc",
+    }
+
+    render(<StaticPostContent content={content} />)
+
+    expect(screen.getByTitle("Embedded video").parentElement).toHaveStyle({
+      aspectRatio: "1920 / 1080",
+    })
   })
 
   it("keeps legacy captions visible when caption visibility is not stored", () => {

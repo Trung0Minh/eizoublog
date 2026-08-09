@@ -95,10 +95,10 @@ describe("PostPage analytics", () => {
     expect(screen.getByTestId("comment-section")).toHaveTextContent(
       "frieren-memory",
     )
-    expect(screen.getByText("Post body").parentElement).toHaveClass(
+    expect(screen.getByText("Post body").closest(".relative.z-30")).toHaveClass(
       "bg-background/90",
       "border-border-default/60",
-      "px-4",
+      "px-3",
     )
   })
 

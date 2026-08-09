@@ -17,20 +17,11 @@ export function normalizeGalleryLayout(value: unknown): GalleryLayout {
 }
 
 export function getGalleryImagePresentation(image: GalleryImage) {
-  const rotation = rotationValue(image.rotation)
-  const normalizedAngle = normalizedRotation(rotation)
-  const naturalWidth = image.naturalWidth ?? null
-  const naturalHeight = image.naturalHeight ?? null
-  const isQuarterTurn = normalizedAngle === 90 || normalizedAngle === 270
-  const imageScale = isQuarterTurn && naturalWidth && naturalHeight
-    ? naturalWidth / naturalHeight
-    : 1
+  const { transform, wrapperAspectRatio } = getMediaPresentation(image)
 
   return {
-    transform: `rotate(${rotation}deg) scale(${imageScale * (image.flipX ? -1 : 1)}, ${imageScale * (image.flipY ? -1 : 1)})`,
-    wrapperAspectRatio: isQuarterTurn && naturalWidth && naturalHeight
-      ? `${naturalHeight} / ${naturalWidth}`
-      : null,
+    transform,
+    wrapperAspectRatio,
   }
 }
 
@@ -179,8 +170,4 @@ function positiveNumber(value: unknown) {
   return number !== null && number > 0 ? number : null
 }
 
-function normalizedRotation(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value)
-    ? ((value % 360) + 360) % 360
-    : 0
-}
+import { getMediaPresentation } from "@/lib/mediaPresentation"

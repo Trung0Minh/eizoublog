@@ -434,11 +434,21 @@ describe("EditorToolbar", () => {
             {
               alt: "",
               caption: "",
+              flipX: false,
+              flipY: false,
+              naturalHeight: null,
+              naturalWidth: null,
+              rotation: 0,
               url: "https://cdn.example.com/content-images/scene-a.webp",
             },
             {
               alt: "",
               caption: "",
+              flipX: false,
+              flipY: false,
+              naturalHeight: null,
+              naturalWidth: null,
+              rotation: 0,
               url: "https://cdn.example.com/content-images/scene-b.gif",
             },
           ]),
@@ -734,7 +744,7 @@ describe("SpoilerView", () => {
 })
 
 describe("PostBody", () => {
-  it("strips only empty paragraphs from the top and bottom of rendered posts", () => {
+  it("preserves every saved blank paragraph, including document boundaries", () => {
     const { container } = render(
       <PostBody
         content={{
@@ -761,10 +771,14 @@ describe("PostBody", () => {
     )
 
     const paragraphs = Array.from(container.querySelectorAll("p"))
-    expect(paragraphs).toHaveLength(3)
-    expect(paragraphs[0]).toHaveTextContent("First paragraph")
-    expect(paragraphs[1]).toHaveTextContent("")
-    expect(paragraphs[2]).toHaveTextContent("Middle paragraph")
+    expect(paragraphs).toHaveLength(6)
+    expect(paragraphs[0]).toHaveAttribute("data-empty", "true")
+    expect(paragraphs[1]).not.toHaveAttribute("data-empty")
+    expect(paragraphs[1]?.textContent).toBe("   ")
+    expect(paragraphs[2]).toHaveTextContent("First paragraph")
+    expect(paragraphs[3]).toHaveAttribute("data-empty", "true")
+    expect(paragraphs[4]).toHaveTextContent("Middle paragraph")
+    expect(paragraphs[5]).toHaveAttribute("data-empty", "true")
   })
 
   it("passes custom content classes to the interactive post body wrapper", () => {

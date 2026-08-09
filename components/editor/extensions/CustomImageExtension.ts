@@ -1,43 +1,12 @@
 import { mergeAttributes, Node } from "@tiptap/core"
 import { ReactNodeViewRenderer } from "@tiptap/react"
 import { ImageNodeView } from "./ImageNodeView"
-
-function normalizeImageRotation(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value)
-    ? ((value % 360) + 360) % 360
-    : 0
-}
-
-function numberAttribute(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) && value > 0
-    ? value
-    : null
-}
-
-function getRotatedImageFit(attrs: Record<string, unknown>) {
-  const rotation = normalizeImageRotation(attrs.rotation)
-  const naturalWidth = numberAttribute(attrs.naturalWidth)
-  const naturalHeight = numberAttribute(attrs.naturalHeight)
-  const isQuarterTurn = rotation === 90 || rotation === 270
-
-  if (!isQuarterTurn || !naturalWidth || !naturalHeight) {
-    return { scale: 1, wrapperStyle: "" }
-  }
-
-  return {
-    scale: naturalWidth / naturalHeight,
-    wrapperStyle: `align-items: center; aspect-ratio: ${naturalHeight} / ${naturalWidth}; display: flex; justify-content: center; overflow: hidden; width: 100%;`,
-  }
-}
-
-function imageTransformStyle(attrs: Record<string, unknown>) {
-  const rotation = normalizeImageRotation(attrs.rotation)
-  const { scale } = getRotatedImageFit(attrs)
-  const scaleX = attrs.flipX === true || attrs.flipX === "true" ? -1 : 1
-  const scaleY = attrs.flipY === true || attrs.flipY === "true" ? -1 : 1
-
-  return `transform: rotate(${rotation}deg) scale(${scale * scaleX}, ${scale * scaleY}); transform-origin: center;`
-}
+import {
+  mediaImageStyleAttribute,
+  mediaWrapperStyleAttribute,
+  normalizeMediaRotation,
+  positiveMediaDimension,
+} from "@/lib/mediaPresentation"
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -64,11 +33,11 @@ export const CustomImageExtension = Node.create({
       rotation: {
         default: 0,
         parseHTML: (element) =>
-          normalizeImageRotation(
+          normalizeMediaRotation(
             Number(element.getAttribute("data-rotation") ?? 0),
           ),
         renderHTML: (attributes) => ({
-          "data-rotation": normalizeImageRotation(attributes.rotation),
+          "data-rotation": normalizeMediaRotation(attributes.rotation),
         }),
       },
       flipX: {
@@ -92,7 +61,7 @@ export const CustomImageExtension = Node.create({
           return Number.isFinite(value) && value > 0 ? value : null
         },
         renderHTML: (attributes) => {
-          const value = numberAttribute(attributes.naturalWidth)
+          const value = positiveMediaDimension(attributes.naturalWidth)
           return value ? { "data-natural-width": value } : {}
         },
       },
@@ -103,7 +72,7 @@ export const CustomImageExtension = Node.create({
           return Number.isFinite(value) && value > 0 ? value : null
         },
         renderHTML: (attributes) => {
-          const value = numberAttribute(attributes.naturalHeight)
+          const value = positiveMediaDimension(attributes.naturalHeight)
           return value ? { "data-natural-height": value } : {}
         },
       },
@@ -120,7 +89,7 @@ export const CustomImageExtension = Node.create({
 
   renderHTML({ HTMLAttributes, node }) {
     const showCaption = node.attrs.showCaption === true || node.attrs.showCaption === "true"
-    const { wrapperStyle } = getRotatedImageFit(node.attrs)
+    const wrapperStyle = mediaWrapperStyleAttribute(node.attrs)
     const figureAttributes = { ...HTMLAttributes }
     delete figureAttributes.src
     delete figureAttributes.alt
@@ -131,7 +100,7 @@ export const CustomImageExtension = Node.create({
       [
         "div",
         {
-          class: "w-full overflow-visible",
+          class: "w-full",
           style: wrapperStyle,
         },
         [
@@ -140,7 +109,7 @@ export const CustomImageExtension = Node.create({
             alt: typeof node.attrs.alt === "string" ? node.attrs.alt : "",
             class: "!m-0 h-auto w-full rounded-md object-contain",
             src: node.attrs.src,
-            style: imageTransformStyle(node.attrs),
+            style: mediaImageStyleAttribute(node.attrs),
           },
         ],
       ],

@@ -30,7 +30,7 @@ export default async function RoomDetailPage({
 
   // Fetch the room with writer details, selected post and event details
   const room = await prisma.awardEventRoom.findUnique({
-    include: {
+    select: {
       event: {
         select: {
           id: true,
@@ -38,6 +38,8 @@ export default async function RoomDetailPage({
           title: true,
         },
       },
+      eventId: true,
+      id: true,
       selectedPost: {
         select: {
           content: true,
@@ -47,6 +49,9 @@ export default async function RoomDetailPage({
           title: true,
         },
       },
+      submittedContent: true,
+      submittedPostTitle: true,
+      visibility: true,
       writer: {
         select: {
           avatarUrl: true,
@@ -56,6 +61,7 @@ export default async function RoomDetailPage({
           username: true,
         },
       },
+      writerId: true,
     },
     where: { id: roomId },
   })
@@ -112,9 +118,11 @@ export default async function RoomDetailPage({
         : {}),
     },
   })
-  const selectedPostContent = room.selectedPost.content as unknown as JSONContent
+  const selectedPostContent = (
+    room.submittedContent ?? room.selectedPost.content
+  ) as unknown as JSONContent
   const hasTableOfContents = extractHeadings(selectedPostContent).length > 0
-  const selectedPostTitle = room.selectedPost.title
+  const selectedPostTitle = room.submittedPostTitle ?? room.selectedPost.title
   const selectedPostCoverUrl = room.selectedPost.coverUrl
   const canLeaveFeedback = room.event.status !== "CLOSED"
   const feedbackDisabledReason =
@@ -123,9 +131,9 @@ export default async function RoomDetailPage({
       : undefined
 
   return (
-    <main className="mx-auto w-full max-w-[1360px] px-4 py-8 sm:px-6 sm:py-10 lg:px-10 2xl:pl-20 2xl:pr-0">
+    <main className="mx-auto w-full max-w-[1440px] py-8 sm:py-10">
       {/* Back navigation */}
-      <div className="mb-6">
+      <div className="mx-auto mb-6 w-full max-w-[1100px] px-4 md:px-6">
         <Link
           href={`/dashboard/events/${eventId}`}
           className="inline-flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors font-medium"
@@ -137,7 +145,7 @@ export default async function RoomDetailPage({
 
       <div className="space-y-8">
         {/* Header Section */}
-        <div className="border-b border-border-default pb-6 space-y-4">
+        <div className="mx-auto w-full max-w-[1100px] space-y-4 border-b border-border-default px-4 pb-6 md:px-6">
           <div className="space-y-1">
             <span className="text-xs font-semibold uppercase tracking-[0.12em] text-accent">
               {room.event.title}
@@ -185,7 +193,7 @@ export default async function RoomDetailPage({
 
         {/* Post Image */}
         {selectedPostCoverUrl && (
-          <div className="relative aspect-video w-full overflow-hidden rounded-[8px] border border-border-default bg-subtle-bg">
+          <div className="relative mx-auto aspect-video w-full max-w-[1100px] overflow-hidden rounded-[8px] border border-border-default bg-subtle-bg">
             <div className="absolute inset-0 overflow-hidden">
               <img
                 alt={selectedPostTitle}
@@ -201,7 +209,7 @@ export default async function RoomDetailPage({
         )}
 
         {hasTableOfContents && (
-          <div className="2xl:hidden">
+          <div className="mx-auto w-full max-w-[1100px] px-4 md:px-6 2xl:hidden">
             <TableOfContents collapsible content={selectedPostContent} />
           </div>
         )}
@@ -209,17 +217,17 @@ export default async function RoomDetailPage({
         {/* Main Content Area with sidebar Table of Contents */}
         <div
           className={cn(
-            "grid w-full gap-8 lg:justify-start",
+            "mx-auto grid w-full max-w-[1440px] gap-8 lg:grid-cols-[minmax(0,1100px)] lg:justify-center",
             hasTableOfContents
-              ? "lg:grid-cols-[minmax(0,1000px)] 2xl:grid-cols-[minmax(0,1000px)_220px]"
-              : "lg:grid-cols-[minmax(0,1fr)]",
+              ? "2xl:grid-cols-[minmax(0,1100px)_220px]"
+              : "2xl:grid-cols-[minmax(0,1100px)]",
           )}
           data-testid="room-detail-content-grid"
         >
-          <article className="min-w-0 w-full">
+          <article className="min-w-0 w-full px-4 md:px-6">
             {/* Post Content */}
             <PostContentFrame>
-              <PostBody content={selectedPostContent} />
+              <PostBody content={selectedPostContent} presentation="article" />
             </PostContentFrame>
 
             {/* Feedback Section */}

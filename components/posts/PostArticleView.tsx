@@ -41,8 +41,8 @@ export function PostArticleView({
         </div>
       )}
 
-      <div className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-1 justify-center pb-20 pt-0 xl:px-12">
-        <main className="w-full max-w-[1000px] px-4 md:px-5 xl:px-0">
+      <div className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-1 justify-center pb-20 pt-0">
+        <main className="w-full max-w-[1100px] shrink-0 px-4 md:px-6">
           <header className="flex flex-col">
             <ScrollReveal delay={0.1}>
               {post.coverAlt && (
@@ -65,15 +65,17 @@ export function PostArticleView({
           </header>
 
           {hasTableOfContents && (
-            <div className="xl:hidden">
+            <div className="2xl:hidden">
               <TableOfContents collapsible content={content} />
             </div>
           )}
 
-          <article className="post-content mx-auto mt-4 w-full font-lora text-[16px] leading-[1.75] text-text-primary md:mt-6 md:text-[17.5px] md:leading-[1.8]">
+          <article className="post-content mx-auto mt-4 w-full text-text-primary md:mt-6">
             <ScrollReveal delay={0.2}>
-              <div className="relative z-30 mb-5 overflow-hidden rounded-[16px] border border-border-default/60 bg-background/90 px-4 py-5 backdrop-blur-sm sm:mb-8 sm:rounded-[8px] sm:bg-subtle-bg/90 sm:p-8 md:p-10">
-                <PostBody content={content} />
+              <div className="relative z-30 mb-5 overflow-hidden rounded-[16px] border border-border-default/60 bg-background/90 px-3 py-4 backdrop-blur-sm sm:mb-8 sm:rounded-[8px] sm:bg-subtle-bg/90 sm:p-8 md:p-12">
+                <div className="rounded-[14px] border border-transparent">
+                  <PostBody content={content} presentation="article" />
+                </div>
               </div>
             </ScrollReveal>
           </article>
@@ -92,7 +94,7 @@ export function PostArticleView({
         </main>
 
         {hasTableOfContents && (
-          <aside className="sticky top-24 ml-10 mt-12 hidden max-h-[calc(100vh-120px)] w-[200px] shrink-0 self-start overflow-y-auto overscroll-contain no-scrollbar xl:block">
+          <aside className="sticky top-24 ml-10 mt-12 hidden max-h-[calc(100vh-120px)] w-[200px] shrink-0 self-start overflow-y-auto overscroll-contain no-scrollbar 2xl:block">
             <ScrollReveal delay={0.5}>
               <TableOfContents content={content} />
             </ScrollReveal>

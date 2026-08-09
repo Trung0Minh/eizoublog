@@ -3,6 +3,10 @@ import { ReactNodeViewRenderer } from "@tiptap/react"
 import type { DOMOutputSpec } from "@tiptap/pm/model"
 
 import { isNativeVideo, toVideoEmbedUrl } from "@/components/editor/video"
+import {
+  nativeVideoFrameStyleAttribute,
+  positiveMediaDimension,
+} from "@/lib/mediaPresentation"
 import { VideoNodeView } from "./VideoNodeView"
 
 export { isNativeVideo, toVideoEmbedUrl } from "@/components/editor/video"
@@ -23,6 +27,22 @@ export const VideoEmbedExtension = Node.create({
         parseHTML: (element) => element.getAttribute("data-show-caption") === "true",
         renderHTML: (attributes) => ({
           "data-show-caption": attributes.showCaption ? "true" : "false",
+        }),
+      },
+      naturalHeight: {
+        default: null,
+        parseHTML: (element) =>
+          positiveMediaDimension(Number(element.getAttribute("data-natural-height"))),
+        renderHTML: (attributes) => ({
+          "data-natural-height": positiveMediaDimension(attributes.naturalHeight),
+        }),
+      },
+      naturalWidth: {
+        default: null,
+        parseHTML: (element) =>
+          positiveMediaDimension(Number(element.getAttribute("data-natural-width"))),
+        renderHTML: (attributes) => ({
+          "data-natural-width": positiveMediaDimension(attributes.naturalWidth),
         }),
       },
       url: {
@@ -54,8 +74,9 @@ export const VideoEmbedExtension = Node.create({
       ? [
           "video",
           {
-            class: "h-auto w-full rounded-md bg-black/5",
+            class: "absolute inset-0 h-full w-full rounded-md object-contain",
             controls: "true",
+            "data-native-video": "true",
             preload: "metadata",
             src: rawUrl,
             title: caption || "Embedded video",
@@ -77,7 +98,15 @@ export const VideoEmbedExtension = Node.create({
     const children: DOMOutputSpec[] = [
       [
         "div",
-        { class: isNative ? "w-full" : "relative w-full aspect-video" },
+        {
+          class: isNative
+            ? "relative w-full overflow-hidden rounded-md bg-black/5"
+            : "relative w-full aspect-video",
+          ...(isNative && {
+            "data-native-video-frame": "true",
+            style: nativeVideoFrameStyleAttribute(node.attrs),
+          }),
+        },
         mediaNode,
       ],
     ]
@@ -93,7 +122,7 @@ export const VideoEmbedExtension = Node.create({
     return [
       "figure",
       mergeAttributes(HTMLAttributes, {
-        class: "my-6",
+        class: "my-2",
         "data-type": "video-embed",
       }),
       ...children,

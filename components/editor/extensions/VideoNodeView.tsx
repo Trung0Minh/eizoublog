@@ -2,6 +2,7 @@ import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react"
 import { Trash2, Type } from "lucide-react"
 
 import { isNativeVideo, toVideoEmbedUrl } from "@/components/editor/video"
+import { getNativeVideoFrameStyle } from "@/lib/mediaPresentation"
 
 export function VideoNodeView(props: NodeViewProps) {
   const { node, selected, deleteNode, editor, updateAttributes } = props
@@ -39,13 +40,36 @@ export function VideoNodeView(props: NodeViewProps) {
 
       <figure className="m-0" data-type="video-embed">
         {isNative ? (
+          <div
+            className="relative w-full overflow-hidden rounded-md bg-black/5"
+            data-native-video-frame
+            style={getNativeVideoFrameStyle(node.attrs)}
+          >
             <video
-              className="h-auto w-full rounded-md bg-black/5"
+              className="absolute inset-0 h-full w-full rounded-md object-contain"
               controls
+              data-native-video
+              onLoadedMetadata={(event) => {
+                if (!editor.isEditable) return
+
+                const { videoHeight, videoWidth } = event.currentTarget
+                if (
+                  videoWidth > 0 &&
+                  videoHeight > 0 &&
+                  (node.attrs.naturalWidth !== videoWidth ||
+                    node.attrs.naturalHeight !== videoHeight)
+                ) {
+                  updateAttributes({
+                    naturalHeight: videoHeight,
+                    naturalWidth: videoWidth,
+                  })
+                }
+              }}
               preload="metadata"
               src={rawUrl}
               title={caption || "Embedded video"}
             />
+          </div>
           ) : (
             <div className="relative aspect-video w-full">
             <iframe

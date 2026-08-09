@@ -977,6 +977,7 @@ export function PostEditor({
                         <TiptapEditor
                           content={content}
                           editable
+                          presentation="article"
                           onChange={(json, text) => {
                             setContent(json)
                             setContentText(text)

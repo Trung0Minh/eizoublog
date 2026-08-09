@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => ({
   redirect: vi.fn((path: string) => {
     throw new Error(`redirect:${path}`)
   }),
+  postBody: vi.fn(),
   session: vi.fn(),
 }))
 
@@ -30,7 +31,10 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/lib/session", () => ({ getCurrentSession: mocks.session }))
 vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }))
 vi.mock("@/components/posts/PostBody", () => ({
-  PostBody: () => <div data-testid="post-body" />,
+  PostBody: (props: { content: unknown; presentation?: string }) => {
+    mocks.postBody(props)
+    return <div data-testid="post-body" />
+  },
 }))
 vi.mock("@/components/posts/PostContentFrame", () => ({
   PostContentFrame: ({ children }: { children: ReactNode }) => (
@@ -130,9 +134,56 @@ describe("RoomDetailPage", () => {
     )
 
     expect(screen.getByTestId("room-detail-content-grid")).toHaveClass(
-      "lg:grid-cols-[minmax(0,1fr)]",
+      "lg:grid-cols-[minmax(0,1100px)]",
+      "2xl:grid-cols-[minmax(0,1100px)]",
     )
     expect(screen.queryByTestId("toc")).not.toBeInTheDocument()
+  })
+
+  it("reviews the immutable submitted snapshot instead of later draft edits", async () => {
+    const submittedContent = {
+      content: [
+        {
+          content: [{ text: "Submitted version", type: "text" }],
+          type: "paragraph",
+        },
+      ],
+      type: "doc",
+    }
+    mocks.prisma.awardEventRoom.findUnique.mockResolvedValue({
+      event: { id: "event-1", status: "OPEN", title: "Awards Event" },
+      eventId: "event-1",
+      id: "room-1",
+      selectedPost: {
+        content: emptyDoc,
+        coverUrl: null,
+        id: "post-1",
+        status: "DRAFT",
+        title: "Later draft title",
+      },
+      submittedContent,
+      submittedPostTitle: "Submitted title",
+      visibility: "PRIVATE",
+      writer: {
+        avatarUrl: null,
+        bio: null,
+        id: "writer-1",
+        name: "Alice",
+        username: "alice",
+      },
+      writerId: "writer-1",
+    })
+
+    render(
+      await RoomDetailPage({
+        params: Promise.resolve({ id: "event-1", roomId: "room-1" }),
+      }),
+    )
+
+    expect(screen.getByRole("heading", { name: "Submitted title" })).toBeVisible()
+    expect(mocks.postBody).toHaveBeenCalledWith(
+      expect.objectContaining({ content: submittedContent, presentation: "article" }),
+    )
   })
 
   it("disables new feedback when the event is closed", async () => {

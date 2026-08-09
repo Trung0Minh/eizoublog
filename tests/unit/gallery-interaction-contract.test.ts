@@ -77,7 +77,7 @@ describe("gallery reorder interaction", () => {
     expect(source).toContain('alignItems: "center"')
     expect(source).toContain("getGalleryImagePresentation(image)")
     expect(source).toContain("aspectRatio: wrapperAspectRatio")
-    expect(source).not.toContain('overflow: "hidden"')
+    expect(source).toContain('overflow: "hidden"')
   })
 
   it("uses compact rows and caption lanes", () => {

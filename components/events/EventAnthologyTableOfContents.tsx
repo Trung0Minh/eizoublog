@@ -7,6 +7,8 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import type { PostHeading } from "@/lib/postHeadings"
 import { cn } from "@/lib/utils"
 
+const MOBILE_TOC_TRANSITION_MS = 300
+
 export function EventAnthologyTableOfContents({
   collapsible = false,
   headings,
@@ -46,17 +48,30 @@ export function EventAnthologyTableOfContents({
     if (pendingNavigationTimerRef.current) {
       clearTimeout(pendingNavigationTimerRef.current)
     }
-    if (collapsible) setMobileOpen(false)
     window.history.pushState(null, "", `#${id}`)
-    window.requestAnimationFrame(() => {
-      document.getElementById(id)?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
+    const scrollToHeading = () => {
+      window.requestAnimationFrame(() => {
+        document.getElementById(id)?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        })
+        pendingNavigationTimerRef.current = setTimeout(() => {
+          pendingNavigationRef.current = false
+        }, 900)
       })
-      pendingNavigationTimerRef.current = setTimeout(() => {
-        pendingNavigationRef.current = false
-      }, 900)
-    })
+    }
+
+    if (collapsible && mobileOpen) {
+      setMobileOpen(false)
+      pendingNavigationTimerRef.current = setTimeout(
+        scrollToHeading,
+        MOBILE_TOC_TRANSITION_MS,
+      )
+      return
+    }
+
+    if (collapsible) setMobileOpen(false)
+    scrollToHeading()
   }
 
   useEffect(() => {

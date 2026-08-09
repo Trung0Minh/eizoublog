@@ -38,6 +38,32 @@ describe("VideoEmbedExtension", () => {
     expect(editor.getHTML()).toContain("Opening sequence")
     editor.destroy()
   })
+
+  it("serializes native-video dimensions for stable static rendering", () => {
+    const editor = new Editor({
+      content: {
+        content: [
+          {
+            attrs: {
+              naturalHeight: 1080,
+              naturalWidth: 1920,
+              url: "https://cdn.example.com/scene.mp4",
+            },
+            type: "videoEmbed",
+          },
+        ],
+        type: "doc",
+      },
+      extensions: [StarterKit, VideoEmbedExtension],
+    })
+
+    expect(editor.getJSON().content?.[0]?.attrs).toMatchObject({
+      naturalHeight: 1080,
+      naturalWidth: 1920,
+    })
+    expect(editor.getHTML()).toContain("aspect-ratio: 1920 / 1080")
+    editor.destroy()
+  })
 })
 
 describe("text color extension", () => {

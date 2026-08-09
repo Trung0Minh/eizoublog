@@ -14,11 +14,11 @@ export function PostContentFrame({
   return (
     <div
       className={cn(
-        "rounded-[24px] border border-border-default/80 bg-background/90 p-5 shadow-[0_18px_60px_rgba(31,24,38,0.08)] backdrop-blur-xl dark:bg-background/80 sm:p-8 md:p-10",
+        "relative z-30 overflow-hidden rounded-[16px] border border-border-default/60 bg-background/90 px-3 py-4 backdrop-blur-sm sm:rounded-[8px] sm:bg-subtle-bg/90 sm:p-8 md:p-12",
         className,
       )}
     >
-      {children}
+      <div className="rounded-[14px] border border-transparent">{children}</div>
     </div>
   )
 }

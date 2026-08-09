@@ -89,6 +89,49 @@ describe("EventAnthologyTableOfContents", () => {
       "false",
     )
   })
+
+  it("waits for the mobile contents panel to collapse before scrolling", async () => {
+    vi.useFakeTimers()
+    const requestAnimationFrameSpy = vi
+      .spyOn(window, "requestAnimationFrame")
+      .mockImplementation((callback) => {
+        callback(0)
+        return 1
+      })
+    const scrollIntoView = vi.fn()
+    const headingElement = document.createElement("h2")
+    headingElement.id = "event-room-a-opening"
+    headingElement.scrollIntoView = scrollIntoView
+    document.body.appendChild(headingElement)
+
+    try {
+      render(
+        <EventAnthologyTableOfContents
+          collapsible
+          headings={[
+            { id: "event-room-a", level: 1, text: "Writer A" },
+            { id: "event-room-a-opening", level: 2, text: "Opening A" },
+          ]}
+        />,
+      )
+
+      fireEvent.click(screen.getByRole("button", { name: "Mục lục" }))
+      fireEvent.click(screen.getByRole("link", { name: "Opening A" }))
+
+      expect(scrollIntoView).not.toHaveBeenCalled()
+
+      await vi.advanceTimersByTimeAsync(300)
+
+      expect(scrollIntoView).toHaveBeenCalledWith({
+        behavior: "smooth",
+        block: "start",
+      })
+    } finally {
+      headingElement.remove()
+      requestAnimationFrameSpy.mockRestore()
+      vi.useRealTimers()
+    }
+  })
 })
 
 describe("EventAnthologyView", () => {
@@ -265,7 +308,7 @@ describe("EventAnthologyView", () => {
     )
   })
 
-  it("keeps the original desktop shell while letting the intro fill its card", () => {
+  it("uses the canonical article shell while letting the intro fill its card", () => {
     render(
       <EventAnthologyView
         event={{
@@ -286,9 +329,9 @@ describe("EventAnthologyView", () => {
       screen.getByTestId("event-cover-alt"),
     )
     expect(screen.getByTestId("event-content-grid")).toHaveClass(
-      "max-w-7xl",
-      "lg:grid-cols-[minmax(0,1000px)]",
-      "2xl:grid-cols-[minmax(0,1000px)_220px]",
+      "max-w-[1440px]",
+      "lg:grid-cols-[minmax(0,1100px)]",
+      "2xl:grid-cols-[minmax(0,1100px)_220px]",
     )
     expect(screen.getByTestId("event-hero-grid")).toHaveClass(
       "max-w-7xl",
@@ -512,9 +555,9 @@ describe("EventAnthologyView", () => {
 
     const authorCredits = screen.getByLabelText("Tác giả bài viết")
     expect(screen.getByTestId("event-author-credits")).toHaveClass(
-      "max-w-7xl",
-      "lg:grid-cols-[minmax(0,1000px)]",
-      "2xl:pl-20",
+      "max-w-[1440px]",
+      "lg:grid-cols-[minmax(0,1100px)]",
+      "2xl:grid-cols-[minmax(0,1100px)_220px]",
     )
     expect(within(authorCredits).getByText("Writer A")).toBeInTheDocument()
     expect(within(authorCredits).getByText("Writer B")).toBeInTheDocument()
@@ -529,10 +572,15 @@ describe("EventAnthologyView", () => {
     expect(screen.getAllByTestId("event-contributor-block")[0].querySelector("h2")).toHaveTextContent(
       "Writer A",
     )
-    expect(screen.getAllByTestId("event-contributor-block")[0]).toHaveClass(
+    const firstContributorBlock = screen.getAllByTestId("event-contributor-block")[0]
+    expect(firstContributorBlock).toHaveClass(
       "relative",
       "scroll-mt-24",
     )
+    expect(firstContributorBlock).not.toHaveClass("overflow-hidden")
+    expect(
+      within(firstContributorBlock).getByTestId("event-entry-content").parentElement,
+    ).toHaveClass("overflow-hidden")
     expect(screen.getAllByTestId("event-contributor-block")[0].querySelector("img")).toHaveClass(
       "aspect-square",
       "h-28",
@@ -544,7 +592,11 @@ describe("EventAnthologyView", () => {
     expect(screen.getAllByTestId("event-contributor-header")[0]).toHaveClass(
       "2xl:absolute",
       "2xl:left-[-9rem]",
+      "2xl:top-0",
       "text-center",
+    )
+    expect(screen.getAllByTestId("event-contributor-header")[0]).not.toHaveClass(
+      "2xl:top-10",
     )
     expect(screen.getByTestId("event-cover-alt").nextElementSibling).toContainElement(
       screen.getByRole("button", { name: "Mục lục" }),

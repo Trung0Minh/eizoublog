@@ -9,6 +9,10 @@ import {
   ImageLightbox,
   type LightboxImage,
 } from "@/components/posts/ImageLightbox"
+import {
+  getMediaPresentation,
+  getNativeVideoFrameStyle,
+} from "@/lib/mediaPresentation"
 import { cn } from "@/lib/utils"
 
 interface LightboxState {
@@ -24,6 +28,53 @@ function getImageCaption(image: HTMLImageElement) {
     ?.trim()
 
   return caption || undefined
+}
+
+function syncRotatedImage(image: HTMLImageElement) {
+  if (image.dataset.naturalWidth && image.dataset.naturalHeight) {
+    return
+  }
+
+  const rotation = Number(image.dataset.imageRotation ?? 0)
+
+  if (image.naturalWidth <= 0 || image.naturalHeight <= 0) {
+    return
+  }
+
+  const wrapper = image.parentElement
+  if (!wrapper) {
+    return
+  }
+
+  const { imageStyle, wrapperStyle } = getMediaPresentation({
+    flipX: image.dataset.flipX,
+    flipY: image.dataset.flipY,
+    naturalHeight: image.naturalHeight,
+    naturalWidth: image.naturalWidth,
+    rotation,
+  })
+
+  if (!wrapperStyle) {
+    return
+  }
+
+  Object.assign(wrapper.style, wrapperStyle)
+  Object.assign(image.style, imageStyle)
+}
+
+function syncNativeVideo(video: HTMLVideoElement) {
+  if (video.videoWidth <= 0 || video.videoHeight <= 0) return
+
+  const frame = video.closest<HTMLElement>("[data-native-video-frame]")
+  if (!frame) return
+
+  Object.assign(
+    frame.style,
+    getNativeVideoFrameStyle({
+      naturalHeight: video.videoHeight,
+      naturalWidth: video.videoWidth,
+    }),
+  )
 }
 
 export function PostImageInteractions({
@@ -45,16 +96,36 @@ export function PostImageInteractions({
     const syncFocusableImages = () => {
       container.querySelectorAll("img").forEach((image) => {
         image.setAttribute("tabindex", "0")
+        syncRotatedImage(image)
       })
+      container
+        .querySelectorAll<HTMLVideoElement>("video[data-native-video]")
+        .forEach((video) => {
+          syncNativeVideo(video)
+        })
     }
 
     syncFocusableImages()
+
+    const handleMediaLoad = (event: Event) => {
+      const media = event.target
+      if (media instanceof HTMLImageElement) {
+        syncRotatedImage(media)
+      } else if (media instanceof HTMLVideoElement) {
+        syncNativeVideo(media)
+      }
+    }
+
+    container.addEventListener("load", handleMediaLoad, true)
+    container.addEventListener("loadedmetadata", handleMediaLoad, true)
 
     const observer = new MutationObserver(syncFocusableImages)
     observer.observe(container, { childList: true, subtree: true })
 
     return () => {
       observer.disconnect()
+      container.removeEventListener("load", handleMediaLoad, true)
+      container.removeEventListener("loadedmetadata", handleMediaLoad, true)
     }
   }, [])
 

@@ -65,8 +65,8 @@ export function PostHero({
         )}
         data-testid="post-hero-content"
       >
-        <div className="mx-auto flex w-full max-w-[1440px] justify-center px-4 md:px-5 xl:px-12">
-          <div className="w-full max-w-[1000px]" data-testid="post-hero-main-column">
+        <div className="mx-auto flex w-full max-w-[1440px] justify-center">
+          <div className="w-full max-w-[1100px] shrink-0 px-4 md:px-6" data-testid="post-hero-main-column">
             <ScrollReveal delay={0.1}>
               {post.category && (
                 <div className="text-[11px] font-bold text-white bg-accent px-3 py-1 rounded-full uppercase tracking-[0.1em] w-max mb-4 shadow-lg flex items-center gap-1">
@@ -83,7 +83,7 @@ export function PostHero({
             {isRichSubtitle(post.excerptContent) ? (
               <ScrollReveal delay={0.15}>
                 <div className="mb-8 max-w-[90%] text-[15px] leading-[1.6] text-text-secondary md:text-[18px] [&_.ProseMirror]:!m-0 [&_.ProseMirror]:!max-w-none [&_.ProseMirror>*]:!m-0">
-                  <PostBody content={post.excerptContent} />
+                  <PostBody content={post.excerptContent} presentation="embedded" />
                 </div>
               </ScrollReveal>
             ) : post.excerpt ? (
@@ -153,7 +153,7 @@ export function PostHero({
           {hasTableOfContents && (
             <div
               aria-hidden="true"
-              className="ml-10 hidden w-[200px] shrink-0 xl:block"
+              className="ml-10 hidden w-[200px] shrink-0 2xl:block"
               data-testid="post-hero-toc-spacer"
             />
           )}

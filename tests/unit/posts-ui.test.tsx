@@ -248,12 +248,12 @@ describe("Post detail responsive components", () => {
     render(<PostHero hasTableOfContents post={post} />)
 
     expect(screen.getByTestId("post-hero-main-column")).toHaveClass(
-      "max-w-[1000px]",
+      "max-w-[1100px]",
     )
     expect(screen.getByTestId("post-hero-toc-spacer")).toHaveClass(
       "ml-10",
       "w-[200px]",
-      "xl:block",
+      "2xl:block",
     )
   })
 

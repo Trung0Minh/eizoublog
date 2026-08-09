@@ -11,6 +11,11 @@ import {
 } from "@/components/editor/gallery"
 import { isNativeVideo, toVideoEmbedUrl } from "@/components/editor/video"
 import { SpoilerBlock } from "@/components/posts/SpoilerBlock"
+import {
+  getMediaPresentation,
+  getNativeVideoFrameStyle,
+  positiveMediaDimension,
+} from "@/lib/mediaPresentation"
 import { normalizePostHeadingIds } from "@/lib/postHeadings"
 import { generateSlug } from "@/lib/utils"
 
@@ -41,59 +46,6 @@ function numberAttr(
 function booleanAttr(attrs: Record<string, unknown>, name: string) {
   const value = attrs[name]
   return value === true || value === "true"
-}
-
-function normalizeImageRotation(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value)
-    ? ((value % 360) + 360) % 360
-    : 0
-}
-
-function positiveNumberAttr(
-  attrs: Record<string, unknown>,
-  name: string,
-): number | undefined {
-  const value = attrs[name]
-  return typeof value === "number" && Number.isFinite(value) && value > 0
-    ? value
-    : undefined
-}
-
-function getRotatedImageFit(attrs: Record<string, unknown>) {
-  const rotation = normalizeImageRotation(attrs.rotation)
-  const naturalWidth = positiveNumberAttr(attrs, "naturalWidth")
-  const naturalHeight = positiveNumberAttr(attrs, "naturalHeight")
-  const isQuarterTurn = rotation === 90 || rotation === 270
-
-  if (!isQuarterTurn || !naturalWidth || !naturalHeight) {
-    return {
-      imageScale: 1,
-      wrapperStyle: undefined,
-    }
-  }
-
-  return {
-    imageScale: naturalWidth / naturalHeight,
-    wrapperStyle: {
-      alignItems: "center",
-      aspectRatio: `${naturalHeight} / ${naturalWidth}`,
-      display: "flex",
-      justifyContent: "center",
-      width: "100%",
-    } satisfies CSSProperties,
-  }
-}
-
-function imageTransformStyle(attrs: Record<string, unknown>): CSSProperties {
-  const rotation = normalizeImageRotation(attrs.rotation)
-  const { imageScale } = getRotatedImageFit(attrs)
-  const scaleX = booleanAttr(attrs, "flipX") ? -1 : 1
-  const scaleY = booleanAttr(attrs, "flipY") ? -1 : 1
-
-  return {
-    transform: `rotate(${rotation}deg) scale(${imageScale * scaleX}, ${imageScale * scaleY})`,
-    transformOrigin: "center",
-  }
 }
 
 function textAlignStyle(value: string | undefined): CSSProperties | undefined {
@@ -205,13 +157,15 @@ function renderImage(node: JSONContent, key: string) {
   const caption = getNodeText(node)
   const align = stringAttr(attrs, "align") || "center"
   const width = stringAttr(attrs, "width") || "100%"
-  const { wrapperStyle } = getRotatedImageFit(attrs)
+  const { imageStyle, rotation, wrapperStyle } = getMediaPresentation(attrs)
+  const naturalWidth = positiveMediaDimension(attrs.naturalWidth)
+  const naturalHeight = positiveMediaDimension(attrs.naturalHeight)
 
   const alignClass = align === "left"
     ? "float-left mr-6 mb-4 mt-2 clear-left"
     : align === "right"
     ? "float-right ml-6 mb-4 mt-2 clear-right"
-    : "justify-center my-6 clear-both"
+    : "justify-center my-2 clear-both"
 
   return (
     <figure 
@@ -228,10 +182,15 @@ function renderImage(node: JSONContent, key: string) {
         <img
           alt={stringAttr(attrs, "alt") || caption || ""}
           className="!m-0 h-auto w-full rounded-md object-contain"
+          data-flip-x={booleanAttr(attrs, "flipX") ? "true" : "false"}
+          data-flip-y={booleanAttr(attrs, "flipY") ? "true" : "false"}
+          data-image-rotation={rotation}
+          data-natural-height={naturalHeight ?? undefined}
+          data-natural-width={naturalWidth ?? undefined}
           decoding="async"
           loading="lazy"
           src={src}
-          style={imageTransformStyle(attrs)}
+          style={imageStyle}
         />
       </div>
       {caption && captionIsVisible(attrs) ? (
@@ -261,6 +220,11 @@ function renderImageGallery(node: JSONContent, key: string) {
         attrs: {
           align: "center",
           alt: getGalleryImageAlt(image),
+          flipX: image.flipX,
+          flipY: image.flipY,
+          naturalHeight: image.naturalHeight,
+          naturalWidth: image.naturalWidth,
+          rotation: image.rotation,
           showCaption: image.showCaption,
           src: image.url,
           width: "100%",
@@ -309,13 +273,20 @@ function renderImageGallery(node: JSONContent, key: string) {
             <figure className="image-gallery__item" key={image.url + index}>
               {isVideoUrl ? (
                 isNative ? (
-                  <video
-                    className="h-auto w-full rounded-md bg-black/5"
-                    controls
-                    preload="metadata"
-                    src={image.url}
-                    title={getGalleryImageAlt(image)}
-                  />
+                  <div
+                    className="relative w-full overflow-hidden rounded-md bg-black/5"
+                    data-native-video-frame
+                    style={getNativeVideoFrameStyle(image)}
+                  >
+                    <video
+                      className="absolute inset-0 h-full w-full rounded-md object-contain"
+                      controls
+                      data-native-video
+                      preload="metadata"
+                      src={image.url}
+                      title={getGalleryImageAlt(image)}
+                    />
+                  </div>
                 ) : (
                   <div className="relative aspect-video w-full">
                     <iframe
@@ -329,7 +300,7 @@ function renderImageGallery(node: JSONContent, key: string) {
                   </div>
                 )
               ) : (
-                <div className="flex w-full items-center justify-center" style={wrapperAspectRatio ? { aspectRatio: wrapperAspectRatio } : undefined}>
+                <div className="flex w-full items-center justify-center overflow-hidden" style={wrapperAspectRatio ? { aspectRatio: wrapperAspectRatio } : undefined}>
                   <img
                     alt={getGalleryImageAlt(image)}
                     className="image-gallery__image"
@@ -373,15 +344,22 @@ function renderVideoEmbed(node: JSONContent, key: string) {
   const caption = stringAttr(attrs, "caption") ?? ""
 
   return (
-    <figure className="my-6" data-type="video-embed" key={key}>
+    <figure className="my-2" data-type="video-embed" key={key}>
       {isNativeVideo(rawUrl) ? (
+        <div
+          className="relative w-full overflow-hidden rounded-md bg-black/5"
+          data-native-video-frame
+          style={getNativeVideoFrameStyle(attrs)}
+        >
           <video
-            className="h-auto w-full rounded-md bg-black/5"
+            className="absolute inset-0 h-full w-full rounded-md object-contain"
             controls
+            data-native-video
             preload="metadata"
             src={rawUrl}
             title={caption || "Embedded video"}
           />
+        </div>
         ) : (
           <div className="relative aspect-video w-full">
           <iframe
@@ -428,7 +406,7 @@ function renderNode(node: JSONContent, key: string): ReactNode {
       const id = stringAttr(attrs, "id") ?? (text ? generateSlug(text) : undefined)
 
       return (
-        <Tag id={id} key={key} style={alignStyle}>
+        <Tag className="scroll-mt-24" id={id} key={key} style={alignStyle}>
           {renderChildren(node)}
         </Tag>
       )
@@ -453,6 +431,7 @@ function renderNode(node: JSONContent, key: string): ReactNode {
     case "paragraph": {
       const children = renderChildren(node)
       const isEmpty = children.length === 0
+
       return (
         <p data-empty={isEmpty ? "true" : undefined} key={key} style={alignStyle}>
           {isEmpty ? <br /> : children}
@@ -489,9 +468,23 @@ function renderNode(node: JSONContent, key: string): ReactNode {
   }
 }
 
-export function StaticPostContent({ content }: { content: JSONContent }) {
+export function StaticPostContent({
+  content,
+  presentation = "article",
+}: {
+  content: JSONContent
+  presentation?: "article" | "embedded"
+}) {
+  if (presentation === "embedded") {
+    return (
+      <div className="ProseMirror">
+        {renderChildren(normalizePostHeadingIds(content))}
+      </div>
+    )
+  }
+
   return (
-    <div className="ProseMirror">
+    <div className="ProseMirror post-rich-text">
       {renderChildren(normalizePostHeadingIds(content))}
     </div>
   )

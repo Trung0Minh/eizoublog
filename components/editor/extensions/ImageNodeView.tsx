@@ -1,6 +1,6 @@
 import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/react"
 import { AnimatePresence } from "motion/react"
-import { useRef, useState, type CSSProperties, type SyntheticEvent } from "react"
+import { useRef, useState, type SyntheticEvent } from "react"
 import {
   AlignCenter,
   AlignLeft,
@@ -17,58 +17,19 @@ import {
 import { GalleryAddMediaButton } from "@/components/editor/GalleryAddMediaButton"
 import { serializeGalleryImages } from "@/components/editor/gallery"
 import { ImageLightbox } from "@/components/posts/ImageLightbox"
-
-function normalizeRotation(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value)
-    ? ((value % 360) + 360) % 360
-    : 0
-}
-
-function rawRotation(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) ? value : 0
-}
-
-function positiveNumber(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) && value > 0
-    ? value
-    : null
-}
-
-function getRotatedImageFit(attrs: Record<string, unknown>) {
-  const rotation = normalizeRotation(attrs.rotation)
-  const naturalWidth = positiveNumber(attrs.naturalWidth)
-  const naturalHeight = positiveNumber(attrs.naturalHeight)
-  const isQuarterTurn = rotation === 90 || rotation === 270
-
-  if (!isQuarterTurn || !naturalWidth || !naturalHeight) {
-    return {
-      imageScale: 1,
-      wrapperStyle: undefined,
-    }
-  }
-
-  return {
-    imageScale: naturalWidth / naturalHeight,
-    wrapperStyle: {
-      alignItems: "center",
-      aspectRatio: `${naturalHeight} / ${naturalWidth}`,
-      display: "flex",
-      justifyContent: "center",
-      overflow: "hidden",
-      width: "100%",
-    } satisfies CSSProperties,
-  }
-}
+import {
+  getMediaPresentation,
+  positiveMediaDimension,
+} from "@/lib/mediaPresentation"
 
 export function ImageNodeView(props: NodeViewProps) {
   const { node, updateAttributes, selected } = props
   const captionRef = useRef<HTMLElement>(null)
   const [zoomOpen, setZoomOpen] = useState(false)
-  const rotation = rawRotation(node.attrs.rotation)
+  const { imageStyle, rotation, transform: imageTransform, wrapperStyle } =
+    getMediaPresentation(node.attrs)
   const flipX = node.attrs.flipX === true
   const flipY = node.attrs.flipY === true
-  const { imageScale, wrapperStyle } = getRotatedImageFit(node.attrs)
-  const imageTransform = `rotate(${rotation}deg) scale(${imageScale * (flipX ? -1 : 1)}, ${imageScale * (flipY ? -1 : 1)})`
   const handleImageLoad = (event: SyntheticEvent<HTMLImageElement>) => {
     const { naturalHeight, naturalWidth } = event.currentTarget
 
@@ -77,8 +38,8 @@ export function ImageNodeView(props: NodeViewProps) {
     }
 
     if (
-      node.attrs.naturalWidth !== naturalWidth ||
-      node.attrs.naturalHeight !== naturalHeight
+      !positiveMediaDimension(node.attrs.naturalWidth) ||
+      !positiveMediaDimension(node.attrs.naturalHeight)
     ) {
       updateAttributes({ naturalHeight, naturalWidth })
     }
@@ -214,9 +175,9 @@ export function ImageNodeView(props: NodeViewProps) {
                 caption: node.textContent,
                 flipX: node.attrs.flipX === true,
                 flipY: node.attrs.flipY === true,
-                naturalHeight: positiveNumber(node.attrs.naturalHeight),
-                naturalWidth: positiveNumber(node.attrs.naturalWidth),
-                rotation: rawRotation(node.attrs.rotation),
+                naturalHeight: positiveMediaDimension(node.attrs.naturalHeight),
+                naturalWidth: positiveMediaDimension(node.attrs.naturalWidth),
+                rotation,
                 showCaption: node.attrs.showCaption === true,
                 url: typeof node.attrs.src === "string" ? node.attrs.src : "",
               }
@@ -257,10 +218,7 @@ export function ImageNodeView(props: NodeViewProps) {
           }`}
           onLoad={handleImageLoad}
           src={node.attrs.src}
-          style={{
-            transform: imageTransform,
-            transformOrigin: "center",
-          }}
+          style={imageStyle}
         />
       </div>
       <figcaption

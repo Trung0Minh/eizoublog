@@ -2,19 +2,21 @@ import type { JSONContent } from "@tiptap/react"
 
 import { PostImageInteractions } from "@/components/posts/PostImageInteractions"
 import { StaticPostContent } from "@/components/posts/StaticPostContent"
-import { trimRichTextBoundaries } from "@/lib/richTextBoundaries"
 
 interface PostBodyProps {
   content: JSONContent
   contentClassName?: string
+  presentation?: "article" | "embedded"
 }
 
-export function PostBody({ content, contentClassName }: PostBodyProps) {
-  const trimmedContent = trimRichTextBoundaries(content)
-
+export function PostBody({
+  content,
+  contentClassName,
+  presentation = "embedded",
+}: PostBodyProps) {
   return (
     <PostImageInteractions className={contentClassName}>
-      <StaticPostContent content={trimmedContent} />
+      <StaticPostContent content={content} presentation={presentation} />
     </PostImageInteractions>
   )
 }

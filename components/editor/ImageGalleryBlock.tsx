@@ -19,6 +19,7 @@ import {
 import { GalleryAddMediaButton } from "@/components/editor/GalleryAddMediaButton"
 import { ImageLightbox, type LightboxImage } from "@/components/posts/ImageLightbox"
 import { isNativeVideo, toVideoEmbedUrl } from "@/components/editor/video"
+import { getNativeVideoFrameStyle } from "@/lib/mediaPresentation"
 
 function galleryImagePresentation(image: GalleryImage) {
   const { transform, wrapperAspectRatio } = getGalleryImagePresentation(image)
@@ -31,6 +32,7 @@ function galleryImagePresentation(image: GalleryImage) {
           aspectRatio: wrapperAspectRatio,
           display: "flex",
           justifyContent: "center",
+          overflow: "hidden",
           width: "100%",
         } satisfies CSSProperties
       : undefined,
@@ -458,13 +460,29 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
                 
                 {isVideoUrl ? (
                   isNative ? (
+                    <div
+                      className="relative w-full overflow-hidden rounded-md bg-black/5"
+                      data-native-video-frame
+                      style={getNativeVideoFrameStyle(image)}
+                    >
                       <video
-                        className="h-auto w-full rounded-md bg-black/5"
+                        className="absolute inset-0 h-full w-full rounded-md object-contain"
                         controls
+                        data-native-video
+                        onLoadedMetadata={(event) => {
+                          const { videoHeight, videoWidth } = event.currentTarget
+                          if (videoWidth > 0 && videoHeight > 0) {
+                            updateImage(index, {
+                              naturalHeight: videoHeight,
+                              naturalWidth: videoWidth,
+                            })
+                          }
+                        }}
                         preload="metadata"
                         src={image.url}
                         title={getGalleryImageAlt(image)}
                       />
+                    </div>
                     ) : (
                       <div className="relative aspect-video w-full">
                       <iframe

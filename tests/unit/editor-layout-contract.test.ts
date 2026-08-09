@@ -12,7 +12,8 @@ describe("post editor layout contracts", () => {
     const editor = read("components/posts/PostEditor.tsx")
 
     expect(editor).toContain("fixed inset-y-0 right-0")
-    expect(editor).toContain("lg:mr-[320px] xl:mr-[360px]")
+    expect(editor).not.toContain("lg:mr-[320px] xl:mr-[360px]")
+    expect(editor).toContain("max-w-[1100px]")
     expect(editor).toContain("fixed bottom-[72px] left-1/2")
     expect(editor).toContain("lg:bottom-6 lg:left-6")
     expect(editor).not.toContain("fixed bottom-6 right-6")

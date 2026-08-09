@@ -55,8 +55,8 @@ describe("preview table of contents layout", () => {
 
     expect(source).toContain("const hasTableOfContents = extractHeadings")
     expect(source).toContain("{hasTableOfContents && (")
-    expect(source).toContain("lg:grid-cols-[minmax(0,1000px)]")
-    expect(source).toContain("2xl:grid-cols-[minmax(0,1000px)_220px]")
+    expect(source).toContain("lg:grid-cols-[minmax(0,1100px)]")
+    expect(source).toContain("2xl:grid-cols-[minmax(0,1100px)_220px]")
     expect(source).not.toContain("max-w-[800px]")
   })
 
@@ -72,7 +72,7 @@ describe("preview table of contents layout", () => {
     const source = read("app/(writer)/dashboard/events/[id]/rooms/[roomId]/page.tsx")
 
     expect(source).toContain(
-      '{hasTableOfContents && (\n          <div className="2xl:hidden">',
+      '{hasTableOfContents && (\n          <div className="mx-auto w-full max-w-[1100px] px-4 md:px-6 2xl:hidden">',
     )
     expect(source).toContain("<TableOfContents collapsible")
   })
@@ -81,7 +81,7 @@ describe("preview table of contents layout", () => {
     const source = read("components/posts/PostArticleView.tsx")
 
     expect(source).toContain(
-      '{hasTableOfContents && (\n            <div className="xl:hidden">',
+      '{hasTableOfContents && (\n            <div className="2xl:hidden">',
     )
     expect(source).toContain("<TableOfContents collapsible")
   })

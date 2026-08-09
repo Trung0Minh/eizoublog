@@ -5,7 +5,6 @@ import { ImageGalleryBlock } from "@/components/editor/ImageGalleryBlock"
 import {
   galleryRowHasCaption,
   getGalleryImageAlt,
-  getGalleryImagePresentation,
   groupGalleryImagesIntoRows,
   normalizeGalleryLayout,
   parseGalleryImages,
@@ -13,19 +12,17 @@ import {
   type GalleryImage,
 } from "@/components/editor/gallery"
 import { isNativeVideo, toVideoEmbedUrl } from "@/components/editor/video"
+import {
+  mediaImageStyleAttribute,
+  mediaWrapperStyleAttribute,
+} from "@/lib/mediaPresentation"
 
 function imageTransformStyle(image: GalleryImage) {
-  return `transform: ${getGalleryImagePresentation(image).transform}; transform-origin: center;`
+  return mediaImageStyleAttribute(image)
 }
 
 function imageWrapperStyle(image: GalleryImage) {
-  const { wrapperAspectRatio } = getGalleryImagePresentation(image)
-
-  if (!wrapperAspectRatio) {
-    return undefined
-  }
-
-  return `align-items: center; aspect-ratio: ${wrapperAspectRatio}; display: flex; justify-content: center; width: 100%;`
+  return mediaWrapperStyleAttribute(image) || undefined
 }
 
 declare module "@tiptap/core" {
@@ -137,12 +134,20 @@ export const GalleryExtension = Node.create({
           style: "width: 100%; max-width: 100%",
         }),
         [
-          "img",
+          "div",
           {
-            alt: getGalleryImageAlt(image),
-            class: "!m-0 h-auto w-full rounded-md object-contain",
-            src: image.url,
+            class: "w-full",
+            style: imageWrapperStyle(image),
           },
+          [
+            "img",
+            {
+              alt: getGalleryImageAlt(image),
+              class: "!m-0 h-auto w-full rounded-md object-contain",
+              src: image.url,
+              style: imageTransformStyle(image),
+            },
+          ],
         ],
         ...(showCaption
           ? [
