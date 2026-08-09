@@ -39,6 +39,14 @@ export default async function EditPostPage({
     prisma.post.findUnique({
       select: {
         authorId: true,
+        awardEventRooms: {
+          select: {
+            event: { select: { id: true, status: true, title: true } },
+            visibility: true,
+          },
+          take: 1,
+          where: { writerId: session.user.id },
+        },
         categoryId: true,
         coAuthors: { select: { userId: true, status: true } },
         content: true,
@@ -79,12 +87,24 @@ export default async function EditPostPage({
     notFound()
   }
 
+  const eventRoom = post.awardEventRooms[0]
+
   return (
     <PostEditor
       canPublish={session.user.id === post.authorId}
       canRestoreRevisions={session.user.role === "ADMIN" || session.user.id === post.authorId}
       categories={referenceData.categories}
       currentUserId={session.user.id}
+      eventAssignment={
+        eventRoom
+          ? {
+              eventId: eventRoom.event.id,
+              eventStatus: eventRoom.event.status,
+              eventTitle: eventRoom.event.title,
+              visibility: eventRoom.visibility,
+            }
+          : undefined
+      }
       initialData={{
         categoryId: post.categoryId,
         coAuthorIds: post.coAuthors.map(({ userId }) => userId),

@@ -76,6 +76,12 @@ interface PostEditorProps {
   canRestoreRevisions?: boolean
   categories: CategoryOption[]
   currentUserId: string
+  eventAssignment?: {
+    eventId: string
+    eventStatus: "OPEN" | "CLOSED"
+    eventTitle: string
+    visibility: "PRIVATE" | "PARTICIPANTS"
+  }
   initialData?: InitialPostData
   initialTags?: TagOption[]
   writers: WriterOption[]
@@ -191,6 +197,7 @@ export function PostEditor({
   canRestoreRevisions = false,
   categories,
   currentUserId,
+  eventAssignment,
   initialData,
   initialTags = [],
   writers,
@@ -228,7 +235,9 @@ export function PostEditor({
       ? isDesktopSettingsDefault
       : settingsPreference === "open"
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
-  const [savingAction, setSavingAction] = useState<"draft" | "publish" | null>(null)
+  const [savingAction, setSavingAction] = useState<
+    "draft" | "event" | "publish" | null
+  >(null)
   const [postId, setPostId] = useState<string | null>(initialData?.id ?? null)
   const [postVersion, setPostVersion] = useState(initialData?.version ?? 1)
   const postVersionRef = useRef(initialData?.version ?? 1)
@@ -434,15 +443,15 @@ export function PostEditor({
     }
   }, [coverUrl, postId, recoveryPayload, title])
 
-  async function savePost(status: "DRAFT" | "PUBLISHED") {
-    if (status === "PUBLISHED") {
+  async function savePost(action: "draft" | "event" | "publish") {
+    if (action === "publish") {
       if (!contentText || !contentText.trim()) {
         setError("Nội dung bài viết không được để trống khi đăng.")
         setSavingAction(null)
         return
       }
     }
-    setSavingAction(status === "PUBLISHED" ? "publish" : "draft")
+    setSavingAction(action)
     setError("")
     let isNavigatingAway = false
     const savingGeneration = getGeneration()
@@ -478,7 +487,9 @@ export function PostEditor({
             initialExcerpt,
             hasInitialData,
           ),
-          status,
+          ...(action !== "event" && {
+            status: action === "publish" ? "PUBLISHED" : "DRAFT",
+          }),
           tagIds: manualDraft.tagIds,
           title: manualDraft.title,
           ...(currentPostId && { baseVersion: postVersionRef.current }),
@@ -512,7 +523,28 @@ export function PostEditor({
         return savedPost
       })
 
-      if (status === "PUBLISHED") {
+      if (action === "event") {
+        if (!eventAssignment) {
+          throw new Error("Bài viết chưa được chọn cho sự kiện")
+        }
+
+        const response = await fetch(`/api/events/${eventAssignment.eventId}/room`, {
+          body: JSON.stringify({
+            postId: post.id,
+            status: "SUBMITTED",
+            visibility: eventAssignment.visibility,
+          }),
+          headers: { "Content-Type": "application/json" },
+          method: "PATCH",
+        })
+        const result: unknown = await response.json()
+
+        if (!response.ok) {
+          throw new Error(getApiError(result))
+        }
+      }
+
+      if (action === "publish") {
         markSavedThrough(savingGeneration)
         recovery.discard()
         isNavigatingAway = true
@@ -600,11 +632,22 @@ export function PostEditor({
         isPending={isPending || savingAction !== null}
         isSettingsOpen={isSettingsOpen}
         isPublished={initialData?.status === "PUBLISHED"}
-        onPublish={() => startTransition(() => void savePost("PUBLISHED"))}
-        onSaveDraft={() => startTransition(() => void savePost("DRAFT"))}
+        onPublish={() =>
+          startTransition(() =>
+            void savePost(eventAssignment ? "event" : "publish"),
+          )
+        }
+        onSaveDraft={() => startTransition(() => void savePost("draft"))}
         onExport={() => void downloadRecoveryCopy()}
         onHistory={postId ? () => setIsHistoryOpen(true) : undefined}
         pendingAction={savingAction}
+        publishDisabled={eventAssignment?.eventStatus === "CLOSED"}
+        publishIsUpdate={Boolean(eventAssignment)}
+        publishLabel={
+          eventAssignment
+            ? `Cập nhật bài tham gia cho ${eventAssignment.eventTitle}`
+            : undefined
+        }
         previewHref={postId ? `/dashboard/preview/${postId}` : null}
         onToggleSettings={() =>
           setSettingsPreference(isSettingsOpen ? "closed" : "open")
@@ -769,7 +812,7 @@ export function PostEditor({
                             className="inline-flex h-9 items-center justify-center rounded-[5px] border border-border-default bg-background px-3 text-[13px] font-medium text-text-primary transition-colors hover:bg-subtle-bg disabled:cursor-not-allowed disabled:opacity-50"
                             disabled={!canSave || isPending}
                             onClick={() =>
-                              startTransition(() => void savePost("DRAFT"))
+                              startTransition(() => void savePost("draft"))
                             }
                             type="button"
                           >

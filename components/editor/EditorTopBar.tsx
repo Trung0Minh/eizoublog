@@ -17,7 +17,7 @@ import { ParticleToggle } from "@/components/ui/ParticleToggle"
 import { SeasonToggle } from "@/components/ui/SeasonToggle"
 import { Button } from "@/components/ui/button"
 
-type PendingAction = "draft" | "publish" | null
+type PendingAction = "draft" | "event" | "publish" | null
 
 function ButtonSpinner() {
   return (
@@ -43,6 +43,9 @@ interface EditorTopBarProps {
   onHistory?: () => void
   onPublish: () => void
   onSaveDraft: () => void
+  publishDisabled?: boolean
+  publishIsUpdate?: boolean
+  publishLabel?: string
 }
 
 const railButtonClass =
@@ -62,11 +65,16 @@ export function EditorTopBar({
   onHistory,
   onPublish,
   onSaveDraft,
+  publishDisabled = false,
+  publishIsUpdate = false,
+  publishLabel: publishLabelOverride,
 }: EditorTopBarProps) {
   const actionsDisabled = isPending || !canSave
   const isDraftPending = pendingAction === "draft"
-  const isPublishPending = pendingAction === "publish"
-  const publishLabel = isPublished ? "Cập nhật bài viết" : "Xuất bản bài viết"
+  const isPublishPending = pendingAction === "event" || pendingAction === "publish"
+  const publishLabel =
+    publishLabelOverride ??
+    (isPublished ? "Cập nhật bài viết" : "Xuất bản bài viết")
 
   return (
     <aside
@@ -154,7 +162,7 @@ export function EditorTopBar({
         <Button
           aria-label={publishLabel}
           className="h-9 w-9 rounded-full bg-accent p-0 text-white shadow-sm hover:bg-accent/90"
-          disabled={actionsDisabled}
+          disabled={actionsDisabled || publishDisabled}
           onClick={onPublish}
           size="icon"
           title={publishLabel}
@@ -162,7 +170,7 @@ export function EditorTopBar({
         >
           {isPublishPending ? (
             <ButtonSpinner />
-          ) : isPublished ? (
+          ) : isPublished || publishIsUpdate ? (
             <RefreshCw aria-hidden="true" className="h-4 w-4" />
           ) : (
             <Send aria-hidden="true" className="h-4 w-4" />

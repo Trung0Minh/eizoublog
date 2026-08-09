@@ -700,6 +700,97 @@ describe("PostEditor", () => {
     expect(routerMocks.push).toHaveBeenCalledWith("/new-post")
   })
 
+  it("updates the assigned event submission instead of publishing the post", async () => {
+    const user = userEvent.setup()
+    vi.stubGlobal(
+      "fetch",
+      vi.fn()
+        .mockResolvedValueOnce(
+          new Response(
+            JSON.stringify({
+              data: { id: "post-1", slug: "event-entry", version: 4 },
+            }),
+            { status: 200 },
+          ),
+        )
+        .mockResolvedValueOnce(
+          new Response(
+            JSON.stringify({ data: { id: "room-1", status: "SUBMITTED" } }),
+            { status: 200 },
+          ),
+        ),
+    )
+
+    render(
+      <PostEditor
+        categories={[]}
+        currentUserId="writer-1"
+        eventAssignment={{
+          eventId: "event-1",
+          eventStatus: "OPEN",
+          eventTitle: "Eizou Awards",
+          visibility: "PRIVATE",
+        }}
+        initialData={{
+          categoryId: null,
+          coAuthorIds: [],
+          content: { content: [], type: "doc" },
+          contentText: "Initial body",
+          coverAlt: null,
+          coverUrl: null,
+          excerpt: "Initial excerpt",
+          id: "post-1",
+          status: "DRAFT",
+          tags: [],
+          title: "Event entry",
+          version: 3,
+        }}
+        writers={[]}
+      />,
+    )
+
+    expect(
+      screen.getByRole("button", {
+        name: "Cập nhật bài tham gia cho Eizou Awards",
+      }),
+    ).toBeVisible()
+    expect(
+      screen.queryByRole("button", { name: "Xuất bản bài viết" }),
+    ).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "Mock editor" }))
+    await user.click(
+      screen.getByRole("button", {
+        name: "Cập nhật bài tham gia cho Eizou Awards",
+      }),
+    )
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        "/api/events/event-1/room",
+        expect.objectContaining({ method: "PATCH" }),
+      )
+    })
+
+    const postRequest = (fetch as ReturnType<typeof vi.fn>).mock.calls.find(
+      ([url]) => url === "/api/posts/post-1",
+    )?.[1] as { body: string }
+    expect(JSON.parse(postRequest.body) as Record<string, unknown>).not.toHaveProperty(
+      "status",
+    )
+
+    const eventRequest = (fetch as ReturnType<typeof vi.fn>).mock.calls.find(
+      ([url]) => url === "/api/events/event-1/room",
+    )?.[1] as { body: string }
+    expect(JSON.parse(eventRequest.body) as Record<string, unknown>).toMatchObject({
+      postId: "post-1",
+      status: "SUBMITTED",
+      visibility: "PRIVATE",
+    })
+    expect(routerMocks.push).not.toHaveBeenCalledWith("/event-entry")
+    expect(routerMocks.refresh).toHaveBeenCalled()
+  })
+
   it("uses a fullscreen writing shell with a left action rail and right settings", async () => {
     const user = userEvent.setup()
     render(
