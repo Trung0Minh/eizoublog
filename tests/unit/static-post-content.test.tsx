@@ -204,6 +204,56 @@ describe("StaticPostContent", () => {
     expect(screen.getAllByRole("img")).toHaveLength(2)
   })
 
+  it("keeps grid gallery images grouped in their source rows", () => {
+    const content: JSONContent = {
+      content: [
+        {
+          attrs: {
+            columns: 2,
+            images: JSON.stringify([
+              { alt: "Frame A", caption: "", url: "https://cdn.example.com/a.webp" },
+              { alt: "Frame B", caption: "", url: "https://cdn.example.com/b.webp" },
+              { alt: "Frame C", caption: "", url: "https://cdn.example.com/c.webp" },
+              { alt: "Frame D", caption: "", url: "https://cdn.example.com/d.webp" },
+            ]),
+          },
+          type: "imageGallery",
+        },
+      ],
+      type: "doc",
+    }
+
+    const { container } = render(<StaticPostContent content={content} />)
+    const rows = container.querySelectorAll(".image-gallery__grid-row")
+
+    expect(rows).toHaveLength(2)
+    expect(rows[0]?.querySelectorAll(".image-gallery__item")).toHaveLength(2)
+    expect(rows[1]?.querySelectorAll(".image-gallery__item")).toHaveLength(2)
+  })
+
+  it("renders a visible gallery-level caption", () => {
+    const content: JSONContent = {
+      content: [
+        {
+          attrs: {
+            caption: "Frames from the opening sequence",
+            images: JSON.stringify([
+              { alt: "Frame A", caption: "", url: "https://cdn.example.com/a.webp" },
+              { alt: "Frame B", caption: "", url: "https://cdn.example.com/b.webp" },
+            ]),
+            showCaption: true,
+          },
+          type: "imageGallery",
+        },
+      ],
+      type: "doc",
+    }
+
+    render(<StaticPostContent content={content} />)
+
+    expect(screen.getByText("Frames from the opening sequence")).toHaveClass("image-gallery__gallery-caption")
+  })
+
   it("renders one-image galleries as normal single images", () => {
     const content: JSONContent = {
       content: [
@@ -284,8 +334,8 @@ describe("StaticPostContent", () => {
 
     expect(image.parentElement).toHaveStyle({
       aspectRatio: "900 / 600",
-      overflow: "hidden",
     })
+    expect(image.parentElement).not.toHaveStyle({ overflow: "hidden" })
     expect(image).toHaveStyle({
       transform: "rotate(270deg) scale(-0.6666666666666666, -0.6666666666666666)",
       transformOrigin: "center",
@@ -321,7 +371,7 @@ describe("StaticPostContent", () => {
     expect(screen.queryByText("Hidden gallery caption")).not.toBeInTheDocument()
   })
 
-  it("reserves caption slots across mixed-caption gallery rows", () => {
+  it("aligns only the siblings of a captioned gallery item", () => {
     const content: JSONContent = {
       content: [
         {
@@ -352,8 +402,28 @@ describe("StaticPostContent", () => {
     const captions = container.querySelectorAll(".image-gallery__caption")
     expect(captions).toHaveLength(2)
     expect(captions[0]).toHaveAttribute("aria-hidden", "true")
-    expect(captions[0]).toHaveTextContent("")
     expect(captions[1]).toHaveTextContent("Visible gallery caption")
+  })
+
+  it("does not reserve caption space when every gallery caption is blank", () => {
+    const content: JSONContent = {
+      content: [
+        {
+          attrs: {
+            images: JSON.stringify([
+              { alt: "Frame one", caption: "   ", showCaption: true, url: "https://cdn.example.com/one.webp" },
+              { alt: "Frame two", caption: "", showCaption: true, url: "https://cdn.example.com/two.webp" },
+            ]),
+          },
+          type: "imageGallery",
+        },
+      ],
+      type: "doc",
+    }
+
+    const { container } = render(<StaticPostContent content={content} />)
+
+    expect(container.querySelectorAll(".image-gallery__caption")).toHaveLength(0)
   })
 
   it("hides video captions when caption visibility is disabled", () => {

@@ -212,6 +212,11 @@ export function ImageNodeView(props: NodeViewProps) {
               const originalImage = {
                 alt: typeof node.attrs.alt === "string" ? node.attrs.alt : "",
                 caption: node.textContent,
+                flipX: node.attrs.flipX === true,
+                flipY: node.attrs.flipY === true,
+                naturalHeight: positiveNumber(node.attrs.naturalHeight),
+                naturalWidth: positiveNumber(node.attrs.naturalWidth),
+                rotation: rawRotation(node.attrs.rotation),
                 showCaption: node.attrs.showCaption === true,
                 url: typeof node.attrs.src === "string" ? node.attrs.src : "",
               }
@@ -260,7 +265,7 @@ export function ImageNodeView(props: NodeViewProps) {
       </div>
       <figcaption
         ref={captionRef}
-        className={`editor-media-caption mt-1 w-full text-center text-sm ${
+        className={`editor-media-caption mt-2 w-full text-center text-sm italic ${
           props.editor.isEditable ? "min-h-[1.5rem] outline-none" : ""
         } ${!node.attrs.showCaption ? "hidden" : ""}`}
       >

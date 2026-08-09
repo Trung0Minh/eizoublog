@@ -8,6 +8,7 @@ import {
   CustomImageExtension,
   GalleryExtension,
   HeadingWithIdExtension,
+  ItalicCaretExtension,
   ListItemExtension,
   SpoilerExtension,
   VideoEmbedExtension,
@@ -142,6 +143,27 @@ describe("HeadingWithIdExtension", () => {
   })
 })
 
+describe("ItalicCaretExtension", () => {
+  it("renders a slanted caret while the text cursor is inside italic content", () => {
+    const editor = new Editor({
+      content: "<p><em>Leaning</em></p>",
+      extensions: [StarterKit, ItalicCaretExtension],
+    })
+
+    editor.commands.focus()
+    editor.commands.setTextSelection(3)
+
+    expect(editor.isActive("italic")).toBe(true)
+    let hasItalicCaretDecoration = false
+    editor.view.someProp("decorations", (getDecorations) => {
+      hasItalicCaretDecoration = getDecorations(editor.state) !== null
+      return hasItalicCaretDecoration
+    })
+    expect(hasItalicCaretDecoration).toBe(true)
+    editor.destroy()
+  })
+})
+
 describe("GalleryExtension", () => {
   it("stores horizontal gallery layout while defaulting legacy galleries to grid", () => {
     const editor = new Editor({
@@ -241,7 +263,45 @@ describe("GalleryExtension", () => {
     editor.destroy()
   })
 
-  it("reserves gallery caption slots for mixed-caption media", () => {
+  it("serializes a gallery caption and transformed gallery images", () => {
+    const editor = new Editor({
+      content: {
+        content: [
+          {
+            attrs: {
+              caption: "Key frames from the chase",
+              images: JSON.stringify([
+                {
+                  alt: "Rotated frame",
+                  caption: "",
+                  flipX: true,
+                  flipY: true,
+                  naturalHeight: 800,
+                  naturalWidth: 1200,
+                  rotation: 90,
+                  url: "https://cdn.example.com/rotated.webp",
+                },
+                { alt: "Second frame", caption: "", url: "https://cdn.example.com/second.webp" },
+              ]),
+              showCaption: true,
+            },
+            type: "imageGallery",
+          },
+        ],
+        type: "doc",
+      },
+      extensions: [StarterKit, GalleryExtension],
+    })
+
+    const html = editor.getHTML()
+
+    expect(html).toContain('data-caption="Key frames from the chase"')
+    expect(html).toContain("Key frames from the chase")
+    expect(html).toContain("rotate(90deg) scale(-1.5, -1.5)")
+    editor.destroy()
+  })
+
+  it("aligns gallery captions only within their source row", () => {
     const editor = new Editor({
       content: {
         content: [

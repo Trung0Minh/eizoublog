@@ -1,34 +1,72 @@
 "use client"
 
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react"
-import { GalleryHorizontal, Grid2X2, GripVertical, Trash2, Type } from "lucide-react"
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from "react"
+import { FlipHorizontal2, FlipVertical2, GalleryHorizontal, Grid2X2, GripVertical, RotateCcw, RotateCw, Trash2, Type, ZoomIn } from "lucide-react"
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type SyntheticEvent } from "react"
 
 import {
+  galleryRowHasCaption,
   getGalleryImageAlt,
+  getGalleryImagePresentation,
+  groupGalleryImagesIntoRows,
   normalizeGalleryLayout,
   parseGalleryImages,
   reorderGalleryImages,
+  rotationValue,
   serializeGalleryImages,
   type GalleryImage,
 } from "@/components/editor/gallery"
 import { GalleryAddMediaButton } from "@/components/editor/GalleryAddMediaButton"
+import { ImageLightbox, type LightboxImage } from "@/components/posts/ImageLightbox"
 import { isNativeVideo, toVideoEmbedUrl } from "@/components/editor/video"
+
+function galleryImagePresentation(image: GalleryImage) {
+  const { transform, wrapperAspectRatio } = getGalleryImagePresentation(image)
+
+  return {
+    transform,
+    wrapperStyle: wrapperAspectRatio
+      ? {
+          alignItems: "center",
+          aspectRatio: wrapperAspectRatio,
+          display: "flex",
+          justifyContent: "center",
+          width: "100%",
+        } satisfies CSSProperties
+      : undefined,
+  }
+}
 
 export function ImageGalleryBlock({ node, updateAttributes, editor, selected, deleteNode, getPos }: NodeViewProps) {
   const images = useMemo(() => parseGalleryImages(node.attrs.images), [node.attrs.images])
   const columns = node.attrs.columns || 2
   const layout = normalizeGalleryLayout(node.attrs.layout)
+  const galleryCaption = typeof node.attrs.caption === "string" ? node.attrs.caption : ""
+  const showGalleryCaption = node.attrs.showCaption === true
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [dropIndex, setDropIndex] = useState<number | null>(null)
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+  const [captionInputIndex, setCaptionInputIndex] = useState<number | null>(null)
   const galleryContainerRef = useRef<HTMLDivElement>(null)
   const reorderHandleRef = useRef<HTMLButtonElement | null>(null)
   const dropIndexRef = useRef<number | null>(null)
-  const hasVisibleCaption = images.some(
-    (image) =>
-      editor.isEditable
-        ? image.showCaption
-        : image.caption && image.showCaption !== false,
+  const galleryRows = useMemo(
+    () => layout === "grid"
+      ? groupGalleryImagesIntoRows(images, columns)
+      : [images.map((image, index) => ({ image, index }))],
+    [columns, images, layout],
+  )
+  const lightboxImages = useMemo<LightboxImage[]>(
+    () => images.flatMap((image) => {
+      const isVideo = isNativeVideo(image.url) || image.url.includes("youtube.com") || image.url.includes("youtu.be")
+      if (isVideo) {
+        return []
+      }
+
+      const { transform } = getGalleryImagePresentation(image)
+      return [{ alt: getGalleryImageAlt(image), caption: image.caption || undefined, src: image.url, transform, transformOrigin: "center" }]
+    }),
+    [images],
   )
 
   function updateImage(index: number, newImage: Partial<GalleryImage>) {
@@ -52,6 +90,11 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
       {
         align: "center",
         alt: image.alt,
+        flipX: image.flipX,
+        flipY: image.flipY,
+        naturalHeight: image.naturalHeight,
+        naturalWidth: image.naturalWidth,
+        rotation: image.rotation,
         showCaption: image.showCaption,
         src: image.url,
         width: "100%",
@@ -232,7 +275,7 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
       data-type="image-gallery"
     >
       {editor.isEditable && (
-        <div className="absolute top-2 left-2 flex items-center gap-1 rounded-md border border-border-default bg-background p-1 shadow-md z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-200">
+        <div className="absolute -left-9 top-0 z-50 flex min-w-9 flex-col items-center gap-1 rounded-md border border-border-default bg-background p-1 shadow-md opacity-0 invisible transition-opacity duration-200 group-hover:visible group-hover:opacity-100 focus-within:visible focus-within:opacity-100">
           {layout === "horizontal" && draggedIndex !== null ? (
             <span className="px-2 text-xs font-medium text-text-secondary">
               Choose a new position · Press Escape to cancel
@@ -266,15 +309,24 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
               })
             }
           />
+          <button
+            aria-pressed={showGalleryCaption}
+            className={`rounded p-1.5 text-sm hover:bg-subtle-bg ${showGalleryCaption ? "bg-subtle-bg text-text-primary" : "text-text-secondary"}`}
+            onClick={() => updateAttributes({ showCaption: !showGalleryCaption })}
+            onMouseDown={(event) => event.preventDefault()}
+            title="Toggle gallery caption"
+            type="button"
+          >
+            <Type className="h-4 w-4" />
+          </button>
           {layout === "grid" && (
             <>
-              <div className="mx-1 h-4 w-px bg-border-default" />
-              <span className="px-2 text-xs font-medium text-text-secondary">Columns:</span>
+              <div className="my-1 h-px w-4 bg-border-default" />
               {[1, 2, 3, 4].map((col) => (
                 <button
                   key={col}
                   type="button"
-                  className={`flex h-6 w-6 items-center justify-center rounded text-sm ${columns === col ? "bg-subtle-bg text-text-primary" : "text-text-secondary hover:bg-subtle-bg"}`}
+                  className={`flex h-6 w-6 items-center justify-center rounded text-sm ${columns === col ? "bg-accent text-button-text shadow-sm" : "text-text-secondary hover:bg-subtle-bg"}`}
                   onClick={() => updateAttributes({ columns: col })}
                 >
                   {col}
@@ -294,19 +346,24 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
                 : "image-gallery__grid"
             } ${layout === "grid" && draggedIndex !== null ? "select-none !cursor-grabbing" : ""}`
           }
-          style={
-            layout === "grid"
-              ? {
-                  gridTemplateColumns: `repeat(${Math.min(columns, images.length)}, minmax(0, 1fr))`,
-                }
-              : undefined
-          }
           ref={galleryContainerRef}
         >
-          {images.map((image, index) => {
+          {galleryRows.map((row, rowIndex) => (
+            <div
+              className="image-gallery__grid-row"
+              key={rowIndex}
+              style={layout === "grid" ? { gridTemplateColumns: `repeat(${Math.min(columns, images.length)}, minmax(0, 1fr))` } : undefined}
+            >
+            {row.map(({ image, index }) => {
             const isNative = isNativeVideo(image.url)
             const isVideoUrl = isNative || image.url.includes("youtube.com") || image.url.includes("youtu.be")
-            const showCaption = image.caption && image.showCaption !== false
+            const showCaption = image.caption.trim() && image.showCaption !== false
+            const showCaptionInput = image.showCaption && (
+              image.caption.trim() !== "" || captionInputIndex === index
+            )
+            const reserveCaptionSpace = layout === "grid" && !showCaptionInput && galleryRowHasCaption(images, index, columns)
+            const { transform, wrapperStyle } = galleryImagePresentation(image)
+            const lightboxImageIndex = lightboxImages.findIndex((lightboxImage) => lightboxImage.src === image.url)
 
             return (
               <figure
@@ -345,11 +402,26 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
                       <GripVertical className="h-4 w-4" />
                     </button>
                     <div className="mx-1 h-4 w-px bg-border-default" />
+                    {!isVideoUrl ? (
+                      <>
+                        <button className="rounded p-1.5 text-sm text-text-secondary hover:bg-subtle-bg hover:text-text-primary" onClick={() => updateImage(index, { rotation: rotationValue(image.rotation) - 90 })} title="Rotate left" type="button"><RotateCcw className="h-4 w-4" /></button>
+                        <button className="rounded p-1.5 text-sm text-text-secondary hover:bg-subtle-bg hover:text-text-primary" onClick={() => updateImage(index, { rotation: rotationValue(image.rotation) + 90 })} title="Rotate right" type="button"><RotateCw className="h-4 w-4" /></button>
+                        <button className={`rounded p-1.5 text-sm hover:bg-subtle-bg ${image.flipX ? "bg-subtle-bg text-text-primary" : "text-text-secondary"}`} onClick={() => updateImage(index, { flipX: !image.flipX })} title="Flip horizontal" type="button"><FlipHorizontal2 className="h-4 w-4" /></button>
+                        <button className={`rounded p-1.5 text-sm hover:bg-subtle-bg ${image.flipY ? "bg-subtle-bg text-text-primary" : "text-text-secondary"}`} onClick={() => updateImage(index, { flipY: !image.flipY })} title="Flip vertical" type="button"><FlipVertical2 className="h-4 w-4" /></button>
+                        <button className="rounded p-1.5 text-sm text-text-secondary hover:bg-subtle-bg hover:text-text-primary" onClick={() => setLightboxIndex(lightboxImageIndex)} title="Zoom image" type="button"><ZoomIn className="h-4 w-4" /></button>
+                        <div className="mx-1 h-4 w-px bg-border-default" />
+                      </>
+                    ) : null}
                     <button
                       className={`rounded p-1.5 text-sm hover:bg-subtle-bg ${
                         image.showCaption ? "bg-subtle-bg text-text-primary" : "text-text-secondary"
                       }`}
-                      onClick={() => updateImage(index, { showCaption: !image.showCaption })}
+                      onClick={() => {
+                        const nextShowCaption = !image.showCaption
+                        updateImage(index, { showCaption: nextShowCaption })
+                        setCaptionInputIndex(nextShowCaption ? index : null)
+                      }}
+                      onMouseDown={(event) => event.preventDefault()}
                       title="Toggle Caption"
                       type="button"
                     >
@@ -406,52 +478,70 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
                       </div>
                     )
                 ) : (
-                  <img
-                    alt={getGalleryImageAlt(image)}
-                    className="image-gallery__image"
-                    decoding="async"
-                    loading="lazy"
-                    src={image.url}
-                  />
+                  <div className="w-full" style={wrapperStyle}>
+                    <img
+                      alt={getGalleryImageAlt(image)}
+                      className="image-gallery__image"
+                      decoding="async"
+                      loading="lazy"
+                      onLoad={(event: SyntheticEvent<HTMLImageElement>) => {
+                        const { naturalHeight, naturalWidth } = event.currentTarget
+                        if (naturalWidth > 0 && naturalHeight > 0 && (image.naturalWidth !== naturalWidth || image.naturalHeight !== naturalHeight)) {
+                          updateImage(index, { naturalHeight, naturalWidth })
+                        }
+                      }}
+                      src={image.url}
+                      style={{ transform, transformOrigin: "center" }}
+                    />
+                  </div>
                 )}
 
                 {editor.isEditable ? (
-                  image.showCaption ? (
-                    <figcaption className="image-gallery__caption !mt-1">
-                      <input
-                        autoFocus
-                        className="w-full bg-transparent text-center outline-none border-none placeholder:text-text-tertiary/50"
+                  showCaptionInput ? (
+                    <figcaption className="image-gallery__caption">
+                      <textarea
+                        autoFocus={captionInputIndex === index}
+                        className="image-gallery__caption-input border-none bg-transparent text-center italic outline-none placeholder:text-text-tertiary/50"
                         placeholder="Write a caption..."
+                        rows={1}
                         value={image.caption}
                         onChange={(e) => updateImage(index, { caption: e.target.value })}
+                        onBlur={(event) => {
+                          if (event.currentTarget.value.trim() === "") {
+                            updateImage(index, { showCaption: false })
+                          }
+                          setCaptionInputIndex(null)
+                        }}
                         onKeyDown={(e) => e.stopPropagation()}
                       />
                     </figcaption>
-                  ) : hasVisibleCaption ? (
-                    <figcaption
-                      aria-hidden="true"
-                      className="image-gallery__caption image-gallery__caption--placeholder !mt-1"
-                    />
+                  ) : reserveCaptionSpace ? (
+                    <figcaption aria-hidden="true" className="image-gallery__caption image-gallery__caption--placeholder" />
                   ) : null
                 ) : showCaption ? (
-                  <figcaption className="image-gallery__caption !mt-1">
+                  <figcaption className="image-gallery__caption">
                     {image.caption}
                   </figcaption>
-                ) : hasVisibleCaption ? (
-                  <figcaption
-                    aria-hidden="true"
-                    className="image-gallery__caption image-gallery__caption--placeholder !mt-1"
-                  />
+                ) : reserveCaptionSpace ? (
+                  <figcaption aria-hidden="true" className="image-gallery__caption image-gallery__caption--placeholder" />
                 ) : null}
               </figure>
             )
-          })}
+            })}
+            </div>
+          ))}
         </div>
       ) : (
         <p className="m-0 rounded border border-dashed p-4 text-center text-sm text-muted-foreground">
           Empty image gallery
         </p>
       )}
+      {editor.isEditable && showGalleryCaption ? (
+        <textarea className="image-gallery__gallery-caption image-gallery__gallery-caption-input mt-2 bg-transparent text-center text-sm italic outline-none placeholder:text-text-tertiary/50" onChange={(event) => updateAttributes({ caption: event.target.value })} onKeyDown={(event) => event.stopPropagation()} placeholder="Write a gallery caption..." rows={1} value={galleryCaption} />
+      ) : galleryCaption && showGalleryCaption ? (
+        <p className="image-gallery__gallery-caption mt-2 text-center text-sm">{galleryCaption}</p>
+      ) : null}
+      {lightboxIndex !== null && lightboxImages[lightboxIndex] ? <ImageLightbox images={lightboxImages} initialIndex={lightboxIndex} onClose={() => setLightboxIndex(null)} /> : null}
     </NodeViewWrapper>
   )
 }

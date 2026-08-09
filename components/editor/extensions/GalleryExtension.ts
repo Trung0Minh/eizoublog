@@ -3,13 +3,30 @@ import { ReactNodeViewRenderer } from "@tiptap/react"
 
 import { ImageGalleryBlock } from "@/components/editor/ImageGalleryBlock"
 import {
+  galleryRowHasCaption,
   getGalleryImageAlt,
+  getGalleryImagePresentation,
+  groupGalleryImagesIntoRows,
   normalizeGalleryLayout,
   parseGalleryImages,
   serializeGalleryImages,
   type GalleryImage,
 } from "@/components/editor/gallery"
 import { isNativeVideo, toVideoEmbedUrl } from "@/components/editor/video"
+
+function imageTransformStyle(image: GalleryImage) {
+  return `transform: ${getGalleryImagePresentation(image).transform}; transform-origin: center;`
+}
+
+function imageWrapperStyle(image: GalleryImage) {
+  const { wrapperAspectRatio } = getGalleryImagePresentation(image)
+
+  if (!wrapperAspectRatio) {
+    return undefined
+  }
+
+  return `align-items: center; aspect-ratio: ${wrapperAspectRatio}; display: flex; justify-content: center; width: 100%;`
+}
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -50,6 +67,20 @@ export const GalleryExtension = Node.create({
           "data-layout": normalizeGalleryLayout(attributes.layout),
         }),
       },
+      caption: {
+        default: "",
+        parseHTML: (element) => element.getAttribute("data-caption") ?? "",
+        renderHTML: (attributes) => ({
+          "data-caption": typeof attributes.caption === "string" ? attributes.caption : "",
+        }),
+      },
+      showCaption: {
+        default: false,
+        parseHTML: (element) => element.getAttribute("data-show-caption") === "true",
+        renderHTML: (attributes) => ({
+          "data-show-caption": attributes.showCaption === true ? "true" : "false",
+        }),
+      },
     }
   },
 
@@ -81,17 +112,21 @@ export const GalleryExtension = Node.create({
     const images = parseGalleryImages(node.attrs.images)
     const columns = node.attrs.columns || 2
     const layout = normalizeGalleryLayout(node.attrs.layout)
-    const hasVisibleCaption = images.some(
-      (image) => image.caption && image.showCaption !== false,
-    )
+    const caption = typeof node.attrs.caption === "string" ? node.attrs.caption : ""
+    const showGalleryCaption = node.attrs.showCaption === true && caption
+    const galleryRows = layout === "grid"
+      ? groupGalleryImagesIntoRows(images, columns)
+      : [images.map((image, index) => ({ image, index }))]
     const renderedAttributes = { ...HTMLAttributes }
     delete renderedAttributes.images
     delete renderedAttributes.columns
     delete renderedAttributes.layout
+    delete renderedAttributes.caption
+    delete renderedAttributes.showCaption
 
     if (images.length === 1) {
       const [image] = images
-      const showCaption = image.caption && image.showCaption !== false
+      const showCaption = image.caption.trim() && image.showCaption !== false
 
       return [
         "figure",
@@ -137,16 +172,22 @@ export const GalleryExtension = Node.create({
             layout === "horizontal"
               ? "image-gallery__horizontal"
               : "image-gallery__grid",
-          ...(layout === "grid"
-            ? {
-                style: `grid-template-columns: repeat(${columns}, minmax(0, 1fr))`,
-              }
-            : {}),
         },
-        ...images.map((image) => {
+        ...galleryRows.map((row) => [
+          "div",
+          {
+            class: "image-gallery__grid-row",
+            ...(layout === "grid"
+              ? {
+                  style: `grid-template-columns: repeat(${Math.min(columns, images.length)}, minmax(0, 1fr))`,
+                }
+              : {}),
+          },
+          ...row.map(({ image, index }) => {
           const isVideoUrl = image.url.match(/\.(mp4|webm)$/i) || image.url.includes("youtube.com") || image.url.includes("youtu.be")
           const isNative = isNativeVideo(image.url)
-          const showCaption = image.caption && image.showCaption !== false
+          const showCaption = image.caption.trim() && image.showCaption !== false
+          const reserveCaptionSpace = layout === "grid" && !showCaption && galleryRowHasCaption(images, index, columns)
 
           const mediaNode = isVideoUrl
             ? [
@@ -176,12 +217,17 @@ export const GalleryExtension = Node.create({
                     ],
               ]
             : [
-                "img",
-                {
-                  alt: getGalleryImageAlt(image),
-                  class: "image-gallery__image",
-                  src: image.url,
-                },
+                "div",
+                { class: "w-full", style: imageWrapperStyle(image) },
+                [
+                  "img",
+                  {
+                    alt: getGalleryImageAlt(image),
+                    class: "image-gallery__image",
+                    src: image.url,
+                    style: imageTransformStyle(image),
+                  },
+                ],
               ]
 
           return [
@@ -196,21 +242,24 @@ export const GalleryExtension = Node.create({
                     image.caption,
                   ],
                 ]
-              : hasVisibleCaption
+              : reserveCaptionSpace
               ? [
                   [
                     "figcaption",
                     {
                       "aria-hidden": "true",
-                      class:
-                        "image-gallery__caption image-gallery__caption--placeholder",
+                      class: "image-gallery__caption image-gallery__caption--placeholder",
                     },
                   ],
                 ]
               : []),
           ]
-        }),
+          }),
+        ]),
       ],
+      ...(showGalleryCaption
+        ? [["p", { class: "image-gallery__gallery-caption" }, caption]]
+        : []),
     ]
   },
 })

@@ -36,6 +36,7 @@ import {
   CustomImageExtension,
   GalleryExtension,
   HeadingWithIdExtension,
+  ItalicCaretExtension,
   ListItemExtension,
   SpoilerExtension,
   TrailingNodeExtension,
@@ -174,6 +175,7 @@ export function TiptapEditor({
       }),
       CustomImageExtension,
       GalleryExtension,
+      ItalicCaretExtension,
       Link.configure({
         HTMLAttributes: {
           class: "text-accent underline underline-offset-2 hover:opacity-80",

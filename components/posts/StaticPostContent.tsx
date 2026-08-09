@@ -2,7 +2,10 @@ import type { JSONContent } from "@tiptap/react"
 import type { CSSProperties, ReactNode } from "react"
 
 import {
+  galleryRowHasCaption,
   getGalleryImageAlt,
+  getGalleryImagePresentation,
+  groupGalleryImagesIntoRows,
   normalizeGalleryLayout,
   parseGalleryImages,
 } from "@/components/editor/gallery"
@@ -76,7 +79,6 @@ function getRotatedImageFit(attrs: Record<string, unknown>) {
       aspectRatio: `${naturalHeight} / ${naturalWidth}`,
       display: "flex",
       justifyContent: "center",
-      overflow: "hidden",
       width: "100%",
     } satisfies CSSProperties,
   }
@@ -244,6 +246,8 @@ function renderImageGallery(node: JSONContent, key: string) {
   const images = parseGalleryImages(attrs.images)
   const columns = numberAttr(attrs, "columns") || 2
   const layout = normalizeGalleryLayout(attrs.layout)
+  const galleryCaption = stringAttr(attrs, "caption") ?? ""
+  const showGalleryCaption = attrs.showCaption === true && galleryCaption.trim() !== ""
 
   if (images.length === 0) {
     return null
@@ -270,9 +274,9 @@ function renderImageGallery(node: JSONContent, key: string) {
     )
   }
 
-  const hasVisibleCaption = images.some(
-    (image) => image.caption && image.showCaption !== false,
-  )
+  const galleryRows = layout === "grid"
+    ? groupGalleryImagesIntoRows(images, columns)
+    : [images.map((image, index) => ({ image, index }))]
 
   return (
     <div
@@ -287,18 +291,19 @@ function renderImageGallery(node: JSONContent, key: string) {
             ? "image-gallery__horizontal"
             : "image-gallery__grid"
         }
-        style={
-          layout === "grid"
-            ? {
-                gridTemplateColumns: `repeat(${Math.min(columns, images.length)}, minmax(0, 1fr))`,
-              }
-            : undefined
-        }
       >
-        {images.map((image, index) => {
+        {galleryRows.map((row, rowIndex) => (
+          <div
+            className="image-gallery__grid-row"
+            key={rowIndex}
+            style={layout === "grid" ? { gridTemplateColumns: `repeat(${Math.min(columns, images.length)}, minmax(0, 1fr))` } : undefined}
+          >
+          {row.map(({ image, index }) => {
           const isNative = isNativeVideo(image.url)
           const isVideoUrl = isNative || image.url.includes("youtube.com") || image.url.includes("youtu.be")
-          const showCaption = image.caption && image.showCaption !== false
+          const showCaption = image.caption.trim() && image.showCaption !== false
+          const reserveCaptionSpace = layout === "grid" && !showCaption && galleryRowHasCaption(images, index, columns)
+          const { transform, wrapperAspectRatio } = getGalleryImagePresentation(image)
 
           return (
             <figure className="image-gallery__item" key={image.url + index}>
@@ -324,28 +329,35 @@ function renderImageGallery(node: JSONContent, key: string) {
                   </div>
                 )
               ) : (
-                <img
-                  alt={getGalleryImageAlt(image)}
-                  className="image-gallery__image"
-                  decoding="async"
-                  loading="lazy"
-                  src={image.url}
-                />
+                <div className="flex w-full items-center justify-center" style={wrapperAspectRatio ? { aspectRatio: wrapperAspectRatio } : undefined}>
+                  <img
+                    alt={getGalleryImageAlt(image)}
+                    className="image-gallery__image"
+                    decoding="async"
+                    loading="lazy"
+                    src={image.url}
+                    style={{ transform, transformOrigin: "center" }}
+                  />
+                </div>
               )}
               {showCaption ? (
                 <figcaption className="image-gallery__caption">
                   {image.caption}
                 </figcaption>
-              ) : hasVisibleCaption ? (
-                <figcaption
-                  aria-hidden="true"
-                  className="image-gallery__caption image-gallery__caption--placeholder"
-                />
+              ) : reserveCaptionSpace ? (
+                <figcaption aria-hidden="true" className="image-gallery__caption image-gallery__caption--placeholder" />
               ) : null}
             </figure>
           )
-        })}
+          })}
+          </div>
+        ))}
       </div>
+      {showGalleryCaption ? (
+        <p className="image-gallery__gallery-caption mt-2 text-center text-sm">
+          {galleryCaption}
+        </p>
+      ) : null}
     </div>
   )
 }
