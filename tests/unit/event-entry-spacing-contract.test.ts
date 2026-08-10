@@ -39,6 +39,9 @@ describe("event entry published spacing contract", () => {
     expect(anthology).toContain("max-w-[1440px]")
     expect(anthology).toContain("lg:grid-cols-[minmax(0,1100px)]")
     expect(anthology).toContain("px-4 md:px-6")
+    expect(anthology).not.toContain(
+      'className="overflow-hidden rounded-[14px] border border-transparent"',
+    )
     expect(room).toContain("lg:grid-cols-[minmax(0,1100px)]")
     expect(room).toContain("submittedContent: true")
     expect(room).toContain("room.submittedContent ?? room.selectedPost.content")

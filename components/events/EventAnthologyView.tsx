@@ -323,7 +323,7 @@ export function EventAnthologyView({
                     </h2>
                   </div>
 
-                  <div className="overflow-hidden rounded-[14px] border border-transparent">
+                  <div className="rounded-[14px] border border-transparent">
                     <article
                       className="event-entry-content min-w-0 text-text-primary"
                       data-testid="event-entry-content"
