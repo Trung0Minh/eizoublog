@@ -5,6 +5,7 @@ import {
   buildAwardEventOutline,
   buildAwardEventPostContent,
   emptyAwardEventDoc,
+  mergeAwardEventTags,
   namespaceAwardEventPostContent,
   reorderAwardEventRooms,
   shuffleAwardEventRooms,
@@ -130,6 +131,29 @@ describe("buildAwardEventPostContent", () => {
     expect(JSON.stringify(content)).toContain("No submitted entries yet.")
     expect(JSON.stringify(content)).not.toContain("Removed Writer")
     expect(JSON.stringify(content)).not.toContain("Removed body")
+  })
+})
+
+describe("mergeAwardEventTags", () => {
+  it("combines event and writer tags once by slug", () => {
+    expect(
+      mergeAwardEventTags(
+        [{ name: "Shared", slug: "shared" }],
+        [
+          {
+            selectedPost: {
+              tags: [
+                { name: "Shared again", slug: "shared" },
+                { name: "Writer tag", slug: "writer-tag" },
+              ],
+            },
+          },
+        ],
+      ),
+    ).toEqual([
+      { name: "Shared", slug: "shared" },
+      { name: "Writer tag", slug: "writer-tag" },
+    ])
   })
 })
 

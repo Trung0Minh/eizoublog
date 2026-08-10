@@ -5,6 +5,12 @@ import { extractHeadings, type PostHeading } from "@/lib/postHeadings"
 type AwardEventRoomStatus = "DRAFT" | "SUBMITTED"
 type AwardEventSelectedPostStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED" | "REMOVED"
 
+export interface AwardEventTag {
+  id?: string
+  name: string
+  slug: string
+}
+
 export interface AwardEventWriter {
   name: string
   username: string
@@ -17,6 +23,7 @@ export interface AwardEventPostRoom {
     content: JSONContent
     id: string
     status: AwardEventSelectedPostStatus
+    tags?: AwardEventTag[]
     title: string
   } | null
   status: AwardEventRoomStatus
@@ -26,6 +33,27 @@ export interface AwardEventPostRoom {
 export interface AwardEventPostContentInput {
   eventIntro: JSONContent | null
   rooms: AwardEventPostRoom[]
+}
+
+export function mergeAwardEventTags(
+  eventTags: AwardEventTag[],
+  rooms: Array<{ selectedPost: { tags?: AwardEventTag[] } | null }>,
+) {
+  const tags = new Map<string, AwardEventTag>()
+
+  for (const tag of eventTags) {
+    tags.set(tag.slug, tag)
+  }
+
+  for (const room of rooms) {
+    for (const tag of room.selectedPost?.tags ?? []) {
+      if (!tags.has(tag.slug)) {
+        tags.set(tag.slug, tag)
+      }
+    }
+  }
+
+  return [...tags.values()]
 }
 
 export interface OrderedAwardEventRoom {

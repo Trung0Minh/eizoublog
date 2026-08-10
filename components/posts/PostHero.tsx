@@ -1,6 +1,7 @@
 'use client';
 
 import { Sparkles } from "lucide-react"
+import Link from "next/link"
 import { motion, useScroll, useTransform } from "motion/react"
 import type { JSONContent } from "@tiptap/react"
 
@@ -148,6 +149,22 @@ export function PostHero({
                 </>
               )}
             </ScrollReveal>
+
+            {post.tags.length > 0 && (
+              <ScrollReveal delay={0.25}>
+                <div className="mt-4 flex w-full flex-wrap items-center gap-2">
+                  {post.tags.map(({ tag }) => (
+                    <Link
+                      className="hover-glitch cursor-pointer rounded-full border border-accent/20 bg-accent/10 px-[12px] py-[6px] text-[11px] font-semibold text-accent"
+                      href={`/tag/${tag.slug}`}
+                      key={tag.slug}
+                    >
+                      {tag.name}
+                    </Link>
+                  ))}
+                </div>
+              </ScrollReveal>
+            )}
           </div>
 
           {hasTableOfContents && (

@@ -1,5 +1,4 @@
 import type { JSONContent } from "@tiptap/react"
-import Link from "next/link"
 import type { ReactNode } from "react"
 
 import { AuthorCreditList } from "@/components/posts/AuthorCreditList"
@@ -25,7 +24,6 @@ export function PostArticleView({
 }: PostArticleViewProps) {
   const creditAuthors = [post.author, ...post.coAuthors.map(({ user }) => user)]
   const hasTableOfContents = extractHeadings(content).length > 0
-  const tags = post.tags.map(({ tag }) => tag)
 
   return (
     <div className="contents" data-testid="post-article-view">
@@ -50,17 +48,6 @@ export function PostArticleView({
                   {post.coverAlt}
                 </div>
               )}
-              <div className="hide-scrollbar flex items-center gap-[6px] overflow-x-auto whitespace-nowrap pb-1">
-                {tags.map((tag) => (
-                  <Link
-                    className="hover-glitch cursor-pointer rounded-full border border-accent/20 bg-accent/10 px-[12px] py-[6px] text-[11px] font-semibold text-accent"
-                    href={`/tag/${tag.slug}`}
-                    key={tag.slug}
-                  >
-                    {tag.name}
-                  </Link>
-                ))}
-              </div>
             </ScrollReveal>
           </header>
 

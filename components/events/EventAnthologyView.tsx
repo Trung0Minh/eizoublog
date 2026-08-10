@@ -9,7 +9,9 @@ import { PostBody } from "@/components/posts/PostBody"
 import {
   buildAwardEventOutline,
   getSubmittedAwardEventRooms,
+  mergeAwardEventTags,
   namespaceAwardEventPostContent,
+  type AwardEventTag,
   type AwardEventPostRoom,
 } from "@/lib/awardEvents"
 import { cn } from "@/lib/utils"
@@ -21,6 +23,7 @@ interface AnthologyRoom {
     content: unknown
     id: string
     status: "DRAFT" | "PUBLISHED" | "ARCHIVED" | "REMOVED"
+    tags?: Array<{ tag: AwardEventTag }>
     title: string
   } | null
   status: "DRAFT" | "SUBMITTED"
@@ -45,7 +48,7 @@ interface EventAnthologyViewProps {
     intro: unknown
     introText: string | null
     rooms: AnthologyRoom[]
-    tags?: Array<{ tag: { name: string; slug: string } }>
+    tags?: Array<{ tag: AwardEventTag }>
     title: string
   }
   postActions?: ReactNode
@@ -142,6 +145,7 @@ export function EventAnthologyView({
             content: submittedContent,
             id: room.submittedPostId ?? room.selectedPost?.id ?? room.id,
             status: "DRAFT",
+            tags: room.selectedPost?.tags?.map(({ tag }) => tag) ?? [],
             title:
               room.submittedPostTitle ?? room.selectedPost?.title ?? "Untitled",
           }
@@ -151,6 +155,7 @@ export function EventAnthologyView({
               content: isJsonContent(room.selectedPost.content)
                 ? room.selectedPost.content
                 : { content: [], type: "doc" },
+              tags: room.selectedPost.tags?.map(({ tag }) => tag) ?? [],
             }
           : null,
       writer: {
@@ -162,6 +167,16 @@ export function EventAnthologyView({
   })
   const rooms = getSubmittedAwardEventRooms(normalizedRooms)
   const headings = buildAwardEventOutline(rooms)
+  const tags = mergeAwardEventTags(
+    (event.tags ?? []).map(({ tag }) => tag),
+    rooms.map((room) => ({
+      selectedPost: room.selectedPost
+        ? {
+            tags: room.selectedPost.tags ?? [],
+          }
+        : null,
+    })),
+  )
   const richIntro =
     isJsonContent(event.intro) && hasMeaningfulContent(event.intro)
       ? event.intro
@@ -202,7 +217,7 @@ export function EventAnthologyView({
           data-testid="event-hero-grid"
         >
           <div className="min-w-0" data-testid="event-hero-main-column">
-            {(event.category || (event.tags?.length ?? 0) > 0) && (
+            {(event.category || tags.length > 0) && (
               <div className="mb-4 flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-accent">
                 {event.category && (
                   <Link
@@ -212,7 +227,7 @@ export function EventAnthologyView({
                     {event.category.name}
                   </Link>
                 )}
-                {event.tags?.map(({ tag }) => (
+                {tags.map((tag) => (
                   <Link
                     className="rounded-full border border-border-default bg-background/70 px-3 py-1.5 text-text-secondary transition-colors hover:border-accent/50 hover:text-accent"
                     href={`/tag/${tag.slug}`}
@@ -345,7 +360,10 @@ export function EventAnthologyView({
         </div>
 
         {headings.length > 0 && (
-          <aside className="hidden 2xl:block">
+          <aside
+            className={cn("hidden 2xl:block", event.coverAlt && "pt-[53px]")}
+            data-testid="event-desktop-toc"
+          >
             <div className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto overscroll-contain pr-2 [scrollbar-gutter:stable]">
               <EventAnthologyTableOfContents headings={headings} />
             </div>

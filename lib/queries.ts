@@ -297,7 +297,15 @@ export const publishedPostDetailSelect = {
           id: true,
           order: true,
           selectedPost: {
-            select: { content: true, id: true, status: true, title: true },
+            select: {
+              content: true,
+              id: true,
+              status: true,
+              tags: {
+                select: { tag: { select: { name: true, slug: true } } },
+              },
+              title: true,
+            },
           },
           status: true,
           submittedContent: true,

@@ -10,6 +10,7 @@ import {
   buildAwardEventPostContent,
   emptyAwardEventDoc,
   flattenAwardEventText,
+  mergeAwardEventTags,
   shuffleSubmittedAwardEventRooms,
 } from "@/lib/awardEvents"
 import { prisma } from "@/lib/prisma"
@@ -72,6 +73,9 @@ export const awardEventDetailSelect = {
           content: true,
           id: true,
           status: true,
+          tags: {
+            select: { tag: { select: { id: true, name: true, slug: true } } },
+          },
           title: true,
         },
       },
@@ -165,6 +169,7 @@ export async function regenerateAwardEventPost(
             content: normalizeAwardEventContent(room.submittedContent),
             id: room.submittedPostId ?? room.selectedPost?.id ?? room.id,
             status: "DRAFT" as const,
+            tags: room.selectedPost?.tags?.map(({ tag }) => tag) ?? [],
             title: room.submittedPostTitle ?? room.selectedPost?.title ?? "Untitled",
           }
         : room.selectedPost
@@ -172,6 +177,7 @@ export async function regenerateAwardEventPost(
               content: normalizeAwardEventContent(room.selectedPost.content),
               id: room.selectedPost.id,
               status: room.selectedPost.status,
+              tags: room.selectedPost.tags.map(({ tag }) => tag),
               title: room.selectedPost.title,
             }
           : null,
@@ -183,7 +189,14 @@ export async function regenerateAwardEventPost(
     rooms,
   })
   const contentText = flattenAwardEventText(content)
-  const tagIds = event.tags.map(({ tag }) => tag.id)
+  const tagIds = mergeAwardEventTags(
+    event.tags.map(({ tag }) => tag),
+    event.rooms.map((room) => ({
+      selectedPost: room.selectedPost
+        ? { tags: room.selectedPost.tags?.map(({ tag }) => tag) ?? [] }
+        : null,
+    })),
+  ).flatMap((tag) => (tag.id ? [tag.id] : []))
 
   const post = await prisma.$transaction(async (tx) => {
     if (event.finalPostId) {

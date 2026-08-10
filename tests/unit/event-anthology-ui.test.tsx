@@ -580,7 +580,7 @@ describe("EventAnthologyView", () => {
     expect(firstContributorBlock).not.toHaveClass("overflow-hidden")
     expect(
       within(firstContributorBlock).getByTestId("event-entry-content").parentElement,
-    ).toHaveClass("overflow-hidden")
+    ).not.toHaveClass("overflow-hidden")
     expect(screen.getAllByTestId("event-contributor-block")[0].querySelector("img")).toHaveClass(
       "aspect-square",
       "h-28",

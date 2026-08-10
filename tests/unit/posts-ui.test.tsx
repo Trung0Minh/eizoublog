@@ -105,7 +105,7 @@ const post = {
 }
 
 describe("PostCard", () => {
-  it("renders post links, authors, category, tags, and comment count", () => {
+  it("renders post links, authors, category, and comment count", () => {
     render(<PostCard post={post} />)
 
     expect(
@@ -140,14 +140,7 @@ describe("PostCard", () => {
       expect(link).toHaveAttribute("href", "/authors/mina")
       expect(link).toHaveAttribute("data-prefetch", "undefined")
     })
-    expect(screen.getByRole("link", { name: "Sakuga" })).toHaveAttribute(
-      "href",
-      "/tag/sakuga",
-    )
-    expect(screen.getByRole("link", { name: "Sakuga" })).toHaveAttribute(
-      "data-prefetch",
-      "undefined",
-    )
+    expect(screen.queryByRole("link", { name: "Sakuga" })).not.toBeInTheDocument()
     expect(screen.getByText("2 bình luận")).toBeVisible()
   })
 

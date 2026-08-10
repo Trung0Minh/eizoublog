@@ -62,7 +62,6 @@ function AuthorAvatar({
 
 export function PostCard({ post }: PostCardProps) {
   const authors = [post.author, ...post.coAuthors.map(({ user }) => user)]
-  const tags = post.tags.map(({ tag }) => tag)
 
   return (
     <motion.article 
@@ -159,19 +158,6 @@ export function PostCard({ post }: PostCardProps) {
         </div>
       </div>
 
-      {tags.length > 0 && (
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          {tags.map((tag) => (
-            <Link
-              className="glass-badge"
-              href={`/tag/${tag.slug}`}
-              key={tag.slug}
-            >
-              {tag.name}
-            </Link>
-          ))}
-        </div>
-      )}
     </motion.article>
   )
 }
