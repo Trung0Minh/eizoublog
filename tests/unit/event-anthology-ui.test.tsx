@@ -330,15 +330,26 @@ describe("EventAnthologyView", () => {
     )
     expect(screen.getByTestId("event-content-grid")).toHaveClass(
       "max-w-[1440px]",
+      "pt-0",
       "lg:grid-cols-[minmax(0,1100px)]",
-      "2xl:grid-cols-[minmax(0,1100px)_220px]",
     )
     expect(screen.getByTestId("event-hero-grid")).toHaveClass(
-      "max-w-7xl",
-      "lg:grid-cols-[minmax(0,1000px)]",
-      "2xl:grid-cols-[minmax(0,1000px)_220px]",
-      "2xl:pl-20",
+      "max-w-[1440px]",
+      "pb-8",
+      "md:pb-16",
+      "lg:grid-cols-[minmax(0,1100px)]",
     )
+    expect(screen.getByTestId("event-content-grid")).not.toHaveClass(
+      "2xl:grid-cols-[minmax(0,1100px)_220px]",
+    )
+    expect(screen.getByTestId("event-hero-grid")).not.toHaveClass(
+      "2xl:grid-cols-[minmax(0,1100px)_220px]",
+    )
+    expect(screen.getByTestId("event-hero-main-column")).toHaveClass(
+      "px-4",
+      "md:px-6",
+    )
+    expect(screen.getByTestId("event-hero-grid")).not.toHaveClass("2xl:pl-20")
     expect(screen.getByTestId("event-hero-main-column")).toContainElement(
       screen.getByRole("heading", { name: "Collected perspectives" }),
     )
@@ -392,6 +403,49 @@ describe("EventAnthologyView", () => {
       "href",
       "/tag/direction",
     )
+  })
+
+  it("places event tags after the contributor metadata like a normal post", () => {
+    render(
+      <EventAnthologyView
+        event={{
+          category: { name: "Reviews", slug: "reviews" },
+          coverAlt: null,
+          coverUrl: null,
+          intro: { content: [], type: "doc" },
+          introText: null,
+          rooms: [
+            {
+              id: "room-a",
+              order: 0,
+              selectedPost: {
+                content: { content: [], type: "doc" },
+                id: "post-a",
+                status: "DRAFT",
+                title: "Entry A",
+              },
+              status: "SUBMITTED",
+              writer: {
+                avatarUrl: null,
+                bio: null,
+                name: "Writer A",
+                username: "writer-a",
+              },
+            },
+          ],
+          tags: [{ tag: { name: "Direction", slug: "direction" } }],
+          title: "Metadata event",
+        }}
+      />,
+    )
+
+    const contributorMetadata = screen.getByLabelText("Event contributors")
+    const tag = screen.getByRole("link", { name: "Direction" })
+
+    expect(
+      contributorMetadata.compareDocumentPosition(tag) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
   })
 
   it("falls back to the plain introduction when the rich-text intro is empty", () => {
@@ -549,11 +603,17 @@ describe("EventAnthologyView", () => {
     )
 
     const heroCredits = screen.getByLabelText("Event contributors")
-    expect(within(heroCredits).getByText("Writer A & Writer B")).toBeInTheDocument()
+    expect(within(heroCredits).getByText("Writer A · Writer B")).toBeInTheDocument()
     expect(within(heroCredits).queryByText("Draft Writer")).not.toBeInTheDocument()
     expect(within(heroCredits).queryByText("Removed Writer")).not.toBeInTheDocument()
 
     const authorCredits = screen.getByLabelText("Tác giả bài viết")
+    expect(screen.getByTestId("event-hero-grid")).toHaveClass(
+      "2xl:grid-cols-[minmax(0,1100px)_220px]",
+    )
+    expect(screen.getByTestId("event-content-grid")).toHaveClass(
+      "2xl:grid-cols-[minmax(0,1100px)_220px]",
+    )
     expect(screen.getByTestId("event-author-credits")).toHaveClass(
       "max-w-[1440px]",
       "lg:grid-cols-[minmax(0,1100px)]",

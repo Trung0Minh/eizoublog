@@ -116,7 +116,7 @@ function EventContributorAttribution({
         ))}
       </div>
       <span className="min-w-0 text-sm font-bold leading-5 text-text-primary">
-        {writers.map(({ name }) => name).join(" & ")}
+        {writers.map(({ name }) => name).join(" · ")}
       </span>
     </div>
   )
@@ -167,6 +167,7 @@ export function EventAnthologyView({
   })
   const rooms = getSubmittedAwardEventRooms(normalizedRooms)
   const headings = buildAwardEventOutline(rooms)
+  const hasTableOfContents = headings.length > 0
   const tags = mergeAwardEventTags(
     (event.tags ?? []).map(({ tag }) => tag),
     rooms.map((room) => ({
@@ -213,29 +214,25 @@ export function EventAnthologyView({
           data-testid="event-cover-bottom-fade"
         />
         <div
-          className="mx-auto grid min-h-[440px] w-full max-w-7xl items-end gap-8 px-4 py-12 sm:min-h-[56vh] sm:px-6 md:py-20 lg:min-h-[64vh] lg:grid-cols-[minmax(0,1000px)] lg:justify-start lg:px-10 2xl:max-w-[1360px] 2xl:grid-cols-[minmax(0,1000px)_220px] 2xl:pl-20 2xl:pr-0"
+          className={cn(
+            "mx-auto grid min-h-[440px] w-full max-w-[1440px] items-end gap-8 pb-8 pt-12 sm:min-h-[56vh] md:pb-16 md:pt-20 lg:min-h-[64vh] lg:grid-cols-[minmax(0,1100px)] lg:justify-center",
+            hasTableOfContents &&
+              "2xl:grid-cols-[minmax(0,1100px)_220px]",
+          )}
           data-testid="event-hero-grid"
         >
-          <div className="min-w-0" data-testid="event-hero-main-column">
-            {(event.category || tags.length > 0) && (
+          <div
+            className="min-w-0 px-4 md:px-6"
+            data-testid="event-hero-main-column"
+          >
+            {event.category && (
               <div className="mb-4 flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-accent">
-                {event.category && (
-                  <Link
-                    className="rounded-full border border-accent/25 bg-background/80 px-3 py-1.5 transition-colors hover:border-accent hover:bg-accent/10"
-                    href={`/category/${event.category.slug}`}
-                  >
-                    {event.category.name}
-                  </Link>
-                )}
-                {tags.map((tag) => (
-                  <Link
-                    className="rounded-full border border-border-default bg-background/70 px-3 py-1.5 text-text-secondary transition-colors hover:border-accent/50 hover:text-accent"
-                    href={`/tag/${tag.slug}`}
-                    key={tag.slug}
-                  >
-                    {tag.name}
-                  </Link>
-                ))}
+                <Link
+                  className="rounded-full border border-accent/25 bg-background/80 px-3 py-1.5 transition-colors hover:border-accent hover:bg-accent/10"
+                  href={`/category/${event.category.slug}`}
+                >
+                  {event.category.name}
+                </Link>
               </div>
             )}
             <h1 className="max-w-6xl font-display text-4xl font-bold leading-[0.98] tracking-[-0.04em] text-text-primary sm:text-6xl lg:text-7xl">
@@ -257,6 +254,19 @@ export function EventAnthologyView({
                 )}
               </div>
             )}
+            {tags.length > 0 && (
+              <div className="mt-4 flex w-full flex-wrap items-center gap-2">
+                {tags.map((tag) => (
+                  <Link
+                    className="hover-glitch cursor-pointer rounded-full border border-accent/20 bg-accent/10 px-[12px] py-[6px] text-[11px] font-semibold text-accent"
+                    href={`/tag/${tag.slug}`}
+                    key={tag.slug}
+                  >
+                    {tag.name}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -269,7 +279,11 @@ export function EventAnthologyView({
       </div>
 
       <div
-        className="relative z-10 mx-auto grid w-full max-w-[1440px] gap-8 pt-6 sm:pt-8 lg:grid-cols-[minmax(0,1100px)] lg:justify-center 2xl:grid-cols-[minmax(0,1100px)_220px]"
+        className={cn(
+          "relative z-10 mx-auto grid w-full max-w-[1440px] gap-8 pt-0 lg:grid-cols-[minmax(0,1100px)] lg:justify-center",
+          hasTableOfContents &&
+            "2xl:grid-cols-[minmax(0,1100px)_220px]",
+        )}
         data-testid="event-content-grid"
       >
         <div className="min-w-0 space-y-6 px-4 md:px-6 sm:space-y-8">
@@ -281,7 +295,7 @@ export function EventAnthologyView({
               {event.coverAlt}
             </p>
           )}
-          {headings.length > 0 && (
+          {hasTableOfContents && (
             <div className="2xl:hidden">
               <EventAnthologyTableOfContents collapsible headings={headings} />
             </div>
@@ -359,7 +373,7 @@ export function EventAnthologyView({
           )}
         </div>
 
-        {headings.length > 0 && (
+        {hasTableOfContents && (
           <aside
             className={cn("hidden 2xl:block", event.coverAlt && "pt-[53px]")}
             data-testid="event-desktop-toc"
@@ -373,7 +387,11 @@ export function EventAnthologyView({
 
       {rooms.length > 0 && (
         <div
-          className="mx-auto grid w-full max-w-[1440px] gap-8 pt-8 lg:grid-cols-[minmax(0,1100px)] lg:justify-center 2xl:grid-cols-[minmax(0,1100px)_220px]"
+          className={cn(
+            "mx-auto grid w-full max-w-[1440px] gap-8 pt-8 lg:grid-cols-[minmax(0,1100px)] lg:justify-center",
+            hasTableOfContents &&
+              "2xl:grid-cols-[minmax(0,1100px)_220px]",
+          )}
           data-testid="event-author-credits"
         >
           <div className="min-w-0 px-4 font-sans text-text-primary md:px-6">
