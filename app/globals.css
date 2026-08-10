@@ -509,10 +509,16 @@
   .post-rich-text {
     color: var(--text-primary);
     font-family: var(--font-inter), system-ui, sans-serif;
-    font-size: 1rem;
+    font-size: 1.25rem;
     line-height: 1.65;
     max-width: 100%;
     overflow-wrap: anywhere;
+  }
+
+  @media (max-width: 767px) {
+    .post-rich-text {
+      padding-inline: 0.25rem;
+    }
   }
 
   .post-rich-text::after {
@@ -528,7 +534,7 @@
   .post-rich-text h2 {
     border-left: 3px solid var(--accent);
     font-family: var(--font-inter), system-ui, sans-serif;
-    font-size: 1.5rem;
+    font-size: 1.875rem;
     font-weight: 700;
     margin-bottom: 0.6em;
     margin-top: 0;
@@ -537,7 +543,7 @@
 
   .post-rich-text h3 {
     font-family: var(--font-inter), system-ui, sans-serif;
-    font-size: 1.25rem;
+    font-size: 1.6875rem;
     font-weight: 700;
     margin-bottom: 0.4em;
     margin-top: 0;
@@ -546,7 +552,7 @@
   .post-rich-text h4 {
     font-family: var(--font-inter), system-ui, sans-serif;
     color: var(--text-secondary);
-    font-size: 1.125rem;
+    font-size: 1.5rem;
     font-weight: 650;
     letter-spacing: 0;
     margin-bottom: 0.35em;

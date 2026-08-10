@@ -19,7 +19,7 @@ describe("article rich-text presentation contract", () => {
   it("uses editor typography and rhythm for published article content", () => {
     const css = read("app/globals.css")
 
-    expect(css).toMatch(/\.post-rich-text\s*\{[^}]*font-size:\s*1rem;/)
+    expect(css).toMatch(/\.post-rich-text\s*\{[^}]*font-size:\s*1\.25rem;/)
     expect(css).toMatch(/\.post-rich-text\s*\{[^}]*line-height:\s*1\.65;/)
     expect(css).toMatch(
       /\.post-rich-text[^{}]*> figure:not\(\.float-left\):not\(\.float-right\)\s*\{[^}]*margin:\s*0\.5rem auto;/,
