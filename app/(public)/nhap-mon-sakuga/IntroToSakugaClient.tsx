@@ -468,8 +468,8 @@ export function IntroToSakugaClient({
         </div>
       )}
 
-      <main className="flex-1 w-full max-w-[800px] mx-auto pt-8 md:pt-16 pb-32 px-4 md:px-0">
-        <div className={cn("bg-background/90 backdrop-blur-md border-[3px] border-border/60 rounded-[24px] p-6 md:p-12 shadow-xl relative isolate overflow-hidden", isEditing && "border-editorial/40 shadow-editorial/10")}>
+      <main className="flex-1 w-full max-w-[1100px] mx-auto pt-8 md:pt-16 pb-32 px-4 md:px-6">
+        <div className={cn("-mx-4 w-[calc(100%+2rem)] bg-background/90 backdrop-blur-md border-[3px] border-border/60 rounded-[24px] p-6 md:mx-0 md:w-auto md:p-12 shadow-xl relative isolate overflow-hidden", isEditing && "border-editorial/40 shadow-editorial/10")}>
           <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-bl-[100px] -z-10" />
           <div className="absolute bottom-0 left-0 w-40 h-40 bg-accent/10 rounded-tr-[100px] -z-10" />
 
@@ -481,13 +481,13 @@ export function IntroToSakugaClient({
                   <HelpCircle className="w-6 h-6 text-accent animate-pulse shrink-0" />
                   {isEditing ? (
                     <input
-                      className="w-full text-center border-none bg-transparent text-[32px] md:text-[40px] font-display font-bold text-text-primary leading-tight outline-none focus:ring-2 focus:ring-accent rounded-[8px] placeholder:text-text-tertiary"
+                      className="w-full text-center border-none bg-transparent text-[36px] md:text-[48px] lg:text-[56px] font-display font-bold text-text-primary leading-tight outline-none focus:ring-2 focus:ring-accent rounded-[8px] placeholder:text-text-tertiary"
                       value={data.title}
                       onChange={(e) => updateData(d => ({ ...d, title: e.target.value }))}
                       placeholder="Tiêu đề trang..."
                     />
                   ) : (
-                    <h1 className="text-[32px] md:text-[40px] font-display font-bold text-text-primary leading-tight">
+                    <h1 className="text-[36px] md:text-[48px] lg:text-[56px] font-display font-bold text-text-primary leading-tight">
                       <TextReveal className="text-accent" text={data.title} />
                     </h1>
                   )}
@@ -497,14 +497,14 @@ export function IntroToSakugaClient({
               <ScrollReveal delay={0.1}>
                 {isEditing ? (
                   <Textarea
-                    className="text-[15px] italic text-text-secondary border-t border-b border-border/50 py-3 mt-4 max-w-[600px] mx-auto text-center resize-none bg-transparent shadow-none focus-visible:ring-1 focus-visible:ring-accent rounded-none"
+                    className="text-[16px] md:text-[18px] italic text-text-secondary border-t border-b border-border/50 py-3 mt-4 max-w-[600px] mx-auto text-center resize-none bg-transparent shadow-none focus-visible:ring-1 focus-visible:ring-accent rounded-none"
                     value={data.shortIntro}
                     onChange={(e) => updateData(d => ({ ...d, shortIntro: e.target.value }))}
                     placeholder="Mô tả ngắn..."
                     rows={2}
                   />
                 ) : data.shortIntro ? (
-                  <p className="text-[15px] italic text-text-secondary border-t border-b border-border/50 py-3 mt-4 max-w-[600px] mx-auto text-center">
+                  <p className="text-[16px] md:text-[18px] italic text-text-secondary border-t border-b border-border/50 py-3 mt-4 max-w-[600px] mx-auto text-center">
                     {data.shortIntro}
                   </p>
                 ) : null}
@@ -545,7 +545,11 @@ export function IntroToSakugaClient({
                     }}
                   />
                 ) : (
-                  <PostBody content={data.body} />
+                  <PostBody
+                    content={data.body}
+                    contentClassName="sakuga-content"
+                    presentation="article"
+                  />
                 )}
               </ScrollReveal>
 

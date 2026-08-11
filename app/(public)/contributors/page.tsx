@@ -54,11 +54,11 @@ export default async function ContributorsPage({ searchParams }: ContributorsPag
 
   return (
     <div className="min-h-screen flex flex-col pt-0">
-      <main className="flex-1 w-full max-w-[1200px] mx-auto px-5 pt-8 md:pt-16 pb-20">
+      <main className="flex-1 w-full max-w-[1240px] mx-auto px-5 pt-8 md:pt-16 pb-20">
         <div className="text-center mb-16">
           <div className="mb-4 inline-grid grid-cols-[32px_auto_32px] items-center justify-center gap-3">
             <FourPointSparkle className="sparkle-glyph h-8 w-8 text-accent" />
-            <h1 className="text-[36px] md:text-[48px] font-display font-bold">
+            <h1 className="text-[36px] sm:text-[44px] md:text-[56px] font-display font-bold">
               <TextReveal
                 text="Tác giả"
                 className="animate-gradient-x bg-[linear-gradient(105deg,var(--accent)_0%,var(--season-logo-secondary,var(--accent))_48%,var(--accent)_100%)] bg-clip-text text-transparent [&>span:last-child]:mr-0"

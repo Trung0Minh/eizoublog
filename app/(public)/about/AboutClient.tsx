@@ -1,7 +1,7 @@
 "use client"
 
 import dynamic from "next/dynamic"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Pencil, Save, X, Heart } from "lucide-react"
 import type { Editor, JSONContent } from "@tiptap/react"
@@ -162,6 +162,95 @@ export function AboutClient({
   const contentTextRef = useRef(contentText)
   const aboutEditorRef = useRef<Editor | null>(null)
   const whyWeDoThisEditorRef = useRef<Editor | null>(null)
+  const aboutGridRef = useRef<HTMLDivElement>(null)
+
+  useLayoutEffect(() => {
+    const grid = aboutGridRef.current
+    if (!grid) return
+
+    const image = grid.querySelector<HTMLElement>("[data-about-portrait]")
+    const content = grid.querySelector<HTMLElement>("[data-about-content]")
+    const card = grid.parentElement
+    const main = grid.closest("main")
+    if (!image || !content || !card || !main) return
+
+    let animationFrame = 0
+
+    const balanceColumns = () => {
+      content.style.width = ""
+
+      if (window.innerWidth < 768 || isEditing) {
+        return
+      }
+
+      const imageHeight = image.getBoundingClientRect().height
+      if (imageHeight <= 0) return
+
+      const mainStyle = getComputedStyle(main)
+      const cardStyle = getComputedStyle(card)
+      const gridStyle = getComputedStyle(grid)
+      const availableWidth =
+        main.clientWidth -
+        parseFloat(mainStyle.paddingLeft) -
+        parseFloat(mainStyle.paddingRight) -
+        parseFloat(cardStyle.paddingLeft) -
+        parseFloat(cardStyle.paddingRight) -
+        parseFloat(cardStyle.borderLeftWidth) -
+        parseFloat(cardStyle.borderRightWidth) -
+        image.getBoundingClientRect().width -
+        parseFloat(gridStyle.columnGap)
+
+      let lowerWidth = 280
+      let upperWidth = Math.max(lowerWidth, Math.min(760, availableWidth))
+      let bestWidth = upperWidth
+      let bestDifference = Number.POSITIVE_INFINITY
+
+      // Binary-search once for the width whose intrinsic content height
+      // most closely matches the uncropped portrait height.
+      for (let index = 0; index < 9; index += 1) {
+        const candidateWidth = (lowerWidth + upperWidth) / 2
+        content.style.width = `${candidateWidth}px`
+        const heightDifference = content.scrollHeight - imageHeight
+        const absoluteDifference = Math.abs(heightDifference)
+
+        if (absoluteDifference < bestDifference) {
+          bestDifference = absoluteDifference
+          bestWidth = candidateWidth
+        }
+
+        if (heightDifference > 0) {
+          lowerWidth = candidateWidth
+        } else {
+          upperWidth = candidateWidth
+        }
+      }
+
+      content.style.width = `${Math.round(bestWidth)}px`
+    }
+
+    const scheduleBalance = () => {
+      cancelAnimationFrame(animationFrame)
+      animationFrame = requestAnimationFrame(balanceColumns)
+    }
+
+    const observer = new ResizeObserver(scheduleBalance)
+    observer.observe(image)
+    observer.observe(main)
+    window.addEventListener("resize", scheduleBalance)
+
+    const imageElement = image.querySelector("img")
+    imageElement?.addEventListener("load", scheduleBalance)
+    void document.fonts.ready.then(scheduleBalance)
+    scheduleBalance()
+
+    return () => {
+      cancelAnimationFrame(animationFrame)
+      observer.disconnect()
+      window.removeEventListener("resize", scheduleBalance)
+      imageElement?.removeEventListener("load", scheduleBalance)
+      content.style.width = ""
+    }
+  }, [data.body, data.title, data.whyWeDoThis, isEditing])
 
   function updateData(updater: (currentData: AboutPageContent) => AboutPageContent) {
     const nextData = updater(dataRef.current)
@@ -293,15 +382,15 @@ export function AboutClient({
       )}
 
       <main className="flex-1 w-full max-w-[1180px] mx-auto pt-8 md:pt-16 pb-32 px-4 md:px-6 xl:px-0">
-        <div className={cn("bg-background/90 backdrop-blur-md border-[3px] border-border/60 rounded-[24px] p-6 md:p-12 shadow-xl relative isolate overflow-hidden", isEditing && "border-editorial/40 shadow-editorial/10")}>
+        <div className={cn("mx-auto w-fit max-w-full bg-background/90 backdrop-blur-md border-[3px] border-border/60 rounded-[24px] p-6 md:p-12 shadow-xl relative isolate overflow-hidden", isEditing && "border-editorial/40 shadow-editorial/10")}>
           {/* Decorative Corner Flairs */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-bl-[100px] -z-10" />
           <div className="absolute bottom-0 left-0 w-40 h-40 bg-accent/10 rounded-tr-[100px] -z-10" />
 
-          <div className="grid grid-cols-1 gap-10 md:grid-cols-[auto_minmax(0,1fr)] md:items-stretch">
+          <div ref={aboutGridRef} className="grid grid-cols-1 gap-10 md:grid-cols-[auto_minmax(0,1fr)] md:items-start">
 
-            <ScrollReveal delay={0.2} className="w-full md:h-full md:w-[min(42vw,430px)] md:self-stretch">
-              <div className="relative h-full rounded-[16px] overflow-hidden border-4 border-white dark:border-border shadow-lg rotate-[-2deg] hover:rotate-0 transition-transform duration-300 bg-background">
+            <ScrollReveal delay={0.2} className="w-full md:w-[min(42vw,430px)]" data-about-portrait="true">
+              <div className="relative h-auto rounded-[16px] overflow-hidden border-4 border-white dark:border-border shadow-lg rotate-[-2deg] hover:rotate-0 transition-transform duration-300 bg-background">
                  {isEditing ? (
                    <CoverImageUpload
                      preserveAspectRatio
@@ -312,14 +401,17 @@ export function AboutClient({
                    <img
                       src={data.coverUrl || "https://picsum.photos/seed/animekawaiigirl/800/1000"}
                       alt="Mascot"
-                      className="h-auto w-full md:h-full md:w-full md:object-cover"
+                      className="h-auto w-full"
                       referrerPolicy="no-referrer"
                    />
                  )}
               </div>
             </ScrollReveal>
 
-            <div className="flex w-full min-w-0 flex-col">
+            <div
+              className="flex w-full min-w-0 flex-col md:self-start"
+              data-about-content="true"
+            >
               <ScrollReveal>
                 <div className="mb-4">
                   {isEditing ? (

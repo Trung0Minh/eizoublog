@@ -40,7 +40,7 @@ export function ContributorBio({ bio }: { bio: string }) {
   }, [bio])
 
   return (
-    <div className="text-[14px] text-text-secondary">
+    <div className="contributor-bio text-[14px] text-text-secondary">
       <motion.div
         animate={{
           height:

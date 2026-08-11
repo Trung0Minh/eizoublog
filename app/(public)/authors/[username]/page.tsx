@@ -119,7 +119,7 @@ export default async function AuthorPage({
             @{author.username}
           </p>
           {author.bio && (
-            <div className="mt-3 max-w-2xl text-sm leading-relaxed">
+            <div className="contributor-bio mt-3 max-w-2xl text-sm leading-relaxed">
               {(() => {
                 if (author.bio.startsWith("{")) {
                   try {
