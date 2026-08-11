@@ -81,7 +81,7 @@ export function PostArticleView({
         </main>
 
         {hasTableOfContents && (
-          <aside className="sticky top-24 ml-10 mt-12 hidden max-h-[calc(100vh-120px)] w-[200px] shrink-0 self-start overflow-y-auto overscroll-contain no-scrollbar 2xl:block">
+          <aside className="sticky top-24 ml-10 mt-12 hidden w-[200px] shrink-0 self-start 2xl:block">
             <ScrollReveal delay={0.5}>
               <TableOfContents content={content} />
             </ScrollReveal>

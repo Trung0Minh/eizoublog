@@ -53,14 +53,23 @@ export function TableOfContents({
   const contents = (
     <nav
       aria-label="Mục lục"
-      className={cn("font-sans", !collapsible && "sticky top-[80px]")}
+      className={cn(
+        "font-sans",
+        !collapsible && "flex max-h-[calc(100vh-120px)] flex-col",
+      )}
     >
       {!collapsible && (
-        <h4 className="mb-3 text-[10px] font-semibold uppercase tracking-[0.1em] text-text-tertiary">
+        <h4 className="mb-3 shrink-0 text-[10px] font-semibold uppercase tracking-[0.1em] text-text-tertiary">
           Nội dung
         </h4>
       )}
-      <ul className="flex flex-col relative">
+      <ul
+        className={cn(
+          "relative flex flex-col",
+          !collapsible &&
+            "min-h-0 overflow-y-auto overscroll-contain pr-2 [scrollbar-gutter:stable]",
+        )}
+      >
         <div className="absolute left-0 top-0 bottom-0 w-px bg-border-default"></div>
         {headings.map(({ id, level, text }) => (
           <li

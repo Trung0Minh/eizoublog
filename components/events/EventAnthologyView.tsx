@@ -378,7 +378,7 @@ export function EventAnthologyView({
             className={cn("hidden 2xl:block", event.coverAlt && "pt-[53px]")}
             data-testid="event-desktop-toc"
           >
-            <div className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto overscroll-contain pr-2 [scrollbar-gutter:stable]">
+            <div className="sticky top-24">
               <EventAnthologyTableOfContents headings={headings} />
             </div>
           </aside>

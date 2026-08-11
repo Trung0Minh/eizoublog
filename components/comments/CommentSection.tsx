@@ -93,11 +93,11 @@ export function CommentSection({
 
   return (
     <section className="relative z-30 mt-8 overflow-hidden rounded-[16px] border border-border-default/60 bg-background/90 px-4 py-5 font-sans backdrop-blur-sm sm:mt-12 sm:rounded-[8px] sm:bg-subtle-bg/90 sm:p-8 md:p-10" id="comments">
-      <div className="mb-4">
+      <div className="mb-4 flex items-baseline gap-2">
         <h2 className="text-[20px] font-bold tracking-tight text-text-primary">
           Bình luận
         </h2>
-        <p className="mt-1 text-[14px] text-text-secondary">
+        <p className="text-[14px] text-text-secondary">
           {total} bình luận
         </p>
       </div>

@@ -119,10 +119,10 @@ export default async function PostPage({ params }: PostPageProps) {
           }
         />
         <div
-          className="mx-auto grid w-full max-w-7xl gap-12 px-4 pb-24 sm:px-6 lg:grid-cols-[minmax(0,1000px)] lg:justify-start lg:px-10 2xl:max-w-[1360px] 2xl:grid-cols-[minmax(0,1000px)_220px] 2xl:pl-20 2xl:pr-0"
+          className="mx-auto grid w-full max-w-[1440px] gap-8 pb-24 lg:grid-cols-[minmax(0,1100px)] lg:justify-center 2xl:grid-cols-[minmax(0,1100px)_220px]"
           data-testid="event-comments"
         >
-          <div className="min-w-0">
+          <div className="min-w-0 px-4 md:px-6">
             <CommentSection
               initialComments={post.comments}
               postId={post.id}

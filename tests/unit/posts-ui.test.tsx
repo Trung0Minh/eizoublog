@@ -784,6 +784,67 @@ describe("PostEditor", () => {
     expect(routerMocks.refresh).toHaveBeenCalled()
   })
 
+  it("sends an empty cover alt value when clearing it on a published post", async () => {
+    const user = userEvent.setup()
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            data: {
+              id: "post-1",
+              slug: "existing-post",
+              status: "PUBLISHED",
+              version: 2,
+            },
+          }),
+          { status: 200 },
+        ),
+      ),
+    )
+
+    render(
+      <PostEditor
+        categories={[]}
+        currentUserId="writer-1"
+        initialData={{
+          categoryId: null,
+          coAuthorIds: [],
+          content: { content: [], type: "doc" },
+          contentText: "Published body",
+          coverAlt: "Existing cover description",
+          coverUrl: "https://cdn.example.test/cover.jpg",
+          excerpt: null,
+          id: "post-1",
+          status: "PUBLISHED",
+          tags: [],
+          title: "Existing post",
+          version: 1,
+        }}
+        writers={[]}
+      />,
+    )
+
+    await user.click(screen.getByRole("button", { name: "Cài đặt bài viết" }))
+    await user.clear(screen.getByLabelText("Văn bản thay thế ảnh bìa"))
+    await user.click(screen.getByRole("button", { name: "Cập nhật bài viết" }))
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        "/api/posts/post-1",
+        expect.objectContaining({ method: "PATCH" }),
+      )
+    })
+
+    const request = (fetch as ReturnType<typeof vi.fn>).mock.calls.find(
+      ([url]) => url === "/api/posts/post-1",
+    )?.[1] as { body: string }
+    expect(JSON.parse(request.body) as Record<string, unknown>).toHaveProperty(
+      "coverAlt",
+      "",
+    )
+  })
+
   it("uses a fullscreen writing shell with a left action rail and right settings", async () => {
     const user = userEvent.setup()
     render(

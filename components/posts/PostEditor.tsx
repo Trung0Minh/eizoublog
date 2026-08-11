@@ -319,7 +319,7 @@ export function PostEditor({
           coAuthorIds: draft.coAuthorIds,
           content: draft.content,
           contentText: draft.contentText,
-          coverAlt: draft.coverAlt || undefined,
+          coverAlt: draft.coverAlt,
           coverUrl: draft.coverUrl || undefined,
           draftVisibility:
             draft.coAuthorIds.length > 0 ? "CO_AUTHORS" : "PRIVATE",
@@ -477,7 +477,7 @@ export function PostEditor({
           coAuthorIds: manualDraft.coAuthorIds,
           content: manualDraft.content,
           contentText: manualDraft.contentText,
-          coverAlt: manualDraft.coverAlt || undefined,
+          coverAlt: manualDraft.coverAlt,
           coverUrl: manualDraft.coverUrl || undefined,
           draftVisibility:
             manualDraft.coAuthorIds.length > 0 ? "CO_AUTHORS" : "PRIVATE",

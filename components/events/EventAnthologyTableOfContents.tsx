@@ -124,13 +124,25 @@ export function EventAnthologyTableOfContents({
   }, [activeId, collapsible, expandedWriterIds])
 
   const contents = (
-    <nav aria-label="Mục lục sự kiện" className="font-sans">
+    <nav
+      aria-label="Mục lục sự kiện"
+      className={cn(
+        "font-sans",
+        !collapsible && "flex max-h-[calc(100vh-8rem)] flex-col",
+      )}
+    >
       {!collapsible && (
-        <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.16em] text-text-tertiary">
+        <p className="mb-4 shrink-0 text-[10px] font-bold uppercase tracking-[0.16em] text-text-tertiary">
           Tác giả
         </p>
       )}
-      <ol className="border-l border-border-default">
+      <ol
+        className={cn(
+          "border-l border-border-default",
+          !collapsible &&
+            "min-h-0 overflow-y-auto overscroll-contain pr-2 [scrollbar-gutter:stable]",
+        )}
+      >
         {groups.map(({ children, writer }) => {
           const isExpanded = expandedWriterIds.includes(writer.id)
           const isWriterActive =

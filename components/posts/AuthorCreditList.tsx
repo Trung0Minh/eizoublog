@@ -51,23 +51,14 @@ export function AuthorCreditList({
       </div>
 
       {authors.length > 1 && (
-        <>
-          <div
-            aria-hidden="true"
-            className={cn(
-              "pointer-events-none absolute bottom-3 right-0 top-0 w-16 bg-gradient-to-l from-background via-background/75 to-transparent sm:hidden",
-              hasOverflow && "sm:block",
-            )}
-          />
-          <div
-            className={cn(
-              "mt-1 text-right text-[11px] font-medium text-text-tertiary sm:hidden",
-              hasOverflow && "sm:block",
-            )}
-          >
-            Kéo ngang để xem thêm →
-          </div>
-        </>
+        <div
+          className={cn(
+            "mt-1 text-right text-[11px] font-medium text-text-tertiary sm:hidden",
+            hasOverflow && "sm:block",
+          )}
+        >
+          Kéo ngang để xem thêm →
+        </div>
       )}
     </div>
   )
