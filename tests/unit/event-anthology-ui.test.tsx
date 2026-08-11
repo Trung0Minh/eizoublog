@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { EventAnthologyTableOfContents } from "@/components/events/EventAnthologyTableOfContents"
@@ -14,6 +14,21 @@ vi.mock("@/components/posts/PostBody", () => ({
 }))
 
 describe("EventAnthologyTableOfContents", () => {
+  let intersectionCallback: IntersectionObserverCallback
+
+  beforeEach(() => {
+    class MockIntersectionObserver {
+      constructor(callback: IntersectionObserverCallback) {
+        intersectionCallback = callback
+      }
+      disconnect() {}
+      observe() {}
+      unobserve() {}
+    }
+
+    vi.stubGlobal("IntersectionObserver", MockIntersectionObserver)
+  })
+
   it("opens and closes writer outlines independently", async () => {
     const pushStateSpy = vi.spyOn(window.history, "pushState").mockImplementation(() => {})
     const scrollIntoView = vi.fn()
@@ -130,6 +145,56 @@ describe("EventAnthologyTableOfContents", () => {
       headingElement.remove()
       requestAnimationFrameSpy.mockRestore()
       vi.useRealTimers()
+    }
+  })
+
+  it("keeps the active desktop link visible without scrolling page ancestors", async () => {
+    const headingElement = document.createElement("h2")
+    headingElement.id = "event-room-a-opening"
+    document.body.appendChild(headingElement)
+
+    try {
+      render(
+        <EventAnthologyTableOfContents
+          headings={[
+            { id: "event-room-a", level: 1, text: "Writer A" },
+            { id: "event-room-a-opening", level: 2, text: "Opening A" },
+          ]}
+        />,
+      )
+
+      const navigation = screen.getByRole("navigation", {
+        name: "Mục lục sự kiện",
+      })
+      const list = within(navigation).getAllByRole("list")[0]
+      const activeLink = screen.getByRole("link", { name: "Opening A" })
+      const scrollIntoView = vi.fn()
+
+      activeLink.scrollIntoView = scrollIntoView
+      list.scrollTop = 10
+      list.getBoundingClientRect = vi.fn(
+        () => ({ bottom: 100, top: 0 }) as DOMRect,
+      )
+      activeLink.getBoundingClientRect = vi.fn(
+        () => ({ bottom: 140, top: 120 }) as DOMRect,
+      )
+
+      act(() => {
+        intersectionCallback(
+          [
+            {
+              isIntersecting: true,
+              target: headingElement,
+            },
+          ] as unknown as IntersectionObserverEntry[],
+          {} as IntersectionObserver,
+        )
+      })
+
+      await waitFor(() => expect(list.scrollTop).toBe(50))
+      expect(scrollIntoView).not.toHaveBeenCalled()
+    } finally {
+      headingElement.remove()
     }
   })
 })

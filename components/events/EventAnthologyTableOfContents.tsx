@@ -34,6 +34,7 @@ export function EventAnthologyTableOfContents({
   const [expandedWriterIds, setExpandedWriterIds] = useState<string[]>(
     groups[0] ? [groups[0].writer.id] : [],
   )
+  const listRef = useRef<HTMLOListElement>(null)
   const linkRefs = useRef(new Map<string, HTMLAnchorElement>())
   const pendingNavigationRef = useRef(false)
   const pendingNavigationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -120,7 +121,19 @@ export function EventAnthologyTableOfContents({
 
   useEffect(() => {
     if (collapsible) return
-    linkRefs.current.get(activeId)?.scrollIntoView({ block: "nearest" })
+
+    const list = listRef.current
+    const activeLink = linkRefs.current.get(activeId)
+    if (!list || !activeLink) return
+
+    const listBounds = list.getBoundingClientRect()
+    const linkBounds = activeLink.getBoundingClientRect()
+
+    if (linkBounds.top < listBounds.top) {
+      list.scrollTop -= listBounds.top - linkBounds.top
+    } else if (linkBounds.bottom > listBounds.bottom) {
+      list.scrollTop += linkBounds.bottom - listBounds.bottom
+    }
   }, [activeId, collapsible, expandedWriterIds])
 
   const contents = (
@@ -142,6 +155,7 @@ export function EventAnthologyTableOfContents({
           !collapsible &&
             "min-h-0 overflow-y-auto overscroll-contain pr-2 [scrollbar-gutter:stable]",
         )}
+        ref={listRef}
       >
         {groups.map(({ children, writer }) => {
           const isExpanded = expandedWriterIds.includes(writer.id)
