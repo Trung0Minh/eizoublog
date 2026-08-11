@@ -60,6 +60,36 @@ describe("public profile layouts", () => {
     )
   })
 
+  it("preserves authored line breaks in compact author bios", () => {
+    render(
+      <AuthorBio
+        author={{
+          avatarUrl: null,
+          bio: JSON.stringify({
+            content: [
+              {
+                content: [{ text: "Đã lỡ yêu Chanh mất rồi", type: "text" }],
+                type: "paragraph",
+              },
+              {
+                content: [{ text: "#chucemhanhphuc", type: "text" }],
+                type: "paragraph",
+              },
+            ],
+            type: "doc",
+          }),
+          name: "nun",
+          username: "nun",
+        }}
+      />,
+    )
+
+    const bio = screen.getByText((_, element) =>
+      element?.textContent === "Đã lỡ yêu Chanh mất rồi\n#chucemhanhphuc",
+    )
+    expect(bio).toHaveClass("whitespace-pre-line")
+  })
+
   it("places the contributor role badge beside the name at each breakpoint", async () => {
     mocks.getCachedContributors.mockResolvedValue([
       {

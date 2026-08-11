@@ -113,6 +113,12 @@ describe("anime-blog-4 appearance parity", () => {
     expect(homePostList).not.toContain("mb-6 flex justify-end")
   })
 
+  it("uses one shared horizontal inset for the homepage hero and content grid", () => {
+    const hero = read("components/posts/HeroCarousel.tsx")
+
+    expect(hero).not.toContain("mt-4 px-4 md:px-5")
+  })
+
   it("does not invent fallback tags on post pages", () => {
     const postPage = read("app/(public)/[slug]/page.tsx")
     const postHero = read("components/posts/PostHero.tsx")

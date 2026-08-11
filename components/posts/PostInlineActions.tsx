@@ -28,6 +28,7 @@ interface PostInlineActionsProps {
   eventSettingsHref?: string
   featuredAt?: Date | string | null
   postId: string
+  splitAdminActionsOnMobile?: boolean
   status?: PostStatus
 }
 
@@ -50,6 +51,7 @@ export function PostInlineActions({
   eventSettingsHref,
   featuredAt,
   postId,
+  splitAdminActionsOnMobile = false,
   status,
 }: PostInlineActionsProps) {
   const router = useRouter()
@@ -176,7 +178,14 @@ export function PostInlineActions({
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-2">
+      <div
+        className={cn(
+          "flex flex-wrap items-center gap-2",
+          splitAdminActionsOnMobile &&
+            "contents sm:flex sm:flex-wrap sm:items-center sm:gap-2",
+        )}
+        data-testid="post-inline-actions"
+      >
         {canEdit && (
           <Button
             asChild
@@ -193,100 +202,107 @@ export function PostInlineActions({
         )}
 
         {showAdminActions && (
-          <div className="inline-flex items-center gap-1 rounded-[12px] border border-border-default/70 bg-background/85 p-1.5 shadow-sm backdrop-blur-xl">
-            {isAdmin && eventSettingsHref && (
-              <Button
-                asChild
-                aria-label="Cài đặt sự kiện"
-                className={buttonClass}
-                size="icon"
-                title="Cài đặt"
-                variant="ghost"
-              >
-                <Link href={eventSettingsHref} prefetch={false}>
-                  <Settings aria-hidden="true" className={iconClass} />
-                </Link>
-              </Button>
+          <div
+            className={cn(
+              splitAdminActionsOnMobile ? "basis-full sm:basis-auto" : "contents",
             )}
+            data-testid="post-admin-actions"
+          >
+            <div className="inline-flex items-center gap-1 rounded-[12px] border border-border-default/70 bg-background/85 p-1.5 shadow-sm backdrop-blur-xl">
+              {isAdmin && eventSettingsHref && (
+                <Button
+                  asChild
+                  aria-label="Cài đặt sự kiện"
+                  className={buttonClass}
+                  size="icon"
+                  title="Cài đặt"
+                  variant="ghost"
+                >
+                  <Link href={eventSettingsHref} prefetch={false}>
+                    <Settings aria-hidden="true" className={iconClass} />
+                  </Link>
+                </Button>
+              )}
 
-            {isAdmin && isPublished && (
-              <Button
-                aria-label={isFeatured ? "Bỏ khỏi bài nổi bật" : "Đưa vào bài nổi bật"}
-                className={cn(
-                  buttonClass,
-                  isFeatured &&
-                    "bg-accent/10 text-accent hover:bg-accent/15 hover:text-accent",
-                )}
-                disabled={pendingAction !== null}
-                onClick={() => void toggleFeatured()}
-                size="icon"
-                title={isFeatured ? "Bỏ khỏi bài nổi bật" : "Đưa vào bài nổi bật"}
-                type="button"
-                variant="ghost"
-              >
-                {pendingAction === "feature" ? (
-                  <Loader2 aria-hidden="true" className={`${iconClass} animate-spin`} />
-                ) : (
-                  <Star
-                    aria-hidden="true"
-                    className={cn(iconClass, isFeatured && "fill-current")}
-                  />
-                )}
-              </Button>
-            )}
+              {isAdmin && isPublished && (
+                <Button
+                  aria-label={isFeatured ? "Bỏ khỏi bài nổi bật" : "Đưa vào bài nổi bật"}
+                  className={cn(
+                    buttonClass,
+                    isFeatured &&
+                      "bg-accent/10 text-accent hover:bg-accent/15 hover:text-accent",
+                  )}
+                  disabled={pendingAction !== null}
+                  onClick={() => void toggleFeatured()}
+                  size="icon"
+                  title={isFeatured ? "Bỏ khỏi bài nổi bật" : "Đưa vào bài nổi bật"}
+                  type="button"
+                  variant="ghost"
+                >
+                  {pendingAction === "feature" ? (
+                    <Loader2 aria-hidden="true" className={`${iconClass} animate-spin`} />
+                  ) : (
+                    <Star
+                      aria-hidden="true"
+                      className={cn(iconClass, isFeatured && "fill-current")}
+                    />
+                  )}
+                </Button>
+              )}
 
-            {isAdmin && isPublished && (
-              <Button
-                aria-label="Rút bài"
-                className={buttonClass}
-                disabled={pendingAction !== null}
-                onClick={() => void updateStatus("DRAFT")}
-                size="icon"
-                title="Rút bài"
-                type="button"
-                variant="ghost"
-              >
-                {pendingAction === "draft" ? (
-                  <Loader2 aria-hidden="true" className={`${iconClass} animate-spin`} />
-                ) : (
-                  <RotateCcw aria-hidden="true" className={iconClass} />
-                )}
-              </Button>
-            )}
+              {isAdmin && isPublished && (
+                <Button
+                  aria-label="Rút bài"
+                  className={buttonClass}
+                  disabled={pendingAction !== null}
+                  onClick={() => void updateStatus("DRAFT")}
+                  size="icon"
+                  title="Rút bài"
+                  type="button"
+                  variant="ghost"
+                >
+                  {pendingAction === "draft" ? (
+                    <Loader2 aria-hidden="true" className={`${iconClass} animate-spin`} />
+                  ) : (
+                    <RotateCcw aria-hidden="true" className={iconClass} />
+                  )}
+                </Button>
+              )}
 
-            {isAdmin && status !== "ARCHIVED" && status !== "REMOVED" && (
-              <Button
-                aria-label="Lưu trữ"
-                className="h-8 w-8 rounded-[8px] p-0 text-text-secondary transition-colors hover:bg-orange-500/10 hover:text-orange-500"
-                disabled={pendingAction !== null}
-                onClick={() => void updateStatus("ARCHIVED")}
-                size="icon"
-                title="Lưu trữ"
-                type="button"
-                variant="ghost"
-              >
-                {pendingAction === "archive" ? (
-                  <Loader2 aria-hidden="true" className={`${iconClass} animate-spin`} />
-                ) : (
-                  <Archive aria-hidden="true" className={iconClass} />
-                )}
-              </Button>
-            )}
+              {isAdmin && status !== "ARCHIVED" && status !== "REMOVED" && (
+                <Button
+                  aria-label="Lưu trữ"
+                  className="h-8 w-8 rounded-[8px] p-0 text-text-secondary transition-colors hover:bg-orange-500/10 hover:text-orange-500"
+                  disabled={pendingAction !== null}
+                  onClick={() => void updateStatus("ARCHIVED")}
+                  size="icon"
+                  title="Lưu trữ"
+                  type="button"
+                  variant="ghost"
+                >
+                  {pendingAction === "archive" ? (
+                    <Loader2 aria-hidden="true" className={`${iconClass} animate-spin`} />
+                  ) : (
+                    <Archive aria-hidden="true" className={iconClass} />
+                  )}
+                </Button>
+              )}
 
-            {isAdmin && status !== "REMOVED" && (
-              <Button
-                aria-label="Gỡ bài viết"
-                className="h-8 w-8 rounded-[8px] p-0 text-text-tertiary transition-colors hover:bg-destructive/10 hover:text-destructive"
-                disabled={pendingAction !== null}
-                onClick={() => setRemoveConfirmOpen(true)}
-                size="icon"
-                title="Gỡ bài viết"
-                type="button"
-                variant="ghost"
-              >
-                <ShieldX aria-hidden="true" className={iconClass} />
-              </Button>
-            )}
+              {isAdmin && status !== "REMOVED" && (
+                <Button
+                  aria-label="Gỡ bài viết"
+                  className="h-8 w-8 rounded-[8px] p-0 text-text-tertiary transition-colors hover:bg-destructive/10 hover:text-destructive"
+                  disabled={pendingAction !== null}
+                  onClick={() => setRemoveConfirmOpen(true)}
+                  size="icon"
+                  title="Gỡ bài viết"
+                  type="button"
+                  variant="ghost"
+                >
+                  <ShieldX aria-hidden="true" className={iconClass} />
+                </Button>
+              )}
+            </div>
           </div>
         )}
       </div>

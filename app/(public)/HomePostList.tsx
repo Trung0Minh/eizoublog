@@ -1,3 +1,5 @@
+import type { ReactNode } from "react"
+
 import { PostList } from "@/components/posts/PostList"
 import { PostSortTabs } from "@/components/posts/PostSortTabs"
 import { getCachedPublishedPosts } from "@/lib/queries"
@@ -10,41 +12,65 @@ export async function HomePostList({
   archiveMonth,
   data,
   page,
+  sidebar,
   sort,
 }: {
   archiveMonth?: string
   data?: HomePostListData
   page: number
+  sidebar?: ReactNode
   sort: PostListSort
 }) {
   const { posts, total } =
     data ?? (await getCachedPublishedPosts(page, PAGE_SIZE, sort, archiveMonth))
 
   return (
-    <div className="flex scroll-mt-24 flex-col" id="post-list">
-      {archiveMonth && (
-        <h1 className="text-2xl font-bold mb-4">
-          Bài viết {formatArchiveHeading(archiveMonth)}
-        </h1>
-      )}
-      <div className="mb-6 flex justify-start gap-4 border-b pb-4">
-        <PostSortTabs
-          basePath="/"
-          query={{ archive: archiveMonth }}
-          sort={sort}
+    <div
+      className="grid scroll-mt-24 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_240px] lg:items-start lg:gap-x-12"
+      id="post-list"
+    >
+      <div className="lg:col-start-1 lg:row-start-1">
+        {archiveMonth && (
+          <h1 className="mb-4 text-2xl font-bold">
+            Bài viết {formatArchiveHeading(archiveMonth)}
+          </h1>
+        )}
+        <div className="mb-6 flex justify-start gap-4 border-b pb-4">
+          <PostSortTabs
+            basePath="/"
+            query={{ archive: archiveMonth }}
+            sort={sort}
+          />
+        </div>
+      </div>
+
+      <div
+        className="lg:col-start-1 lg:row-start-2"
+        data-testid="home-post-feed"
+      >
+        <PostList
+          emptyMessage="Chưa có bài viết nào được xuất bản."
+          pagination={{
+            page,
+            pageSize: PAGE_SIZE,
+            query: {
+              archive: archiveMonth,
+              sort: sort === "latest" ? undefined : sort,
+            },
+            total,
+          }}
+          posts={posts}
         />
       </div>
 
-      <PostList
-        emptyMessage="Chưa có bài viết nào được xuất bản."
-        pagination={{
-          page,
-          pageSize: PAGE_SIZE,
-          query: { archive: archiveMonth, sort: sort === "latest" ? undefined : sort },
-          total,
-        }}
-        posts={posts}
-      />
+      {sidebar && (
+        <div
+          className="mt-8 lg:col-start-2 lg:row-start-2 lg:mt-0"
+          data-testid="home-sidebar-slot"
+        >
+          {sidebar}
+        </div>
+      )}
     </div>
   )
 }

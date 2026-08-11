@@ -95,8 +95,15 @@ export function PostHero({
               </ScrollReveal>
             ) : null}
 
-            <ScrollReveal delay={0.2} className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-[12px] bg-background/95 backdrop-blur-md p-2 pr-4 rounded-full border border-border-default shadow-md select-none">
+            <ScrollReveal
+              className="flex flex-wrap items-center gap-3"
+              data-testid="post-hero-meta-row"
+              delay={0.2}
+            >
+              <div
+                className="flex w-fit min-w-0 items-center gap-[12px] rounded-full border border-border-default bg-background/95 p-2 pr-4 shadow-md backdrop-blur-md select-none"
+                data-testid="post-author-card"
+              >
                 <div className="flex items-center">
                   {authors.map((displayAuthor, index) => (
                     <div
@@ -115,9 +122,9 @@ export function PostHero({
                     </div>
                   ))}
                 </div>
-                <div className="flex flex-col sm:flex-row sm:items-center text-[13px] text-text-primary font-bold">
+                <div className="flex min-w-0 flex-col text-[13px] font-bold text-text-primary sm:flex-row sm:items-center">
                   <div className="flex items-center gap-1">
-                    <span className="text-text-primary font-bold">
+                    <span className="truncate font-bold text-text-primary sm:overflow-visible">
                       {authors.map(({ name }) => name).join(" & ")}
                     </span>
                   </div>
@@ -144,6 +151,7 @@ export function PostHero({
                     authorUsernames={authorUsernames}
                     featuredAt={post.featuredAt}
                     postId={post.id}
+                    splitAdminActionsOnMobile
                     status={post.status}
                   />
                 </>

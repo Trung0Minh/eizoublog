@@ -52,7 +52,7 @@ export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
   if (!posts || posts.length === 0) return null;
 
   return (
-    <div className="relative w-full max-w-[1440px] auto mb-8 md:mb-12 mt-4 px-4 md:px-5">
+    <div className="relative mx-auto mt-4 mb-8 w-full max-w-[1440px] md:mb-12">
       <div className="flex items-center gap-2 mb-4">
         <Sparkles className="w-5 h-5 text-accent animate-pulse" />
         <h2 className="text-[18px] font-bold tracking-tight">Bài viết nổi bật</h2>

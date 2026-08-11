@@ -23,7 +23,17 @@ function getBioText(node: JSONContent): string {
     return node.text ?? ""
   }
 
-  return node.content?.map(getBioText).join(" ").replace(/\s+/g, " ").trim() ?? ""
+  if (node.type === "hardBreak") {
+    return "\n"
+  }
+
+  const childText = node.content?.map(getBioText) ?? []
+
+  if (node.type === "doc" || node.type === "bulletList" || node.type === "orderedList") {
+    return childText.filter(Boolean).join("\n")
+  }
+
+  return childText.join("")
 }
 
 function getAuthorBioPreview(author: AuthorBioAuthor) {
@@ -33,7 +43,13 @@ function getAuthorBioPreview(author: AuthorBioAuthor) {
 
   if (author.bio.startsWith("{")) {
     try {
-      return getBioText(JSON.parse(author.bio) as JSONContent) || fallbackBio(author.name)
+      return (
+        getBioText(JSON.parse(author.bio) as JSONContent)
+          .replace(/[ \t]+/g, " ")
+          .replace(/ *\n */g, "\n")
+          .replace(/\n{3,}/g, "\n\n")
+          .trim() || fallbackBio(author.name)
+      )
     } catch {
       return author.bio
     }
@@ -75,7 +91,7 @@ export function AuthorBio({ author, className }: AuthorBioProps) {
         >
           {author.name}
         </Link>
-        <div className="mb-3 line-clamp-4 text-[13px] leading-[1.6] text-text-secondary">
+        <div className="mb-3 line-clamp-4 whitespace-pre-line text-[13px] leading-[1.6] text-text-secondary">
           {bioPreview}
         </div>
         <Link

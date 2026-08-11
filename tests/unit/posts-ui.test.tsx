@@ -96,6 +96,7 @@ const post = {
   coverAlt: "Cover alt",
   coverUrl: "https://cdn.example.com/cover.jpg",
   excerpt: "A compact summary of the article.",
+  featuredAt: null,
   publishedAt: new Date("2024-04-01T00:00:00Z"),
   slug: "frieren-animation",
   status: "PUBLISHED" as const,
@@ -1346,6 +1347,25 @@ describe("HomePage sorting UI", () => {
       10,
       "oldest",
       "2026-06",
+    )
+  })
+
+  it("aligns the homepage sidebar with the first post row", async () => {
+    const element = await HomePostList({
+      data: { posts: [post], total: 1 },
+      page: 1,
+      sidebar: <aside aria-label="Thanh bên trang chủ">Sidebar</aside>,
+      sort: "latest",
+    })
+    render(element)
+
+    expect(screen.getByTestId("home-post-feed")).toHaveClass(
+      "lg:col-start-1",
+      "lg:row-start-2",
+    )
+    expect(screen.getByTestId("home-sidebar-slot")).toHaveClass(
+      "lg:col-start-2",
+      "lg:row-start-2",
     )
   })
 })
