@@ -6,6 +6,7 @@ import { Check, X } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
+import { announceNotificationsChanged } from "@/lib/clientNotifications"
 
 export function CoAuthorInviteActions({ postId }: { postId: string }) {
   const router = useRouter()
@@ -17,7 +18,7 @@ export function CoAuthorInviteActions({ postId }: { postId: string }) {
       const res = await fetch(`/api/posts/${postId}/co-authors/accept`, { method: "POST" })
       if (!res.ok) throw new Error()
       toast.success("Invitation accepted")
-      window.dispatchEvent(new Event("notifications:changed"))
+      announceNotificationsChanged()
       router.refresh()
     } catch {
       toast.error("Failed to accept invitation", {
@@ -33,7 +34,7 @@ export function CoAuthorInviteActions({ postId }: { postId: string }) {
       const res = await fetch(`/api/posts/${postId}/co-authors/decline`, { method: "POST" })
       if (!res.ok) throw new Error()
       toast.success("Invitation declined")
-      window.dispatchEvent(new Event("notifications:changed"))
+      announceNotificationsChanged()
       router.refresh()
     } catch {
       toast.error("Failed to decline invitation", {

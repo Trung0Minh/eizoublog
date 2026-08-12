@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
+import { announceNotificationsChanged } from "@/lib/clientNotifications"
 
 export function MarkCommentsReadButton({ disabled }: { disabled?: boolean }) {
   const router = useRouter()
@@ -20,7 +21,7 @@ export function MarkCommentsReadButton({ disabled }: { disabled?: boolean }) {
         throw new Error("Failed to mark comments read")
       }
 
-      window.dispatchEvent(new Event("notifications:changed"))
+      announceNotificationsChanged()
       router.refresh()
     } catch {
       setPending(false)

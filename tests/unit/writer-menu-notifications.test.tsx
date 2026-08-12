@@ -1,7 +1,7 @@
-import { render, screen, waitFor } from "@testing-library/react"
+import { act, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type { AnchorHTMLAttributes } from "react"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 const mocks = vi.hoisted(() => ({
   signOut: vi.fn(),
@@ -24,6 +24,10 @@ import { WriterMenu } from "@/components/layout/WriterMenu"
 describe("WriterMenu notifications", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it("fetches lightweight notification counts even when a user is provided", async () => {
@@ -64,7 +68,9 @@ describe("WriterMenu notifications", () => {
       )
 
       await waitFor(() => {
-        expect(fetchMock).toHaveBeenCalledWith("/api/user/notification-counts")
+        expect(fetchMock).toHaveBeenCalledWith("/api/user/notification-counts", {
+          cache: "no-store",
+        })
       })
       expect(fetchMock).not.toHaveBeenCalledWith("/api/user/notifications")
 
@@ -82,8 +88,55 @@ describe("WriterMenu notifications", () => {
     }
   })
 
+  it("refreshes notification counts while the visible page remains open", async () => {
+    vi.useFakeTimers()
+    let unreadComments = 0
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async () =>
+        new Response(JSON.stringify({
+          data: {
+            counts: {
+              openEvents: 0,
+              pendingInvites: 0,
+              responseEvents: 0,
+              total: unreadComments,
+              unreadComments,
+            },
+          },
+        })),
+      )
+
+    try {
+      render(
+        <WriterMenu
+          user={{
+            avatarUrl: null,
+            name: "Mina Writer",
+            role: "WRITER",
+            username: "mina",
+          }}
+        />,
+      )
+
+      await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+      unreadComments = 1
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5_000)
+      })
+      await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
+
+      await vi.waitFor(() => expect(
+        screen.getByRole("button", { name: "Mở menu tác giả" }).querySelector(".bg-red-500"),
+      ).not.toBeNull())
+    } finally {
+      fetchMock.mockRestore()
+    }
+  })
+
   it("shows open event badges separately and clears them when the writer checks events", async () => {
     const user = userEvent.setup()
+    let openEvents = 2
     const fetchMock = vi
       .spyOn(globalThis, "fetch")
       .mockImplementation(async (input, init) => {
@@ -93,7 +146,7 @@ describe("WriterMenu notifications", () => {
             JSON.stringify({
               data: {
                 counts: {
-                  openEvents: 2,
+                  openEvents,
                   pendingInvites: 0,
                   responseEvents: 1,
                   total: 3,
@@ -107,6 +160,7 @@ describe("WriterMenu notifications", () => {
           url === "/api/user/event-notifications/seen" &&
           init?.method === "POST"
         ) {
+          openEvents = 0
           return new Response(JSON.stringify({ data: { count: 0 } }))
         }
         return new Response(JSON.stringify({ data: { count: 0 } }))

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { announceNotificationsChanged } from "@/lib/clientNotifications"
 
 interface MarkNotificationReadButtonProps {
   commentId?: string
@@ -40,13 +41,13 @@ export function MarkNotificationReadButton({
       })
 
       if (!response.ok) {
-        console.error("Failed to update notification read state:", response.statusText)
+        throw new Error(response.statusText)
       }
+      announceNotificationsChanged()
+      router.refresh()
     } catch (error) {
       console.error("Failed to update notification read state:", error)
     } finally {
-      window.dispatchEvent(new Event("notifications:changed"))
-      router.refresh()
       setIsPending(false)
     }
   }

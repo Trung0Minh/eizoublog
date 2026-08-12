@@ -245,10 +245,12 @@ describe("NotificationsPage", () => {
 
   describe("ViewLink component", () => {
     it("calls the mark-read API, dispatches event, and navigates on click for commentId", async () => {
-      const fetchSpy = vi.spyOn(global, "fetch").mockResolvedValue({
-        ok: true,
-        json: async () => ({ data: { success: true } }),
-      } as Response)
+      let resolveRequest: ((response: Response) => void) | undefined
+      const fetchSpy = vi.spyOn(global, "fetch").mockImplementation(
+        () => new Promise<Response>((resolve) => {
+          resolveRequest = resolve
+        }),
+      )
 
       const dispatchSpy = vi.spyOn(window, "dispatchEvent")
 
@@ -270,14 +272,16 @@ describe("NotificationsPage", () => {
         keepalive: true,
       })
 
-      await waitFor(() => {
-        expect(dispatchSpy).toHaveBeenCalledWith(expect.any(Event))
-        const event = dispatchSpy.mock.calls.find(
-          (call) => call[0].type === "notifications:changed",
-        )?.[0]
-        expect(event).toBeDefined()
-        expect(mocks.router.push).toHaveBeenCalledWith("/test-path")
-      })
+      expect(mocks.router.push).toHaveBeenCalledWith("/test-path")
+      expect(dispatchSpy.mock.calls.some(
+        (call) => call[0].type === "notifications:changed",
+      )).toBe(false)
+
+      resolveRequest?.(new Response(JSON.stringify({ data: { success: true } })))
+
+      await waitFor(() => expect(dispatchSpy.mock.calls.some(
+        (call) => call[0].type === "notifications:changed",
+      )).toBe(true))
 
       fetchSpy.mockRestore()
       dispatchSpy.mockRestore()

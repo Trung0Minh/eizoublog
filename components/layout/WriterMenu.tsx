@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Bell, ChevronDown, FileText, LogOut, PartyPopper, Shield, User } from "lucide-react"
 import Link from "next/link"
 import { signOut } from "next-auth/react"
@@ -17,6 +17,12 @@ import {
   loadSessionUser,
   type ClientSessionUser,
 } from "@/lib/clientSession"
+import {
+  announceNotificationsChanged,
+  NOTIFICATION_POLL_INTERVAL_MS,
+  requestNotificationRefresh,
+  subscribeToNotificationChanges,
+} from "@/lib/clientNotifications"
 import { cn } from "@/lib/utils"
 
 export type WriterMenuUser = ClientSessionUser
@@ -128,6 +134,7 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
   const [responseEvents, setResponseEvents] = useState(0)
   const [unreadComments, setUnreadComments] = useState(0)
   const [openEvents, setOpenEvents] = useState(0)
+  const notificationRequestRef = useRef(0)
 
   useEffect(() => {
     if (user !== undefined) return
@@ -162,36 +169,51 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
     let isMounted = true
 
     async function loadNotificationCounts() {
+      const requestId = ++notificationRequestRef.current
       try {
-        const response = await fetch("/api/user/notification-counts")
+        const response = await fetch("/api/user/notification-counts", {
+          cache: "no-store",
+        })
         const result = response.ok ? await response.json() : null
         const counts = readNotificationCounts(result)
 
-        if (isMounted) {
+        if (isMounted && requestId === notificationRequestRef.current) {
           setPendingInvites(counts?.pendingInvites ?? readCount(result))
           setResponseEvents(counts?.responseEvents ?? 0)
           setUnreadComments(counts?.unreadComments ?? 0)
           setOpenEvents(counts?.openEvents ?? 0)
         }
-      } catch {
-        if (isMounted) {
-          setPendingInvites(0)
-          setResponseEvents(0)
-          setUnreadComments(0)
-          setOpenEvents(0)
-        }
+      } catch {}
+    }
+
+    function refreshWhenVisible() {
+      if (document.visibilityState === "visible") {
+        void loadNotificationCounts()
       }
     }
 
     void loadNotificationCounts()
-    window.addEventListener("notifications:changed", loadNotificationCounts)
+    const unsubscribe = subscribeToNotificationChanges(() => {
+      void loadNotificationCounts()
+    })
+    const interval = window.setInterval(
+      refreshWhenVisible,
+      NOTIFICATION_POLL_INTERVAL_MS,
+    )
+    window.addEventListener("focus", refreshWhenVisible)
+    window.addEventListener("online", refreshWhenVisible)
+    window.addEventListener("pageshow", refreshWhenVisible)
+    document.addEventListener("visibilitychange", refreshWhenVisible)
 
     return () => {
       isMounted = false
-      window.removeEventListener(
-        "notifications:changed",
-        loadNotificationCounts,
-      )
+      notificationRequestRef.current += 1
+      unsubscribe()
+      window.clearInterval(interval)
+      window.removeEventListener("focus", refreshWhenVisible)
+      window.removeEventListener("online", refreshWhenVisible)
+      window.removeEventListener("pageshow", refreshWhenVisible)
+      document.removeEventListener("visibilitychange", refreshWhenVisible)
     }
   }, [menuUser])
 
@@ -204,13 +226,22 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
     window.dispatchEvent(
       new CustomEvent("navbar-menu:open-change", { detail: open }),
     )
+    if (open) requestNotificationRefresh()
   }
 
-  function markEventNotificationsSeen() {
+  async function markEventNotificationsSeen() {
     if (openEvents === 0) return
 
     setOpenEvents(0)
-    void fetch("/api/user/event-notifications/seen", { method: "POST" })
+    try {
+      const response = await fetch("/api/user/event-notifications/seen", {
+        method: "POST",
+      })
+      if (!response.ok) throw new Error(response.statusText)
+      announceNotificationsChanged()
+    } catch {
+      requestNotificationRefresh()
+    }
   }
 
   return (
@@ -249,7 +280,7 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
           <Link
             className="flex items-center justify-between"
             href="/dashboard/events"
-            onClick={markEventNotificationsSeen}
+            onClick={() => void markEventNotificationsSeen()}
           >
             <div className="flex items-center gap-2">
               <PartyPopper aria-hidden="true" />

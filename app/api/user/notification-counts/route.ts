@@ -20,7 +20,10 @@ export async function GET() {
       total: notificationCounts.total + openEvents,
     }
 
-    return Response.json({ data: { counts } })
+    return Response.json(
+      { data: { counts } },
+      { headers: { "Cache-Control": "no-store" } },
+    )
   } catch (error) {
     console.error("[GET /api/user/notification-counts]", error)
     return Response.json({ error: "Something went wrong" }, { status: 500 })

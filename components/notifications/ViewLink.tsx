@@ -4,6 +4,8 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ComponentProps, MouseEvent } from "react"
 
+import { announceNotificationsChanged } from "@/lib/clientNotifications"
+
 interface ViewLinkProps extends ComponentProps<typeof Link> {
   commentId?: string
   eventRoomCommentId?: string
@@ -55,9 +57,13 @@ export function ViewLink({
           },
           body: JSON.stringify(body),
           keepalive: true,
-        }).catch((err) => {
-          console.error("Failed to mark as read in background:", err)
         })
+          .then((response) => {
+            if (response.ok) announceNotificationsChanged()
+          })
+          .catch((err) => {
+            console.error("Failed to mark as read in background:", err)
+          })
       }
       return
     }
@@ -77,14 +83,14 @@ export function ViewLink({
         .then((res) => {
           if (!res.ok) {
             console.error("Failed to mark notification/comment as read:", res.statusText)
+            return
           }
+          announceNotificationsChanged()
         })
         .catch((error) => {
           console.error("Failed to mark notification or comment as read:", error)
         })
     }
-
-    window.dispatchEvent(new Event("notifications:changed"))
 
     let targetHref = ""
     if (typeof href === "string") {
