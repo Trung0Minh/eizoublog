@@ -53,11 +53,34 @@ describe("published post width contract", () => {
     expect(authorCredits).toContain("Kéo ngang để xem thêm")
   })
 
+  it("keeps author cards horizontal on narrow screens", () => {
+    const authorBio = read("components/posts/AuthorBio.tsx")
+
+    expect(authorBio).toContain("flex-row items-start")
+    expect(authorBio).not.toContain("flex-col items-center")
+    expect(authorBio).toContain("author-bio-card")
+
+    const globals = read("app/globals.css")
+    expect(globals).toContain(".author-bio-card")
+    expect(globals).toContain("background-color: hsl(var(--background) / 0.5)")
+  })
+
+  it("gives blockquotes a visible container and allows 10x image zoom", () => {
+    const globals = read("app/globals.css")
+    const lightbox = read("components/posts/ImageLightbox.tsx")
+
+    expect(globals).toContain("background: hsl(var(--card) / 0.9)")
+    expect(globals).toContain("border-left: 4px solid var(--border-strong)")
+    expect(globals).not.toContain("box-shadow: inset 0 0 0 1px var(--border-default)")
+    expect(lightbox).toContain("maxScale={10}")
+    expect(lightbox).toContain('aria-label="Image thumbnails"')
+  })
+
   it("aligns event comments with the event article column", () => {
     const publicPage = read("app/(public)/[slug]/page.tsx")
 
     expect(publicPage).toContain('data-testid="event-comments"')
-    expect(publicPage).toContain("lg:grid-cols-[minmax(0,1000px)]")
-    expect(publicPage).toContain("2xl:pl-20")
+    expect(publicPage).toContain("lg:grid-cols-[minmax(0,1100px)]")
+    expect(publicPage).toContain("2xl:grid-cols-[minmax(0,1100px)_220px]")
   })
 })

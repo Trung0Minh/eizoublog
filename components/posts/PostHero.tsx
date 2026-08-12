@@ -18,6 +18,29 @@ function isRichSubtitle(value: unknown): value is JSONContent {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
+function hasMeaningfulSubtitle(node: JSONContent): boolean {
+  if (node.type === "text") {
+    return Boolean(node.text?.trim())
+  }
+
+  if (node.content?.some(hasMeaningfulSubtitle)) {
+    return true
+  }
+
+  return Boolean(
+    node.type &&
+      ![
+        "blockquote",
+        "bulletList",
+        "doc",
+        "heading",
+        "listItem",
+        "orderedList",
+        "paragraph",
+      ].includes(node.type),
+  )
+}
+
 interface PostHeroProps {
   post: PostHeroPost
   authorUsernames?: string[]
@@ -30,6 +53,9 @@ export function PostHero({
   hasTableOfContents = false,
 }: PostHeroProps) {
   const authors = [post.author, ...post.coAuthors.map(({ user }) => user)]
+  const richSubtitle = isRichSubtitle(post.excerptContent) &&
+    hasMeaningfulSubtitle(post.excerptContent)
+  const hasSubtitle = richSubtitle || Boolean(post.excerpt?.trim())
 
   const { scrollY } = useScroll()
   const y = useTransform(scrollY, [0, 1000], [0, 400])
@@ -76,12 +102,13 @@ export function PostHero({
               )}
             </ScrollReveal>
             <h1 className={cn(
-              "mb-4 font-display text-[28px] font-bold leading-[1.1] tracking-[-0.02em] text-text-primary md:text-[44px] lg:text-[52px]",
+              "font-display text-[28px] font-bold leading-[1.1] tracking-[-0.02em] text-text-primary md:text-[44px] lg:text-[52px]",
+              hasSubtitle ? "mb-4" : "mb-3",
               post.coverUrl && "drop-shadow-[0_2px_10px_rgba(255,255,255,0.1)]",
             )}>
               <TextReveal text={post.title} />
             </h1>
-            {isRichSubtitle(post.excerptContent) ? (
+            {richSubtitle ? (
               <ScrollReveal delay={0.15}>
                 <div className="mb-8 max-w-[90%] text-[15px] leading-[1.6] text-text-secondary md:text-[18px] [&_.ProseMirror]:!m-0 [&_.ProseMirror]:!max-w-none [&_.ProseMirror>*]:!m-0">
                   <PostBody content={post.excerptContent} presentation="embedded" />

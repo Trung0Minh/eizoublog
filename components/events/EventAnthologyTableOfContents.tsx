@@ -39,6 +39,14 @@ export function EventAnthologyTableOfContents({
   const pendingNavigationRef = useRef(false)
   const pendingNavigationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  function toggleWriter(writerId: string) {
+    setExpandedWriterIds((current) =>
+      current.includes(writerId)
+        ? current.filter((id) => id !== writerId)
+        : [...current, writerId],
+    )
+  }
+
   function navigateToHeading(
     event: MouseEvent<HTMLAnchorElement>,
     id: string,
@@ -134,13 +142,13 @@ export function EventAnthologyTableOfContents({
     } else if (linkBounds.bottom > listBounds.bottom) {
       list.scrollTop += linkBounds.bottom - listBounds.bottom
     }
-  }, [activeId, collapsible, expandedWriterIds])
+  }, [activeId, collapsible])
 
   const contents = (
     <nav
       aria-label="Mục lục sự kiện"
       className={cn(
-        "font-sans",
+        "font-sans [overflow-anchor:none]",
         !collapsible && "flex max-h-[calc(100vh-8rem)] flex-col",
       )}
     >
@@ -194,13 +202,7 @@ export function EventAnthologyTableOfContents({
                     aria-expanded={isExpanded}
                     aria-label={`Thu gọn hoặc mở rộng các mục của ${writer.text}`}
                     className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-subtle-bg hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                    onClick={() =>
-                      setExpandedWriterIds((current) =>
-                        current.includes(writer.id)
-                          ? current.filter((id) => id !== writer.id)
-                          : [...current, writer.id],
-                      )
-                    }
+                    onClick={() => toggleWriter(writer.id)}
                     type="button"
                   >
                     <ChevronDown

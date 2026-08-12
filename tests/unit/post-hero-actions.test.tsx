@@ -81,4 +81,23 @@ describe("PostHero mobile action layout", () => {
       "sm:basis-auto",
     )
   })
+
+  it("tightens the title spacing when the post has no subtitle", () => {
+    render(
+      <PostHero
+        post={{
+          ...post,
+          excerptContent: {
+            content: [{ content: [], type: "paragraph" }],
+            type: "doc",
+          },
+        }}
+      />,
+    )
+
+    expect(screen.getByRole("heading", { name: "Posttitle" })).toHaveClass(
+      "mb-3",
+    )
+    expect(screen.getByTestId("post-hero-meta-row")).toBeVisible()
+  })
 })

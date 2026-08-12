@@ -34,6 +34,26 @@ interface ImageLightboxProps {
 
 const emptySubscribe = () => () => undefined
 
+function getThumbnailTransform(transform?: string) {
+  if (!transform) {
+    return undefined
+  }
+
+  return transform.replace(
+    /scale\(\s*(-?)[\d.]+\s*,\s*(-?)[\d.]+\s*\)/,
+    (_, scaleX: string, scaleY: string) =>
+      `scale(${scaleX ? "-1" : "1"}, ${scaleY ? "-1" : "1"})`,
+  )
+}
+
+function isQuarterTurn(transform?: string) {
+  const rotation = transform?.match(/rotate\(\s*(-?[\d.]+)deg\s*\)/)?.[1]
+  if (!rotation) return false
+
+  const normalizedRotation = ((Number(rotation) % 360) + 360) % 360
+  return normalizedRotation === 90 || normalizedRotation === 270
+}
+
 export function ImageLightbox({
   images,
   initialIndex,
@@ -71,11 +91,13 @@ export function ImageLightbox({
         onClose()
       }
 
-      if (event.key === "ArrowLeft") {
+      if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+        event.preventDefault()
         previous()
       }
 
-      if (event.key === "ArrowRight") {
+      if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+        event.preventDefault()
         next()
       }
     }
@@ -105,7 +127,7 @@ export function ImageLightbox({
       transition={{ duration: 0.2 }}
       aria-label="Image viewer"
       aria-modal="true"
-      className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/90 p-4"
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/90"
       onClick={onClose}
       role="dialog"
     >
@@ -142,7 +164,7 @@ export function ImageLightbox({
         key={index}
         initialScale={1}
         minScale={0.5}
-        maxScale={4}
+        maxScale={10}
         centerOnInit
         doubleClick={{ mode: "zoomIn" }}
         wheel={{ step: 0.005 }}
@@ -175,7 +197,7 @@ export function ImageLightbox({
             </div>
 
             <div
-              className="flex h-full w-full items-center justify-center overflow-hidden touch-none"
+              className="relative flex h-full w-full items-center justify-center overflow-hidden touch-none"
               onClick={(event) => event.stopPropagation()}
             >
               <TransformComponent 
@@ -202,6 +224,47 @@ export function ImageLightbox({
                   />
                 </motion.div>
               </TransformComponent>
+
+              {images.length > 1 ? (
+                <div
+                  aria-label="Image thumbnails"
+                  className="no-scrollbar absolute bottom-4 left-1/2 z-10 flex max-w-[min(90%,720px)] -translate-x-1/2 gap-2 overflow-x-auto rounded-lg bg-black/45 p-2 backdrop-blur-[2px] sm:bottom-auto sm:left-16 sm:top-1/2 sm:max-h-[min(76vh,640px)] sm:max-w-none sm:-translate-x-0 sm:-translate-y-1/2 sm:flex-col sm:overflow-x-hidden sm:overflow-y-auto"
+                  role="list"
+                >
+                  {images.map((image, imageIndex) => {
+                    const quarterTurn = isQuarterTurn(image.transform)
+
+                    return (
+                      <button
+                        aria-label={`View image ${imageIndex + 1}`}
+                        aria-current={imageIndex === index ? "true" : undefined}
+                        className={`flex h-16 w-24 shrink-0 items-center justify-center overflow-hidden rounded border-2 transition-opacity ${
+                          imageIndex === index
+                            ? "border-white opacity-100"
+                            : "border-transparent opacity-60 hover:opacity-100"
+                        }`}
+                        key={`${image.src}-${imageIndex}`}
+                        onClick={() => setIndex(imageIndex)}
+                        type="button"
+                      >
+                        <img
+                          alt=""
+                          className={quarterTurn
+                            ? "block h-24 w-16 max-w-none object-contain"
+                            : "block h-full w-full object-contain"
+                          }
+                          draggable={false}
+                          src={image.src}
+                          style={{
+                            transform: getThumbnailTransform(image.transform),
+                            transformOrigin: image.transformOrigin,
+                          }}
+                        />
+                      </button>
+                    )
+                  })}
+                </div>
+              ) : null}
             </div>
           </>
         )}

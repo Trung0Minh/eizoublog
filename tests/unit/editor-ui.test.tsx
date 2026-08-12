@@ -998,24 +998,41 @@ describe("PostBody", () => {
     expect(
       screen.getByRole("dialog", { name: "Image viewer" }),
     ).toBeVisible()
+    const lightbox = within(
+      screen.getByRole("dialog", { name: "Image viewer" }),
+    )
     expect(
-      within(screen.getByRole("dialog", { name: "Image viewer" })).getByRole(
-        "img",
-        { name: "First frame" },
-      ),
+      lightbox.getByRole("img", { name: "First frame" }),
     ).toHaveStyle({
       transform: "rotate(270deg) scale(-0.6666666666666666, 0.6666666666666666)",
       transformOrigin: "center",
     })
     expect(screen.getByText("1 / 2")).toBeVisible()
+    expect(screen.getByRole("list", { name: "Image thumbnails" })).toBeVisible()
+    const thumbnail = screen
+      .getByRole("list", { name: "Image thumbnails" })
+      .querySelector("img")
+    expect(thumbnail).toHaveStyle({
+      transform: "rotate(270deg) scale(-1, 1)",
+      transformOrigin: "center",
+    })
+
+    await user.click(screen.getByRole("button", { name: "View image 2" }))
+    expect(lightbox.getByRole("img", { name: "Second frame" })).toBeVisible()
+
+    await user.keyboard("{ArrowLeft}")
+
+    expect(lightbox.getByRole("img", { name: "First frame" })).toBeVisible()
 
     await user.keyboard("{ArrowRight}")
-
-    const lightbox = within(
-      screen.getByRole("dialog", { name: "Image viewer" }),
-    )
     expect(lightbox.getByRole("img", { name: "Second frame" })).toBeVisible()
     expect(lightbox.getByText("Motion comparison")).toBeVisible()
+
+    await user.keyboard("{ArrowUp}")
+    expect(lightbox.getByRole("img", { name: "First frame" })).toBeVisible()
+
+    await user.keyboard("{ArrowDown}")
+    expect(lightbox.getByRole("img", { name: "Second frame" })).toBeVisible()
 
     await user.keyboard("{Escape}")
 

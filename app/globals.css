@@ -427,6 +427,12 @@
       box-shadow: none;
       transition-property: background-color, border-color, color;
     }
+    .author-bio-card {
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      background-color: hsl(var(--background) / 0.5);
+      box-shadow: 0 8px 32px rgb(0 0 0 / 0.06);
+    }
     .glass-card:hover {
       transform: none;
       box-shadow: none;
@@ -653,8 +659,8 @@
   }
 
   .post-rich-text blockquote {
-    background: var(--subtle-bg);
-    border-left: 3px solid var(--border-strong);
+    background: hsl(var(--card) / 0.9);
+    border-left: 4px solid var(--border-strong);
     border-radius: 0 4px 4px 0;
     color: var(--text-secondary);
     font-style: italic;

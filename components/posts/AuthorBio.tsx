@@ -64,7 +64,7 @@ export function AuthorBio({ author, className }: AuthorBioProps) {
   return (
     <section
       className={cn(
-        "glass-card flex h-full flex-col items-center gap-5 p-5 text-center md:flex-row md:items-start md:p-6 md:text-left",
+        "author-bio-card glass-card flex h-full flex-row items-start gap-3 p-4 text-left md:gap-5 md:p-6",
         className,
       )}
     >

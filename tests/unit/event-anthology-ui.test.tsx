@@ -76,6 +76,55 @@ describe("EventAnthologyTableOfContents", () => {
     pushStateSpy.mockRestore()
   })
 
+  it("preserves the TOC scroll position when expanding another writer", async () => {
+    const writerAElement = document.createElement("section")
+    writerAElement.id = "event-room-a"
+    document.body.appendChild(writerAElement)
+    try {
+      render(
+        <EventAnthologyTableOfContents
+          headings={[
+            { id: "event-room-a", level: 1, text: "Writer A" },
+            { id: "event-room-a-opening", level: 2, text: "Opening A" },
+            { id: "event-room-b", level: 1, text: "Writer B" },
+            { id: "event-room-b-opening", level: 2, text: "Opening B" },
+          ]}
+        />,
+      )
+
+      const navigation = screen.getByRole("navigation", {
+        name: "Mục lục sự kiện",
+      })
+      const list = within(navigation).getAllByRole("list")[0]
+      const writerALink = screen.getByRole("link", { name: "Writer A" })
+      list.getBoundingClientRect = vi.fn(
+        () => ({ bottom: 100, top: 0 }) as DOMRect,
+      )
+      writerALink.getBoundingClientRect = vi.fn(
+        () => ({ bottom: 160, top: 130 }) as DOMRect,
+      )
+
+      act(() => {
+        intersectionCallback(
+          [{ isIntersecting: true, target: writerAElement }] as unknown as IntersectionObserverEntry[],
+          {} as IntersectionObserver,
+        )
+      })
+      await waitFor(() => expect(list.scrollTop).toBe(60))
+      list.scrollTop = 240
+
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: "Thu gọn hoặc mở rộng các mục của Writer B",
+        }),
+      )
+
+      await waitFor(() => expect(list.scrollTop).toBe(240))
+    } finally {
+      writerAElement.remove()
+    }
+  })
+
   it("keeps the controlled mobile contents panel in normal document flow", () => {
     render(
       <EventAnthologyTableOfContents
