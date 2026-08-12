@@ -458,6 +458,7 @@ export async function updateAwardEventRoom({
   })
 
   await regenerateEventPostIfExists(eventId)
+  revalidateTag("posts", "max")
 
   return updated
 }

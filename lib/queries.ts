@@ -411,6 +411,7 @@ export interface WriterDashboardPostItem {
   publishedAt: Date | null
   slug: string
   status: PostStatus
+  submittedToEvent: boolean
   title: string
   updatedAt: Date
 }
@@ -499,6 +500,7 @@ interface WriterDashboardPostRow {
   publishedAt: Date | null
   slug: string | null
   status: string | null
+  submittedToEvent: boolean | null
   title: string | null
   updatedAt: Date | null
 }
@@ -1274,6 +1276,12 @@ export const getCachedWriterDashboardPosts = unstable_cache(
         p."publishedAt",
         p.slug,
         p.status::text AS status,
+        EXISTS (
+          SELECT 1
+          FROM award_event_rooms submitted_room
+          WHERE submitted_room.status = 'SUBMITTED'
+            AND submitted_room."submittedPostId" = p.id
+        ) AS "submittedToEvent",
         p.title,
         p."updatedAt",
         COALESCE(comment_counts.count, 0) AS "commentCount",
@@ -1339,6 +1347,7 @@ export const getCachedWriterDashboardPosts = unstable_cache(
         publishedAt: row.publishedAt,
         slug: row.slug,
         status: parsePostStatus(row.status),
+        submittedToEvent: row.submittedToEvent === true,
         title: row.title,
         updatedAt: row.updatedAt,
       }))

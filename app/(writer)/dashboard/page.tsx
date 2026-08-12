@@ -42,6 +42,8 @@ export default async function DashboardPage() {
       <div className="space-y-4">
         {posts.map((post, index) => {
           const isOwner = post.authorId === session.user.id
+          const isEventSubmission =
+            post.status === "DRAFT" && post.submittedToEvent
           const hasPendingInvite = post.coAuthors?.some(
             (coAuthor) =>
               coAuthor.userId === session.user.id &&
@@ -59,14 +61,29 @@ export default async function DashboardPage() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <h2 className="truncate font-medium">{post.title}</h2>
-                    <Badge variant={post.status === "PUBLISHED" ? "default" : "secondary"} className="shrink-0 h-5 px-1.5 text-[10px]">
-                      {post.status === "PUBLISHED" ? "Đã xuất bản" : "Nháp"}
+                    <Badge
+                      variant={post.status === "PUBLISHED" ? "default" : "secondary"}
+                      className={
+                        isEventSubmission
+                          ? "h-5 shrink-0 border-accent/30 bg-accent/10 px-1.5 text-[10px] text-accent hover:bg-accent/10"
+                          : "h-5 shrink-0 px-1.5 text-[10px]"
+                      }
+                    >
+                      {post.status === "PUBLISHED"
+                        ? "Đã xuất bản"
+                        : isEventSubmission
+                          ? "Đã gửi sự kiện"
+                          : "Nháp"}
                     </Badge>
                   </div>
                   <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
                     {post.status === "PUBLISHED" && post.publishedAt ? (
                       <span>
                         Đã xuất bản <RelativeTime date={post.publishedAt} />
+                      </span>
+                    ) : isEventSubmission ? (
+                      <span>
+                        Bài dự thi · Đã cập nhật <RelativeTime date={post.updatedAt} />
                       </span>
                     ) : (
                       <span>

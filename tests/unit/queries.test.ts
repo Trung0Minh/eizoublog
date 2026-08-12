@@ -617,6 +617,7 @@ describe("cached Prisma query helpers", () => {
         publishedAt: null,
         slug: "draft",
         status: "DRAFT",
+        submittedToEvent: true,
         title: "Draft",
         updatedAt: new Date("2026-06-01T00:00:00Z"),
       },
@@ -631,6 +632,7 @@ describe("cached Prisma query helpers", () => {
         publishedAt: null,
         slug: "draft",
         status: "DRAFT",
+        submittedToEvent: true,
         title: "Draft",
         updatedAt: new Date("2026-06-01T00:00:00Z"),
       },
@@ -653,6 +655,17 @@ describe("cached Prisma query helpers", () => {
     const sql = flattenSql(mocks.prisma.$queryRaw.mock.calls[0])
     expect(sql).toMatch(
       /NOT EXISTS\s*\(\s*SELECT 1\s*FROM award_events event\s*WHERE event\."finalPostId" = p\.id\s*\)/,
+    )
+  })
+
+  it("marks only posts captured by a submitted event room", async () => {
+    mocks.prisma.$queryRaw.mockResolvedValueOnce([])
+
+    await getCachedWriterDashboardPosts("writer-1")
+
+    const sql = flattenSql(mocks.prisma.$queryRaw.mock.calls[0])
+    expect(sql).toMatch(
+      /FROM award_event_rooms submitted_room[\s\S]*submitted_room\.status = 'SUBMITTED'[\s\S]*submitted_room\."submittedPostId" = p\.id/,
     )
   })
 

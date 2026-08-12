@@ -106,4 +106,27 @@ describe("DashboardPage", () => {
     expect(screen.queryByRole("button", { name: "Lưu trữ" })).not.toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Rút bài" })).not.toBeInTheDocument()
   })
+
+  it("labels a submitted event entry instead of calling it a draft", async () => {
+    mocks.prisma.$queryRaw.mockResolvedValue([
+      {
+        authorId: "writer-1",
+        coAuthors: [],
+        commentCount: BigInt(0),
+        id: "post-1",
+        publishedAt: null,
+        slug: "event-entry",
+        status: "DRAFT",
+        submittedToEvent: true,
+        title: "Event entry",
+        updatedAt: new Date("2026-06-16T00:00:00Z"),
+      },
+    ])
+
+    render(await DashboardPage())
+
+    expect(screen.getByText("Đã gửi sự kiện")).toBeVisible()
+    expect(screen.queryByText("Nháp")).not.toBeInTheDocument()
+    expect(screen.queryByText(/Bản nháp/)).not.toBeInTheDocument()
+  })
 })

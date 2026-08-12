@@ -144,6 +144,14 @@ describe("updateAwardEventRoom", () => {
     )
   })
 
+  it("invalidates writer dashboard posts after an event room status changes", async () => {
+    mocks.prisma.post.findFirst.mockResolvedValue(selectedPost())
+
+    await updateAwardEventRoom(updateInput("post-1"))
+
+    expect(mocks.revalidateTag).toHaveBeenCalledWith("posts", "max")
+  })
+
   it("clears legacy writer introductions when a writer submits", async () => {
     mocks.prisma.post.findFirst.mockResolvedValue(selectedPost())
 
