@@ -79,6 +79,7 @@ import { CoverImageUpload } from "@/components/posts/CoverImageUpload"
 import { Pagination } from "@/components/ui/Pagination"
 import { PostBody } from "@/components/posts/PostBody"
 import { PostCard } from "@/components/posts/PostCard"
+import { CompactPostList } from "@/components/posts/CompactPostList"
 import { PostEditor } from "@/components/posts/PostEditor"
 import { PostHero } from "@/components/posts/PostHero"
 import { TableOfContents } from "@/components/posts/TableOfContents"
@@ -136,13 +137,23 @@ describe("PostCard", () => {
       "undefined",
     )
     const minaLinks = screen.getAllByRole("link", { name: "Mina" })
-    expect(minaLinks).toHaveLength(2)
+    expect(minaLinks).toHaveLength(1)
     minaLinks.forEach((link) => {
       expect(link).toHaveAttribute("href", "/authors/mina")
       expect(link).toHaveAttribute("data-prefetch", "undefined")
     })
+    expect(screen.getAllByRole("link", { name: "Ken" })).toHaveLength(1)
+    expect(screen.queryByText("Ken")).not.toBeInTheDocument()
+    expect(screen.queryByText("Mina")).not.toBeInTheDocument()
     expect(screen.queryByRole("link", { name: "Sakuga" })).not.toBeInTheDocument()
     expect(screen.getByText("2 bình luận")).toBeVisible()
+  })
+
+  it("keeps the author name visible on single-author cards", () => {
+    render(<PostCard post={{ ...post, coAuthors: [] }} />)
+
+    expect(screen.getAllByRole("link", { name: "Mina" })).toHaveLength(2)
+    expect(screen.getByText("Mina")).toBeVisible()
   })
 
   it("shows the complete excerpt with safe wrapping at every breakpoint", () => {
@@ -168,6 +179,19 @@ describe("PostCard", () => {
 
     expect(source).not.toContain(
       "line-clamp-2 text-xs leading-relaxed text-text-secondary",
+    )
+  })
+
+  it("shows every credited contributor name in compact post rows", () => {
+    render(<CompactPostList posts={[post]} />)
+
+    expect(screen.getByRole("link", { name: "Mina" })).toHaveAttribute(
+      "href",
+      "/authors/mina",
+    )
+    expect(screen.getByRole("link", { name: "Ken" })).toHaveAttribute(
+      "href",
+      "/authors/ken",
     )
   })
 
@@ -221,6 +245,12 @@ describe("Post detail responsive components", () => {
     expect(cover).toHaveAttribute("loading", "eager")
     expect(cover).toHaveAttribute("fetchpriority", "high")
     expect(cover).toHaveAttribute("decoding", "async")
+    expect(screen.getAllByRole("link", { name: "Mina" })).toHaveLength(2)
+    expect(screen.getAllByRole("link", { name: "Ken" })).toHaveLength(2)
+    expect(screen.getAllByRole("link", { name: "Ken" })[0]).toHaveAttribute(
+      "href",
+      "/authors/ken",
+    )
   })
 
   it("uses a compact editorial hero when a post has no cover", () => {

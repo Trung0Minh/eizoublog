@@ -135,8 +135,10 @@ export function PostHero({
               >
                 <div className="flex items-center">
                   {authors.map((displayAuthor, index) => (
-                    <div
-                      className="w-9 h-9 rounded-full bg-[#2d6e7e] flex justify-center items-center text-white text-[14px] outline outline-2 outline-background font-bold overflow-hidden"
+                    <Link
+                      aria-label={displayAuthor.name}
+                      className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-[#2d6e7e] text-[14px] font-bold text-white outline outline-2 outline-background transition-transform hover:z-30 hover:scale-105"
+                      href={`/authors/${displayAuthor.username}`}
                       key={displayAuthor.username}
                       style={{
                         marginLeft: index === 0 ? 0 : -12,
@@ -148,14 +150,22 @@ export function PostHero({
                       ) : (
                         displayAuthor.name.charAt(0)
                       )}
-                    </div>
+                    </Link>
                   ))}
                 </div>
                 <div className="flex min-w-0 flex-col text-[13px] font-bold text-text-primary sm:flex-row sm:items-center">
-                  <div className="flex items-center gap-1">
-                    <span className="truncate font-bold text-text-primary sm:overflow-visible">
-                      {authors.map(({ name }) => name).join(" & ")}
-                    </span>
+                  <div className="flex min-w-0 flex-wrap items-center gap-1">
+                    {authors.map((author, index) => (
+                      <span className="inline-flex items-center gap-1" key={author.username}>
+                        {index > 0 && <span className="text-text-tertiary">&</span>}
+                        <Link
+                          className="font-bold text-text-primary transition-colors hover:text-accent"
+                          href={`/authors/${author.username}`}
+                        >
+                          {author.name}
+                        </Link>
+                      </span>
+                    ))}
                   </div>
                   <div className="flex items-center text-text-secondary hidden sm:flex mx-2">&middot;</div>
                   <div className="flex items-center text-text-secondary font-medium">

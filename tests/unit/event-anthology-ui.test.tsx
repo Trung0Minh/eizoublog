@@ -717,7 +717,12 @@ describe("EventAnthologyView", () => {
     )
 
     const heroCredits = screen.getByLabelText("Event contributors")
-    expect(within(heroCredits).getByText("Writer A · Writer B")).toBeInTheDocument()
+    expect(within(heroCredits).getAllByRole("link", { name: "Writer A" })).toHaveLength(2)
+    expect(within(heroCredits).getAllByRole("link", { name: "Writer B" })).toHaveLength(2)
+    expect(within(heroCredits).getAllByRole("link", { name: "Writer A" })[0]).toHaveAttribute(
+      "href",
+      "/authors/writer-a",
+    )
     expect(within(heroCredits).queryByText("Draft Writer")).not.toBeInTheDocument()
     expect(within(heroCredits).queryByText("Removed Writer")).not.toBeInTheDocument()
 

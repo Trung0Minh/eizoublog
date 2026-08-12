@@ -178,6 +178,14 @@ describe("cached Prisma query helpers", () => {
     expect(latestSql).toContain("LEFT JOIN award_events final_event")
     expect(commentsSql).toContain("LEFT JOIN award_events final_event")
     expect(latestSql).toContain('final_event.intro AS "eventIntro"')
+    expect(latestSql).toMatch(
+      /event\."finalPostId" = p\.id\s+AND event_room\.status = 'SUBMITTED'\s+AND event_room\."excludedAt" IS NULL/,
+    )
+    expect(commentsSql).toMatch(
+      /event\."finalPostId" = p\.id\s+AND event_room\.status = 'SUBMITTED'\s+AND event_room\."excludedAt" IS NULL/,
+    )
+    expect(latestSql).toMatch(/pa\.status = 'ACCEPTED'/)
+    expect(latestSql).toMatch(/credited_user\.id <> p\."authorId"/)
     expect(commentsSql).toContain('final_event.intro AS "eventIntro"')
 
     expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(2)
@@ -185,7 +193,7 @@ describe("cached Prisma query helpers", () => {
     expect(mocks.prisma.post.findMany).not.toHaveBeenCalled()
     expect(mocks.prisma.post.count).not.toHaveBeenCalled()
     expect(mocks.cacheEntries).toContainEqual({
-      keyParts: ["published-posts"],
+      keyParts: ["published-posts-with-event-contributors"],
       options: { revalidate: 300, tags: ["posts"] },
     })
   })
@@ -530,11 +538,22 @@ describe("cached Prisma query helpers", () => {
 
   it("caches contributors without exposing private email addresses", async () => {
     mocks.prisma.user.findMany.mockResolvedValue([
-      { name: "Mina", username: "mina" },
+      {
+        id: "writer-1",
+        name: "Mina",
+        username: "mina",
+      },
+    ])
+    mocks.prisma.$queryRaw.mockResolvedValueOnce([
+      { postCount: BigInt(3), writerId: "writer-1" },
     ])
 
     await expect(getCachedContributors()).resolves.toEqual([
-      { name: "Mina", username: "mina" },
+      {
+        _count: { posts: 3 },
+        name: "Mina",
+        username: "mina",
+      },
     ])
 
     expect(mocks.prisma.user.findMany).toHaveBeenCalledWith(
@@ -545,8 +564,18 @@ describe("cached Prisma query helpers", () => {
     )
     const select = mocks.prisma.user.findMany.mock.calls[0]?.[0].select
     expect(select).not.toHaveProperty("email")
+    const contributorCountSql = flattenSql(mocks.prisma.$queryRaw.mock.calls[0])
+    expect(contributorCountSql).toMatch(
+      /COUNT\(DISTINCT credited_posts\."postId"\)/,
+    )
+    expect(contributorCountSql).toMatch(
+      /post_author\.status = 'ACCEPTED'/,
+    )
+    expect(contributorCountSql).toMatch(
+      /event_room\.status = 'SUBMITTED'\s+AND event_room\."excludedAt" IS NULL\s+AND final_post\.status = 'PUBLISHED'/,
+    )
     expect(mocks.cacheEntries).toContainEqual({
-      keyParts: ["contributors"],
+      keyParts: ["contributors-with-event-post-counts"],
       options: { revalidate: 300, tags: ["posts", "users"] },
     })
   })
@@ -1060,12 +1089,25 @@ describe("cached Prisma query helpers", () => {
     expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(1)
     expect(mocks.prisma.post.findMany).not.toHaveBeenCalled()
     expect(mocks.prisma.post.count).not.toHaveBeenCalled()
+    const authorPostsSql = flattenSql(mocks.prisma.$queryRaw.mock.calls[0])
+    expect(authorPostsSql).toMatch(
+      /FROM award_events event\s+JOIN award_event_rooms event_room\s+ON event_room\."eventId" = event\.id/,
+    )
+    expect(authorPostsSql).toMatch(
+      /event\."finalPostId" = p\.id\s+AND event_room\.status = 'SUBMITTED'\s+AND event_room\."excludedAt" IS NULL/,
+    )
+    expect(authorPostsSql).toMatch(
+      /event_writer\.username =/,
+    )
+    expect(authorPostsSql).toMatch(
+      /pa\.status = 'ACCEPTED'/,
+    )
     expect(mocks.cacheEntries).toContainEqual({
       keyParts: ["author-by-username"],
       options: { revalidate: 300, tags: ["users"] },
     })
     expect(mocks.cacheEntries).toContainEqual({
-      keyParts: ["author-posts"],
+      keyParts: ["author-posts-with-event-contributors"],
       options: { revalidate: 300, tags: ["posts", "users"] },
     })
   })

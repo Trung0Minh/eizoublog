@@ -95,8 +95,10 @@ function EventContributorAttribution({
     >
       <div className="flex shrink-0 items-center">
         {writers.map((writer, index) => (
-          <div
-            className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-[#2d6e7e] text-sm font-bold text-white outline outline-2 outline-background"
+          <Link
+            aria-label={writer.name}
+            className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-[#2d6e7e] text-sm font-bold text-white outline outline-2 outline-background transition-transform hover:z-30 hover:scale-105"
+            href={`/authors/${writer.username}`}
             key={writer.username}
             style={{
               marginLeft: index === 0 ? 0 : -12,
@@ -112,11 +114,21 @@ function EventContributorAttribution({
             ) : (
               writer.name.charAt(0)
             )}
-          </div>
+          </Link>
         ))}
       </div>
-      <span className="min-w-0 text-sm font-bold leading-5 text-text-primary">
-        {writers.map(({ name }) => name).join(" · ")}
+      <span className="flex min-w-0 flex-wrap items-center gap-1 text-sm font-bold leading-5 text-text-primary">
+        {writers.map((writer, index) => (
+          <span className="inline-flex items-center gap-1" key={writer.username}>
+            {index > 0 && <span className="text-text-tertiary">·</span>}
+            <Link
+              className="transition-colors hover:text-accent"
+              href={`/authors/${writer.username}`}
+            >
+              {writer.name}
+            </Link>
+          </span>
+        ))}
       </span>
     </div>
   )

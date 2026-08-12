@@ -52,6 +52,7 @@ export function CompactPostList({
       >
         {posts.map((post, index) => {
           const tags = post.tags.map(({ tag }) => tag)
+          const authors = [post.author, ...post.coAuthors.map(({ user }) => user)]
 
           return (
             <motion.article
@@ -111,7 +112,24 @@ export function CompactPostList({
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-secondary">
                   {post.publishedAt && <RelativeTime date={post.publishedAt} />}
-                  <span>bởi {post.author.name}</span>
+                  <span className="inline-flex flex-wrap items-center gap-1">
+                    <span>bởi</span>
+                    {authors.map((author, authorIndex) => (
+                      <span className="inline-flex items-center gap-1" key={author.username}>
+                        {authorIndex > 0 && (
+                          <span aria-hidden="true" className="text-text-tertiary">
+                            ·
+                          </span>
+                        )}
+                        <Link
+                          className="font-medium text-text-primary transition-colors hover:text-accent"
+                          href={`/authors/${author.username}`}
+                        >
+                          {author.name}
+                        </Link>
+                      </span>
+                    ))}
+                  </span>
                   <span className="inline-flex items-center gap-1 font-semibold">
                     <MessageSquare aria-hidden="true" className="h-3 w-3" />
                     {post._count.comments} bình luận

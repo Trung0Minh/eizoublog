@@ -85,13 +85,11 @@ type SidebarArchiveRow = {
 }
 
 const contributorSelect = {
-  _count: {
-    select: { posts: { where: { status: "PUBLISHED" } } },
-  },
   avatarUrl: true,
   bio: true,
   displayRoleColor: true,
   displayRoleName: true,
+  id: true,
   name: true,
   username: true,
   role: true,
@@ -514,6 +512,11 @@ interface WriterEventRow {
   title: string | null
 }
 
+interface ContributorPostCountRow {
+  postCount: DbCount
+  writerId: string | null
+}
+
 function countToNumber(value: DbCount) {
   if (typeof value === "bigint") {
     return Number(value)
@@ -694,16 +697,44 @@ async function getPublishedPostListBySql(
             SELECT json_agg(
               json_build_object(
                 'user', json_build_object(
-                  'avatarUrl', co_author."avatarUrl",
-                  'name', co_author.name,
-                  'username', co_author.username
+                  'avatarUrl', credited_author."avatarUrl",
+                  'name', credited_author.name,
+                  'username', credited_author.username
                 )
               )
-              ORDER BY pa.order ASC
+              ORDER BY credited_author."creditOrder" ASC, credited_author.name ASC
             ) AS items
-            FROM post_authors pa
-            JOIN users co_author ON co_author.id = pa."userId"
-            WHERE pa."postId" = p.id
+            FROM (
+              SELECT
+                credited_user."avatarUrl",
+                MIN(credit."creditOrder") AS "creditOrder",
+                credited_user.id,
+                credited_user.name,
+                credited_user.username
+              FROM (
+                SELECT pa."userId", pa.order AS "creditOrder"
+                FROM post_authors pa
+                WHERE pa."postId" = p.id
+                  AND pa.status = 'ACCEPTED'
+
+                UNION ALL
+
+                SELECT event_room."writerId", event_room.order AS "creditOrder"
+                FROM award_events event
+                JOIN award_event_rooms event_room
+                  ON event_room."eventId" = event.id
+                WHERE event."finalPostId" = p.id
+                  AND event_room.status = 'SUBMITTED'
+                  AND event_room."excludedAt" IS NULL
+              ) credit
+              JOIN users credited_user ON credited_user.id = credit."userId"
+              WHERE credited_user.id <> p."authorId"
+              GROUP BY
+                credited_user.id,
+                credited_user."avatarUrl",
+                credited_user.name,
+                credited_user.username
+            ) credited_author
           ) co_authors ON TRUE
           LEFT JOIN LATERAL (
             SELECT json_agg(
@@ -792,16 +823,44 @@ async function getPublishedPostListBySql(
             SELECT json_agg(
               json_build_object(
                 'user', json_build_object(
-                  'avatarUrl', co_author."avatarUrl",
-                  'name', co_author.name,
-                  'username', co_author.username
+                  'avatarUrl', credited_author."avatarUrl",
+                  'name', credited_author.name,
+                  'username', credited_author.username
                 )
               )
-              ORDER BY pa.order ASC
+              ORDER BY credited_author."creditOrder" ASC, credited_author.name ASC
             ) AS items
-            FROM post_authors pa
-            JOIN users co_author ON co_author.id = pa."userId"
-            WHERE pa."postId" = p.id
+            FROM (
+              SELECT
+                credited_user."avatarUrl",
+                MIN(credit."creditOrder") AS "creditOrder",
+                credited_user.id,
+                credited_user.name,
+                credited_user.username
+              FROM (
+                SELECT pa."userId", pa.order AS "creditOrder"
+                FROM post_authors pa
+                WHERE pa."postId" = p.id
+                  AND pa.status = 'ACCEPTED'
+
+                UNION ALL
+
+                SELECT event_room."writerId", event_room.order AS "creditOrder"
+                FROM award_events event
+                JOIN award_event_rooms event_room
+                  ON event_room."eventId" = event.id
+                WHERE event."finalPostId" = p.id
+                  AND event_room.status = 'SUBMITTED'
+                  AND event_room."excludedAt" IS NULL
+              ) credit
+              JOIN users credited_user ON credited_user.id = credit."userId"
+              WHERE credited_user.id <> p."authorId"
+              GROUP BY
+                credited_user.id,
+                credited_user."avatarUrl",
+                credited_user.name,
+                credited_user.username
+            ) credited_author
           ) co_authors ON TRUE
           LEFT JOIN LATERAL (
             SELECT json_agg(
@@ -885,7 +944,7 @@ export const getCachedPublishedPosts = unstable_cache(
       sort,
     )
   },
-  ["published-posts"],
+  ["published-posts-with-event-contributors"],
   { revalidate: 300, tags: ["posts"] },
 )
 
@@ -913,7 +972,7 @@ export const getCachedHomeCarouselPosts = unstable_cache(
 
     return [...featured.posts, ...fallbackPosts].slice(0, 10)
   },
-  ["home-carousel-posts"],
+  ["home-carousel-posts-with-event-contributors"],
   { revalidate: 300, tags: ["posts"] },
 )
 
@@ -1004,13 +1063,57 @@ export async function getCachedPublishedPost(slug: string) {
 }
 
 export const getCachedContributors = unstable_cache(
-  async () =>
-    prisma.user.findMany({
-      orderBy: { name: "asc" },
-      select: contributorSelect,
-      where: { role: { in: ["ADMIN", "WRITER"] } },
-    }),
-  ["contributors"],
+  async () => {
+    const [contributors, postCounts] = await Promise.all([
+      prisma.user.findMany({
+        orderBy: { name: "asc" },
+        select: contributorSelect,
+        where: { role: { in: ["ADMIN", "WRITER"] } },
+      }),
+      prisma.$queryRaw<ContributorPostCountRow[]>`
+        SELECT
+          credited_posts."writerId",
+          COUNT(DISTINCT credited_posts."postId") AS "postCount"
+        FROM (
+          SELECT p."authorId" AS "writerId", p.id AS "postId"
+          FROM posts p
+          WHERE p.status = 'PUBLISHED'
+
+          UNION
+
+          SELECT post_author."userId" AS "writerId", p.id AS "postId"
+          FROM post_authors post_author
+          JOIN posts p ON p.id = post_author."postId"
+          WHERE p.status = 'PUBLISHED'
+            AND post_author.status = 'ACCEPTED'
+
+          UNION
+
+          SELECT event_room."writerId", event."finalPostId" AS "postId"
+          FROM award_event_rooms event_room
+          JOIN award_events event ON event.id = event_room."eventId"
+          JOIN posts final_post ON final_post.id = event."finalPostId"
+          WHERE event_room.status = 'SUBMITTED'
+            AND event_room."excludedAt" IS NULL
+            AND final_post.status = 'PUBLISHED'
+        ) credited_posts
+        GROUP BY credited_posts."writerId"
+      `,
+    ])
+    const postCountByWriter = new Map(
+      postCounts.flatMap((row) =>
+        row.writerId ? [[row.writerId, countToNumber(row.postCount)] as const] : [],
+      ),
+    )
+
+    return contributors.map(({ id, ...contributor }) => ({
+      ...contributor,
+      _count: {
+        posts: postCountByWriter.get(id) ?? 0,
+      },
+    }))
+  },
+  ["contributors-with-event-post-counts"],
   { revalidate: 300, tags: ["posts", "users"] },
 )
 
@@ -1806,7 +1909,20 @@ export const getCachedAuthorPosts = unstable_cache(
             FROM post_authors pa
             JOIN users co_author ON co_author.id = pa."userId"
             WHERE pa."postId" = p.id
+              AND pa.status = 'ACCEPTED'
               AND co_author.username = ${username}
+          )
+          OR EXISTS (
+            SELECT 1
+            FROM award_events event
+            JOIN award_event_rooms event_room
+              ON event_room."eventId" = event.id
+            JOIN users event_writer
+              ON event_writer.id = event_room."writerId"
+            WHERE event."finalPostId" = p.id
+              AND event_room.status = 'SUBMITTED'
+              AND event_room."excludedAt" IS NULL
+              AND event_writer.username = ${username}
           )
         )
       `,
@@ -1814,7 +1930,7 @@ export const getCachedAuthorPosts = unstable_cache(
       pageSize,
       sort,
     ),
-  ["author-posts"],
+  ["author-posts-with-event-contributors"],
   { revalidate: 300, tags: ["posts", "users"] },
 )
 

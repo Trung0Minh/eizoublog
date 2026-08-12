@@ -130,18 +130,14 @@ export function PostCard({ post }: PostCardProps) {
                 </Link>
               ))}
             </div>
-            <div className="flex flex-wrap items-center gap-1">
-              {authors.map((author, i) => (
-                <Link
-                  className="font-semibold text-text-primary hover:text-accent transition-colors"
-                  href={`/authors/${author.username}`}
-                  key={author.username}
-                >
-                  {i > 0 && <span className="mr-1 text-text-tertiary">·</span>}
-                  {author.name}
-                </Link>
-              ))}
-            </div>
+            {authors.length === 1 && (
+              <Link
+                className="font-semibold text-text-primary transition-colors hover:text-accent"
+                href={`/authors/${authors[0].username}`}
+              >
+                {authors[0].name}
+              </Link>
+            )}
           </div>
           <span className="text-text-tertiary px-1">&middot;</span>
           {post.publishedAt ? (
