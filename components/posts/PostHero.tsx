@@ -53,9 +53,11 @@ export function PostHero({
   hasTableOfContents = false,
 }: PostHeroProps) {
   const authors = [post.author, ...post.coAuthors.map(({ user }) => user)]
-  const richSubtitle = isRichSubtitle(post.excerptContent) &&
+  const richSubtitleContent = isRichSubtitle(post.excerptContent) &&
     hasMeaningfulSubtitle(post.excerptContent)
-  const hasSubtitle = richSubtitle || Boolean(post.excerpt?.trim())
+    ? post.excerptContent
+    : null
+  const hasSubtitle = Boolean(richSubtitleContent || post.excerpt?.trim())
 
   const { scrollY } = useScroll()
   const y = useTransform(scrollY, [0, 1000], [0, 400])
@@ -108,10 +110,10 @@ export function PostHero({
             )}>
               <TextReveal text={post.title} />
             </h1>
-            {richSubtitle ? (
+            {richSubtitleContent ? (
               <ScrollReveal delay={0.15}>
                 <div className="mb-8 max-w-[90%] text-[15px] leading-[1.6] text-text-secondary md:text-[18px] [&_.ProseMirror]:!m-0 [&_.ProseMirror]:!max-w-none [&_.ProseMirror>*]:!m-0">
-                  <PostBody content={post.excerptContent} presentation="embedded" />
+                  <PostBody content={richSubtitleContent} presentation="embedded" />
                 </div>
               </ScrollReveal>
             ) : post.excerpt ? (
