@@ -6,6 +6,7 @@ import { ChevronDown } from "lucide-react"
 
 import { motion } from "motion/react"
 
+import { TableOfContentsHeading } from "@/components/posts/TableOfContentsHeading"
 import { cn } from "@/lib/utils"
 import { extractHeadings } from "@/lib/postHeadings"
 
@@ -59,7 +60,7 @@ export function TableOfContents({
       )}
     >
       {!collapsible && (
-        <h4 className="mb-3 shrink-0 text-[10px] font-semibold uppercase tracking-[0.1em] text-text-tertiary">
+        <h4 className="mb-3 shrink-0 text-[12px] font-bold uppercase tracking-[0.12em] text-text-tertiary">
           Nội dung
         </h4>
       )}
@@ -77,12 +78,11 @@ export function TableOfContents({
           >
             <a
               className={cn(
-                "py-1.5 text-[13px] relative flex items-center transition-colors",
+                "relative block transition-colors",
                 activeId === id
                   ? "font-semibold text-accent"
                   : "text-text-secondary hover:text-text-primary",
               )}
-              style={{ paddingLeft: `${Math.max(0, level - 2) * 12 + 8}px` }}
               href={`#${id}`}
             >
               {activeId === id && (
@@ -92,7 +92,9 @@ export function TableOfContents({
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 />
               )}
-              {text}
+              <TableOfContentsHeading active={activeId === id} level={level}>
+                {text}
+              </TableOfContentsHeading>
             </a>
           </li>
         ))}

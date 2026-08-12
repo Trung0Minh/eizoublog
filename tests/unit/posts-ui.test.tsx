@@ -354,6 +354,14 @@ describe("TableOfContents", () => {
       "href",
       "#dao-dien-tap",
     )
+    expect(
+      screen
+        .getByRole("link", { name: "Đạo diễn tập" })
+        .querySelector('[data-heading-marker="dot"]'),
+    ).not.toBeNull()
+    expect(screen.getByRole("heading", { name: "Nội dung" })).toHaveClass(
+      "text-[12px]",
+    )
   })
 
   it("wraps mobile contents in a collapsible card", () => {

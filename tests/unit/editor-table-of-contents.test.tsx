@@ -76,6 +76,12 @@ describe("EditorTableOfContents", () => {
     expect(
       screen.getByRole("button", { name: "Nhịp chuyển động" }),
     ).toHaveAttribute("aria-current", "location")
+    expect(
+      screen
+        .getByRole("button", { name: "Nhịp chuyển động" })
+        .querySelector('[data-heading-marker="dot"]'),
+    ).not.toBeNull()
+    expect(screen.getByText("Dàn ý bài viết")).toHaveClass("text-[12px]")
   })
 
   it("moves the editor selection to a heading when it is selected", () => {

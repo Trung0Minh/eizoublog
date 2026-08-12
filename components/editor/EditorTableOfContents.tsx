@@ -5,6 +5,7 @@ import { ChevronDown, ListTree } from "lucide-react"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
 import { cn } from "@/lib/utils"
+import { TableOfContentsHeading } from "@/components/posts/TableOfContentsHeading"
 import { extractHeadings, type PostHeading } from "@/lib/postHeadings"
 
 interface EditorTableOfContentsProps {
@@ -102,7 +103,7 @@ export function EditorTableOfContents({
             <button
               aria-current={isActive ? "location" : "false"}
               className={cn(
-                "relative flex w-full cursor-pointer items-start py-1.5 pr-2 text-left text-[13px] leading-[1.35] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                "relative block w-full cursor-pointer text-left transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 isActive
                   ? "font-semibold text-accent"
                   : "text-text-secondary hover:text-text-primary",
@@ -110,7 +111,6 @@ export function EditorTableOfContents({
               )}
               disabled={!editor}
               onClick={() => jumpToHeading(id)}
-              style={{ paddingLeft: `${Math.max(0, level - 2) * 12 + 12}px` }}
               type="button"
             >
               <span
@@ -120,7 +120,14 @@ export function EditorTableOfContents({
                   isActive ? "opacity-100" : "opacity-0",
                 )}
               />
-              <span className="line-clamp-2">{text}</span>
+              <TableOfContentsHeading
+                active={isActive}
+                basePadding={12}
+                className="w-full"
+                level={level}
+              >
+                <span className="line-clamp-2">{text}</span>
+              </TableOfContentsHeading>
             </button>
           </li>
         )
@@ -136,7 +143,7 @@ export function EditorTableOfContents({
       >
         <div className="mb-3 flex items-center gap-2 text-text-tertiary">
           <ListTree aria-hidden="true" className="h-3.5 w-3.5" />
-          <span className="text-[10px] font-bold uppercase tracking-[0.14em]">
+          <span className="text-[12px] font-bold uppercase tracking-[0.14em]">
             Dàn ý bài viết
           </span>
           <span className="ml-auto text-[10px] tabular-nums">

@@ -91,11 +91,14 @@ describe("EventAnthologyTableOfContents", () => {
     const category = screen.getByRole("link", { name: "Best movies" })
     const entry = screen.getByRole("link", { name: "Hyakuremu" })
     const detail = screen.getByRole("link", { name: "Production notes" })
+    const categoryHeading = category.querySelector('[data-toc-heading-level="2"]')
+    const entryHeading = entry.querySelector('[data-toc-heading-level="3"]')
+    const detailHeading = detail.querySelector('[data-toc-heading-level="4"]')
 
-    expect(category).toHaveClass("font-semibold", "text-[12px]")
-    expect(category).not.toHaveClass("uppercase")
-    expect(entry).toHaveClass("font-normal", "text-[12px]")
-    expect(detail).toHaveClass("font-normal", "text-[12px]", "text-text-secondary")
+    expect(categoryHeading).toHaveClass("font-semibold", "text-[13px]")
+    expect(categoryHeading).not.toHaveClass("uppercase")
+    expect(entryHeading).toHaveClass("font-normal", "text-[13px]")
+    expect(detailHeading).toHaveClass("font-normal", "text-[13px]")
     expect(category.querySelector("[data-heading-marker]")).toBeNull()
     expect(entry.querySelector('[data-heading-marker="dot"]')).not.toBeNull()
     expect(entry.querySelector('[data-heading-marker="dot"]')).toHaveClass(
@@ -116,10 +119,10 @@ describe("EventAnthologyTableOfContents", () => {
     )
     expect(
       entry.querySelector('[data-heading-marker-align="first-line"]'),
-    ).toHaveClass("h-[16px]", "items-center", "translate-y-px")
-    expect(category).toHaveStyle({ paddingLeft: "12px" })
-    expect(entry).toHaveStyle({ paddingLeft: "12px" })
-    expect(detail).toHaveStyle({ paddingLeft: "32px" })
+    ).toHaveClass("h-[17px]", "items-center", "translate-y-px")
+    expect(categoryHeading).toHaveStyle({ paddingLeft: "12px" })
+    expect(entryHeading).toHaveStyle({ paddingLeft: "12px" })
+    expect(detailHeading).toHaveStyle({ paddingLeft: "32px" })
   })
 
   it("preserves the TOC scroll position when expanding another writer", async () => {

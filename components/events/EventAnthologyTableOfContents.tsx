@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 
 import type { PostHeading } from "@/lib/postHeadings"
 import { cn } from "@/lib/utils"
+import { TableOfContentsHeading } from "@/components/posts/TableOfContentsHeading"
 
 const MOBILE_TOC_TRANSITION_MS = 300
 
@@ -153,7 +154,7 @@ export function EventAnthologyTableOfContents({
       )}
     >
       {!collapsible && (
-        <p className="mb-4 shrink-0 text-[10px] font-bold uppercase tracking-[0.16em] text-text-tertiary">
+        <p className="mb-4 shrink-0 text-[12px] font-bold uppercase tracking-[0.16em] text-text-tertiary">
           Tác giả
         </p>
       )}
@@ -178,7 +179,7 @@ export function EventAnthologyTableOfContents({
                 )}
                 <a
                   className={cn(
-                    "min-w-0 flex-1 py-1.5 pl-3 text-[12px] font-bold leading-snug text-text-primary transition-colors hover:text-accent",
+                    "min-w-0 flex-1 py-1.5 pl-3 text-[14px] font-bold leading-snug text-text-primary transition-colors hover:text-accent",
                     isWriterActive && "text-accent",
                   )}
                   href={`#${writer.id}`}
@@ -231,10 +232,6 @@ export function EventAnthologyTableOfContents({
                     const previousHeading = children[headingIndex - 1]
                     const startsNewGroup =
                       heading.level === 2 && previousHeading?.level !== 2
-                    const nestedLevel = Math.min(Math.max(heading.level, 3), 6)
-                    const headingPadding =
-                      heading.level === 2 ? 12 : 12 + (nestedLevel - 3) * 20
-
                     return (
                     <li
                       className={cn(
@@ -245,12 +242,7 @@ export function EventAnthologyTableOfContents({
                     >
                       <a
                         className={cn(
-                          "group relative min-h-7 items-start rounded-r-md py-1.5 pr-1.5 leading-snug transition-colors",
-                          heading.level === 2
-                            ? "block text-[12px] font-semibold text-text-secondary hover:text-text-primary"
-                            : heading.level === 3
-                              ? "grid grid-cols-[14px_minmax(0,1fr)] gap-1.5 text-[12px] font-normal text-text-secondary hover:text-text-primary"
-                              : "grid grid-cols-[14px_minmax(0,1fr)] gap-1.5 text-[12px] font-normal text-text-secondary hover:text-text-primary",
+                          "relative block text-text-secondary transition-colors hover:text-text-primary",
                           activeId === heading.id &&
                             "bg-accent/[0.07] text-accent",
                         )}
@@ -260,36 +252,18 @@ export function EventAnthologyTableOfContents({
                           if (element) linkRefs.current.set(heading.id, element)
                           else linkRefs.current.delete(heading.id)
                         }}
-                        style={{ paddingLeft: headingPadding }}
                         tabIndex={isExpanded ? undefined : -1}
                       >
                         {activeId === heading.id && (
                           <span className="absolute -left-px inset-y-1 w-0.5 bg-accent" />
                         )}
-                        {heading.level >= 3 && (
-                          <span
-                            aria-hidden="true"
-                            className="flex h-[16px] translate-y-px shrink-0 items-center"
-                            data-heading-marker-align="first-line"
-                          >
-                            <span
-                              className={cn(
-                                "block shrink-0 transition-[color,opacity]",
-                                heading.level === 3
-                                  ? "h-[5px] w-[5px] rounded-full bg-text-secondary opacity-55 group-hover:opacity-100"
-                                  : "h-[5px] w-[5px] border border-accent/45 bg-transparent group-hover:border-accent",
-                                activeId === heading.id &&
-                                  (heading.level >= 4
-                                    ? "border-accent"
-                                    : "bg-accent"),
-                              )}
-                              data-heading-marker={
-                                heading.level === 3 ? "dot" : "hollow-square"
-                              }
-                            />
-                          </span>
-                        )}
-                        <span>{heading.text}</span>
+                        <TableOfContentsHeading
+                          active={activeId === heading.id}
+                          basePadding={12}
+                          level={heading.level}
+                        >
+                          {heading.text}
+                        </TableOfContentsHeading>
                       </a>
                     </li>
                     )
