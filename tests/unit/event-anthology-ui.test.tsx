@@ -76,6 +76,52 @@ describe("EventAnthologyTableOfContents", () => {
     pushStateSpy.mockRestore()
   })
 
+  it("uses distinct markers and typography for nested heading levels", () => {
+    render(
+      <EventAnthologyTableOfContents
+        headings={[
+          { id: "event-room-a", level: 1, text: "Writer A" },
+          { id: "event-room-a-category", level: 2, text: "Best movies" },
+          { id: "event-room-a-entry", level: 3, text: "Hyakuremu" },
+          { id: "event-room-a-detail", level: 4, text: "Production notes" },
+        ]}
+      />,
+    )
+
+    const category = screen.getByRole("link", { name: "Best movies" })
+    const entry = screen.getByRole("link", { name: "Hyakuremu" })
+    const detail = screen.getByRole("link", { name: "Production notes" })
+
+    expect(category).toHaveClass("font-semibold", "text-[12px]")
+    expect(category).not.toHaveClass("uppercase")
+    expect(entry).toHaveClass("font-normal", "text-[12px]")
+    expect(detail).toHaveClass("font-normal", "text-[12px]", "text-text-secondary")
+    expect(category.querySelector("[data-heading-marker]")).toBeNull()
+    expect(entry.querySelector('[data-heading-marker="dot"]')).not.toBeNull()
+    expect(entry.querySelector('[data-heading-marker="dot"]')).toHaveClass(
+      "h-[5px]",
+      "w-[5px]",
+      "bg-text-secondary",
+      "opacity-55",
+      "group-hover:opacity-100",
+    )
+    expect(detail.querySelector('[data-heading-marker="hollow-square"]')).not.toBeNull()
+    expect(
+      detail.querySelector('[data-heading-marker="hollow-square"]'),
+    ).toHaveClass(
+      "h-[5px]",
+      "w-[5px]",
+      "border-accent/45",
+      "group-hover:border-accent",
+    )
+    expect(
+      entry.querySelector('[data-heading-marker-align="first-line"]'),
+    ).toHaveClass("h-[16px]", "items-center", "translate-y-px")
+    expect(category).toHaveStyle({ paddingLeft: "12px" })
+    expect(entry).toHaveStyle({ paddingLeft: "12px" })
+    expect(detail).toHaveStyle({ paddingLeft: "32px" })
+  })
+
   it("preserves the TOC scroll position when expanding another writer", async () => {
     const writerAElement = document.createElement("section")
     writerAElement.id = "event-room-a"

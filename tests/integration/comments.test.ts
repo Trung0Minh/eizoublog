@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => {
   const prisma = {
     comment: {
       create: vi.fn(),
+      findFirst: vi.fn(),
       findUnique: vi.fn(),
       update: vi.fn(),
     },
@@ -61,6 +62,8 @@ const publishedPost = {
     id: "user-1",
     name: "Mina",
   },
+  coAuthors: [],
+  finalAwardEvent: null,
   id: "post-1",
   slug: "frieren",
   title: "Frieren and memory",
@@ -168,6 +171,47 @@ describe("comments API", () => {
       to: "parent@example.com",
       toName: "Parent",
     })
+  })
+
+  it("emails submitted event contributors as credited post authors", async () => {
+    mocks.prisma.post.findUnique.mockResolvedValue({
+      ...publishedPost,
+      finalAwardEvent: {
+        rooms: [
+          {
+            writer: {
+              email: "event-writer@example.com",
+              id: "writer-2",
+              name: "Event Writer",
+            },
+          },
+        ],
+      },
+    })
+    mocks.prisma.comment.create.mockResolvedValue(safeComment)
+
+    const response = await POST(
+      jsonRequest({
+        authorEmail: "reader@example.com",
+        authorName: "Reader",
+        content: "Thoughtful event comment",
+        postId: "post-1",
+      }),
+    )
+
+    expect(response.status).toBe(201)
+    expect(mocks.sendPostCommentEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "mina@example.com",
+        toName: "Mina",
+      }),
+    )
+    expect(mocks.sendPostCommentEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "event-writer@example.com",
+        toName: "Event Writer",
+      }),
+    )
   })
 
   it("does not send a reply notification when the author replies to themself", async () => {

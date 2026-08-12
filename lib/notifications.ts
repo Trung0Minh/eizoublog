@@ -18,6 +18,17 @@ function commentNotificationWhere(user: NotificationUser) {
             some: { status: "ACCEPTED", userId: user.id },
           },
         },
+        {
+          finalAwardEvent: {
+            rooms: {
+              some: {
+                excludedAt: null,
+                status: "SUBMITTED",
+                writerId: user.id,
+              },
+            },
+          },
+        },
       ],
       status: { notIn: ["ARCHIVED", "REMOVED"] },
     },
@@ -28,7 +39,7 @@ function commentNotificationWhere(user: NotificationUser) {
 function unreadCommentWhere(user: NotificationUser) {
   return {
     ...commentNotificationWhere(user),
-    isRead: false,
+    readBy: { none: { userId: user.id } },
   } satisfies Prisma.CommentWhereInput
 }
 
@@ -151,7 +162,6 @@ export async function getNotificationCounts(user: NotificationUser) {
         FROM comments c
         JOIN posts p ON p.id = c."postId"
         WHERE c."authorEmail" <> ${user.email}
-          AND c."isRead" = false
           AND c.status = 'APPROVED'
           AND p.status NOT IN ('ARCHIVED', 'REMOVED')
           AND (
@@ -163,6 +173,22 @@ export async function getNotificationCounts(user: NotificationUser) {
                 AND pa."userId" = ${user.id}
                 AND pa.status = 'ACCEPTED'
             )
+            OR EXISTS (
+              SELECT 1
+              FROM award_events event
+              JOIN award_event_rooms event_room
+                ON event_room."eventId" = event.id
+              WHERE event."finalPostId" = p.id
+                AND event_room."writerId" = ${user.id}
+                AND event_room.status = 'SUBMITTED'
+                AND event_room."excludedAt" IS NULL
+            )
+          )
+          AND NOT EXISTS (
+            SELECT 1
+            FROM comment_reads comment_read
+            WHERE comment_read."commentId" = c.id
+              AND comment_read."userId" = ${user.id}
           )
       ) AS "unreadComments",
       (
@@ -215,7 +241,12 @@ export async function getNotifications(user: NotificationUser) {
                 'content', c.content,
                 'createdAt', c."createdAt",
                 'id', c.id,
-                'isRead', c."isRead",
+                'isRead', EXISTS (
+                  SELECT 1
+                  FROM comment_reads comment_read
+                  WHERE comment_read."commentId" = c.id
+                    AND comment_read."userId" = ${user.id}
+                ),
                 'post', jsonb_build_object(
                   'slug', p.slug,
                   'title', p.title
@@ -234,6 +265,16 @@ export async function getNotifications(user: NotificationUser) {
                     WHERE accepted_author."postId" = p.id
                       AND accepted_author."userId" = ${user.id}
                       AND accepted_author.status = 'ACCEPTED'
+                  )
+                  OR EXISTS (
+                    SELECT 1
+                    FROM award_events event
+                    JOIN award_event_rooms event_room
+                      ON event_room."eventId" = event.id
+                    WHERE event."finalPostId" = p.id
+                      AND event_room."writerId" = ${user.id}
+                      AND event_room.status = 'SUBMITTED'
+                      AND event_room."excludedAt" IS NULL
                   )
                 )
               ORDER BY c."createdAt" DESC
@@ -335,10 +376,7 @@ export async function getNotifications(user: NotificationUser) {
 
 export async function markUnreadCommentsRead(user: NotificationUser) {
   const [comments, eventRoomComments] = await Promise.all([
-    prisma.comment.updateMany({
-      data: { isRead: true },
-      where: unreadCommentWhere(user),
-    }),
+    markOwnedCommentsRead(user),
     prisma.awardEventRoomComment.updateMany({
       data: { isRead: true },
       where: {
@@ -352,6 +390,20 @@ export async function markUnreadCommentsRead(user: NotificationUser) {
   return { count: comments.count + eventRoomComments.count }
 }
 
+async function markOwnedCommentsRead(user: NotificationUser) {
+  const comments = await prisma.comment.findMany({
+    select: { id: true },
+    where: unreadCommentWhere(user),
+  })
+
+  if (comments.length === 0) return { count: 0 }
+
+  return prisma.commentRead.createMany({
+    data: comments.map(({ id: commentId }) => ({ commentId, userId: user.id })),
+    skipDuplicates: true,
+  })
+}
+
 export async function markNotificationsRead(userId: string) {
   return prisma.notification.updateMany({
     data: { readAt: new Date() },
@@ -360,23 +412,31 @@ export async function markNotificationsRead(userId: string) {
 }
 
 export async function markCommentRead(commentId: string, user: NotificationUser) {
-  return prisma.comment.updateMany({
-    data: { isRead: true },
-    where: {
-      ...unreadCommentWhere(user),
-      id: commentId,
-    },
+  const owned = await prisma.comment.findFirst({
+    select: { id: true },
+    where: { ...commentNotificationWhere(user), id: commentId },
   })
+
+  if (!owned) return { count: 0 }
+
+  const result = await prisma.commentRead.upsert({
+    create: { commentId, userId: user.id },
+    update: { readAt: new Date() },
+    where: { commentId_userId: { commentId, userId: user.id } },
+  })
+  return { count: result ? 1 : 0 }
 }
 
 export async function markCommentUnread(commentId: string, user: NotificationUser) {
-  return prisma.comment.updateMany({
-    data: { isRead: false },
-    where: {
-      ...commentNotificationWhere(user),
-      id: commentId,
-      isRead: true,
-    },
+  const owned = await prisma.comment.findFirst({
+    select: { id: true },
+    where: { ...commentNotificationWhere(user), id: commentId },
+  })
+
+  if (!owned) return { count: 0 }
+
+  return prisma.commentRead.deleteMany({
+    where: { commentId, userId: user.id },
   })
 }
 

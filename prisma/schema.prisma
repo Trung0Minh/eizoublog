@@ -33,6 +33,7 @@ model User {
   invitesSent        Invite[]                @relation("InviteCreatedBy")
   passwordResets     PasswordResetToken[]
   comments           Comment[]
+  commentReads       CommentRead[]
   notifications      Notification[]
   awardEventsCreated AwardEvent[]            @relation("AwardEventCreatedBy")
   awardEventRooms    AwardEventRoom[]
@@ -366,12 +367,26 @@ model Comment {
   parent      Comment?      @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   replies     Comment[]     @relation("CommentReplies")
   author      User?         @relation(fields: [authorId], references: [id])
+  readBy      CommentRead[]
 
   @@index([postId, status])
   @@index([parentId])
   @@index([authorId, createdAt(sort: Desc)])
   @@index([status, createdAt(sort: Desc)])
   @@map("comments")
+}
+
+model CommentRead {
+  commentId String
+  userId    String
+  readAt    DateTime @default(now())
+
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([commentId, userId])
+  @@index([userId, readAt])
+  @@map("comment_reads")
 }
 
 enum CommentStatus {

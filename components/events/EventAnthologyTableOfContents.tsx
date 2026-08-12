@@ -227,12 +227,32 @@ export function EventAnthologyTableOfContents({
                   )}
                 >
                   <ol className="min-h-0 overflow-hidden">
-                  {children.map((heading) => (
-                    <li key={heading.id}>
+                  {children.map((heading, headingIndex) => {
+                    const previousHeading = children[headingIndex - 1]
+                    const startsNewGroup =
+                      heading.level === 2 && previousHeading?.level !== 2
+                    const nestedLevel = Math.min(Math.max(heading.level, 3), 6)
+                    const headingPadding =
+                      heading.level === 2 ? 12 : 12 + (nestedLevel - 3) * 20
+
+                    return (
+                    <li
+                      className={cn(
+                        heading.level === 2 && "mt-2 first:mt-1",
+                        startsNewGroup && "mt-3",
+                      )}
+                      key={heading.id}
+                    >
                       <a
                         className={cn(
-                          "relative block py-1.5 text-[12px] leading-snug text-text-secondary transition-colors hover:text-text-primary",
-                          activeId === heading.id && "text-accent",
+                          "group relative min-h-7 items-start rounded-r-md py-1.5 pr-1.5 leading-snug transition-colors",
+                          heading.level === 2
+                            ? "block text-[12px] font-semibold text-text-secondary hover:text-text-primary"
+                            : heading.level === 3
+                              ? "grid grid-cols-[14px_minmax(0,1fr)] gap-1.5 text-[12px] font-normal text-text-secondary hover:text-text-primary"
+                              : "grid grid-cols-[14px_minmax(0,1fr)] gap-1.5 text-[12px] font-normal text-text-secondary hover:text-text-primary",
+                          activeId === heading.id &&
+                            "bg-accent/[0.07] text-accent",
                         )}
                         href={`#${heading.id}`}
                         onClick={(event) => navigateToHeading(event, heading.id)}
@@ -240,18 +260,40 @@ export function EventAnthologyTableOfContents({
                           if (element) linkRefs.current.set(heading.id, element)
                           else linkRefs.current.delete(heading.id)
                         }}
-                        style={{
-                          paddingLeft: 24 + (heading.level - 2) * 10,
-                        }}
+                        style={{ paddingLeft: headingPadding }}
                         tabIndex={isExpanded ? undefined : -1}
                       >
                         {activeId === heading.id && (
                           <span className="absolute -left-px inset-y-1 w-0.5 bg-accent" />
                         )}
-                        {heading.text}
+                        {heading.level >= 3 && (
+                          <span
+                            aria-hidden="true"
+                            className="flex h-[16px] translate-y-px shrink-0 items-center"
+                            data-heading-marker-align="first-line"
+                          >
+                            <span
+                              className={cn(
+                                "block shrink-0 transition-[color,opacity]",
+                                heading.level === 3
+                                  ? "h-[5px] w-[5px] rounded-full bg-text-secondary opacity-55 group-hover:opacity-100"
+                                  : "h-[5px] w-[5px] border border-accent/45 bg-transparent group-hover:border-accent",
+                                activeId === heading.id &&
+                                  (heading.level >= 4
+                                    ? "border-accent"
+                                    : "bg-accent"),
+                              )}
+                              data-heading-marker={
+                                heading.level === 3 ? "dot" : "hollow-square"
+                              }
+                            />
+                          </span>
+                        )}
+                        <span>{heading.text}</span>
                       </a>
                     </li>
-                  ))}
+                    )
+                  })}
                   </ol>
                 </div>
               )}

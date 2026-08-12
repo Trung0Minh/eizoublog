@@ -73,7 +73,23 @@ export async function POST(request: Request) {
             name: true,
             id: true
           }
-        }
+        },
+        coAuthors: {
+          select: {
+            user: { select: { email: true, id: true, name: true } },
+          },
+          where: { status: "ACCEPTED" },
+        },
+        finalAwardEvent: {
+          select: {
+            rooms: {
+              select: {
+                writer: { select: { email: true, id: true, name: true } },
+              },
+              where: { excludedAt: null, status: "SUBMITTED" },
+            },
+          },
+        },
       },
       where: { id: data.postId, status: "PUBLISHED" },
     })
@@ -166,30 +182,39 @@ export async function POST(request: Request) {
       }
     }
 
-    const shouldSendPostAuthorEmail = 
-      post.author.email.toLowerCase() !== authorEmail.toLowerCase() &&
-      !(parent && parent.notifyReply && parent.authorEmail.toLowerCase() === post.author.email.toLowerCase())
+    const creditedAuthors = new Map(
+      [
+        post.author,
+        ...post.coAuthors.map(({ user }) => user),
+        ...(post.finalAwardEvent?.rooms.map(({ writer }) => writer) ?? []),
+      ].map((recipient) => [recipient.email.toLowerCase(), recipient] as const),
+    )
+    creditedAuthors.delete(authorEmail.toLowerCase())
+    if (parent?.notifyReply) {
+      creditedAuthors.delete(parent.authorEmail.toLowerCase())
+    }
 
-    if (shouldSendPostAuthorEmail) {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL
-
-      if (appUrl) {
-        try {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL
+    if (appUrl) {
+      await Promise.all(
+        [...creditedAuthors.values()].map(async (recipient) => {
+          try {
           await sendPostCommentEmail({
             postTitle: post.title,
             postUrl: `${appUrl}/${post.slug}#comment-${comment.id}`,
             commenterName: authorName,
             commentContent: data.content,
-            to: post.author.email,
-            toName: post.author.name,
+            to: recipient.email,
+            toName: recipient.name,
           })
-        } catch (error) {
-          console.error(
-            "[POST /api/comments] Failed to send post author email:",
-            error,
-          )
-        }
-      }
+          } catch (error) {
+            console.error(
+              "[POST /api/comments] Failed to send credited author email:",
+              error,
+            )
+          }
+        }),
+      )
     }
 
     revalidateTag("comments", "max")

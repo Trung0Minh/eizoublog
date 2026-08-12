@@ -8,8 +8,14 @@ const mocks = vi.hoisted(() => ({
     },
     comment: {
       count: vi.fn(),
+      findFirst: vi.fn(),
       findMany: vi.fn(),
       updateMany: vi.fn(),
+    },
+    commentRead: {
+      createMany: vi.fn(),
+      deleteMany: vi.fn(),
+      upsert: vi.fn(),
     },
     postAuthor: {
       count: vi.fn(),
@@ -47,7 +53,11 @@ describe("notification queries", () => {
     mocks.prisma.awardEventRoomComment.updateMany.mockResolvedValue({ count: 0 })
     mocks.prisma.comment.count.mockResolvedValue(0)
     mocks.prisma.comment.findMany.mockResolvedValue([])
+    mocks.prisma.comment.findFirst.mockResolvedValue(null)
     mocks.prisma.comment.updateMany.mockResolvedValue({ count: 0 })
+    mocks.prisma.commentRead.createMany.mockResolvedValue({ count: 0 })
+    mocks.prisma.commentRead.deleteMany.mockResolvedValue({ count: 0 })
+    mocks.prisma.commentRead.upsert.mockResolvedValue({ commentId: "comment-1" })
     mocks.prisma.notification.count.mockResolvedValue(0)
     mocks.prisma.notification.create.mockResolvedValue({ id: "notification-1" })
     mocks.prisma.notification.findMany.mockResolvedValue([])
@@ -79,6 +89,9 @@ describe("notification queries", () => {
     })
 
     expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(1)
+    const sql = String(mocks.prisma.$queryRaw.mock.calls[0]?.[0])
+    expect(sql).toContain("FROM award_events event")
+    expect(sql).toContain("FROM comment_reads comment_read")
     expect(mocks.prisma.comment.count).not.toHaveBeenCalled()
     expect(mocks.prisma.postAuthor.count).not.toHaveBeenCalled()
     expect(mocks.prisma.notification.count).not.toHaveBeenCalled()
@@ -152,7 +165,13 @@ describe("notification queries", () => {
   })
 
   it("marks unread comments read across authored and accepted co-authored posts", async () => {
-    mocks.prisma.comment.updateMany.mockResolvedValue({ count: 4 })
+    mocks.prisma.comment.findMany.mockResolvedValue([
+      { id: "comment-1" },
+      { id: "comment-2" },
+      { id: "comment-3" },
+      { id: "comment-4" },
+    ])
+    mocks.prisma.commentRead.createMany.mockResolvedValue({ count: 4 })
     mocks.prisma.awardEventRoomComment.updateMany.mockResolvedValue({ count: 2 })
 
     await expect(
@@ -162,11 +181,10 @@ describe("notification queries", () => {
       }),
     ).resolves.toEqual({ count: 6 })
 
-    expect(mocks.prisma.comment.updateMany).toHaveBeenCalledWith({
-      data: { isRead: true },
+    expect(mocks.prisma.comment.findMany).toHaveBeenCalledWith({
+      select: { id: true },
       where: {
         authorEmail: { not: "mina@example.com" },
-        isRead: false,
         post: {
           OR: [
             { authorId: "writer-1" },
@@ -175,11 +193,32 @@ describe("notification queries", () => {
                 some: { status: "ACCEPTED", userId: "writer-1" },
               },
             },
+            {
+              finalAwardEvent: {
+                rooms: {
+                  some: {
+                    excludedAt: null,
+                    status: "SUBMITTED",
+                    writerId: "writer-1",
+                  },
+                },
+              },
+            },
           ],
           status: { notIn: ["ARCHIVED", "REMOVED"] },
         },
+        readBy: { none: { userId: "writer-1" } },
         status: "APPROVED",
       },
+    })
+    expect(mocks.prisma.commentRead.createMany).toHaveBeenCalledWith({
+      data: [
+        { commentId: "comment-1", userId: "writer-1" },
+        { commentId: "comment-2", userId: "writer-1" },
+        { commentId: "comment-3", userId: "writer-1" },
+        { commentId: "comment-4", userId: "writer-1" },
+      ],
+      skipDuplicates: true,
     })
     expect(mocks.prisma.awardEventRoomComment.updateMany).toHaveBeenCalledWith({
       data: { isRead: true },
@@ -205,7 +244,7 @@ describe("notification queries", () => {
   })
 
   it("marks a single unread comment read if authorized", async () => {
-    mocks.prisma.comment.updateMany.mockResolvedValue({ count: 1 })
+    mocks.prisma.comment.findFirst.mockResolvedValue({ id: "comment-123" })
 
     await expect(
       markCommentRead("comment-123", {
@@ -214,12 +253,11 @@ describe("notification queries", () => {
       }),
     ).resolves.toEqual({ count: 1 })
 
-    expect(mocks.prisma.comment.updateMany).toHaveBeenCalledWith({
-      data: { isRead: true },
+    expect(mocks.prisma.comment.findFirst).toHaveBeenCalledWith({
+      select: { id: true },
       where: {
         id: "comment-123",
         authorEmail: { not: "mina@example.com" },
-        isRead: false,
         post: {
           OR: [
             { authorId: "writer-1" },
@@ -228,10 +266,28 @@ describe("notification queries", () => {
                 some: { status: "ACCEPTED", userId: "writer-1" },
               },
             },
+            {
+              finalAwardEvent: {
+                rooms: {
+                  some: {
+                    excludedAt: null,
+                    status: "SUBMITTED",
+                    writerId: "writer-1",
+                  },
+                },
+              },
+            },
           ],
           status: { notIn: ["ARCHIVED", "REMOVED"] },
         },
         status: "APPROVED",
+      },
+    })
+    expect(mocks.prisma.commentRead.upsert).toHaveBeenCalledWith({
+      create: { commentId: "comment-123", userId: "writer-1" },
+      update: { readAt: expect.any(Date) },
+      where: {
+        commentId_userId: { commentId: "comment-123", userId: "writer-1" },
       },
     })
   })
@@ -255,7 +311,8 @@ describe("notification queries", () => {
   })
 
   it("marks a single comment unread if authorized", async () => {
-    mocks.prisma.comment.updateMany.mockResolvedValue({ count: 1 })
+    mocks.prisma.comment.findFirst.mockResolvedValue({ id: "comment-123" })
+    mocks.prisma.commentRead.deleteMany.mockResolvedValue({ count: 1 })
 
     await expect(
       markCommentUnread("comment-123", {
@@ -264,12 +321,11 @@ describe("notification queries", () => {
       }),
     ).resolves.toEqual({ count: 1 })
 
-    expect(mocks.prisma.comment.updateMany).toHaveBeenCalledWith({
-      data: { isRead: false },
+    expect(mocks.prisma.comment.findFirst).toHaveBeenCalledWith({
+      select: { id: true },
       where: {
         id: "comment-123",
         authorEmail: { not: "mina@example.com" },
-        isRead: true,
         post: {
           OR: [
             { authorId: "writer-1" },
@@ -278,11 +334,25 @@ describe("notification queries", () => {
                 some: { status: "ACCEPTED", userId: "writer-1" },
               },
             },
+            {
+              finalAwardEvent: {
+                rooms: {
+                  some: {
+                    excludedAt: null,
+                    status: "SUBMITTED",
+                    writerId: "writer-1",
+                  },
+                },
+              },
+            },
           ],
           status: { notIn: ["ARCHIVED", "REMOVED"] },
         },
         status: "APPROVED",
       },
+    })
+    expect(mocks.prisma.commentRead.deleteMany).toHaveBeenCalledWith({
+      where: { commentId: "comment-123", userId: "writer-1" },
     })
   })
 
