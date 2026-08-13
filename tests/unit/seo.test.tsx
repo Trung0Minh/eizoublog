@@ -67,6 +67,24 @@ describe("buildMetadata", () => {
     )
   })
 
+  it("supports square Open Graph images", () => {
+    const metadata = buildMetadata({
+      ogImage: "https://cdn.example.com/avatar.jpg",
+      ogImageHeight: 512,
+      ogImageWidth: 512,
+      title: "Mina Writer",
+    })
+
+    expect(metadata.openGraph).toHaveProperty("images", [
+      {
+        alt: "Mina Writer | Eizou Blog",
+        height: 512,
+        url: "https://cdn.example.com/avatar.jpg",
+        width: 512,
+      },
+    ])
+  })
+
   it("normalizes trailing slashes in the app URL", () => {
     process.env.NEXT_PUBLIC_APP_URL = "https://eizou.example/"
 

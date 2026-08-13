@@ -38,6 +38,8 @@ import { generateMetadata as aboutMetadata } from "@/app/(public)/about/page"
 import { generateMetadata as categoryMetadata } from "@/app/(public)/category/[slug]/page"
 import { generateMetadata as contributorsMetadata } from "@/app/(public)/contributors/page"
 import { generateMetadata as homeMetadata } from "@/app/(public)/page"
+import { generateMetadata as introMetadata } from "@/app/(public)/nhap-mon-sakuga/page"
+import { metadata as resourcesMetadata } from "@/app/(public)/resources/page"
 import { generateMetadata as searchMetadata } from "@/app/(public)/search/page"
 import { generateMetadata as tagMetadata } from "@/app/(public)/tag/[slug]/page"
 
@@ -158,8 +160,23 @@ describe("public page metadata", () => {
     })
     await expect(aboutMetadata()).resolves.toMatchObject({
       description:
-        "Eizou Blog là blog biên tập dành cho các bài phân tích, bình luận và góc nhìn hậu trường sản xuất anime.",
+        "Kho lưu trữ các bài viết xịn xò bởi cộng đồng fan sakuku vi en",
       title: "Giới thiệu",
+    })
+    await expect(introMetadata()).resolves.toMatchObject({
+      description:
+        "Hướng dẫn và tài liệu tham khảo hoàn chỉnh dành cho người mới bắt đầu.",
+      title: "Nhập môn Sakuga",
+    })
+    expect(resourcesMetadata).toMatchObject({
+      description: "Tổng hợp nguồn tham khảo siu cấp uy tín",
+      openGraph: {
+        description: "Tổng hợp nguồn tham khảo siu cấp uy tín",
+      },
+      title: "Nguồn tham khảo",
+      twitter: {
+        description: "Tổng hợp nguồn tham khảo siu cấp uy tín",
+      },
     })
     await expect(
       searchMetadata({ searchParams: Promise.resolve({ q: "frieren" }) }),
@@ -201,5 +218,45 @@ describe("public page metadata", () => {
     ).resolves.toMatchObject({
       description: "Các bài viết của Mina Writer.",
     })
+  })
+
+  it("converts rich author bios to text and keeps avatar previews square", async () => {
+    mocks.getCachedAuthorByUsername.mockResolvedValue({
+      avatarUrl: "https://cdn.example.com/mina.jpg",
+      bio: JSON.stringify({
+        content: [
+          {
+            content: [{ text: "Đã lỡ yêu Chanh mất rồi", type: "text" }],
+            type: "paragraph",
+          },
+          {
+            content: [{ text: "#chucemhanhphuc", type: "text" }],
+            type: "paragraph",
+          },
+        ],
+        type: "doc",
+      }),
+      createdAt: new Date("2024-01-01T00:00:00Z"),
+      id: "user-1",
+      name: "Mina Writer",
+      username: "mina",
+    })
+
+    const metadata = await authorMetadata({
+      params: Promise.resolve({ username: "mina" }),
+      searchParams: Promise.resolve({}),
+    })
+
+    expect(metadata.description).toBe(
+      "Đã lỡ yêu Chanh mất rồi\n#chucemhanhphuc",
+    )
+    expect(metadata.openGraph).toHaveProperty("images", [
+      {
+        alt: "Mina Writer | Eizou Blog",
+        height: 512,
+        url: "https://cdn.example.com/mina.jpg",
+        width: 512,
+      },
+    ])
   })
 })

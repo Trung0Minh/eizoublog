@@ -39,6 +39,8 @@ interface BuildMetadataOptions {
   noIndex?: boolean
   noIndexFollow?: boolean
   ogImage?: string
+  ogImageHeight?: number
+  ogImageWidth?: number
   ogType?: "article" | "website"
   title?: string
 }
@@ -50,6 +52,8 @@ export function buildMetadata({
   noIndex = false,
   noIndexFollow = false,
   ogImage = "/og-default.png",
+  ogImageHeight = 630,
+  ogImageWidth = 1200,
   ogType = "website",
   title,
 }: BuildMetadataOptions = {}): Metadata {
@@ -71,9 +75,9 @@ export function buildMetadata({
       images: [
         {
           alt: socialTitle,
-          height: 630,
+          height: ogImageHeight,
           url: imageUrl,
-          width: 1200,
+          width: ogImageWidth,
         },
       ],
       locale: "vi_VN",

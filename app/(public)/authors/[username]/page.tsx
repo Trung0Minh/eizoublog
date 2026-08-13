@@ -14,6 +14,7 @@ import {
 } from "@/lib/queries"
 import { parsePostListSort } from "@/lib/postListSort"
 import { buildMetadata } from "@/lib/seo"
+import { richTextJsonToPlainText } from "@/lib/richText"
 
 interface AuthorPageProps {
   params: Promise<{ username: string }>
@@ -41,8 +42,12 @@ export async function generateMetadata({
 
   return buildMetadata({
     canonicalPath: `/authors/${username}`,
-    description: author.bio ?? `Các bài viết của ${author.name}.`,
+    description:
+      (author.bio && richTextJsonToPlainText(author.bio)) ||
+      `Các bài viết của ${author.name}.`,
     ogImage: author.avatarUrl ?? undefined,
+    ogImageHeight: author.avatarUrl ? 512 : undefined,
+    ogImageWidth: author.avatarUrl ? 512 : undefined,
     title: author.name,
   })
 }

@@ -1,6 +1,6 @@
 import Link from "next/link"
-import type { JSONContent } from "@tiptap/react"
 import { cn } from "@/lib/utils"
+import { richTextJsonToPlainText } from "@/lib/richText"
 
 interface AuthorBioAuthor {
   avatarUrl: string | null
@@ -18,44 +18,12 @@ function fallbackBio(authorName: string) {
   return `${authorName} viết về quá trình sản xuất anime, nghệ thuật kể chuyện qua hình ảnh và kỹ thuật đằng sau hoạt hình đương đại.`
 }
 
-function getBioText(node: JSONContent): string {
-  if (node.type === "text") {
-    return node.text ?? ""
-  }
-
-  if (node.type === "hardBreak") {
-    return "\n"
-  }
-
-  const childText = node.content?.map(getBioText) ?? []
-
-  if (node.type === "doc" || node.type === "bulletList" || node.type === "orderedList") {
-    return childText.filter(Boolean).join("\n")
-  }
-
-  return childText.join("")
-}
-
 function getAuthorBioPreview(author: AuthorBioAuthor) {
   if (!author.bio) {
     return fallbackBio(author.name)
   }
 
-  if (author.bio.startsWith("{")) {
-    try {
-      return (
-        getBioText(JSON.parse(author.bio) as JSONContent)
-          .replace(/[ \t]+/g, " ")
-          .replace(/ *\n */g, "\n")
-          .replace(/\n{3,}/g, "\n\n")
-          .trim() || fallbackBio(author.name)
-      )
-    } catch {
-      return author.bio
-    }
-  }
-
-  return author.bio
+  return richTextJsonToPlainText(author.bio) || fallbackBio(author.name)
 }
 
 export function AuthorBio({ author, className }: AuthorBioProps) {

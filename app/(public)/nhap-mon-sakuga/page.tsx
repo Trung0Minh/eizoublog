@@ -10,7 +10,7 @@ export const revalidate = 300
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
     canonicalPath: "/nhap-mon-sakuga",
-    description: "Hướng dẫn toàn diện tích hợp link giới thiệu các tài liệu uy tín nhất cho người mới bắt đầu tiếp cận Sakuga và ngành sản xuất anime.",
+    description: "Hướng dẫn và tài liệu tham khảo hoàn chỉnh dành cho người mới bắt đầu.",
     title: "Nhập môn Sakuga",
   })
 }
