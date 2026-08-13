@@ -169,13 +169,13 @@ describe("public page metadata", () => {
       title: "Nhập môn Sakuga",
     })
     expect(resourcesMetadata).toMatchObject({
-      description: "Tổng hợp nguồn tham khảo siu cấp uy tín",
+      description: "Tổng hợp nguồn tham khảo siu cấp vjp pro",
       openGraph: {
-        description: "Tổng hợp nguồn tham khảo siu cấp uy tín",
+        description: "Tổng hợp nguồn tham khảo siu cấp vjp pro",
       },
       title: "Nguồn tham khảo",
       twitter: {
-        description: "Tổng hợp nguồn tham khảo siu cấp uy tín",
+        description: "Tổng hợp nguồn tham khảo siu cấp vjp pro",
       },
     })
     await expect(

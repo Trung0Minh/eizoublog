@@ -9,7 +9,7 @@ export const revalidate = 300
 
 export const metadata: Metadata = buildMetadata({
   canonicalPath: "/resources",
-  description: "Tổng hợp nguồn tham khảo siu cấp uy tín",
+  description: "Tổng hợp nguồn tham khảo siu cấp vjp pro",
   title: "Nguồn tham khảo",
 })
 
