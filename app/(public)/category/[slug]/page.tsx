@@ -40,7 +40,7 @@ export async function generateMetadata({
   return buildMetadata({
     canonicalPath: `/category/${slug}`,
     description:
-      category.description ?? `Posts in the ${category.name} category`,
+      category.description ?? `Các bài viết thuộc chuyên mục ${category.name}.`,
     title: category.name,
   })
 }

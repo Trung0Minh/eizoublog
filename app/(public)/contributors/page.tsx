@@ -16,7 +16,7 @@ interface ContributorsPageProps {
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
     canonicalPath: "/contributors",
-    description: `Meet the writers behind ${getAppName()}.`,
+    description: `Gặp gỡ những cây bút đứng sau ${getAppName()}.`,
     title: "Người đóng góp",
   })
 }

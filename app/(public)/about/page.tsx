@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return buildMetadata({
     canonicalPath: "/about",
-    description: `${appName} is an invite-only editorial blog for anime analysis, reviews, and production insight.`,
+    description: `${appName} là blog biên tập dành cho các bài phân tích, bình luận và góc nhìn hậu trường sản xuất anime.`,
     title: "Giới thiệu",
   })
 }

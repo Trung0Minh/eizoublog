@@ -36,7 +36,7 @@ export async function generateMetadata({
 
   return buildMetadata({
     canonicalPath: `/tag/${slug}`,
-    description: `Posts tagged with ${tag.name}`,
+    description: `Các bài viết gắn thẻ ${tag.name}.`,
     title: `#${tag.name}`,
   })
 }

@@ -41,7 +41,7 @@ export async function generateMetadata({
 
   return buildMetadata({
     canonicalPath: `/authors/${username}`,
-    description: author.bio ?? `Posts by ${author.name}`,
+    description: author.bio ?? `Các bài viết của ${author.name}.`,
     ogImage: author.avatarUrl ?? undefined,
     title: author.name,
   })
@@ -141,7 +141,7 @@ export default async function AuthorPage({
             <PostSortTabs basePath={`/authors/${username}`} sort={sort} />
           </div>
         <CompactPostList
-          emptyMessage="This author has no published posts yet."
+          emptyMessage="Tác giả này chưa có bài viết nào được xuất bản."
           pagination={{
             page,
             pageSize: PAGE_SIZE,

@@ -180,7 +180,7 @@ describe("anime-blog-4 appearance parity", () => {
     const layout = read("app/layout.tsx")
     const seo = read("lib/seo.ts")
 
-    expect(seo).toContain("Phân tích anime")
+    expect(seo).toContain("Top 1 sakuku vi en")
     expect(seo).not.toContain("In-depth anime analysis")
     expect(layout).toContain('url: "/og-default.png"')
     expect(layout).toContain('images: ["/og-default.png"]')

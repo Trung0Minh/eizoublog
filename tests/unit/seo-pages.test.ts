@@ -34,6 +34,7 @@ vi.mock("@/lib/queries", () => ({
 
 import { generateMetadata as postMetadata } from "@/app/(public)/[slug]/page"
 import { generateMetadata as authorMetadata } from "@/app/(public)/authors/[username]/page"
+import { generateMetadata as aboutMetadata } from "@/app/(public)/about/page"
 import { generateMetadata as categoryMetadata } from "@/app/(public)/category/[slug]/page"
 import { generateMetadata as contributorsMetadata } from "@/app/(public)/contributors/page"
 import { generateMetadata as homeMetadata } from "@/app/(public)/page"
@@ -52,6 +53,7 @@ describe("public page metadata", () => {
       homeMetadata({ searchParams: Promise.resolve({}) }),
     ).resolves.toMatchObject({
       alternates: { canonical: "https://eizou.example" },
+      description: "Top 1 sakuku vi en",
       title: { absolute: "Eizou Blog" },
     })
 
@@ -138,7 +140,7 @@ describe("public page metadata", () => {
         searchParams: Promise.resolve({}),
       }),
     ).resolves.toMatchObject({
-      description: "Posts tagged with Sakuga",
+      description: "Các bài viết gắn thẻ Sakuga.",
       title: "#Sakuga",
     })
     await expect(
@@ -151,14 +153,53 @@ describe("public page metadata", () => {
       title: "Mina Writer",
     })
     await expect(contributorsMetadata()).resolves.toMatchObject({
-      description: "Meet the writers behind Eizou Blog.",
+      description: "Gặp gỡ những cây bút đứng sau Eizou Blog.",
       title: "Người đóng góp",
+    })
+    await expect(aboutMetadata()).resolves.toMatchObject({
+      description:
+        "Eizou Blog là blog biên tập dành cho các bài phân tích, bình luận và góc nhìn hậu trường sản xuất anime.",
+      title: "Giới thiệu",
     })
     await expect(
       searchMetadata({ searchParams: Promise.resolve({ q: "frieren" }) }),
     ).resolves.toMatchObject({
       robots: { follow: false, index: false },
       title: "Tìm kiếm: frieren",
+    })
+  })
+
+  it("uses Vietnamese fallbacks for category and author previews", async () => {
+    mocks.getCachedCategoryBySlug.mockResolvedValue({
+      description: null,
+      id: "category-1",
+      name: "Ghi chú sản xuất",
+      slug: "ghi-chu-san-xuat",
+    })
+    mocks.getCachedAuthorByUsername.mockResolvedValue({
+      avatarUrl: null,
+      bio: null,
+      createdAt: new Date("2024-01-01T00:00:00Z"),
+      id: "user-1",
+      name: "Mina Writer",
+      username: "mina",
+    })
+
+    await expect(
+      categoryMetadata({
+        params: Promise.resolve({ slug: "ghi-chu-san-xuat" }),
+        searchParams: Promise.resolve({}),
+      }),
+    ).resolves.toMatchObject({
+      description: "Các bài viết thuộc chuyên mục Ghi chú sản xuất.",
+    })
+    await expect(
+      authorMetadata({
+        params: Promise.resolve({ username: "mina" }),
+        searchParams: Promise.resolve({}),
+      }),
+    ).resolves.toMatchObject({
+      description: "Các bài viết của Mina Writer.",
     })
   })
 })
