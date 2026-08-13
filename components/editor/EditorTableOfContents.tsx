@@ -193,7 +193,7 @@ export function EditorTableOfContents({
       >
         <div className="min-h-0 overflow-hidden">
           {isOpen && (
-            <div className="mt-3 max-h-[40vh] overflow-y-auto overscroll-contain pr-1">
+            <div className="mt-3 max-h-[40vh] overflow-y-auto overscroll-auto pr-1">
               {outline}
             </div>
           )}

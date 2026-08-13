@@ -68,7 +68,7 @@ export function TableOfContents({
         className={cn(
           "relative flex flex-col",
           !collapsible &&
-            "min-h-0 overflow-y-auto overscroll-contain pr-2 [scrollbar-gutter:stable]",
+            "min-h-0 overflow-y-auto overscroll-auto pr-2 [scrollbar-gutter:stable]",
         )}
       >
         <div className="absolute left-0 top-0 bottom-0 w-px bg-border-default"></div>
@@ -132,7 +132,7 @@ export function TableOfContents({
         )}
       >
         <div className="min-h-0 overflow-hidden">
-          <div className="mt-4 max-h-[60vh] overflow-y-auto overscroll-contain pr-2">
+          <div className="mt-4 max-h-[60vh] overflow-y-auto overscroll-auto pr-2">
             {contents}
           </div>
         </div>

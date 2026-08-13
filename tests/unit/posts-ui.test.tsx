@@ -390,6 +390,32 @@ describe("TableOfContents", () => {
     expect(button).toHaveAttribute("aria-expanded", "true")
     expect(screen.queryByRole("heading", { name: "Nội dung" })).not.toBeInTheDocument()
     expect(screen.getByRole("link", { name: "Opening Cuts" })).toBeVisible()
+    expect(
+      screen.getByRole("link", { name: "Opening Cuts" }).closest(".overflow-y-auto"),
+    ).toHaveClass("overscroll-auto")
+  })
+
+  it("allows desktop TOC scrolling to continue onto the page at its limits", () => {
+    render(
+      <TableOfContents
+        content={{
+          content: [
+            {
+              attrs: { level: 2 },
+              content: [{ text: "Opening Cuts", type: "text" }],
+              type: "heading",
+            },
+          ],
+          type: "doc",
+        }}
+      />,
+    )
+
+    const scrollArea = screen
+      .getByRole("link", { name: "Opening Cuts" })
+      .closest(".overflow-y-auto")
+    expect(scrollArea).toHaveClass("overscroll-auto")
+    expect(scrollArea).not.toHaveClass("overscroll-contain")
   })
 
   it("selects the topmost intersecting heading regardless of callback order", () => {

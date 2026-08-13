@@ -19,13 +19,17 @@ function getTocAsideClasses(relativePath: string) {
   return source.slice(classStart, classEnd)
 }
 
-const stickyScrollClasses = [
+const stickyClasses = [
   "sticky",
   "top-24",
   "self-start",
+]
+
+const stickyScrollClasses = [
+  ...stickyClasses,
   "max-h-[calc(100vh-120px)]",
   "overflow-y-auto",
-  "overscroll-contain",
+  "overscroll-auto",
   "no-scrollbar",
 ]
 
@@ -36,7 +40,7 @@ describe("preview table of contents layout", () => {
     )
 
     expect(classes.split(" ")).toEqual(
-      expect.arrayContaining(stickyScrollClasses),
+      expect.arrayContaining(stickyClasses),
     )
   })
 

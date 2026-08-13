@@ -240,7 +240,7 @@ export default async function RoomDetailPage({
             />
           </article>
           {hasTableOfContents && (
-            <aside className="sticky top-24 hidden max-h-[calc(100vh-120px)] w-[220px] shrink-0 self-start overflow-y-auto overscroll-contain no-scrollbar 2xl:block [scrollbar-gutter:stable]">
+            <aside className="sticky top-24 hidden max-h-[calc(100vh-120px)] w-[220px] shrink-0 self-start overflow-y-auto overscroll-auto no-scrollbar 2xl:block [scrollbar-gutter:stable]">
               <TableOfContents content={selectedPostContent} />
             </aside>
           )}

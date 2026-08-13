@@ -123,6 +123,7 @@ describe("EventAnthologyTableOfContents", () => {
     expect(categoryHeading).toHaveStyle({ paddingLeft: "12px" })
     expect(entryHeading).toHaveStyle({ paddingLeft: "12px" })
     expect(detailHeading).toHaveStyle({ paddingLeft: "32px" })
+    expect(category.closest(".overflow-y-auto")).toHaveClass("overscroll-auto")
   })
 
   it("preserves the TOC scroll position when expanding another writer", async () => {
@@ -186,6 +187,10 @@ describe("EventAnthologyTableOfContents", () => {
     expect(document.querySelector("details")).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole("button", { name: "Mục lục" }))
+
+    expect(
+      screen.getByRole("link", { name: "Writer A" }).closest(".overflow-y-auto"),
+    ).toHaveClass("overscroll-auto")
 
     expect(screen.getByRole("button", { name: "Mục lục" })).toHaveAttribute(
       "aria-expanded",
