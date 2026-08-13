@@ -29,7 +29,7 @@ const stickyScrollClasses = [
   ...stickyClasses,
   "max-h-[calc(100vh-120px)]",
   "overflow-y-auto",
-  "overscroll-auto",
+  "overscroll-contain",
   "no-scrollbar",
 ]
 

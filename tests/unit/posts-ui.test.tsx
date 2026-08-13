@@ -392,10 +392,10 @@ describe("TableOfContents", () => {
     expect(screen.getByRole("link", { name: "Opening Cuts" })).toBeVisible()
     expect(
       screen.getByRole("link", { name: "Opening Cuts" }).closest(".overflow-y-auto"),
-    ).toHaveClass("overscroll-auto")
+    ).toBeNull()
   })
 
-  it("allows desktop TOC scrolling to continue onto the page at its limits", () => {
+  it("keeps desktop TOC scrolling contained", () => {
     render(
       <TableOfContents
         content={{
@@ -414,8 +414,8 @@ describe("TableOfContents", () => {
     const scrollArea = screen
       .getByRole("link", { name: "Opening Cuts" })
       .closest(".overflow-y-auto")
-    expect(scrollArea).toHaveClass("overscroll-auto")
-    expect(scrollArea).not.toHaveClass("overscroll-contain")
+    expect(scrollArea).toHaveClass("overscroll-contain")
+    expect(scrollArea).not.toHaveClass("overscroll-auto")
   })
 
   it("selects the topmost intersecting heading regardless of callback order", () => {

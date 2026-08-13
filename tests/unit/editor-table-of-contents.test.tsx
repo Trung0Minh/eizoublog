@@ -108,7 +108,7 @@ describe("EditorTableOfContents", () => {
     expect(toggle).toHaveAttribute("aria-expanded", "true")
     expect(
       screen.getByRole("button", { name: "Khởi đầu" }).closest(".overflow-y-auto"),
-    ).toHaveClass("overscroll-auto")
+    ).toBeNull()
 
     rerender(
       <EditorTableOfContents

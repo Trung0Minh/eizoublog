@@ -162,7 +162,7 @@ export function EventAnthologyTableOfContents({
         className={cn(
           "border-l border-border-default",
           !collapsible &&
-            "min-h-0 overflow-y-auto overscroll-auto pr-2 [scrollbar-gutter:stable]",
+            "min-h-0 overflow-y-auto overscroll-contain pr-2 [scrollbar-gutter:stable]",
         )}
         ref={listRef}
       >
@@ -309,7 +309,7 @@ export function EventAnthologyTableOfContents({
         data-testid="mobile-event-toc-panel"
       >
         <div className="min-h-0 overflow-hidden">
-          <div className="mt-4 max-h-[60vh] overflow-y-auto overscroll-auto pr-2">
+          <div className="mt-4 pr-2">
             {contents}
           </div>
         </div>
