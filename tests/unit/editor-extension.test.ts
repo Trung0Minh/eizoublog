@@ -8,7 +8,6 @@ import {
   CustomImageExtension,
   GalleryExtension,
   HeadingWithIdExtension,
-  ItalicCaretExtension,
   ListItemExtension,
   SpoilerExtension,
   VideoEmbedExtension,
@@ -165,27 +164,6 @@ describe("HeadingWithIdExtension", () => {
     })
 
     expect(editor.getHTML()).toContain('<h2 id="dao-dien-tap">')
-    editor.destroy()
-  })
-})
-
-describe("ItalicCaretExtension", () => {
-  it("renders a slanted caret while the text cursor is inside italic content", () => {
-    const editor = new Editor({
-      content: "<p><em>Leaning</em></p>",
-      extensions: [StarterKit, ItalicCaretExtension],
-    })
-
-    editor.commands.focus()
-    editor.commands.setTextSelection(3)
-
-    expect(editor.isActive("italic")).toBe(true)
-    let hasItalicCaretDecoration = false
-    editor.view.someProp("decorations", (getDecorations) => {
-      hasItalicCaretDecoration = getDecorations(editor.state) !== null
-      return hasItalicCaretDecoration
-    })
-    expect(hasItalicCaretDecoration).toBe(true)
     editor.destroy()
   })
 })

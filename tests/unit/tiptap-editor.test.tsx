@@ -23,6 +23,7 @@ interface UseEditorOptions {
       }
       transformPastedHTML?: (html: string) => string
   }
+  extensions?: Array<{ name?: string }>
   onUpdate?: (input: {
     editor: {
       getJSON: () => NonNullable<UseEditorOptions["content"]>
@@ -92,6 +93,14 @@ describe("TiptapEditor", () => {
     render(<TiptapEditor editable />)
 
     expect(getEditorSpellcheck()).toBe("false")
+  })
+
+  it("does not install a custom italic caret widget that can intercept editing", () => {
+    render(<TiptapEditor editable />)
+
+    const options = useEditorMock.calls.at(-1) as UseEditorOptions
+
+    expect(options.extensions?.some((extension) => extension.name === "italicCaret")).toBe(false)
   })
 
   it("keeps read-mode typography classes when not editable", () => {

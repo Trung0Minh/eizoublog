@@ -697,35 +697,6 @@
     pointer-events: none;
   }
 
-  /* Match the insertion caret to the slant of italic copy. */
-  .prose-editor em {
-    caret-color: transparent;
-  }
-
-  .prose-editor__italic-caret {
-    animation: prose-editor-caret-blink 1s steps(1, end) infinite;
-    border-left: 2px solid currentColor;
-    display: inline-block;
-    height: 1.15em;
-    margin: 0 -1px;
-    pointer-events: none;
-    transform: skewX(-12deg);
-    transform-origin: bottom;
-    vertical-align: -0.2em;
-  }
-
-  @keyframes prose-editor-caret-blink {
-    50% {
-      opacity: 0;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .prose-editor__italic-caret {
-      animation: none;
-    }
-  }
-
   .post-content {
     max-width: 100%;
   }
