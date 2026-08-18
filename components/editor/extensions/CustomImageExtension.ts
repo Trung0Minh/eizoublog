@@ -18,6 +18,7 @@ declare module "@tiptap/core" {
 
 export const CustomImageExtension = Node.create({
   name: "customImage",
+  priority: 1_000,
   group: "block",
   content: "inline*",
   draggable: true,
@@ -123,6 +124,18 @@ export const CustomImageExtension = Node.create({
 
   addNodeView() {
     return ReactNodeViewRenderer(ImageNodeView)
+  },
+
+  addKeyboardShortcuts() {
+    return {
+      Enter: () => {
+        if (!this.editor.isActive(this.name)) {
+          return false
+        }
+
+        return this.editor.commands.insertContent({ type: "hardBreak" })
+      },
+    }
   },
 
   addCommands() {

@@ -344,6 +344,29 @@ describe("GalleryExtension", () => {
 })
 
 describe("CustomImageExtension", () => {
+  it("inserts a hard line break when Enter is pressed in an image caption", () => {
+    const editor = new Editor({
+      content: {
+        content: [
+          {
+            attrs: { src: "https://cdn.example.com/frame.webp" },
+            content: [{ text: "First line", type: "text" }],
+            type: "customImage",
+          },
+        ],
+        type: "doc",
+      },
+      extensions: [StarterKit, CustomImageExtension],
+    })
+
+    editor.commands.setTextSelection(6)
+    expect(editor.isActive("customImage")).toBe(true)
+    editor.commands.keyboardShortcut("Enter")
+
+    expect(editor.getHTML()).toContain("First<br> line")
+    editor.destroy()
+  })
+
   it("serializes image rotation and flips", () => {
     const editor = new Editor({
       content: {
