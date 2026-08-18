@@ -5,6 +5,31 @@ import { describe, expect, it } from "vitest"
 import { StaticPostContent } from "@/components/posts/StaticPostContent"
 
 describe("StaticPostContent", () => {
+  it("preserves line breaks in standard image captions", () => {
+    const content: JSONContent = {
+      content: [
+        {
+          attrs: {
+            showCaption: true,
+            src: "https://cdn.example.com/frame.webp",
+          },
+          content: [
+            { text: "First line", type: "text" },
+            { type: "hardBreak" },
+            { text: "Second line", type: "text" },
+          ],
+          type: "customImage",
+        },
+      ],
+      type: "doc",
+    }
+
+    const { container } = render(<StaticPostContent content={content} />)
+    const caption = container.querySelector(".media-caption")
+
+    expect(caption?.textContent).toBe("First line\nSecond line")
+  })
+
   it("renders repeated headings with the same unique IDs used by the TOC", () => {
     const content: JSONContent = {
       content: [

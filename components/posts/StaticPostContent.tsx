@@ -67,6 +67,10 @@ function captionIsVisible(attrs: Record<string, unknown>) {
 }
 
 function getNodeText(node: JSONContent): string {
+  if (node.type === "hardBreak") {
+    return "\n"
+  }
+
   if (node.type === "text") {
     return node.text ?? ""
   }
