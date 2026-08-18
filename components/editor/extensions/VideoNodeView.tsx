@@ -85,10 +85,11 @@ export function VideoNodeView(props: NodeViewProps) {
         {editor.isEditable ? (
           node.attrs.showCaption ? (
             <figcaption className="editor-media-caption mt-1 w-full text-center text-sm">
-              <input
+              <textarea
                 autoFocus
-                className="w-full border-none bg-transparent text-center italic outline-none placeholder:text-text-tertiary/50"
+                className="editor-media-caption-input w-full border-none bg-transparent text-center italic outline-none placeholder:text-text-tertiary/50"
                 placeholder="Write a caption..."
+                rows={1}
                 value={caption}
                 onChange={(e) => updateAttributes({ caption: e.target.value })}
                 onKeyDown={(e) => e.stopPropagation()}

@@ -742,6 +742,7 @@
     font-family: var(--font-inter), system-ui, sans-serif;
     font-size: 15px;
     font-style: italic;
+    white-space: pre-line;
     margin-top: 8px;
     text-align: center;
   }
@@ -839,6 +840,7 @@
     margin-top: 0.375rem;
     min-height: calc(15px * 1.2);
     text-align: center;
+    white-space: pre-line;
     width: calc(100% - 1rem);
   }
 
@@ -847,11 +849,13 @@
     font-size: 16px;
     margin-inline: auto;
     margin-top: 0.5rem;
+    white-space: pre-line;
     width: calc(100% - 1rem);
   }
 
   .image-gallery__caption-input,
-  .image-gallery__gallery-caption-input {
+  .image-gallery__gallery-caption-input,
+  .editor-media-caption-input {
     field-sizing: content;
     min-height: 1.2em;
     overflow: hidden;
