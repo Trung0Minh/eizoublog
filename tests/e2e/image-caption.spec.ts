@@ -70,3 +70,39 @@ test("preview preserves image-caption line breaks", async ({ page }) => {
     "First line\nSecond line",
   )
 })
+
+test("preview keeps links in image captions clickable", async ({ page }) => {
+  await loginAsWriter(page)
+
+  const post = await createPost(page.request, {
+    content: {
+      content: [
+        {
+          attrs: {
+            showCaption: true,
+            src: "https://cdn.example.com/editor-frame.webp",
+          },
+          content: [
+            {
+              marks: [{ attrs: { href: "https://example.com" }, type: "link" }],
+              text: "Reference",
+              type: "text",
+            },
+          ],
+          type: "customImage",
+        },
+      ],
+      type: "doc",
+    },
+    contentText: "Reference",
+    status: "DRAFT",
+    title: `Image caption link ${Date.now()}`,
+  })
+
+  await page.goto(`/dashboard/preview/${post.id}`)
+
+  await expect(page.getByRole("link", { name: "Reference" })).toHaveAttribute(
+    "href",
+    "https://example.com",
+  )
+})

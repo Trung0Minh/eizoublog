@@ -27,7 +27,36 @@ describe("StaticPostContent", () => {
     const { container } = render(<StaticPostContent content={content} />)
     const caption = container.querySelector(".media-caption")
 
-    expect(caption?.textContent).toBe("First line\nSecond line")
+    expect(caption?.querySelector("br")).toBeInTheDocument()
+  })
+
+  it("renders links in standard image captions", () => {
+    const content: JSONContent = {
+      content: [
+        {
+          attrs: {
+            showCaption: true,
+            src: "https://cdn.example.com/frame.webp",
+          },
+          content: [
+            {
+              marks: [{ attrs: { href: "https://example.com" }, type: "link" }],
+              text: "Reference",
+              type: "text",
+            },
+          ],
+          type: "customImage",
+        },
+      ],
+      type: "doc",
+    }
+
+    render(<StaticPostContent content={content} />)
+
+    expect(screen.getByRole("link", { name: "Reference" })).toHaveAttribute(
+      "href",
+      "https://example.com",
+    )
   })
 
   it("renders repeated headings with the same unique IDs used by the TOC", () => {

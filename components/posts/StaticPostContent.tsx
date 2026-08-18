@@ -159,6 +159,7 @@ function renderImage(node: JSONContent, key: string) {
   }
 
   const caption = getNodeText(node)
+  const captionContent = renderChildren(node)
   const align = stringAttr(attrs, "align") || "center"
   const width = stringAttr(attrs, "width") || "100%"
   const { imageStyle, rotation, wrapperStyle } = getMediaPresentation(attrs)
@@ -198,7 +199,7 @@ function renderImage(node: JSONContent, key: string) {
         />
       </div>
       {caption && captionIsVisible(attrs) ? (
-        <figcaption className="media-caption">{caption}</figcaption>
+        <figcaption className="media-caption">{captionContent}</figcaption>
       ) : null}
     </figure>
   )
