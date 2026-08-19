@@ -197,7 +197,7 @@ export function ImageLightbox({
             </div>
 
             <div
-              className="relative flex h-full w-full items-center justify-center overflow-hidden touch-none"
+              className="relative flex h-full w-full items-center justify-center overflow-hidden px-4 py-16 touch-none"
               onClick={(event) => event.stopPropagation()}
             >
               <TransformComponent 
@@ -210,11 +210,11 @@ export function ImageLightbox({
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.2 }}
-                  className="flex max-h-[80vh] max-w-[90vw] items-center justify-center"
+                  className="flex max-h-[calc(100vh-8rem)] max-w-[90vw] flex-col items-center justify-center"
                 >
                   <img
                     alt={current.alt || "Expanded post image"}
-                    className="max-h-[80vh] max-w-[90vw] select-none rounded object-contain"
+                    className="max-h-[calc(100vh-11rem)] max-w-[90vw] select-none rounded object-contain"
                     draggable={false}
                     src={current.src}
                     style={{
@@ -222,6 +222,11 @@ export function ImageLightbox({
                       transformOrigin: current.transformOrigin,
                     }}
                   />
+                  {current.caption ? (
+                    <p className="mt-3 max-w-2xl px-4 text-center font-sans text-sm text-white/75">
+                      {current.caption}
+                    </p>
+                  ) : null}
                 </motion.div>
               </TransformComponent>
 
@@ -269,12 +274,6 @@ export function ImageLightbox({
           </>
         )}
       </TransformWrapper>
-
-      {current.caption ? (
-        <p className="mt-4 max-w-2xl px-4 text-center font-sans text-sm text-white/75">
-          {current.caption}
-        </p>
-      ) : null}
 
       {hasNext ? (
         <button
