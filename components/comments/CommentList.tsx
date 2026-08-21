@@ -151,21 +151,21 @@ function CommentBubble({
       {comment.author?.avatarUrl ? (
         <img
           alt={comment.authorName}
-          className="mt-0.5 h-8 w-8 shrink-0 rounded-full object-cover"
+          className="h-8 w-8 shrink-0 rounded-full object-cover"
           src={comment.author.avatarUrl}
         />
       ) : (
         <div
           aria-hidden="true"
-          className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
           style={{ backgroundColor: avatarColor(comment.authorName) }}
         >
           {getInitial(comment.authorName)}
         </div>
       )}
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
-          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+        <div className="flex min-h-8 flex-wrap items-center justify-between gap-x-3 gap-y-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="text-[13px] font-semibold text-text-primary">
               {comment.authorName}
             </span>

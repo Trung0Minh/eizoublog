@@ -182,7 +182,9 @@ export function PostInlineActions({
         className={cn(
           "flex flex-wrap items-center gap-2",
           splitAdminActionsOnMobile &&
-            "contents sm:flex sm:flex-wrap sm:items-center sm:gap-2",
+            (showAdminActions
+              ? "flex-nowrap sm:flex-wrap"
+              : "contents sm:flex sm:flex-wrap sm:items-center sm:gap-2"),
         )}
         data-testid="post-inline-actions"
       >
@@ -203,9 +205,7 @@ export function PostInlineActions({
 
         {showAdminActions && (
           <div
-            className={cn(
-              splitAdminActionsOnMobile ? "basis-full sm:basis-auto" : "contents",
-            )}
+            className="contents"
             data-testid="post-admin-actions"
           >
             <div className="inline-flex items-center gap-1 rounded-[12px] border border-border-default/70 bg-background/85 p-1.5 shadow-sm backdrop-blur-xl">

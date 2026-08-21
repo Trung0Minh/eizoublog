@@ -89,6 +89,16 @@ describe("anime-blog-4 appearance parity", () => {
     expect(about).not.toContain("<Textarea")
   })
 
+  it("uses the available mobile width for the About panel and Resources title", () => {
+    const about = read("app/(public)/about/AboutClient.tsx")
+    const resources = read("app/(public)/resources/ResourcesClient.tsx")
+
+    expect(about).toContain("w-full max-w-full")
+    expect(about).toContain("md:w-fit")
+    expect(resources).toContain("flex-nowrap whitespace-nowrap")
+    expect(resources).toContain("[&>span:last-child]:mr-0")
+  })
+
   it("keeps the Resources edit button hover scope and save draft current", () => {
     const resources = read("app/(public)/resources/ResourcesClient.tsx")
 

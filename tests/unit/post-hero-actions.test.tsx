@@ -69,17 +69,20 @@ describe("PostHero mobile action layout", () => {
     expect(screen.getByRole("link", { name: "Chỉnh sửa bài viết" })).toBeVisible()
   })
 
-  it("keeps admin edit beside the author while wrapping only admin tools on mobile", () => {
+  it("keeps admin edit and tools together when they wrap on mobile", () => {
     sessionMocks.user = { role: "ADMIN", username: "writer" }
 
     render(<PostHero authorUsernames={["writer"]} post={post} />)
 
     expect(screen.getByRole("link", { name: "Chỉnh sửa bài viết" })).toBeVisible()
-    expect(screen.getByTestId("post-inline-actions")).not.toHaveClass("basis-full")
-    expect(screen.getByTestId("post-admin-actions")).toHaveClass(
-      "basis-full",
-      "sm:basis-auto",
+    expect(screen.getByTestId("post-inline-actions")).toHaveClass(
+      "flex-nowrap",
+      "sm:flex-wrap",
     )
+    expect(screen.getByTestId("post-admin-actions")).toHaveClass(
+      "contents",
+    )
+    expect(screen.getByTestId("post-admin-actions")).not.toHaveClass("basis-full")
   })
 
   it("tightens the title spacing when the post has no subtitle", () => {

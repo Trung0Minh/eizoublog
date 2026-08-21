@@ -629,12 +629,12 @@ export function ResourcesClient({
             ) : (
               <h1
                 aria-label={data.title}
-                className="mb-6 flex flex-wrap items-baseline gap-x-0 text-[36px] font-bold leading-[1.1] tracking-tight text-text-primary sm:text-[44px] md:text-[56px]"
+                className="mb-6 flex flex-nowrap items-baseline gap-x-0 whitespace-nowrap text-[36px] font-bold leading-[1.1] tracking-tight text-text-primary sm:text-[44px] md:text-[56px]"
               >
                 <TextReveal text={data.title.split(" ")[0] || "Nguồn"} />
                 <TextReveal
                   text={data.title.split(" ").slice(1).join(" ") || "tham khảo"}
-                  className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-purple-500"
+                  className="flex-nowrap whitespace-nowrap bg-gradient-to-r from-accent to-purple-500 bg-clip-text text-transparent [&>span:last-child]:mr-0"
                 />
               </h1>
             )}
