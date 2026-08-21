@@ -93,8 +93,8 @@ describe("anime-blog-4 appearance parity", () => {
     const about = read("app/(public)/about/AboutClient.tsx")
     const resources = read("app/(public)/resources/ResourcesClient.tsx")
 
-    expect(about).toContain("w-full max-w-full")
-    expect(about).toContain("md:w-fit")
+    expect(about).toContain("-mx-4 w-[calc(100%+2rem)]")
+    expect(about).toContain("md:mx-auto md:w-fit")
     expect(resources).toContain("flex-nowrap whitespace-nowrap")
     expect(resources).toContain("[&>span:last-child]:mr-0")
   })

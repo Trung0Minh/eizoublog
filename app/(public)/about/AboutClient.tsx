@@ -382,7 +382,7 @@ export function AboutClient({
       )}
 
       <main className="flex-1 w-full max-w-[1180px] mx-auto pt-8 md:pt-16 pb-32 px-4 md:px-6 xl:px-0">
-        <div className={cn("mx-auto w-full max-w-full bg-background/90 backdrop-blur-md border-[3px] border-border/60 rounded-[24px] p-6 shadow-xl relative isolate overflow-hidden md:w-fit md:p-12", isEditing && "border-editorial/40 shadow-editorial/10")}>
+        <div className={cn("-mx-4 w-[calc(100%+2rem)] bg-background/90 backdrop-blur-md border-[3px] border-border/60 rounded-[24px] p-6 shadow-xl relative isolate overflow-hidden md:mx-auto md:w-fit md:p-12", isEditing && "border-editorial/40 shadow-editorial/10")}>
           {/* Decorative Corner Flairs */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-bl-[100px] -z-10" />
           <div className="absolute bottom-0 left-0 w-40 h-40 bg-accent/10 rounded-tr-[100px] -z-10" />

@@ -69,16 +69,18 @@ describe("PostHero mobile action layout", () => {
     expect(screen.getByRole("link", { name: "Chỉnh sửa bài viết" })).toBeVisible()
   })
 
-  it("keeps admin edit and tools together when they wrap on mobile", () => {
+  it("lets author, edit, and admin actions wrap only when space requires it", () => {
     sessionMocks.user = { role: "ADMIN", username: "writer" }
 
     render(<PostHero authorUsernames={["writer"]} post={post} />)
 
+    expect(screen.getByTestId("post-hero-meta-row")).toHaveClass("flex-wrap")
     expect(screen.getByRole("link", { name: "Chỉnh sửa bài viết" })).toBeVisible()
     expect(screen.getByTestId("post-inline-actions")).toHaveClass(
-      "flex-nowrap",
-      "sm:flex-wrap",
+      "contents",
+      "sm:flex",
     )
+    expect(screen.getByTestId("post-inline-actions")).not.toHaveClass("flex-nowrap")
     expect(screen.getByTestId("post-admin-actions")).toHaveClass(
       "contents",
     )

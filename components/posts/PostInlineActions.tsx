@@ -182,9 +182,7 @@ export function PostInlineActions({
         className={cn(
           "flex flex-wrap items-center gap-2",
           splitAdminActionsOnMobile &&
-            (showAdminActions
-              ? "flex-nowrap sm:flex-wrap"
-              : "contents sm:flex sm:flex-wrap sm:items-center sm:gap-2"),
+            "contents sm:flex sm:flex-wrap sm:items-center sm:gap-2",
         )}
         data-testid="post-inline-actions"
       >
