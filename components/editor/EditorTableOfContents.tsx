@@ -2,7 +2,14 @@
 
 import type { Editor, JSONContent } from "@tiptap/react"
 import { ChevronDown, ListTree } from "lucide-react"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import {
+  type RefObject,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 
 import { cn } from "@/lib/utils"
 import { TableOfContentsHeading } from "@/components/posts/TableOfContentsHeading"
@@ -13,6 +20,8 @@ interface EditorTableOfContentsProps {
   collapsible?: boolean
   content: JSONContent
   editor: Editor | null
+  scrollContainerRef?: RefObject<HTMLElement | null>
+  stickyToolbarRef?: RefObject<HTMLElement | null>
 }
 
 interface PositionedHeading extends PostHeading {
@@ -42,9 +51,12 @@ export function EditorTableOfContents({
   collapsible = false,
   content,
   editor,
+  scrollContainerRef,
+  stickyToolbarRef,
 }: EditorTableOfContentsProps) {
   const [, setEditorRevision] = useState(0)
   const [isOpen, setIsOpen] = useState(false)
+  const pendingScrollRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const headings = useMemo(() => extractHeadings(content), [content])
   const positionedHeadings = editor
     ? getPositionedHeadings(editor, headings)
@@ -71,6 +83,52 @@ export function EditorTableOfContents({
     }
   }, [editor])
 
+  useEffect(() => {
+    return () => {
+      if (pendingScrollRef.current) {
+        clearTimeout(pendingScrollRef.current)
+      }
+    }
+  }, [])
+
+  const alignHeadingBelowToolbar = useCallback(
+    (position: number) => {
+      if (!editor) return
+
+      window.requestAnimationFrame(() => {
+        const scrollContainer = scrollContainerRef?.current
+        const headingNode = editor.view.nodeDOM(position - 1)
+
+        if (!(headingNode instanceof HTMLElement) || !scrollContainer) {
+          editor.commands.scrollIntoView()
+          return
+        }
+
+        const containerBounds = scrollContainer.getBoundingClientRect()
+        const headingBounds = headingNode.getBoundingClientRect()
+        const toolbarHeight =
+          stickyToolbarRef?.current?.getBoundingClientRect().height ?? 0
+        const top = Math.max(
+          0,
+          Math.round(
+            scrollContainer.scrollTop +
+              headingBounds.top -
+              containerBounds.top -
+              toolbarHeight -
+              16,
+          ),
+        )
+        const behavior = window.matchMedia("(prefers-reduced-motion: reduce)")
+          .matches
+          ? "auto"
+          : "smooth"
+
+        scrollContainer.scrollTo({ behavior, top })
+      })
+    },
+    [editor, scrollContainerRef, stickyToolbarRef],
+  )
+
   const jumpToHeading = useCallback(
     (headingId: string) => {
       if (!editor) return
@@ -80,15 +138,29 @@ export function EditorTableOfContents({
       )
       if (!heading) return
 
-      editor
-        .chain()
-        .focus()
-        .setTextSelection(heading.position)
-        .scrollIntoView()
-        .run()
+      editor.commands.focus(heading.position, { scrollIntoView: false })
+
+      if (pendingScrollRef.current) {
+        clearTimeout(pendingScrollRef.current)
+      }
+
       setIsOpen(false)
+
+      if (collapsible && isOpen) {
+        const delay = window.matchMedia("(prefers-reduced-motion: reduce)")
+          .matches
+          ? 0
+          : 210
+        pendingScrollRef.current = setTimeout(() => {
+          pendingScrollRef.current = null
+          alignHeadingBelowToolbar(heading.position)
+        }, delay)
+        return
+      }
+
+      alignHeadingBelowToolbar(heading.position)
     },
-    [editor, headings],
+    [alignHeadingBelowToolbar, collapsible, editor, headings, isOpen],
   )
 
   if (headings.length === 0) return null
@@ -144,7 +216,7 @@ export function EditorTableOfContents({
         <div className="mb-3 flex items-center gap-2 text-text-tertiary">
           <ListTree aria-hidden="true" className="h-3.5 w-3.5" />
           <span className="text-[12px] font-bold uppercase tracking-[0.14em]">
-            Dàn ý bài viết
+            Mục lục
           </span>
           <span className="ml-auto text-[10px] tabular-nums">
             {headings.length}
@@ -170,7 +242,7 @@ export function EditorTableOfContents({
         type="button"
       >
         <ListTree aria-hidden="true" className="h-4 w-4 text-text-tertiary" />
-        <span>Dàn ý bài viết</span>
+        <span>Mục lục</span>
         <span className="text-[11px] font-normal tabular-nums text-text-tertiary">
           {headings.length} mục
         </span>

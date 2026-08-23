@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { useRouter } from "next/navigation"
 
 import { EditorTopBar } from "@/components/editor/EditorTopBar"
+import { EditorFindReplace } from "@/components/editor/EditorFindReplace"
 import { EditorTableOfContents } from "@/components/editor/EditorTableOfContents"
 import { EditorToolbar } from "@/components/editor/EditorToolbar"
 import {
@@ -25,6 +26,7 @@ import { CoverImageUpload } from "@/components/posts/CoverImageUpload"
 import { TagInput, type TagOption } from "@/components/posts/TagInput"
 import { SaveStatusIndicator } from "@/components/editor/SaveStatusIndicator"
 import { PostHistoryPanel } from "@/components/posts/PostHistoryPanel"
+import { PostBackupImport } from "@/components/posts/PostBackupImport"
 import { DurabilityBanner } from "@/components/durability/DurabilityBanner"
 import { AutosaveConflictError, useAutosave } from "@/hooks/useAutosave"
 import { usePostRecoveryDraft } from "@/hooks/usePostRecoveryDraft"
@@ -221,6 +223,7 @@ export function PostEditor({
   )
   const [activeEditor, setActiveEditor] = useState<Editor | null>(null)
   const [bodyEditor, setBodyEditor] = useState<Editor | null>(null)
+  const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false)
   const [spellcheckEnabled, setSpellcheckEnabled] = useState(false)
   const isDesktopSettingsDefault = useSyncExternalStore(
     subscribeDesktopSettings,
@@ -241,6 +244,8 @@ export function PostEditor({
   const [postId, setPostId] = useState<string | null>(initialData?.id ?? null)
   const [postVersion, setPostVersion] = useState(initialData?.version ?? 1)
   const postVersionRef = useRef(initialData?.version ?? 1)
+  const editorScrollContainerRef = useRef<HTMLDivElement>(null)
+  const stickyToolbarRef = useRef<HTMLDivElement>(null)
   const [selectedTags, setSelectedTags] = useState<TagOption[]>(
     initialData?.tags ?? initialTags,
   )
@@ -621,7 +626,7 @@ export function PostEditor({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex h-dvh min-h-dvh flex-col bg-transparent text-text-primary"
+      className="fixed inset-0 z-50 flex h-dvh min-h-dvh animate-in flex-col bg-transparent text-text-primary fade-in duration-200 motion-reduce:animate-none"
       data-editor-surface="true"
       data-testid="post-editor-shell"
     >
@@ -632,6 +637,19 @@ export function PostEditor({
         isPending={isPending || savingAction !== null}
         isSettingsOpen={isSettingsOpen}
         isPublished={initialData?.status === "PUBLISHED"}
+        importAction={
+          postId && initialData && canRestoreRevisions ? (
+            <PostBackupImport
+              currentPost={{
+                id: postId,
+                status: initialData.status,
+                title: title.trim() || initialData.title,
+                version: postVersion,
+              }}
+              rail
+            />
+          ) : undefined
+        }
         onPublish={() =>
           startTransition(() =>
             void savePost(eventAssignment ? "event" : "publish"),
@@ -639,6 +657,7 @@ export function PostEditor({
         }
         onSaveDraft={() => startTransition(() => void savePost("draft"))}
         onExport={() => void downloadRecoveryCopy()}
+        onFindReplace={() => setIsFindReplaceOpen(true)}
         onHistory={postId ? () => setIsHistoryOpen(true) : undefined}
         pendingAction={savingAction}
         publishDisabled={eventAssignment?.eventStatus === "CLOSED"}
@@ -654,6 +673,14 @@ export function PostEditor({
         }
       />
 
+      {bodyEditor && (
+        <EditorFindReplace
+          editor={bodyEditor}
+          onOpenChange={setIsFindReplaceOpen}
+          open={isFindReplaceOpen}
+        />
+      )}
+
       {/* Floating Save Status Pill */}
       <div className="fixed bottom-[72px] left-1/2 z-[90] flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full border border-border-default bg-card/75 px-3 py-2 text-[12px] backdrop-blur-md shadow-glass lg:bottom-6 lg:left-6 lg:translate-x-0 lg:px-4 lg:text-[13px]">
         {isPending || savingAction !== null ? (
@@ -667,7 +694,7 @@ export function PostEditor({
         )}
       </div>
 
-      <main className="relative flex w-full min-h-0 flex-1 overflow-hidden bg-transparent">
+      <main className="relative flex min-h-0 w-full flex-1 animate-in overflow-hidden bg-transparent fade-in slide-in-from-bottom-1 duration-300 [animation-delay:45ms] motion-reduce:animate-none">
         <AnimatePresence initial={false}>
           {isSettingsOpen && (
             <motion.aside
@@ -884,17 +911,26 @@ export function PostEditor({
             </button>
           </div>
 
-          <div className="min-w-0 flex-1 w-full h-full overflow-y-auto lg:ml-20 2xl:ml-0">
+          <div
+            ref={editorScrollContainerRef}
+            className="min-w-0 flex-1 w-full h-full overflow-y-auto lg:ml-20 2xl:ml-0"
+            data-testid="editor-scroll-container"
+          >
             {hasOutline && (
               <aside
                 className={cn(
-                  "hidden 2xl:fixed 2xl:bottom-6 2xl:top-6 2xl:z-20 2xl:block 2xl:w-40 2xl:overflow-y-auto 2xl:transition-[left] 2xl:duration-300",
+                  "hidden animate-in fade-in slide-in-from-bottom-1 duration-300 [animation-delay:90ms] motion-reduce:animate-none 2xl:fixed 2xl:bottom-6 2xl:top-6 2xl:z-20 2xl:block 2xl:w-40 2xl:overflow-y-auto 2xl:transition-[left] 2xl:duration-300",
                   isSettingsOpen
                     ? "2xl:left-[max(4.5rem,calc((100vw_-_1100px)_/_2_-_232px))]"
                     : "2xl:left-[max(4.5rem,calc((100vw_-_1100px)_/_2_-_184px))]",
                 )}
               >
-                <EditorTableOfContents content={content} editor={bodyEditor} />
+                <EditorTableOfContents
+                  content={content}
+                  editor={bodyEditor}
+                  scrollContainerRef={editorScrollContainerRef}
+                  stickyToolbarRef={stickyToolbarRef}
+                />
               </aside>
             )}
 
@@ -940,7 +976,7 @@ export function PostEditor({
 
               <div
                 className={cn(
-                  "relative min-w-0",
+                  "relative min-w-0 animate-in fade-in slide-in-from-bottom-1 duration-300 [animation-delay:135ms] motion-reduce:animate-none",
                 )}
               >
                 <div className="min-w-0">
@@ -949,6 +985,8 @@ export function PostEditor({
                     collapsible
                     content={content}
                     editor={bodyEditor}
+                    scrollContainerRef={editorScrollContainerRef}
+                    stickyToolbarRef={stickyToolbarRef}
                   />
 
                   <section
@@ -975,7 +1013,11 @@ export function PostEditor({
                         />
                       </div>
 
-                      <div className="sticky top-0 z-40 -mx-1 mb-5">
+                      <div
+                        ref={stickyToolbarRef}
+                        className="sticky top-0 z-40 -mx-1 mb-5"
+                        data-testid="editor-sticky-toolbar"
+                      >
                         {activeEditor ? (
                           <EditorToolbar
                             editor={activeEditor}

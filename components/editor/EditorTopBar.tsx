@@ -7,10 +7,12 @@ import {
   History,
   RefreshCw,
   Save,
+  Search,
   Send,
   Settings2,
 } from "lucide-react"
 import Link from "next/link"
+import type { ReactNode } from "react"
 
 import { ThemeToggle } from "@/components/layout/ThemeToggle"
 import { ParticleToggle } from "@/components/ui/ParticleToggle"
@@ -35,11 +37,13 @@ interface EditorTopBarProps {
   isPending: boolean
   isSettingsOpen?: boolean
   isPublished: boolean
+  importAction?: ReactNode
   pendingAction?: PendingAction
   previewHref?: string | null
   canPublish?: boolean
   onToggleSettings?: () => void
   onExport?: () => void
+  onFindReplace?: () => void
   onHistory?: () => void
   onPublish: () => void
   onSaveDraft: () => void
@@ -57,11 +61,13 @@ export function EditorTopBar({
   isPending,
   isSettingsOpen = false,
   isPublished,
+  importAction,
   pendingAction = null,
   previewHref,
   canPublish = true,
   onToggleSettings,
   onExport,
+  onFindReplace,
   onHistory,
   onPublish,
   onSaveDraft,
@@ -118,6 +124,23 @@ export function EditorTopBar({
       <SeasonToggle />
       <ParticleToggle />
       <ThemeToggle />
+      <div
+        className="h-5 w-px shrink-0 bg-border-default lg:h-px lg:w-5"
+        data-testid="editor-appearance-separator"
+      />
+      {onFindReplace && (
+        <Button
+          aria-label="Tìm và thay thế"
+          className={railButtonClass}
+          onClick={onFindReplace}
+          size="icon"
+          title="Tìm và thay thế (Ctrl+F)"
+          type="button"
+          variant="ghost"
+        >
+          <Search aria-hidden="true" className="h-4 w-4" />
+        </Button>
+      )}
       {onToggleSettings && (
         <Button
           aria-controls="post-settings-panel"
@@ -143,6 +166,7 @@ export function EditorTopBar({
           <Download aria-hidden="true" className="h-4 w-4" />
         </Button>
       )}
+      {importAction}
 
       <div className="h-5 w-px shrink-0 bg-border-default lg:h-px lg:w-5" />
 

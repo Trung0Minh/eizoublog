@@ -21,13 +21,11 @@ const content: JSONContent = {
 }
 
 function createEditor(selectionFrom = 1) {
-  const run = vi.fn()
-  const scrollIntoView = vi.fn(() => ({ run }))
-  const setTextSelection = vi.fn(() => ({ scrollIntoView }))
-  const focus = vi.fn(() => ({ setTextSelection }))
+  const focus = vi.fn(() => true)
   const listeners = new Map<string, () => void>()
+  const headingElements = [document.createElement("h2"), document.createElement("h3")]
   const editor = {
-    chain: () => ({ focus }),
+    commands: { focus },
     getJSON: () => content,
     off: vi.fn((event: string) => listeners.delete(event)),
     on: vi.fn((event: string, listener: () => void) => {
@@ -50,15 +48,18 @@ function createEditor(selectionFrom = 1) {
       },
       selection: { from: selectionFrom },
     },
+    view: {
+      nodeDOM: vi.fn((position: number) =>
+        position === 0 ? headingElements[0] : headingElements[1],
+      ),
+    },
   }
 
   return {
     editor: editor as unknown as Editor,
     focus,
+    headingElements,
     listeners,
-    run,
-    scrollIntoView,
-    setTextSelection,
   }
 }
 
@@ -81,19 +82,77 @@ describe("EditorTableOfContents", () => {
         .getByRole("button", { name: "Nhịp chuyển động" })
         .querySelector('[data-heading-marker="dot"]'),
     ).not.toBeNull()
-    expect(screen.getByText("Dàn ý bài viết")).toHaveClass("text-[12px]")
+    expect(screen.getByText("Mục lục")).toHaveClass("text-[12px]")
   })
 
-  it("moves the editor selection to a heading when it is selected", () => {
-    const { editor, focus, run, scrollIntoView, setTextSelection } = createEditor()
+  it("moves the caret to a heading and aligns it below the sticky toolbar", () => {
+    const { editor, focus, headingElements } = createEditor()
+    const scrollContainer = document.createElement("div")
+    const toolbar = document.createElement("div")
+    const scrollTo = vi.fn()
+    const requestAnimationFrameSpy = vi
+      .spyOn(window, "requestAnimationFrame")
+      .mockImplementation((callback) => {
+        callback(0)
+        return 1
+      })
 
-    render(<EditorTableOfContents content={content} editor={editor} />)
+    Object.defineProperty(scrollContainer, "scrollTop", {
+      configurable: true,
+      value: 300,
+      writable: true,
+    })
+    Object.defineProperty(scrollContainer, "scrollTo", {
+      configurable: true,
+      value: scrollTo,
+    })
+    scrollContainer.getBoundingClientRect = vi.fn(() => ({
+      bottom: 900,
+      height: 800,
+      left: 0,
+      right: 1000,
+      top: 100,
+      width: 1000,
+      x: 0,
+      y: 100,
+      toJSON: () => ({}),
+    }))
+    toolbar.getBoundingClientRect = vi.fn(() => ({
+      bottom: 148,
+      height: 48,
+      left: 0,
+      right: 1000,
+      top: 100,
+      width: 1000,
+      x: 0,
+      y: 100,
+      toJSON: () => ({}),
+    }))
+    headingElements[1].getBoundingClientRect = vi.fn(() => ({
+      bottom: 640,
+      height: 40,
+      left: 0,
+      right: 800,
+      top: 600,
+      width: 800,
+      x: 0,
+      y: 600,
+      toJSON: () => ({}),
+    }))
+
+    render(
+      <EditorTableOfContents
+        content={content}
+        editor={editor}
+        scrollContainerRef={{ current: scrollContainer }}
+        stickyToolbarRef={{ current: toolbar }}
+      />,
+    )
     fireEvent.click(screen.getByRole("button", { name: "Nhịp chuyển động" }))
 
-    expect(focus).toHaveBeenCalled()
-    expect(setTextSelection).toHaveBeenCalledWith(13)
-    expect(scrollIntoView).toHaveBeenCalled()
-    expect(run).toHaveBeenCalled()
+    expect(focus).toHaveBeenCalledWith(13, { scrollIntoView: false })
+    expect(scrollTo).toHaveBeenCalledWith({ behavior: "smooth", top: 736 })
+    requestAnimationFrameSpy.mockRestore()
   })
 
   it("uses a compact disclosure without showing an empty outline", () => {

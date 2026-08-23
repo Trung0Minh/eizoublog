@@ -28,6 +28,8 @@ describe("EditorTopBar", () => {
         isPublished={false}
         onPublish={onPublish}
         onSaveDraft={onSaveDraft}
+        onFindReplace={vi.fn()}
+        importAction={<button type="button">Import backup into this post</button>}
         previewHref="/dashboard/preview/post-1"
       />,
     )
@@ -48,6 +50,11 @@ describe("EditorTopBar", () => {
       "lg:flex-col",
     )
     expect(screen.queryByText("✨")).not.toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Import backup into this post" }),
+    ).toBeVisible()
+    expect(screen.getByRole("button", { name: "Tìm và thay thế" })).toBeVisible()
+    expect(screen.getByTestId("editor-appearance-separator")).toBeVisible()
 
     await user.click(screen.getByRole("button", { name: /Lưu nháp/ }))
     await user.click(screen.getByRole("button", { name: "Xuất bản bài viết" }))

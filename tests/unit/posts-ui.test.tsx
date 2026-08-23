@@ -960,6 +960,13 @@ describe("PostEditor", () => {
       "bg-background/45",
       "backdrop-blur-xl",
     )
+    expect(screen.getByTestId("editor-scroll-container")).toHaveClass(
+      "overflow-y-auto",
+    )
+    expect(screen.getByTestId("editor-sticky-toolbar")).toHaveClass(
+      "sticky",
+      "top-0",
+    )
     await user.click(screen.getByRole("button", { name: "Cài đặt bài viết" }))
     expect(screen.getByLabelText("Danh mục")).toBeInTheDocument()
     expect(screen.getByLabelText("Thêm đồng tác giả")).toBeInTheDocument()
