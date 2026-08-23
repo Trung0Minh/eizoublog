@@ -164,5 +164,8 @@ describe("taxonomy pages", () => {
       "href",
       "/essay#comment-comment-1",
     )
+    expect(screen.getByTestId("recent-comment-comment-1")).toHaveClass(
+      "grid-cols-[36px_minmax(0,1fr)]",
+    )
   })
 })

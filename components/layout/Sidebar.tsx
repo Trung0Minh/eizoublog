@@ -100,7 +100,7 @@ export function Sidebar({
                   href={`/${comment.post.slug}#comment-${comment.id}`}
                 >
                   <span className="text-[13px] leading-tight line-clamp-2">
-                    <span className="font-medium">{comment.authorName}</span>
+                    <span className="font-bold">{comment.authorName}</span>
                     {": "}
                     {comment.content}
                   </span>

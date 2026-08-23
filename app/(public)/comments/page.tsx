@@ -89,12 +89,13 @@ export default async function CommentsPage({
               <div className="divide-y-2 divide-border-default">
                 {comments.map((comment) => (
                   <article
-                    className="group grid gap-4 px-5 py-7 transition-colors duration-200 hover:bg-subtle-bg sm:grid-cols-[44px_minmax(0,1fr)] sm:px-8 md:gap-5 md:px-12 md:py-8"
+                    className="group grid grid-cols-[36px_minmax(0,1fr)] gap-3 px-4 py-5 transition-colors duration-200 hover:bg-subtle-bg sm:grid-cols-[44px_minmax(0,1fr)] sm:gap-4 sm:px-8 sm:py-7 md:gap-5 md:px-12 md:py-8"
+                    data-testid={`recent-comment-${comment.id}`}
                     key={comment.id}
                   >
                     <div
                       aria-hidden="true"
-                      className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-accent/30 bg-accent/10 text-sm font-extrabold uppercase text-accent transition-colors duration-200 [font-family:var(--font-display)] group-hover:border-accent/60 group-hover:bg-accent/15"
+                      className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-accent/30 bg-accent/10 text-xs font-extrabold uppercase text-accent transition-colors duration-200 [font-family:var(--font-display)] group-hover:border-accent/60 group-hover:bg-accent/15 sm:h-11 sm:w-11 sm:text-sm"
                     >
                       {comment.authorName.trim().charAt(0) || "?"}
                     </div>

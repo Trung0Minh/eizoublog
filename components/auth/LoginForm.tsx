@@ -116,7 +116,7 @@ function LoginContent() {
 
 function AuthPanel({ children }: { children: React.ReactNode }) {
   return (
-    <main className="flex min-h-screen items-center justify-center px-4 py-12">
+    <main className="flex items-center justify-center px-4 py-8 sm:py-10">
       <section className="w-full max-w-sm rounded-[24px] border-[2px] border-border-default bg-background p-6 shadow-[0_18px_60px_rgba(0,0,0,0.14)] sm:p-8 dark:shadow-[0_18px_60px_rgba(0,0,0,0.35)]">
         {children}
       </section>

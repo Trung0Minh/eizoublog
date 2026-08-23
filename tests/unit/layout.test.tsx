@@ -820,6 +820,7 @@ describe("Sidebar", () => {
       "href",
       "/frieren#comment-comment-1",
     )
+    expect(screen.getByText("Mina")).toHaveClass("font-bold")
     expect(screen.getByRole("link", { name: /06\/2026/ })).toHaveAttribute(
       "href",
       "/archive/2026-06",

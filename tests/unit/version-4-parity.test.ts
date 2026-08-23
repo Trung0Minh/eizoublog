@@ -99,6 +99,15 @@ describe("anime-blog-4 appearance parity", () => {
     expect(resources).toContain("[&>span:last-child]:mr-0")
   })
 
+  it("does not force the About page to fill a second viewport", () => {
+    const about = read("app/(public)/about/AboutClient.tsx")
+
+    expect(about).not.toContain('className="min-h-screen flex flex-col')
+    expect(about).not.toContain("pb-32")
+    expect(about).toContain("px-4 pb-0 pt-8")
+    expect(about).toContain("md:px-6 md:pb-4 md:pt-16")
+  })
+
   it("keeps the Resources edit button hover scope and save draft current", () => {
     const resources = read("app/(public)/resources/ResourcesClient.tsx")
 

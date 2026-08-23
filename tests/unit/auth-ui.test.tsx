@@ -67,6 +67,14 @@ describe("LoginPage", () => {
     expect(panel).not.toHaveClass("bg-subtle-bg/30")
   })
 
+  it("does not stack a second full viewport height inside the site layout", () => {
+    render(<LoginForm />)
+
+    const main = screen.getByRole("main")
+    expect(main).not.toHaveClass("min-h-screen")
+    expect(main).toHaveClass("py-8", "sm:py-10")
+  })
+
   it("shows a generic invalid credentials error", async () => {
     const user = userEvent.setup()
     mocks.signIn.mockResolvedValue({ error: "CredentialsSignin" })

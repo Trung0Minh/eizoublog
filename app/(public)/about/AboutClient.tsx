@@ -327,7 +327,7 @@ export function AboutClient({
   }
 
   return (
-    <div className="min-h-screen flex flex-col pt-0 group relative">
+    <div className="group relative flex flex-col pt-0">
       {isAdmin && !isEditing && (
         <Button
           aria-label="Chỉnh sửa trang"
@@ -381,7 +381,7 @@ export function AboutClient({
         </div>
       )}
 
-      <main className="flex-1 w-full max-w-[1180px] mx-auto pt-8 md:pt-16 pb-32 px-4 md:px-6 xl:px-0">
+      <main className="mx-auto w-full max-w-[1180px] px-4 pb-0 pt-8 md:px-6 md:pb-4 md:pt-16 xl:px-0">
         <div className={cn("-mx-4 w-[calc(100%+2rem)] bg-background/90 backdrop-blur-md border-[3px] border-border/60 rounded-[24px] p-6 shadow-xl relative isolate overflow-hidden md:mx-auto md:w-fit md:p-12", isEditing && "border-editorial/40 shadow-editorial/10")}>
           {/* Decorative Corner Flairs */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-bl-[100px] -z-10" />

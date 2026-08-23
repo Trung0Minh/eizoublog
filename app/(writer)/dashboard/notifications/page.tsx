@@ -195,9 +195,6 @@ export default async function NotificationsPage({
               !responseEvents.some((event) => !event.readAt)
             }
           />
-          <Button asChild variant="outline">
-            <Link href="/dashboard" prefetch={false}>Bài viết của tôi</Link>
-          </Button>
         </div>
       </div>
 
