@@ -51,6 +51,7 @@ const labels: Record<string, string> = {
   AUTO_CHECKPOINT: "Automatic checkpoint",
   BASELINE: "Initial protected version",
   DELETE_GUARD: "Deletion safety copy",
+  IMPORT_GUARD: "Pre-import safety copy",
   MANUAL_SAVE: "Manual save",
   PUBLISH: "Published version",
   RESTORE: "Restored version",

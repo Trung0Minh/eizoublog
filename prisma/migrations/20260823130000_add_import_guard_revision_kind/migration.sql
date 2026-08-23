@@ -1,0 +1,1 @@
+ALTER TYPE "PostRevisionKind" ADD VALUE 'IMPORT_GUARD';

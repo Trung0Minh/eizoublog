@@ -9,6 +9,7 @@ import { TextReveal } from "@/components/ui/TextReveal"
 import { RelativeTime } from "@/components/ui/RelativeTime"
 import { CoAuthorInviteActions } from "@/components/posts/CoAuthorInviteActions"
 import { PostOwnerActions } from "@/components/posts/PostOwnerActions"
+import { PostBackupImport } from "@/components/posts/PostBackupImport"
 import { getCachedWriterDashboardPosts } from "@/lib/queries"
 import { getCurrentSession } from "@/lib/session"
 
@@ -32,11 +33,14 @@ export default async function DashboardPage() {
             <TextReveal text={`Chào, ${session.user.name}! ✨`} />
           </h1>
         </div>
-        <Button asChild size="icon" className="rounded-full bg-accent text-white hover:bg-accent/90 shrink-0">
-          <Link href="/dashboard/new" prefetch={false} title="Bài viết mới">
-            <Plus className="h-5 w-5" />
-          </Link>
-        </Button>
+        <div className="flex shrink-0 items-center gap-2">
+          <PostBackupImport />
+          <Button asChild size="icon" className="rounded-full bg-accent text-white hover:bg-accent/90 shrink-0">
+            <Link href="/dashboard/new" prefetch={false} title="Bài viết mới">
+              <Plus className="h-5 w-5" />
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-4">

@@ -45,6 +45,8 @@ describe("DashboardPage", () => {
     render(await DashboardPage())
 
     expect(screen.getByText("Bảng điều khiển")).toBeVisible()
+    expect(screen.getByRole("button", { name: "Import post backup" })).toBeVisible()
+    expect(screen.queryByText("Import backup")).not.toBeInTheDocument()
     expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(1)
     expect(mocks.prisma.post.findMany).not.toHaveBeenCalled()
   })
