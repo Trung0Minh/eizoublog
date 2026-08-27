@@ -22,11 +22,11 @@ function countComments(comments: CommentWithReplies[]) {
   )
 }
 
-function sortPublicCommentsLatestFirst<T extends PublicComment>(comments: T[]) {
+function sortPublicCommentsOldestFirst<T extends PublicComment>(comments: T[]) {
   return [...comments].sort(
     (firstComment, secondComment) =>
-      new Date(secondComment.createdAt).getTime() -
-      new Date(firstComment.createdAt).getTime(),
+      new Date(firstComment.createdAt).getTime() -
+      new Date(secondComment.createdAt).getTime(),
   )
 }
 
@@ -34,7 +34,7 @@ function sortCommentsLatestFirst(comments: CommentWithReplies[]) {
   return [...comments]
     .map((comment) => ({
       ...comment,
-      replies: sortPublicCommentsLatestFirst(comment.replies),
+      replies: sortPublicCommentsOldestFirst(comment.replies),
     }))
     .sort(
       (firstComment, secondComment) =>
@@ -64,7 +64,7 @@ export function CommentSection({
           currentComment.id === comment.parentId
             ? {
                 ...currentComment,
-                replies: sortPublicCommentsLatestFirst([
+                replies: sortPublicCommentsOldestFirst([
                   ...currentComment.replies,
                   comment,
                 ]),

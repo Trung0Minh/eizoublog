@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import type { MouseEvent as ReactMouseEvent } from "react"
 import type { JSONContent } from "@tiptap/react"
 import { ChevronDown } from "lucide-react"
 
@@ -15,6 +16,36 @@ interface TableOfContentsProps {
   content: JSONContent
 }
 
+const HEADING_ANCHOR_PX = 104
+const CLICK_LOCK_DURATION_MS = 900
+
+export function resolveActiveHeadingId(
+  headingIds: string[],
+  anchorY = HEADING_ANCHOR_PX,
+) {
+  const availableHeadings = headingIds.flatMap((id) => {
+    const element = document.getElementById(id)
+    return element ? [{ element, id }] : []
+  })
+  if (availableHeadings.length === 0) return ""
+
+  const documentHeight = Math.max(
+    document.body.scrollHeight,
+    document.documentElement.scrollHeight,
+  )
+  const isAtDocumentEnd =
+    documentHeight > window.innerHeight &&
+    window.scrollY + window.innerHeight >= documentHeight - 2
+  if (isAtDocumentEnd) return availableHeadings.at(-1)?.id ?? ""
+
+  let activeId = availableHeadings[0].id
+  for (const heading of availableHeadings) {
+    if (heading.element.getBoundingClientRect().top > anchorY) break
+    activeId = heading.id
+  }
+  return activeId
+}
+
 export function TableOfContents({
   collapsible = false,
   content,
@@ -22,34 +53,69 @@ export function TableOfContents({
   const [activeId, setActiveId] = useState("")
   const [isOpen, setIsOpen] = useState(false)
   const headings = useMemo(() => extractHeadings(content), [content])
+  const headingIds = useMemo(() => headings.map(({ id }) => id), [headings])
+  const clickLockRef = useRef<{ expiresAt: number; id: string } | null>(null)
+  const clickLockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const updateActiveHeading = useCallback(() => {
+    const clickLock = clickLockRef.current
+    if (clickLock && Date.now() < clickLock.expiresAt) {
+      setActiveId(clickLock.id)
+      return
+    }
+
+    clickLockRef.current = null
+    setActiveId(resolveActiveHeadingId(headingIds))
+  }, [headingIds])
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const topmostEntry = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort(
-            (first, second) =>
-              first.boundingClientRect.top - second.boundingClientRect.top,
-          )[0]
+    updateActiveHeading()
+    window.addEventListener("hashchange", updateActiveHeading)
+    window.addEventListener("resize", updateActiveHeading)
+    window.addEventListener("scroll", updateActiveHeading, { passive: true })
 
-        if (topmostEntry) {
-          setActiveId(topmostEntry.target.id)
-        }
-      },
-      { rootMargin: "-20% 0% -60% 0%" },
-    )
+    const resizeObserver = new ResizeObserver(updateActiveHeading)
+    resizeObserver.observe(document.body)
 
-    headings.forEach(({ id }) => {
-      const element = document.getElementById(id)
+    return () => {
+      resizeObserver.disconnect()
+      window.removeEventListener("hashchange", updateActiveHeading)
+      window.removeEventListener("resize", updateActiveHeading)
+      window.removeEventListener("scroll", updateActiveHeading)
+    }
+  }, [updateActiveHeading])
 
-      if (element) {
-        observer.observe(element)
+  useEffect(() => {
+    return () => {
+      if (clickLockTimerRef.current) clearTimeout(clickLockTimerRef.current)
+    }
+  }, [])
+
+  const handleHeadingClick = useCallback(
+    (event: ReactMouseEvent<HTMLAnchorElement>, id: string) => {
+      if (
+        event.button !== 0 ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey
+      ) {
+        return
       }
-    })
 
-    return () => observer.disconnect()
-  }, [headings])
+      const expiresAt = Date.now() + CLICK_LOCK_DURATION_MS
+      clickLockRef.current = { expiresAt, id }
+      setActiveId(id)
+
+      if (clickLockTimerRef.current) clearTimeout(clickLockTimerRef.current)
+      clickLockTimerRef.current = setTimeout(() => {
+        clickLockTimerRef.current = null
+        clickLockRef.current = null
+        updateActiveHeading()
+      }, CLICK_LOCK_DURATION_MS)
+    },
+    [updateActiveHeading],
+  )
 
   const contents = (
     <nav
@@ -84,6 +150,7 @@ export function TableOfContents({
                   : "text-text-secondary hover:text-text-primary",
               )}
               href={`#${id}`}
+              onClick={(event) => handleHeadingClick(event, id)}
             >
               {activeId === id && (
                 <motion.div 

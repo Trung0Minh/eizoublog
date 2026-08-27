@@ -216,11 +216,26 @@ describe("CommentSection", () => {
     expect(screen.getByText("G")).toBeVisible()
   })
 
-  it("sorts top-level comments and replies latest first", () => {
+  it("sorts top-level comments newest first and replies oldest first", () => {
     render(
       <CommentSection
         initialComments={[
-          topComment,
+          {
+            ...topComment,
+            replies: [
+              {
+                author: null,
+                authorName: "Ryu",
+                content: "Later reply.",
+                createdAt: new Date("2024-04-03T00:00:00Z"),
+                id: "reply-2",
+                parentId: "comment-1",
+                postId: "post-1",
+                status: "APPROVED",
+              },
+              ...topComment.replies,
+            ],
+          },
           {
             author: null,
             authorName: "Rin",
@@ -240,9 +255,15 @@ describe("CommentSection", () => {
 
     const newest = screen.getByText("Newest top-level comment.")
     const oldest = screen.getByText("<script>alert(1)</script>")
+    const earlierReply = screen.getByText("A direct reply.")
+    const laterReply = screen.getByText("Later reply.")
 
     expect(
       newest.compareDocumentPosition(oldest) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    expect(
+      earlierReply.compareDocumentPosition(laterReply) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy()
   })
 

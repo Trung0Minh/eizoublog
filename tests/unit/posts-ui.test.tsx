@@ -311,20 +311,6 @@ describe("Pagination", () => {
 })
 
 describe("TableOfContents", () => {
-  let intersectionCallback: IntersectionObserverCallback
-
-  beforeEach(() => {
-    class MockIntersectionObserver {
-      constructor(callback: IntersectionObserverCallback) {
-        intersectionCallback = callback
-      }
-      disconnect() {}
-      observe() {}
-      unobserve() {}
-    }
-    vi.stubGlobal("IntersectionObserver", MockIntersectionObserver)
-  })
-
   it("extracts heading links from Tiptap JSON", () => {
     render(
       <TableOfContents
@@ -418,7 +404,14 @@ describe("TableOfContents", () => {
     expect(scrollArea).not.toHaveClass("overscroll-auto")
   })
 
-  it("selects the topmost intersecting heading regardless of callback order", () => {
+  it("uses the fixed heading anchor instead of activating the next heading", () => {
+    const requestAnimationFrameSpy = vi
+      .spyOn(window, "requestAnimationFrame")
+      .mockImplementation((callback) => {
+        callback(0)
+        return 1
+      })
+
     render(
       <>
         <h2 id="first-heading">First heading target</h2>
@@ -449,23 +442,68 @@ describe("TableOfContents", () => {
     expect(firstHeading).not.toBeNull()
     expect(secondHeading).not.toBeNull()
 
+    firstHeading!.getBoundingClientRect = vi.fn(() => ({
+      bottom: 136,
+      height: 40,
+      left: 0,
+      right: 900,
+      top: 96,
+      width: 900,
+      x: 0,
+      y: 96,
+      toJSON: () => ({}),
+    }))
+    secondHeading!.getBoundingClientRect = vi.fn(() => ({
+      bottom: 440,
+      height: 40,
+      left: 0,
+      right: 900,
+      top: 400,
+      width: 900,
+      x: 0,
+      y: 400,
+      toJSON: () => ({}),
+    }))
+
     act(() => {
-      intersectionCallback(
-        [
-          {
-            boundingClientRect: { top: 120 },
-            isIntersecting: true,
-            target: firstHeading!,
-          },
-          {
-            boundingClientRect: { top: 260 },
-            isIntersecting: true,
-            target: secondHeading!,
-          },
-        ] as unknown as IntersectionObserverEntry[],
-        {} as IntersectionObserver,
-      )
+      fireEvent.scroll(window)
     })
+
+    expect(screen.getByRole("link", { name: "First heading" })).toHaveClass(
+      "text-accent",
+    )
+    expect(screen.getByRole("link", { name: "Second heading" })).not.toHaveClass(
+      "text-accent",
+    )
+    requestAnimationFrameSpy.mockRestore()
+  })
+
+  it("keeps a clicked heading active while native smooth scrolling starts", () => {
+    render(
+      <>
+        <h2 id="first-heading">First heading target</h2>
+        <h2 id="second-heading">Second heading target</h2>
+        <TableOfContents
+          content={{
+            content: [
+              {
+                attrs: { level: 2 },
+                content: [{ text: "First heading", type: "text" }],
+                type: "heading",
+              },
+              {
+                attrs: { level: 2 },
+                content: [{ text: "Second heading", type: "text" }],
+                type: "heading",
+              },
+            ],
+            type: "doc",
+          }}
+        />
+      </>,
+    )
+
+    fireEvent.click(screen.getByRole("link", { name: "First heading" }))
 
     expect(screen.getByRole("link", { name: "First heading" })).toHaveClass(
       "text-accent",
