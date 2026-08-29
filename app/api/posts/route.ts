@@ -1,5 +1,6 @@
 import type { Prisma, PostStatus } from "@prisma/client"
 import type { Session } from "next-auth"
+import { after } from "next/server"
 import { ZodError, z } from "zod"
 
 import { auth } from "@/lib/auth"
@@ -271,10 +272,35 @@ export async function POST(request: Request) {
         select: { id: true },
       })
 
+      if (data.status === "PUBLISHED") {
+        const { enqueuePublishedPostNewsletter } = await import(
+          "@/lib/newsletterQueue"
+        )
+        await enqueuePublishedPostNewsletter(tx, {
+          coverUrl: data.coverUrl ?? null,
+          excerpt: data.excerpt ?? null,
+          slug: created.slug,
+          title: data.title,
+        })
+      }
+
       return created
     })
 
     revalidatePostMutationPaths([post.slug])
+
+    if (data.status === "PUBLISHED") {
+      after(async () => {
+        try {
+          const { processNewsletterQueue } = await import(
+            "@/lib/newsletterQueue"
+          )
+          await processNewsletterQueue()
+        } catch (error) {
+          console.error("[POST_PUBLICATION_NEWSLETTER_QUEUE]", error)
+        }
+      })
+    }
 
     return Response.json({ data: post }, { status: 201 })
   } catch (error) {

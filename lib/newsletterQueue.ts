@@ -1,6 +1,7 @@
 import type {
   NewsletterBroadcastStatus,
   NewsletterRecipientStatus,
+  Prisma,
 } from "@prisma/client"
 
 import { prisma } from "@/lib/prisma"
@@ -18,6 +19,18 @@ interface NewsletterFeaturedPost {
   title: string
   url: string
 }
+
+interface PublishedPostNewsletterInput {
+  coverUrl: string | null
+  excerpt: string | null
+  slug: string
+  title: string
+}
+
+type NewsletterQueueTransaction = Pick<
+  Prisma.TransactionClient,
+  "newsletterBroadcast" | "newsletterSubscriber"
+>
 
 interface EnqueueNewsletterBroadcastInput {
   appUrl: string
@@ -53,44 +66,76 @@ function getErrorMessage(error: unknown) {
   return message.slice(0, MAX_ERROR_LENGTH)
 }
 
+async function enqueueNewsletterBroadcastWithClient(
+  tx: NewsletterQueueTransaction,
+  input: EnqueueNewsletterBroadcastInput,
+) {
+  const subscribers = await tx.newsletterSubscriber.findMany({
+    orderBy: { subscribedAt: "asc" },
+    select: { email: true, id: true, token: true },
+    where: { status: "ACTIVE" },
+  })
+  const baseUrl = input.appUrl.replace(/\/$/, "")
+  const broadcast = await tx.newsletterBroadcast.create({
+    data: {
+      completedAt: subscribers.length === 0 ? new Date() : undefined,
+      customBody: input.customBody,
+      featuredCoverUrl: input.featuredPost?.coverUrl,
+      featuredExcerpt: input.featuredPost?.excerpt,
+      featuredTitle: input.featuredPost?.title,
+      featuredUrl: input.featuredPost?.url,
+      previewText: input.previewText,
+      recipients: {
+        create: subscribers.map((subscriber) => ({
+          email: subscriber.email,
+          subscriberId: subscriber.id,
+          unsubscribeUrl: `${baseUrl}/unsubscribe?token=${subscriber.token}`,
+        })),
+      },
+      status: subscribers.length === 0 ? "COMPLETED" : undefined,
+      subject: input.subject,
+      totalCount: subscribers.length,
+    },
+    select: { id: true },
+  })
+
+  return {
+    broadcastId: broadcast.id,
+    queued: subscribers.length,
+    total: subscribers.length,
+  }
+}
+
 export async function enqueueNewsletterBroadcast(
   input: EnqueueNewsletterBroadcastInput,
 ) {
-  return prisma.$transaction(async (tx) => {
-    const subscribers = await tx.newsletterSubscriber.findMany({
-      orderBy: { subscribedAt: "asc" },
-      select: { email: true, id: true, token: true },
-      where: { status: "ACTIVE" },
-    })
-    const baseUrl = input.appUrl.replace(/\/$/, "")
-    const broadcast = await tx.newsletterBroadcast.create({
-      data: {
-        completedAt: subscribers.length === 0 ? new Date() : undefined,
-        customBody: input.customBody,
-        featuredCoverUrl: input.featuredPost?.coverUrl,
-        featuredExcerpt: input.featuredPost?.excerpt,
-        featuredTitle: input.featuredPost?.title,
-        featuredUrl: input.featuredPost?.url,
-        previewText: input.previewText,
-        recipients: {
-          create: subscribers.map((subscriber) => ({
-            email: subscriber.email,
-            subscriberId: subscriber.id,
-            unsubscribeUrl: `${baseUrl}/unsubscribe?token=${subscriber.token}`,
-          })),
-        },
-        status: subscribers.length === 0 ? "COMPLETED" : undefined,
-        subject: input.subject,
-        totalCount: subscribers.length,
-      },
-      select: { id: true },
-    })
+  return prisma.$transaction((tx) =>
+    enqueueNewsletterBroadcastWithClient(tx, input),
+  )
+}
 
-    return {
-      broadcastId: broadcast.id,
-      queued: subscribers.length,
-      total: subscribers.length,
-    }
+export async function enqueuePublishedPostNewsletter(
+  tx: NewsletterQueueTransaction,
+  post: PublishedPostNewsletterInput,
+) {
+  const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "Anime Blog"
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+
+  if (!appUrl) {
+    throw new Error("NEXT_PUBLIC_APP_URL is not configured")
+  }
+
+  const baseUrl = appUrl.replace(/\/$/, "")
+  return enqueueNewsletterBroadcastWithClient(tx, {
+    appUrl,
+    featuredPost: {
+      coverUrl: post.coverUrl,
+      excerpt: post.excerpt,
+      title: post.title,
+      url: `${baseUrl}/${post.slug}`,
+    },
+    previewText: `A new essay is now available on ${appName}.`,
+    subject: `New on ${appName}: ${post.title}`,
   })
 }
 

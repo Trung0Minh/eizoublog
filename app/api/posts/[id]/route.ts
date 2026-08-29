@@ -1,4 +1,5 @@
 import { Prisma, type Role } from "@prisma/client"
+import { after } from "next/server"
 import { ZodError, z } from "zod"
 
 import { auth } from "@/lib/auth"
@@ -217,6 +218,7 @@ export async function PATCH(
       )
     }
     let shouldRevalidatePosts = false
+    let shouldProcessNewsletterQueue = false
     let existingSlug: string | null = null
 
     const post = await prisma.$transaction(async (tx) => {
@@ -309,6 +311,8 @@ export async function PATCH(
       }
 
       const nextStatus = data.status ?? existing.status
+      const isFirstPublication =
+        existing.status === "DRAFT" && nextStatus === "PUBLISHED"
       if (nextStatus === "PUBLISHED") {
         const contentTextToCheck = data.contentText !== undefined ? data.contentText : existing.contentText
         if (!contentTextToCheck || !contentTextToCheck.trim()) {
@@ -532,11 +536,39 @@ export async function PATCH(
         })
       }
 
+      if (isFirstPublication) {
+        const { enqueuePublishedPostNewsletter } = await import(
+          "@/lib/newsletterQueue"
+        )
+        await enqueuePublishedPostNewsletter(tx, {
+          coverUrl:
+            data.coverUrl !== undefined ? data.coverUrl : existing.coverUrl,
+          excerpt:
+            data.excerpt !== undefined ? data.excerpt || null : existing.excerpt,
+          slug: newSlug ?? existing.slug,
+          title: data.title ?? existing.title,
+        })
+        shouldProcessNewsletterQueue = true
+      }
+
       return updated
     })
 
     if (shouldRevalidatePosts) {
       revalidatePostMutationPaths([existingSlug, post.slug])
+    }
+
+    if (shouldProcessNewsletterQueue) {
+      after(async () => {
+        try {
+          const { processNewsletterQueue } = await import(
+            "@/lib/newsletterQueue"
+          )
+          await processNewsletterQueue()
+        } catch (error) {
+          console.error("[POST_PUBLICATION_NEWSLETTER_QUEUE]", error)
+        }
+      })
     }
 
     return Response.json({ data: post })

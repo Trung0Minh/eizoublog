@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 const mocks = vi.hoisted(() => {
   const tx = {
@@ -29,10 +29,15 @@ vi.mock("@/lib/resend", () => ({
 
 import {
   enqueueNewsletterBroadcast,
+  enqueuePublishedPostNewsletter,
   processNewsletterQueue,
 } from "@/lib/newsletterQueue"
 
 describe("newsletter queue", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.prisma.$transaction.mockImplementation(
@@ -103,6 +108,42 @@ describe("newsletter queue", () => {
         completedAt: expect.any(Date),
         status: "COMPLETED",
         totalCount: 0,
+      }),
+      select: { id: true },
+    })
+  })
+
+  it("creates a post publication broadcast inside the caller transaction", async () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_NAME", "Eizou")
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://animeblog.example/")
+    mocks.tx.newsletterSubscriber.findMany.mockResolvedValue([
+      { email: "one@example.com", id: "subscriber-1", token: "token-one" },
+    ])
+    mocks.tx.newsletterBroadcast.create.mockResolvedValue({
+      id: "broadcast-post",
+    })
+
+    await enqueuePublishedPostNewsletter(
+      mocks.tx as unknown as Parameters<
+        typeof enqueuePublishedPostNewsletter
+      >[0],
+      {
+        coverUrl: "https://cdn.example/cover.jpg",
+        excerpt: "A new analysis.",
+        slug: "new-analysis",
+        title: "New Analysis",
+      },
+    )
+
+    expect(mocks.prisma.$transaction).not.toHaveBeenCalled()
+    expect(mocks.tx.newsletterBroadcast.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        featuredCoverUrl: "https://cdn.example/cover.jpg",
+        featuredExcerpt: "A new analysis.",
+        featuredTitle: "New Analysis",
+        featuredUrl: "https://animeblog.example/new-analysis",
+        previewText: "A new essay is now available on Eizou.",
+        subject: "New on Eizou: New Analysis",
       }),
       select: { id: true },
     })

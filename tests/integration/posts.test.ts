@@ -52,8 +52,11 @@ const mocks = vi.hoisted(() => {
   }
 
   return {
+    after: vi.fn(),
     auth: vi.fn(),
+    enqueuePublishedPostNewsletter: vi.fn(),
     prisma,
+    processNewsletterQueue: vi.fn(),
     revalidatePath: vi.fn(),
     revalidateTag: vi.fn(),
   }
@@ -61,11 +64,16 @@ const mocks = vi.hoisted(() => {
 
 vi.mock("@/lib/auth", () => ({ auth: mocks.auth }))
 vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }))
+vi.mock("@/lib/newsletterQueue", () => ({
+  enqueuePublishedPostNewsletter: mocks.enqueuePublishedPostNewsletter,
+  processNewsletterQueue: mocks.processNewsletterQueue,
+}))
 vi.mock("next/cache", () => ({
   revalidatePath: mocks.revalidatePath,
   revalidateTag: mocks.revalidateTag,
   unstable_cache: (fn: unknown) => fn,
 }))
+vi.mock("next/server", () => ({ after: mocks.after }))
 
 import { DELETE, GET as GET_POST, PATCH } from "@/app/api/posts/[id]/route"
 import { POST as WITHDRAW_CO_AUTHOR } from "@/app/api/posts/[id]/co-authors/withdraw/route"
@@ -282,6 +290,20 @@ describe("posts API", () => {
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/dashboard")
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin")
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/posts")
+    expect(mocks.enqueuePublishedPostNewsletter).toHaveBeenCalledWith(
+      mocks.prisma,
+      {
+        coverUrl: null,
+        excerpt: "Short summary",
+        slug: "my-title-1",
+        title: "My Title",
+      },
+    )
+    expect(mocks.after).toHaveBeenCalledTimes(1)
+
+    const processAfterResponse = mocks.after.mock.calls[0]?.[0]
+    await processAfterResponse()
+    expect(mocks.processNewsletterQueue).toHaveBeenCalledTimes(1)
   })
 
   it("rejects published post creation if contentText is empty", async () => {
@@ -541,10 +563,14 @@ describe("single post API", () => {
       user: { id: "writer-1", role: "WRITER" },
     })
     mocks.prisma.post.findUnique.mockResolvedValue({
-      id: "post-1",
       authorId: "writer-1",
+      coverUrl: null,
+      excerpt: null,
+      id: "post-1",
+      slug: "draft-title",
       status: "DRAFT",
       contentText: "Nội dung bài viết",
+      title: "Draft Title",
       version: 1,
     })
     mocks.prisma.postTag.findMany.mockResolvedValue([
@@ -596,6 +622,65 @@ describe("single post API", () => {
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/dashboard")
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin")
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/posts")
+    expect(mocks.enqueuePublishedPostNewsletter).toHaveBeenCalledWith(
+      mocks.prisma,
+      {
+        coverUrl: null,
+        excerpt: null,
+        slug: "draft-title",
+        title: "Draft Title",
+      },
+    )
+    expect(mocks.after).toHaveBeenCalledTimes(1)
+  })
+
+  it("does not queue another newsletter when saving an already-published post", async () => {
+    mocks.auth.mockResolvedValue({
+      user: { id: "writer-1", role: "WRITER" },
+    })
+    mocks.prisma.post.findUnique.mockResolvedValue({
+      authorId: "writer-1",
+      categoryId: null,
+      coAuthors: [],
+      content: { content: [], type: "doc" },
+      contentText: "Published content",
+      coverAlt: null,
+      coverUrl: null,
+      draftVisibility: "PRIVATE",
+      excerpt: null,
+      excerptContent: null,
+      id: "post-1",
+      moderationLockedAt: null,
+      publishedAt: new Date("2026-08-29T00:00:00.000Z"),
+      removedAt: null,
+      removedFromStatus: null,
+      slug: "published-post",
+      status: "PUBLISHED",
+      tags: [],
+      title: "Published Post",
+      version: 2,
+    })
+    mocks.prisma.post.update.mockResolvedValue({
+      id: "post-1",
+      lastSavedAt: new Date("2026-08-29T00:01:00.000Z"),
+      slug: "published-post",
+      status: "PUBLISHED",
+      updatedAt: new Date("2026-08-29T00:01:00.000Z"),
+      version: 3,
+    })
+
+    const response = await PATCH(
+      jsonRequest(
+        "https://example.test/api/posts/post-1",
+        { baseVersion: 2, saveKind: "MANUAL", title: "Published Post" },
+        "PATCH",
+      ),
+      routeContext("post-1"),
+    )
+
+    expect(response.status).toBe(200)
+    expect(mocks.enqueuePublishedPostNewsletter).not.toHaveBeenCalled()
+    expect(mocks.after).not.toHaveBeenCalled()
   })
 
   it("allows a writer to publish a moderation-unpublished draft", async () => {
