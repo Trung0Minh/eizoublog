@@ -15,6 +15,13 @@ describe("gallery reorder interaction", () => {
     expect(source).toContain("pickHorizontalImage")
     expect(source).toContain("Place media at position")
     expect(source).toContain("Press Escape to cancel")
+    expect(source).toContain("MousePointerClick")
+    expect(source).toContain('role="status"')
+
+    const toolbarStart = source.indexOf('className="absolute -left-9 top-0')
+    const toolbarEnd = source.indexOf("\n        </div>\n      )}", toolbarStart)
+    const instructionPosition = source.indexOf("Press Escape to cancel")
+    expect(instructionPosition).toBeGreaterThan(toolbarEnd)
   })
 
   it("keeps the layout switch in the local gallery controls without a redundant layout label", () => {
@@ -89,7 +96,12 @@ describe("gallery reorder interaction", () => {
     expect(css).toContain(".prose-editor .image-gallery__image")
     expect(css).toContain("width: calc(100% - 1rem);")
     expect(css).toContain("overflow: hidden;")
-    expect(css).toContain(".image-gallery__gallery-caption {\n    font-style: italic;\n    margin-inline: auto;\n    margin-top: 0.5rem;")
+    const galleryCaptionRule = css.match(
+      /\.image-gallery__gallery-caption\s*\{([^}]*)\}/,
+    )?.[1]
+    expect(galleryCaptionRule).toContain("font-style: italic;")
+    expect(galleryCaptionRule).toContain("margin-inline: auto;")
+    expect(galleryCaptionRule).toContain("margin-top: 0.5rem;")
     expect(css).toContain("transition: transform 200ms ease;")
   })
 

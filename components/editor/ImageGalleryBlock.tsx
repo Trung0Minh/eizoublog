@@ -1,7 +1,7 @@
 "use client"
 
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react"
-import { FlipHorizontal2, FlipVertical2, GalleryHorizontal, Grid2X2, GripVertical, RotateCcw, RotateCw, Trash2, Type, ZoomIn } from "lucide-react"
+import { FlipHorizontal2, FlipVertical2, GalleryHorizontal, Grid2X2, GripVertical, MousePointerClick, RotateCcw, RotateCw, Trash2, Type, ZoomIn } from "lucide-react"
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type SyntheticEvent } from "react"
 
 import {
@@ -278,11 +278,6 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
     >
       {editor.isEditable && (
         <div className="absolute -left-9 top-0 z-50 flex min-w-9 flex-col items-center gap-1 rounded-md border border-border-default bg-background p-1 shadow-md opacity-0 invisible transition-opacity duration-200 group-hover:visible group-hover:opacity-100 focus-within:visible focus-within:opacity-100">
-          {layout === "horizontal" && draggedIndex !== null ? (
-            <span className="px-2 text-xs font-medium text-text-secondary">
-              Choose a new position · Press Escape to cancel
-            </span>
-          ) : null}
           {layout === "grid" ? (
             <button
               aria-label="Switch gallery to horizontal list"
@@ -339,6 +334,16 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
         </div>
       )}
 
+      {editor.isEditable && layout === "horizontal" && draggedIndex !== null ? (
+        <div
+          aria-live="polite"
+          className="pointer-events-none absolute left-1/2 top-2 z-[60] -translate-x-1/2 rounded-full border border-accent/30 bg-background/95 px-3 py-1.5 text-xs font-medium text-text-secondary shadow-md backdrop-blur-sm"
+          role="status"
+        >
+          Choose a new position · Press Escape to cancel
+        </div>
+      ) : null}
+
       {images.length > 0 ? (
         <div
           className={
@@ -380,7 +385,13 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
                     <button
                       aria-label={`Reorder media ${index + 1}`}
                       aria-pressed={draggedIndex === index}
-                      className="cursor-grab rounded p-1.5 text-sm text-text-secondary hover:bg-subtle-bg hover:text-text-primary active:cursor-grabbing"
+                      className={`rounded p-1.5 text-sm transition-colors ${
+                        layout === "grid"
+                          ? "cursor-grab text-text-secondary hover:bg-subtle-bg hover:text-text-primary active:cursor-grabbing"
+                          : draggedIndex === index
+                            ? "cursor-pointer bg-accent text-button-text"
+                            : "cursor-pointer text-text-secondary hover:bg-subtle-bg hover:text-text-primary"
+                      }`}
                       onKeyDown={(event) => handleReorderKey(event, index)}
                       onClick={() =>
                         layout === "horizontal"
@@ -401,7 +412,11 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
                       }
                       type="button"
                     >
-                      <GripVertical className="h-4 w-4" />
+                      {layout === "grid" ? (
+                        <GripVertical aria-hidden="true" className="h-4 w-4" />
+                      ) : (
+                        <MousePointerClick aria-hidden="true" className="h-4 w-4" />
+                      )}
                     </button>
                     <div className="mx-1 h-4 w-px bg-border-default" />
                     {!isVideoUrl ? (

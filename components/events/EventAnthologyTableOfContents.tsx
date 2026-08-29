@@ -2,13 +2,15 @@
 
 import { ChevronDown } from "lucide-react"
 import type { MouseEvent } from "react"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import type { PostHeading } from "@/lib/postHeadings"
+import { resolveActiveHeadingId } from "@/lib/tableOfContents"
 import { cn } from "@/lib/utils"
 import { TableOfContentsHeading } from "@/components/posts/TableOfContentsHeading"
 
 const MOBILE_TOC_TRANSITION_MS = 300
+const CLICK_LOCK_DURATION_MS = 900
 
 export function EventAnthologyTableOfContents({
   collapsible = false,
@@ -37,8 +39,21 @@ export function EventAnthologyTableOfContents({
   )
   const listRef = useRef<HTMLOListElement>(null)
   const linkRefs = useRef(new Map<string, HTMLAnchorElement>())
-  const pendingNavigationRef = useRef(false)
-  const pendingNavigationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const headingIds = useMemo(() => headings.map(({ id }) => id), [headings])
+  const writerIdByHeadingId = useMemo(() => {
+    const result = new Map<string, string>()
+    let writerId = ""
+
+    headings.forEach((heading) => {
+      if (heading.level === 1) writerId = heading.id
+      if (writerId) result.set(heading.id, writerId)
+    })
+
+    return result
+  }, [headings])
+  const clickLockRef = useRef<{ expiresAt: number; id: string } | null>(null)
+  const clickLockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const mobileNavigationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   function toggleWriter(writerId: string) {
     setExpandedWriterIds((current) =>
@@ -48,85 +63,105 @@ export function EventAnthologyTableOfContents({
     )
   }
 
-  function navigateToHeading(
-    event: MouseEvent<HTMLAnchorElement>,
-    id: string,
-  ) {
-    event.preventDefault()
-    setActiveId(id)
-    pendingNavigationRef.current = true
-    if (pendingNavigationTimerRef.current) {
-      clearTimeout(pendingNavigationTimerRef.current)
-    }
-    window.history.pushState(null, "", `#${id}`)
-    const scrollToHeading = () => {
-      window.requestAnimationFrame(() => {
-        document.getElementById(id)?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        })
-        pendingNavigationTimerRef.current = setTimeout(() => {
-          pendingNavigationRef.current = false
-        }, 900)
-      })
-    }
+  const updateActiveHeading = useCallback(() => {
+    const clickLock = clickLockRef.current
+    const nextActiveId =
+      clickLock && Date.now() < clickLock.expiresAt
+        ? clickLock.id
+        : resolveActiveHeadingId(headingIds)
 
-    if (collapsible && mobileOpen) {
-      setMobileOpen(false)
-      pendingNavigationTimerRef.current = setTimeout(
-        scrollToHeading,
-        MOBILE_TOC_TRANSITION_MS,
+    if (!clickLock || Date.now() >= clickLock.expiresAt) {
+      clickLockRef.current = null
+    }
+    setActiveId(nextActiveId)
+
+    const activeWriterId = writerIdByHeadingId.get(nextActiveId)
+    if (activeWriterId) {
+      setExpandedWriterIds((current) =>
+        current.includes(activeWriterId)
+          ? current
+          : [...current, activeWriterId],
       )
+    }
+  }, [headingIds, writerIdByHeadingId])
+
+  const lockActiveHeading = useCallback(
+    (id: string) => {
+      clickLockRef.current = {
+        expiresAt: Date.now() + CLICK_LOCK_DURATION_MS,
+        id,
+      }
+      setActiveId(id)
+
+      if (clickLockTimerRef.current) clearTimeout(clickLockTimerRef.current)
+      clickLockTimerRef.current = setTimeout(() => {
+        clickLockTimerRef.current = null
+        clickLockRef.current = null
+        updateActiveHeading()
+      }, CLICK_LOCK_DURATION_MS)
+    },
+    [updateActiveHeading],
+  )
+
+  function navigateToHeading(event: MouseEvent<HTMLAnchorElement>, id: string) {
+    if (
+      event.button !== 0 ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey
+    ) {
       return
     }
 
-    if (collapsible) setMobileOpen(false)
-    scrollToHeading()
+    lockActiveHeading(id)
+    if (!collapsible) return
+
+    event.preventDefault()
+    setMobileOpen(false)
+    if (mobileNavigationTimerRef.current) {
+      clearTimeout(mobileNavigationTimerRef.current)
+    }
+    mobileNavigationTimerRef.current = setTimeout(() => {
+      window.history.pushState(null, "", `#${id}`)
+      window.requestAnimationFrame(() => {
+        const reduceMotion = window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        ).matches
+        document.getElementById(id)?.scrollIntoView({
+          behavior: reduceMotion ? "auto" : "smooth",
+          block: "start",
+        })
+      })
+      mobileNavigationTimerRef.current = null
+    }, mobileOpen ? MOBILE_TOC_TRANSITION_MS : 0)
   }
 
   useEffect(() => {
-    const writerIdByHeadingId = new Map<string, string>()
-    let writerId = ""
+    updateActiveHeading()
+    window.addEventListener("hashchange", updateActiveHeading)
+    window.addEventListener("resize", updateActiveHeading)
+    window.addEventListener("scroll", updateActiveHeading, { passive: true })
 
-    headings.forEach((heading) => {
-      if (heading.level === 1) writerId = heading.id
-      if (writerId) writerIdByHeadingId.set(heading.id, writerId)
-    })
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (pendingNavigationRef.current) return
-
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return
-
-          setActiveId(entry.target.id)
-
-          const activeWriterId = writerIdByHeadingId.get(entry.target.id)
-          if (activeWriterId) {
-            setExpandedWriterIds((current) =>
-              current.includes(activeWriterId)
-                ? current
-                : [...current, activeWriterId],
-            )
-          }
-        })
-      },
-      { rootMargin: "-20% 0% -65% 0%" },
-    )
-
-    headings.forEach(({ id }) => {
-      const element = document.getElementById(id)
-      if (element) observer.observe(element)
-    })
+    const resizeObserver = new ResizeObserver(updateActiveHeading)
+    resizeObserver.observe(document.body)
 
     return () => {
-      observer.disconnect()
-      if (pendingNavigationTimerRef.current) {
-        clearTimeout(pendingNavigationTimerRef.current)
+      resizeObserver.disconnect()
+      window.removeEventListener("hashchange", updateActiveHeading)
+      window.removeEventListener("resize", updateActiveHeading)
+      window.removeEventListener("scroll", updateActiveHeading)
+    }
+  }, [updateActiveHeading])
+
+  useEffect(() => {
+    return () => {
+      if (clickLockTimerRef.current) clearTimeout(clickLockTimerRef.current)
+      if (mobileNavigationTimerRef.current) {
+        clearTimeout(mobileNavigationTimerRef.current)
       }
     }
-  }, [headings])
+  }, [])
 
   useEffect(() => {
     if (collapsible) return

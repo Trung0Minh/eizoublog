@@ -10,41 +10,16 @@ import { motion } from "motion/react"
 import { TableOfContentsHeading } from "@/components/posts/TableOfContentsHeading"
 import { cn } from "@/lib/utils"
 import { extractHeadings } from "@/lib/postHeadings"
+import { resolveActiveHeadingId } from "@/lib/tableOfContents"
+
+export { resolveActiveHeadingId } from "@/lib/tableOfContents"
 
 interface TableOfContentsProps {
   collapsible?: boolean
   content: JSONContent
 }
 
-const HEADING_ANCHOR_PX = 104
 const CLICK_LOCK_DURATION_MS = 900
-
-export function resolveActiveHeadingId(
-  headingIds: string[],
-  anchorY = HEADING_ANCHOR_PX,
-) {
-  const availableHeadings = headingIds.flatMap((id) => {
-    const element = document.getElementById(id)
-    return element ? [{ element, id }] : []
-  })
-  if (availableHeadings.length === 0) return ""
-
-  const documentHeight = Math.max(
-    document.body.scrollHeight,
-    document.documentElement.scrollHeight,
-  )
-  const isAtDocumentEnd =
-    documentHeight > window.innerHeight &&
-    window.scrollY + window.innerHeight >= documentHeight - 2
-  if (isAtDocumentEnd) return availableHeadings.at(-1)?.id ?? ""
-
-  let activeId = availableHeadings[0].id
-  for (const heading of availableHeadings) {
-    if (heading.element.getBoundingClientRect().top > anchorY) break
-    activeId = heading.id
-  }
-  return activeId
-}
 
 export function TableOfContents({
   collapsible = false,

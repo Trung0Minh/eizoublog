@@ -14,66 +14,52 @@ vi.mock("@/components/posts/PostBody", () => ({
 }))
 
 describe("EventAnthologyTableOfContents", () => {
-  let intersectionCallback: IntersectionObserverCallback
-
-  beforeEach(() => {
-    class MockIntersectionObserver {
-      constructor(callback: IntersectionObserverCallback) {
-        intersectionCallback = callback
-      }
-      disconnect() {}
-      observe() {}
-      unobserve() {}
-    }
-
-    vi.stubGlobal("IntersectionObserver", MockIntersectionObserver)
-  })
-
   it("opens and closes writer outlines independently", async () => {
-    const pushStateSpy = vi.spyOn(window.history, "pushState").mockImplementation(() => {})
-    const scrollIntoView = vi.fn()
+    const writerAElement = document.createElement("section")
+    writerAElement.id = "event-room-a"
+    writerAElement.getBoundingClientRect = vi.fn(
+      () => ({ top: 80 }) as DOMRect,
+    )
     const writerBElement = document.createElement("section")
     writerBElement.id = "event-room-b"
-    writerBElement.scrollIntoView = scrollIntoView
-    document.body.appendChild(writerBElement)
-
-    render(
-      <EventAnthologyTableOfContents
-        headings={[
-          { id: "event-room-a", level: 1, text: "Writer A" },
-          { id: "event-room-a-opening", level: 2, text: "Opening A" },
-          { id: "event-room-b", level: 1, text: "Writer B" },
-          { id: "event-room-b-opening", level: 2, text: "Opening B" },
-        ]}
-      />,
+    writerBElement.getBoundingClientRect = vi.fn(
+      () => ({ top: 400 }) as DOMRect,
     )
+    document.body.append(writerAElement, writerBElement)
 
-    expect(screen.getByRole("link", { name: "Opening A" })).toBeInTheDocument()
-    expect(screen.queryByRole("link", { name: "Opening B" })).not.toBeInTheDocument()
+    try {
+      render(
+        <EventAnthologyTableOfContents
+          headings={[
+            { id: "event-room-a", level: 1, text: "Writer A" },
+            { id: "event-room-a-opening", level: 2, text: "Opening A" },
+            { id: "event-room-b", level: 1, text: "Writer B" },
+            { id: "event-room-b-opening", level: 2, text: "Opening B" },
+          ]}
+        />,
+      )
 
-    fireEvent.click(screen.getByRole("link", { name: "Writer B" }))
+      expect(screen.getByRole("link", { name: "Opening A" })).toBeInTheDocument()
+      expect(screen.queryByRole("link", { name: "Opening B" })).not.toBeInTheDocument()
 
-    expect(pushStateSpy).toHaveBeenCalledWith(null, "", "#event-room-b")
-    await waitFor(() => {
-      expect(scrollIntoView).toHaveBeenCalledWith({
-        behavior: "smooth",
-        block: "start",
-      })
-    })
-    expect(screen.getByRole("link", { name: "Opening A" })).toBeInTheDocument()
-    expect(screen.getByRole("link", { name: "Opening B" })).toBeInTheDocument()
+      const writerBLink = screen.getByRole("link", { name: "Writer B" })
+      expect(fireEvent.click(writerBLink)).toBe(true)
 
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: "Thu gọn hoặc mở rộng các mục của Writer B",
-      }),
-    )
+      expect(screen.getByRole("link", { name: "Opening A" })).toBeInTheDocument()
+      expect(screen.getByRole("link", { name: "Opening B" })).toBeInTheDocument()
 
-    expect(screen.getByRole("link", { name: "Opening A" })).toBeInTheDocument()
-    expect(screen.queryByRole("link", { name: "Opening B" })).not.toBeInTheDocument()
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: "Thu gọn hoặc mở rộng các mục của Writer B",
+        }),
+      )
 
-    writerBElement.remove()
-    pushStateSpy.mockRestore()
+      expect(screen.getByRole("link", { name: "Opening A" })).toBeInTheDocument()
+      expect(screen.queryByRole("link", { name: "Opening B" })).not.toBeInTheDocument()
+    } finally {
+      writerAElement.remove()
+      writerBElement.remove()
+    }
   })
 
   it("uses distinct markers and typography for nested heading levels", () => {
@@ -131,7 +117,9 @@ describe("EventAnthologyTableOfContents", () => {
   it("preserves the TOC scroll position when expanding another writer", async () => {
     const writerAElement = document.createElement("section")
     writerAElement.id = "event-room-a"
-    document.body.appendChild(writerAElement)
+    writerAElement.getBoundingClientRect = vi.fn(
+      () => ({ top: 140 }) as DOMRect,
+    )
     try {
       render(
         <EventAnthologyTableOfContents
@@ -156,12 +144,11 @@ describe("EventAnthologyTableOfContents", () => {
         () => ({ bottom: 160, top: 130 }) as DOMRect,
       )
 
-      act(() => {
-        intersectionCallback(
-          [{ isIntersecting: true, target: writerAElement }] as unknown as IntersectionObserverEntry[],
-          {} as IntersectionObserver,
-        )
-      })
+      document.body.appendChild(writerAElement)
+      writerAElement.getBoundingClientRect = vi.fn(
+        () => ({ top: 80 }) as DOMRect,
+      )
+      act(() => window.dispatchEvent(new Event("scroll")))
       await waitFor(() => expect(list.scrollTop).toBe(60))
       list.scrollTop = 240
 
@@ -254,9 +241,17 @@ describe("EventAnthologyTableOfContents", () => {
   })
 
   it("keeps the active desktop link visible without scrolling page ancestors", async () => {
+    const writerElement = document.createElement("section")
+    writerElement.id = "event-room-a"
+    writerElement.getBoundingClientRect = vi.fn(
+      () => ({ top: 80 }) as DOMRect,
+    )
     const headingElement = document.createElement("h2")
     headingElement.id = "event-room-a-opening"
-    document.body.appendChild(headingElement)
+    headingElement.getBoundingClientRect = vi.fn(
+      () => ({ top: 140 }) as DOMRect,
+    )
+    document.body.append(writerElement, headingElement)
 
     try {
       render(
@@ -284,22 +279,60 @@ describe("EventAnthologyTableOfContents", () => {
         () => ({ bottom: 140, top: 120 }) as DOMRect,
       )
 
-      act(() => {
-        intersectionCallback(
-          [
-            {
-              isIntersecting: true,
-              target: headingElement,
-            },
-          ] as unknown as IntersectionObserverEntry[],
-          {} as IntersectionObserver,
-        )
-      })
+      headingElement.getBoundingClientRect = vi.fn(
+        () => ({ top: 80 }) as DOMRect,
+      )
+      act(() => window.dispatchEvent(new Event("scroll")))
 
       await waitFor(() => expect(list.scrollTop).toBe(50))
       expect(scrollIntoView).not.toHaveBeenCalled()
     } finally {
+      writerElement.remove()
       headingElement.remove()
+    }
+  })
+
+  it("syncs the marker to the heading crossing the article anchor", async () => {
+    const writerElement = document.createElement("section")
+    writerElement.id = "event-room-a"
+    const openingElement = document.createElement("h2")
+    openingElement.id = "event-room-a-opening"
+    writerElement.getBoundingClientRect = vi.fn(
+      () => ({ top: -200 }) as DOMRect,
+    )
+    openingElement.getBoundingClientRect = vi.fn(
+      () => ({ top: 140 }) as DOMRect,
+    )
+    document.body.append(writerElement, openingElement)
+
+    try {
+      render(
+        <EventAnthologyTableOfContents
+          headings={[
+            { id: "event-room-a", level: 1, text: "Writer A" },
+            { id: "event-room-a-opening", level: 2, text: "Opening A" },
+          ]}
+        />,
+      )
+
+      act(() => window.dispatchEvent(new Event("scroll")))
+      expect(screen.getByRole("link", { name: "Writer A" })).toHaveClass(
+        "text-accent",
+      )
+
+      openingElement.getBoundingClientRect = vi.fn(
+        () => ({ top: 104 }) as DOMRect,
+      )
+      act(() => window.dispatchEvent(new Event("scroll")))
+
+      await waitFor(() =>
+        expect(screen.getByRole("link", { name: "Opening A" })).toHaveClass(
+          "text-accent",
+        ),
+      )
+    } finally {
+      writerElement.remove()
+      openingElement.remove()
     }
   })
 })
