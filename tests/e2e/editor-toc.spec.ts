@@ -39,6 +39,7 @@ test("writer can navigate the live editor outline", async ({ page }, testInfo) =
       .boundingBox()
     expect(outlineBox).not.toBeNull()
     expect(actionRailBox).not.toBeNull()
+    expect(outlineBox!.width).toBeGreaterThanOrEqual(192)
     expect(outlineBox!.x).toBeGreaterThanOrEqual(
       actionRailBox!.x + actionRailBox!.width,
     )

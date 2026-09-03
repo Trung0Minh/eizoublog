@@ -919,7 +919,7 @@ export function PostEditor({
             {hasOutline && (
               <aside
                 className={cn(
-                  "hidden animate-in fade-in slide-in-from-bottom-1 duration-300 [animation-delay:90ms] motion-reduce:animate-none 2xl:fixed 2xl:bottom-6 2xl:top-6 2xl:z-20 2xl:block 2xl:w-40 2xl:overflow-y-auto 2xl:transition-[left] 2xl:duration-300",
+                  "hidden animate-in fade-in slide-in-from-bottom-1 duration-300 [animation-delay:90ms] motion-reduce:animate-none 2xl:fixed 2xl:bottom-6 2xl:top-6 2xl:z-20 2xl:block 2xl:w-48 2xl:overflow-y-auto 2xl:transition-[left] 2xl:duration-300",
                   isSettingsOpen
                     ? "2xl:left-[max(4.5rem,calc((100vw_-_1100px)_/_2_-_232px))]"
                     : "2xl:left-[max(4.5rem,calc((100vw_-_1100px)_/_2_-_184px))]",
