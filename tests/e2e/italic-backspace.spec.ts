@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test"
 
 import { loginAsWriter } from "./helpers/auth"
+import { placeCaretAtTextEnd } from "./helpers/editor"
 import { createPost } from "./helpers/posts"
 
 test("writer can delete and type in italic text", async ({ page }) => {
@@ -29,11 +30,11 @@ test("writer can delete and type in italic text", async ({ page }) => {
 
   await page.goto(`/dashboard/edit/${post.id}`)
 
-  const editor = page.locator(".ProseMirror")
+  const editor = page.locator(".ProseMirror.post-rich-text")
   const italicText = editor.locator("em")
   await expect(italicText).toHaveText("Leaning")
 
-  await italicText.click()
+  await placeCaretAtTextEnd(italicText)
   await page.keyboard.press("Backspace")
   await expect(editor).not.toHaveText("Leaning")
 

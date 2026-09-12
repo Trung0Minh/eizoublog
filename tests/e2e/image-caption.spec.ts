@@ -1,7 +1,11 @@
 import { expect, test } from "@playwright/test"
 
 import { loginAsWriter } from "./helpers/auth"
+import { placeCaretAtTextEnd } from "./helpers/editor"
+import { mockArticleImages } from "./helpers/media"
 import { createPost } from "./helpers/posts"
+
+test.beforeEach(async ({ page }) => mockArticleImages(page))
 
 test("writer can add a line break to an image caption", async ({ page }) => {
   await loginAsWriter(page)
@@ -30,12 +34,11 @@ test("writer can add a line break to an image caption", async ({ page }) => {
   const caption = page.locator(".ProseMirror .editor-media-caption")
   await expect(caption).toHaveText("First line")
 
-  await caption.click()
-  await page.keyboard.press("End")
+  await placeCaretAtTextEnd(caption)
   await page.keyboard.press("Enter")
   await page.keyboard.type("Second line")
 
-  await expect(caption).toHaveText("First line\nSecond line")
+  await expect(caption).toHaveText("First line\nSecond line", { useInnerText: true })
 })
 
 test("preview preserves image-caption line breaks", async ({ page }) => {
@@ -68,6 +71,7 @@ test("preview preserves image-caption line breaks", async ({ page }) => {
 
   await expect(page.locator(".media-caption")).toHaveText(
     "First line\nSecond line",
+    { useInnerText: true },
   )
 })
 

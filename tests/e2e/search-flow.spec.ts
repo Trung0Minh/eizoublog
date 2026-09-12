@@ -1,10 +1,19 @@
-import { expect, test } from "@playwright/test"
+import { expect, test, type Page } from "@playwright/test"
 
 import { loginAsWriter } from "./helpers/auth"
 import { createPost } from "./helpers/posts"
 
+async function revealNavbar(page: Page) {
+  // The homepage's hover listener attaches after hydration.
+  await expect(async () => {
+    await page.mouse.move(20, 120)
+    await page.mouse.move(20, 20)
+    await expect(page.getByRole("banner")).toBeInViewport()
+  }).toPass({ timeout: 10000 })
+}
+
 test.describe("Search flow", () => {
-  test("desktop search bar shows inline results", async ({
+  test("desktop command menu shows matching results", async ({
     page,
   }, testInfo) => {
     test.skip(
@@ -22,20 +31,22 @@ test.describe("Search flow", () => {
     await page.context().clearCookies()
 
     await page.goto("/")
+    await revealNavbar(page)
     const responsePromise = page.waitForResponse(
       (response) =>
         response.url().includes("/api/search") &&
         response.request().method() === "GET",
     )
-    await page.getByRole("searchbox", { name: "Tìm kiếm bài viết" }).fill(term)
+    await page.getByRole("banner").getByRole("button", { name: "Tìm kiếm bài viết" }).click()
+    await page.getByPlaceholder("Tìm kiếm bài viết hoặc danh mục...").fill(term)
     await responsePromise
 
     await expect(
-      page.getByRole("banner").getByRole("link", { name: title }),
+      page.getByRole("option", { name: new RegExp(title) }),
     ).toBeVisible()
   })
 
-  test("desktop search dropdown navigates to the full search page", async ({
+  test("desktop command menu opens advanced search", async ({
     page,
   }, testInfo) => {
     test.skip(
@@ -52,18 +63,12 @@ test.describe("Search flow", () => {
     await page.context().clearCookies()
 
     await page.goto("/")
-    const searchbox = page.getByRole("searchbox", { name: "Tìm kiếm bài viết" })
-    const responsePromise = page.waitForResponse(
-      (response) =>
-        response.url().includes("/api/search") &&
-        response.request().method() === "GET",
-    )
-    await searchbox.fill(term)
-    await responsePromise
-    await page
-      .getByRole("banner")
-      .getByRole("link", { name: `Xem tất cả kết quả cho "${term}"` })
-      .click()
+    await revealNavbar(page)
+    await page.getByRole("banner").getByRole("button", { name: "Tìm kiếm bài viết" }).click()
+    await page.getByRole("option", { name: "Tìm kiếm nâng cao" }).click()
+    await expect(page).toHaveURL(/\/search$/, { timeout: 15000 })
+    await page.getByPlaceholder("Nhập từ khóa tìm kiếm...").fill(term)
+    await page.getByPlaceholder("Nhập từ khóa tìm kiếm...").press("Enter")
 
     await expect(page).toHaveURL(new RegExp(`/search\\?q=${term}$`))
     await expect(

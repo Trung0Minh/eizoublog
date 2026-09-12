@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test"
 
+import { loginAsWriter } from "./helpers/auth"
+import { createPost } from "./helpers/posts"
+
 const publicPages = [
   { name: "home", path: "/" },
   { name: "about", path: "/about" },
@@ -56,15 +59,15 @@ test.describe("public layout width and zoom behavior", () => {
   }
 
   test("post detail centers article body and comments", async ({ page }) => {
+    await loginAsWriter(page)
+    const post = await createPost(page.request, {
+      contentText: "Article layout verification.",
+      title: `Layout verification ${Date.now()}`,
+    })
+    await page.context().clearCookies()
     await page.setViewportSize({ height: 1000, width: 1440 })
-    await page.goto("/", { waitUntil: "domcontentloaded" })
-
-    const firstPostLink = page
-      .locator('section[aria-label="Published posts"] article a[href^="/"]')
-      .first()
-    await expect(firstPostLink).toBeVisible()
-    await firstPostLink.click()
-    await expect(page.locator(".post-content")).toBeVisible()
+    await page.goto(`/${post.slug}`, { waitUntil: "domcontentloaded" })
+    await expect(page.locator("article.post-content")).toBeVisible()
     await expect(page.locator("#comments")).toBeVisible()
 
     const metrics = await page.evaluate(() => {

@@ -12,8 +12,8 @@ test.describe("Newsletter flow", () => {
     const email = `newsletter-${testInfo.project.name}-${Date.now()}@example.com`
 
     await page.goto("/")
-    await page.getByRole("textbox", { name: "Email address" }).fill(email)
-    await page.getByRole("button", { name: "Subscribe" }).click()
+    await page.getByRole("textbox", { name: "\u0110\u1ecba ch\u1ec9 email" }).fill(email)
+    await page.getByRole("button", { name: "\u0110\u0103ng k\u00fd" }).click()
 
     await expect(page.getByRole("status")).toHaveText(
       "Subscribed successfully.",
@@ -43,7 +43,7 @@ test.describe("Newsletter flow", () => {
     await page.goto(`/unsubscribe?token=${payload.data.token}`)
 
     await expect(
-      page.getByRole("heading", { name: "You've been unsubscribed" }),
+      page.getByRole("heading", { name: "B\u1ea1n \u0111\u00e3 \u0111\u01b0\u1ee3c h\u1ee7y \u0111\u0103ng k\u00fd" }),
     ).toBeVisible()
   })
 })

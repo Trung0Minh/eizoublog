@@ -1,7 +1,10 @@
 import { expect, test } from "@playwright/test"
 
 import { loginAsWriter } from "./helpers/auth"
+import { mockArticleImages } from "./helpers/media"
 import { createPost } from "./helpers/posts"
+
+test.beforeEach(async ({ page }) => mockArticleImages(page))
 
 test.describe("Writer post flow", () => {
   test("writer can open the editor and create a published post", async ({
@@ -20,23 +23,24 @@ test.describe("Writer post flow", () => {
     expect(shellBox?.height).toBeGreaterThanOrEqual(
       page.viewportSize()!.height - 2,
     )
-    await expect(page.getByLabel("Danh mục")).toHaveCount(0)
-    await page
-      .getByRole("button", { name: /^(?:Mở cài đặt|Cài đặt bài viết)$/ })
-      .click()
+    if (testInfo.project.use.isMobile) {
+      await expect(page.getByLabel("Danh mục")).toBeHidden()
+      await page
+        .getByRole("button", { name: /^(?:Mở cài đặt|Cài đặt bài viết)$/ })
+        .click()
+    }
     await expect(
       page.getByRole("button", { name: "Ẩn cài đặt bài viết" }).first(),
     ).toBeVisible()
     await expect(page.getByLabel("Danh mục")).toBeVisible()
 
     await page.getByRole("textbox", { name: "Tiêu đề" }).fill(title)
-    await page.locator(".ProseMirror").fill(body)
+    await page.locator(".ProseMirror.post-rich-text").fill(body)
     await expect(page.getByRole("textbox", { name: "Tiêu đề" })).toHaveValue(
       title,
     )
-    const saveDraftLabel = testInfo.project.use.isMobile ? /^Nháp$/ : /Lưu nháp/
     await expect(
-      page.getByRole("button", { name: saveDraftLabel }),
+      page.getByRole("button", { name: "Lưu nháp", exact: true }),
     ).toBeEnabled()
 
     const publishedPost = await createPost(page.request, {
@@ -102,7 +106,9 @@ test.describe("Writer post flow", () => {
 
     await page.context().clearCookies()
     await page.goto(`/${post.slug}`)
-    await page.getByRole("img", { name: "Opening frame" }).click()
+    const openingImage = page.getByRole("img", { name: "Opening frame" })
+    await expect(openingImage).toHaveAttribute("tabindex", "0")
+    await openingImage.click()
 
     const lightbox = page.getByRole("dialog", { name: "Image viewer" })
     await expect(lightbox).toBeVisible()
@@ -149,7 +155,7 @@ test.describe("Writer post flow", () => {
     await page.goto(`/dashboard/edit/${post.id}`)
 
     await expect(page.getByTestId("editor-writing-surface")).toBeVisible()
-    await expect(page.locator(".ProseMirror")).toContainText(
+    await expect(page.locator(".ProseMirror.post-rich-text")).toContainText(
       "Text after legacy image.",
     )
     await expect(

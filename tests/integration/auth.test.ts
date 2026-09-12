@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
@@ -423,6 +423,7 @@ describe("POST /api/auth/password/forgot", () => {
   const resetExpiresAt = new Date(Date.now() + 30 * 60 * 1000)
 
   beforeEach(() => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "http://localhost")
     vi.clearAllMocks()
     mocks.createPasswordResetToken.mockReturnValue("raw-reset-token")
     mocks.hashPasswordResetToken.mockReturnValue("hashed-reset-token")
@@ -430,6 +431,8 @@ describe("POST /api/auth/password/forgot", () => {
     mocks.passwordResetTokenCreate.mockResolvedValue({ id: "reset-1" })
     mocks.sendPasswordResetEmail.mockResolvedValue(undefined)
   })
+
+  afterEach(() => vi.unstubAllEnvs())
 
   it("sends reset mail only for an active invited account", async () => {
     mocks.userFindUnique.mockResolvedValue({

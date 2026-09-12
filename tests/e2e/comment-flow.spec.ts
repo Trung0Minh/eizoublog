@@ -25,17 +25,17 @@ test.describe("Comment flow", () => {
     const comment = `This is my E2E comment ${Date.now()}.`
 
     await page.goto(`/${post.slug}#comments`)
-    await page.getByRole("textbox", { name: "Name" }).fill("Test Visitor")
+    await page.getByRole("textbox", { name: "T\u00ean *" }).fill("Test Visitor")
     await page
       .getByRole("textbox", { name: "Email" })
       .fill("visitor@example.com")
-    await page.getByRole("textbox", { name: "Comment" }).fill(comment)
+    await page.getByRole("textbox", { name: "B\u00ecnh lu\u1eadn" }).fill(comment)
     const commentResponse = page.waitForResponse(
       (response) =>
         response.url().includes("/api/comments") &&
         response.request().method() === "POST",
     )
-    await page.getByRole("button", { name: "Post comment" }).click()
+    await page.getByRole("button", { name: "\u0110\u0103ng b\u00ecnh lu\u1eadn" }).click()
     expect((await commentResponse).ok()).toBe(true)
 
     await expect(page.getByText("Test Visitor")).toBeVisible()
@@ -54,27 +54,27 @@ test.describe("Comment flow", () => {
 
     await page.goto(`/${post.slug}#comments`)
     await page
-      .getByRole("textbox", { name: "Name" })
+      .getByRole("textbox", { name: "T\u00ean *" })
       .fill("Original Commenter")
     await page
       .getByRole("textbox", { name: "Email" })
       .fill("original@example.com")
-    await page.getByRole("textbox", { name: "Comment" }).fill(original)
-    await page.getByRole("button", { name: "Post comment" }).click()
+    await page.getByRole("textbox", { name: "B\u00ecnh lu\u1eadn" }).fill(original)
+    await page.getByRole("button", { name: "\u0110\u0103ng b\u00ecnh lu\u1eadn" }).click()
     await expect(page.getByText(original)).toBeVisible()
 
     const thread = page.locator("article").filter({ hasText: original }).first()
-    await thread.getByRole("button", { name: /Reply to Original/ }).click()
+    await thread.getByRole("button", { name: /Tr\u1ea3 l\u1eddi b\u00ecnh lu\u1eadn c\u1ee7a Original/ }).click()
 
     const replyForm = page.getByRole("form", {
-      name: "Reply to Original Commenter",
+      name: "Tr\u1ea3 l\u1eddi Original Commenter",
     })
-    await replyForm.getByRole("textbox", { name: "Name" }).fill("Replier")
+    await replyForm.getByRole("textbox", { name: "T\u00ean *" }).fill("Replier")
     await replyForm
       .getByRole("textbox", { name: "Email" })
       .fill("reply@example.com")
-    await replyForm.getByRole("textbox", { name: "Comment" }).fill(reply)
-    await replyForm.getByRole("button", { name: "Post reply" }).click()
+    await replyForm.getByRole("textbox", { name: "B\u00ecnh lu\u1eadn" }).fill(reply)
+    await replyForm.getByRole("button", { name: "\u0110\u0103ng tr\u1ea3 l\u1eddi" }).click()
 
     await expect(page.getByText(reply)).toBeVisible()
   })
