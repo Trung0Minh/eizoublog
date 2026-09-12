@@ -288,4 +288,3 @@ export function withMissingDefaultResources(resources: ResourceCard[]) {
     ].filter((resource) => !existingUrls.has(resource.url)),
   ]
 }
-

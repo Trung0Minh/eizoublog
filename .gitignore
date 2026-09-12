@@ -37,8 +37,8 @@ output.css
 .env.local
 .env.test
 
-# generated planning output
-/docs/
+# Local generated plans; retained historical records live in docs/archive/.
+/docs/superpowers/
 /plan/
 .codegraph/
 .codex/
