@@ -1,8 +1,10 @@
 import { revalidateTag } from "next/cache"
+import { after } from "next/server"
+import type { Prisma } from "@prisma/client"
 import { ZodError, z } from "zod"
 
 import { prisma } from "@/lib/prisma"
-import { sendCommentReplyEmail, sendPostCommentEmail } from "@/lib/resend"
+import { processCommentEmailQueue } from "@/lib/commentEmailQueue"
 import { auth } from "@/lib/auth"
 import { getPostDetailCacheTag } from "@/lib/cacheTags"
 
@@ -142,46 +144,6 @@ export async function POST(request: Request) {
       }
     }
 
-    const comment = await prisma.comment.create({
-      data: {
-        authorEmail,
-        authorName,
-        authorId,
-        content: data.content,
-        notifyReply: data.notifyReply,
-        parentId: data.parentId ?? null,
-        postId: data.postId,
-        status: "APPROVED",
-      },
-      select: publicCommentSelect,
-    })
-
-    if (
-      parent &&
-      parent.notifyReply &&
-      parent.authorEmail.toLowerCase() !== authorEmail.toLowerCase()
-    ) {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL
-
-      if (appUrl) {
-        try {
-          await sendCommentReplyEmail({
-            postTitle: post.title,
-            postUrl: `${appUrl}/${post.slug}#comment-${comment.id}`,
-            repliedByName: authorName,
-            replyContent: data.content,
-            to: parent.authorEmail,
-            toName: parent.authorName,
-          })
-        } catch (error) {
-          console.error(
-            "[POST /api/comments] Failed to send reply email:",
-            error,
-          )
-        }
-      }
-    }
-
     const creditedAuthors = new Map(
       [
         post.author,
@@ -194,27 +156,55 @@ export async function POST(request: Request) {
       creditedAuthors.delete(parent.authorEmail.toLowerCase())
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL
-    if (appUrl) {
-      await Promise.all(
-        [...creditedAuthors.values()].map(async (recipient) => {
-          try {
-          await sendPostCommentEmail({
-            postTitle: post.title,
-            postUrl: `${appUrl}/${post.slug}#comment-${comment.id}`,
-            commenterName: authorName,
-            commentContent: data.content,
-            to: recipient.email,
-            toName: recipient.name,
-          })
-          } catch (error) {
-            console.error(
-              "[POST /api/comments] Failed to send credited author email:",
-              error,
-            )
-          }
-        }),
-      )
+    const comment = await prisma.$transaction(async (tx) => {
+      const comment = await tx.comment.create({
+        data: {
+          authorEmail,
+          authorName,
+          authorId,
+          content: data.content,
+          notifyReply: data.notifyReply,
+          parentId: data.parentId ?? null,
+          postId: data.postId,
+          status: "APPROVED",
+        },
+        select: publicCommentSelect,
+      })
+
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL
+      if (appUrl) {
+        const common = {
+          commentId: comment.id,
+          content: data.content,
+          senderName: authorName,
+          postTitle: post.title,
+          postUrl: `${appUrl}/${post.slug}#comment-${comment.id}`,
+        }
+        const deliveries: Prisma.CommentEmailDeliveryCreateManyInput[] =
+          [...creditedAuthors.values()].map((recipient) => ({
+            ...common, kind: "POST_COMMENT", to: recipient.email, toName: recipient.name,
+          }))
+        if (parent?.notifyReply && parent.authorEmail.toLowerCase() !== authorEmail.toLowerCase()) {
+          deliveries.push({ ...common, kind: "REPLY", to: parent.authorEmail, toName: parent.authorName })
+        }
+        if (deliveries.length > 0) {
+          await tx.commentEmailDelivery.createMany({ data: deliveries })
+        }
+      }
+      return comment
+    })
+
+    // The durable outbox survives an interrupted callback; cron also drains it.
+    try {
+      after(async () => {
+        try {
+          await processCommentEmailQueue()
+        } catch (error) {
+          console.error("[POST /api/comments] Notification worker failed", error)
+        }
+      })
+    } catch (error) {
+      console.error("[POST /api/comments] Could not schedule notification worker", error)
     }
 
     revalidateTag("comments", "max")

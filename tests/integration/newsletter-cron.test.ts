@@ -2,11 +2,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const mocks = vi.hoisted(() => ({
   processNewsletterQueue: vi.fn(),
+  processCommentEmailQueue: vi.fn(),
 }))
 
 vi.mock("@/lib/newsletterQueue", () => ({
   processNewsletterQueue: mocks.processNewsletterQueue,
 }))
+
+vi.mock("@/lib/commentEmailQueue", () => ({ processCommentEmailQueue: mocks.processCommentEmailQueue }))
 
 import { GET } from "@/app/api/cron/newsletter/route"
 
@@ -32,6 +35,7 @@ describe("GET /api/cron/newsletter", () => {
 
     expect(response.status).toBe(401)
     expect(mocks.processNewsletterQueue).not.toHaveBeenCalled()
+    expect(mocks.processCommentEmailQueue).not.toHaveBeenCalled()
   })
 
   it("processes queued recipients for authorized cron requests", async () => {
@@ -42,5 +46,6 @@ describe("GET /api/cron/newsletter", () => {
       data: { claimed: 2, failed: 0, sent: 2 },
     })
     expect(mocks.processNewsletterQueue).toHaveBeenCalledOnce()
+    expect(mocks.processCommentEmailQueue).toHaveBeenCalledOnce()
   })
 })

@@ -41,6 +41,7 @@ export async function sendInviteEmail({
 }
 
 interface SendCommentReplyEmailOptions {
+  idempotencyKey?: string
   postTitle: string
   postUrl: string
   repliedByName: string
@@ -50,6 +51,7 @@ interface SendCommentReplyEmailOptions {
 }
 
 export async function sendCommentReplyEmail({
+  idempotencyKey,
   postTitle,
   postUrl,
   repliedByName,
@@ -63,7 +65,7 @@ export async function sendCommentReplyEmail({
     throw new Error("Resend email environment variables are not configured")
   }
 
-  const { error } = await resend.emails.send({
+  const payload = {
     from,
     react: CommentReplyEmail({
       postTitle,
@@ -74,7 +76,10 @@ export async function sendCommentReplyEmail({
     }),
     subject: `${repliedByName} replied to your comment on "${postTitle}"`,
     to,
-  })
+  }
+  const { error } = idempotencyKey
+    ? await resend.emails.send(payload, { idempotencyKey })
+    : await resend.emails.send(payload)
 
   if (error) {
     throw new Error(`Resend error: ${error.message}`)
@@ -192,6 +197,7 @@ export async function sendNewsletterBroadcast({
 
 
 interface SendPostCommentEmailOptions {
+  idempotencyKey?: string
   postTitle: string
   postUrl: string
   commenterName: string
@@ -201,6 +207,7 @@ interface SendPostCommentEmailOptions {
 }
 
 export async function sendPostCommentEmail({
+  idempotencyKey,
   postTitle,
   postUrl,
   commenterName,
@@ -214,7 +221,7 @@ export async function sendPostCommentEmail({
     throw new Error("Resend email environment variables are not configured")
   }
 
-  const { error } = await resend.emails.send({
+  const payload = {
     from,
     react: PostCommentEmail({
       postTitle,
@@ -225,7 +232,10 @@ export async function sendPostCommentEmail({
     }),
     subject: `New comment on your post "${postTitle}"`,
     to,
-  })
+  }
+  const { error } = idempotencyKey
+    ? await resend.emails.send(payload, { idempotencyKey })
+    : await resend.emails.send(payload)
 
   if (error) {
     throw new Error(`Resend error: ${error.message}`)

@@ -4,6 +4,8 @@ type PrismaCall = Record<string, unknown>
 
 const mocks = vi.hoisted(() => {
   const prisma = {
+    $transaction: vi.fn(),
+    commentEmailDelivery: { createMany: vi.fn() },
     comment: {
       create: vi.fn(),
       findFirst: vi.fn(),
@@ -22,8 +24,8 @@ const mocks = vi.hoisted(() => {
     auth: vi.fn(),
     prisma,
     revalidateTag: vi.fn(),
-    sendCommentReplyEmail: vi.fn(),
-    sendPostCommentEmail: vi.fn(),
+    after: vi.fn(),
+    processQueue: vi.fn(),
   }
 })
 
@@ -36,10 +38,8 @@ vi.mock("next/cache", () => ({
     (...args: Args) =>
       fn(...args),
 }))
-vi.mock("@/lib/resend", () => ({
-  sendCommentReplyEmail: mocks.sendCommentReplyEmail,
-  sendPostCommentEmail: mocks.sendPostCommentEmail,
-}))
+vi.mock("next/server", () => ({ after: mocks.after }))
+vi.mock("@/lib/commentEmailQueue", () => ({ processCommentEmailQueue: mocks.processQueue }))
 
 import { DELETE } from "@/app/api/comments/[id]/route"
 import { POST } from "@/app/api/comments/route"
@@ -82,6 +82,8 @@ const safeComment = {
 describe("comments API", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.prisma.$transaction.mockImplementation((callback: (tx: typeof mocks.prisma) => Promise<unknown>) => callback(mocks.prisma))
+    mocks.prisma.commentEmailDelivery.createMany.mockResolvedValue({ count: 1 })
     mocks.auth.mockResolvedValue(null)
     process.env.NEXT_PUBLIC_APP_URL = "https://animeblog.example"
   })
@@ -136,7 +138,34 @@ describe("comments API", () => {
     )
   })
 
-  it("sends a reply notification to the parent author when enabled", async () => {
+  it("returns the stored comment before starting notification delivery", async () => {
+    mocks.prisma.post.findUnique.mockResolvedValue(publishedPost)
+    mocks.prisma.comment.create.mockResolvedValue(safeComment)
+    const response = await POST(jsonRequest({
+      authorEmail: "reader@example.com", authorName: "Reader",
+      content: "A queued notification", postId: "post-1",
+    }))
+    expect(response.status).toBe(201)
+    expect(mocks.prisma.commentEmailDelivery.createMany).toHaveBeenCalledOnce()
+    expect(mocks.processQueue).not.toHaveBeenCalled()
+    const callback = mocks.after.mock.calls[0][0] as () => Promise<void>
+    await callback()
+    expect(mocks.processQueue).toHaveBeenCalledOnce()
+  })
+
+  it("still returns success if post-response scheduling fails after the transaction commits", async () => {
+    mocks.prisma.post.findUnique.mockResolvedValue(publishedPost)
+    mocks.prisma.comment.create.mockResolvedValue(safeComment)
+    mocks.after.mockImplementationOnce(() => { throw new Error("scheduler unavailable") })
+    const response = await POST(jsonRequest({
+      authorEmail: "reader@example.com", authorName: "Reader",
+      content: "A durable notification", postId: "post-1",
+    }))
+    expect(response.status).toBe(201)
+    expect(mocks.prisma.commentEmailDelivery.createMany).toHaveBeenCalledOnce()
+  })
+
+  it("queues a reply notification to the parent author when enabled", async () => {
     mocks.prisma.post.findUnique.mockResolvedValue(publishedPost)
     mocks.prisma.comment.findUnique.mockResolvedValue({
       authorEmail: "parent@example.com",
@@ -163,17 +192,18 @@ describe("comments API", () => {
     )
 
     expect(response.status).toBe(201)
-    expect(mocks.sendCommentReplyEmail).toHaveBeenCalledWith({
+    expect(mocks.prisma.commentEmailDelivery.createMany).toHaveBeenCalledWith({ data: expect.arrayContaining([expect.objectContaining({
+      kind: "REPLY",
       postTitle: "Frieren and memory",
       postUrl: "https://animeblog.example/frieren#comment-reply-1",
-      repliedByName: "Reply Writer",
-      replyContent: "I agree with this.",
+      senderName: "Reply Writer",
+      content: "I agree with this.",
       to: "parent@example.com",
       toName: "Parent",
-    })
+    })]) })
   })
 
-  it("emails submitted event contributors as credited post authors", async () => {
+  it("queues emails for submitted event contributors as credited post authors", async () => {
     mocks.prisma.post.findUnique.mockResolvedValue({
       ...publishedPost,
       finalAwardEvent: {
@@ -200,18 +230,16 @@ describe("comments API", () => {
     )
 
     expect(response.status).toBe(201)
-    expect(mocks.sendPostCommentEmail).toHaveBeenCalledWith(
-      expect.objectContaining({
-        to: "mina@example.com",
-        toName: "Mina",
-      }),
-    )
-    expect(mocks.sendPostCommentEmail).toHaveBeenCalledWith(
-      expect.objectContaining({
-        to: "event-writer@example.com",
-        toName: "Event Writer",
-      }),
-    )
+    expect(mocks.prisma.commentEmailDelivery.createMany).toHaveBeenCalledWith({
+      data: expect.arrayContaining([expect.objectContaining({
+        kind: "POST_COMMENT", to: "mina@example.com", toName: "Mina",
+      })]),
+    })
+    expect(mocks.prisma.commentEmailDelivery.createMany).toHaveBeenCalledWith({
+      data: expect.arrayContaining([expect.objectContaining({
+        kind: "POST_COMMENT", to: "event-writer@example.com", toName: "Event Writer",
+      })]),
+    })
   })
 
   it("does not send a reply notification when the author replies to themself", async () => {
@@ -241,7 +269,30 @@ describe("comments API", () => {
     )
 
     expect(response.status).toBe(201)
-    expect(mocks.sendCommentReplyEmail).not.toHaveBeenCalled()
+    expect(mocks.prisma.commentEmailDelivery.createMany).not.toHaveBeenCalledWith({
+      data: expect.arrayContaining([expect.objectContaining({ kind: "REPLY" })]),
+    })
+  })
+
+  it.each([true, false])("deduplicates parent/author recipients with notifyReply=%s", async (notifyReply) => {
+    mocks.prisma.post.findUnique.mockResolvedValue({
+      ...publishedPost,
+      coAuthors: [{ user: { ...publishedPost.author, email: "MINA@example.com" } }],
+    })
+    mocks.prisma.comment.findUnique.mockResolvedValue({
+      authorEmail: "mina@example.com", authorName: "Mina", id: "parent-1",
+      notifyReply, parentId: null, postId: "post-1",
+    })
+    mocks.prisma.comment.create.mockResolvedValue({ ...safeComment, parentId: "parent-1" })
+    const response = await POST(jsonRequest({
+      authorEmail: "reader@example.com", authorName: "Reader",
+      content: "Reply", parentId: "parent-1", postId: "post-1",
+    }))
+    expect(response.status).toBe(201)
+    const queued = mocks.prisma.commentEmailDelivery.createMany.mock.calls[0][0].data
+    expect(queued).toHaveLength(1)
+    expect(queued[0].kind).toBe(notifyReply ? "REPLY" : "POST_COMMENT")
+    expect(queued[0].to.toLowerCase()).toBe("mina@example.com")
   })
 
   it("rejects replies to replies", async () => {

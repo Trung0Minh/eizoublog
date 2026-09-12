@@ -39,7 +39,6 @@ model User {
   awardEventRooms    AwardEventRoom[]
   awardEventComments AwardEventRoomComment[]
 
-  @@index([username])
   @@index([role, createdAt(sort: Desc)])
   @@index([role, name])
   @@map("users")
@@ -119,7 +118,6 @@ model Invite {
 
   createdBy User @relation("InviteCreatedBy", fields: [createdById], references: [id])
 
-  @@index([token])
   @@index([email])
   @@index([createdById])
   @@index([status, expiresAt, createdAt(sort: Desc)])
@@ -164,7 +162,6 @@ model Post {
   awardEventRooms    AwardEventRoom[]         @relation("AwardEventRoomSelectedPost")
   searchVector       Unsupported("tsvector")? @map("search_vector")
 
-  @@index([slug])
   @@index([status, publishedAt(sort: Desc)])
   @@index([status, featuredAt(sort: Desc), publishedAt(sort: Desc)])
   @@index([authorId])
@@ -323,7 +320,6 @@ model Category {
   posts       Post[]
   awardEvents AwardEvent[]
 
-  @@index([slug])
   @@map("categories")
 }
 
@@ -335,7 +331,6 @@ model Tag {
   posts       PostTag[]
   awardEvents AwardEventTag[]
 
-  @@index([slug])
   @@map("tags")
 }
 
@@ -507,6 +502,29 @@ model MediaCleanupJob {
   @@map("media_cleanup_jobs")
 }
 
+model CommentEmailDelivery {
+  id            String    @id @default(cuid())
+  commentId     String
+  kind          String
+  to            String
+  toName        String
+  senderName    String
+  content       String    @db.Text
+  postTitle     String
+  postUrl       String
+  status        String    @default("PENDING")
+  attempts      Int       @default(0)
+  nextAttemptAt DateTime  @default(now())
+  claimedAt     DateTime?
+  firstAttemptAt DateTime?
+  sentAt        DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@unique([commentId, to])
+  @@index([status, nextAttemptAt, claimedAt])
+  @@map("comment_email_deliveries")
+}
+
 model NewsletterSubscriber {
   id                  String                         @id @default(cuid())
   email               String                         @unique
@@ -516,8 +534,6 @@ model NewsletterSubscriber {
   unsubscribedAt      DateTime?
   broadcastRecipients NewsletterBroadcastRecipient[]
 
-  @@index([email])
-  @@index([token])
   @@index([status])
   @@map("newsletter_subscribers")
 }
@@ -628,7 +644,6 @@ model AnalyticsDailySummary {
   updatedAt         DateTime @updatedAt
 
   @@unique([day])
-  @@index([day])
   @@map("analytics_daily_summaries")
 }
 

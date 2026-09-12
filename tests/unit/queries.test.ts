@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import { Prisma } from "@prisma/client"
 
 type CacheEntry = {
   keyParts: string[]
@@ -13,6 +14,11 @@ function flattenSql(value: unknown): string {
   return Object.values(value)
     .map(flattenSql)
     .join(" ")
+}
+
+function assembledSql(call: unknown[]): string {
+  const [strings, ...values] = call
+  return Prisma.sql(strings as TemplateStringsArray, ...values).text
 }
 
 const mocks = vi.hoisted(() => {
@@ -165,8 +171,8 @@ describe("cached Prisma query helpers", () => {
       total: 1,
     })
 
-    const latestSql = String(mocks.prisma.$queryRaw.mock.calls[0]?.[0])
-    const commentsSql = String(mocks.prisma.$queryRaw.mock.calls[1]?.[0])
+    const latestSql = assembledSql(mocks.prisma.$queryRaw.mock.calls[0])
+    const commentsSql = assembledSql(mocks.prisma.$queryRaw.mock.calls[1])
     expect(latestSql.indexOf("LIMIT")).toBeLessThan(
       latestSql.indexOf("FROM comments"),
     )

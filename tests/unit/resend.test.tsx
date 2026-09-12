@@ -19,6 +19,7 @@ import {
   sendCommentReplyEmail,
   sendInviteEmail,
   sendNewsletterBroadcast,
+  sendPostCommentEmail,
   sendSubscribeConfirmationEmail,
 } from "@/lib/resend"
 
@@ -174,6 +175,24 @@ describe("sendCommentReplyEmail", () => {
     expect(renderToStaticMarkup(message.react)).toContain(
       "https://animeblog.example/frieren#comment-reply-1",
     )
+  })
+})
+
+describe("comment notification idempotency", () => {
+  it("passes stable delivery keys through to Resend for both templates", async () => {
+    vi.clearAllMocks()
+    process.env.RESEND_FROM_EMAIL = "Anime Blog <no-reply@example.com>"
+    mocks.send.mockResolvedValue({ data: { id: "email-1" }, error: null })
+    const common = {
+      postTitle: "Article", postUrl: "https://example.test/article",
+      to: "reader@example.test", toName: "Reader", idempotencyKey: "comment-email-1",
+    }
+    await sendCommentReplyEmail({ ...common, repliedByName: "Writer", replyContent: "Reply" })
+    await sendPostCommentEmail({ ...common, commenterName: "Writer", commentContent: "Comment" })
+    for (const call of mocks.send.mock.calls) {
+      expect(call[1]).toEqual({ idempotencyKey: "comment-email-1" })
+    }
+    expect(mocks.send).toHaveBeenCalledTimes(2)
   })
 })
 
