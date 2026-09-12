@@ -32,9 +32,14 @@ npm run build
 npm run test:e2e
 ```
 
-The current implementation, Prisma schema and migrations, automated tests, and
-[`performance_analysis_report.md`](performance_analysis_report.md) are the
-sources of truth for ongoing work.
+The current implementation, Prisma schema and migrations, and automated tests
+are the sources of truth for ongoing work. See [project documentation](docs/README.md)
+for maintenance guidance.
+
+The production migration record for `20260610030000_init` has a pre-existing
+malformed checksum. The live schema was independently reviewed before the
+September 2026 migrations; that historical record was left untouched. Investigate
+it before any future migration-history repair; do not reset the production database.
 
 ## Comment Email Delivery
 

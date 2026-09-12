@@ -17,7 +17,7 @@ being changed. Historical planning documents are not authoritative.
 | `prisma/schema.prisma`, `prisma/migrations/` | Current database schema and migration history |
 | `tests/` | Expected behavior and regression coverage |
 | `app/globals.css`, `tailwind.config.ts` | Current design tokens and global styling |
-| `performance_analysis_report.md` | Remaining performance work and completed optimization context |
+| `README.md`, `docs/README.md` | Operational guidance and maintenance constraints |
 | `.env.example` | Supported environment variables |
 
 ---
