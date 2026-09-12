@@ -57,7 +57,7 @@ describe("preview table of contents layout", () => {
   it("hides the event writer-room TOC and widens content when there are no headings", () => {
     const source = read("app/(writer)/dashboard/events/[id]/rooms/[roomId]/page.tsx")
 
-    expect(source).toContain("const hasTableOfContents = extractHeadings")
+    expect(source).toContain("const hasTableOfContents = headings.length > 0")
     expect(source).toContain("{hasTableOfContents && (")
     expect(source).toContain("lg:grid-cols-[minmax(0,1100px)]")
     expect(source).toContain("2xl:grid-cols-[minmax(0,1100px)_220px]")

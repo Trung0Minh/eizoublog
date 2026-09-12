@@ -222,6 +222,31 @@ describe("responsive visual effects", () => {
     expect(source).toContain('data-testid="mobile-background-vignette"')
   })
 
+  it("warms the displayed resource while retaining separate custom crop metadata", () => {
+    const preloads: HTMLImageElement[] = []
+    vi.stubGlobal("Image", function Image() {
+      const image = document.createElement("img")
+      preloads.push(image)
+      return image
+    })
+    const { container } = render(
+      <DynamicBackground
+        customBackgrounds={{
+          summer_light: "https://cdn.example.com/crop.jpg?cx=10&cy=20&cw=50&ch=50&mcx=30&mcy=40&mcw=25&mch=50",
+        }}
+        initialSeason="summer"
+        initialTheme="light"
+      />,
+    )
+    const images = container.querySelectorAll("img")
+    expect(preloads.some((image) => image.src === "https://cdn.example.com/crop.jpg")).toBe(true)
+    expect(preloads.every((image) => !image.src.includes("?"))).toBe(true)
+    expect(images[0]).toHaveAttribute("src", "https://cdn.example.com/crop.jpg")
+    expect(images[1]).toHaveAttribute("src", "https://cdn.example.com/crop.jpg")
+    expect(images[0]).toHaveStyle({ width: "200%", transform: "translate(-10%, -20%)" })
+    expect(images[1]).toHaveStyle({ width: "400%", transform: "translate(-30%, -40%)" })
+  })
+
   it("keeps the last valid custom background during a transient reload failure", async () => {
     const { container, rerender } = render(
       <DynamicBackground
@@ -261,7 +286,7 @@ describe("responsive visual effects", () => {
 
     expect(container.querySelector("img")).toHaveAttribute(
       "src",
-      "/bg/summer_light.jpg",
+      "/bg/summer_light.webp",
     )
   })
 })

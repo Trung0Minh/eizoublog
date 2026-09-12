@@ -60,14 +60,14 @@ export function HeroCarousel({ posts }: { posts: HeroCarouselPost[] }) {
 
       <div className="glass-card overflow-hidden" ref={emblaRef}>
         <div className="flex">
-          {posts.map((post) => (
+          {posts.map((post, index) => (
             <div className="flex-[0_0_100%] min-w-0 relative aspect-video" key={post.slug || post.id}>
               <Link href={`/${post.slug}`} className="block w-full h-full relative cursor-pointer group">
                 <img
                   src={post.coverUrl?.split('?')[0] || 'https://picsum.photos/seed/placeholder/1200/600'}
                   alt={post.coverAlt || post.title}
                   className="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
-                  fetchPriority="high"
+                  fetchPriority={index === selectedIndex ? "high" : "low"}
                   style={getCoverObjectPositionStyle(post.coverUrl)}
                 />
                 <div className="absolute inset-x-0 bottom-0 top-1/3 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-6 md:p-12">

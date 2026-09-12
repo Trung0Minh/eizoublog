@@ -121,7 +121,8 @@ export default async function RoomDetailPage({
   const selectedPostContent = (
     room.submittedContent ?? room.selectedPost.content
   ) as unknown as JSONContent
-  const hasTableOfContents = extractHeadings(selectedPostContent).length > 0
+  const headings = extractHeadings(selectedPostContent)
+  const hasTableOfContents = headings.length > 0
   const selectedPostTitle = room.submittedPostTitle ?? room.selectedPost.title
   const selectedPostCoverUrl = room.selectedPost.coverUrl
   const canLeaveFeedback = room.event.status !== "CLOSED"
@@ -210,7 +211,7 @@ export default async function RoomDetailPage({
 
         {hasTableOfContents && (
           <div className="mx-auto w-full max-w-[1100px] px-4 md:px-6 2xl:hidden">
-            <TableOfContents collapsible content={selectedPostContent} />
+            <TableOfContents collapsible headings={headings} responsive />
           </div>
         )}
 
@@ -241,7 +242,7 @@ export default async function RoomDetailPage({
           </article>
           {hasTableOfContents && (
             <aside className="sticky top-24 hidden max-h-[calc(100vh-120px)] w-[220px] shrink-0 self-start overflow-y-auto overscroll-contain no-scrollbar 2xl:block [scrollbar-gutter:stable]">
-              <TableOfContents content={selectedPostContent} />
+              <TableOfContents headings={headings} responsive />
             </aside>
           )}
         </div>

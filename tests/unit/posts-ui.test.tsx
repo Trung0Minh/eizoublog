@@ -1,3 +1,4 @@
+import { extractHeadings } from "@/lib/postHeadings"
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
@@ -314,7 +315,7 @@ describe("TableOfContents", () => {
   it("extracts heading links from Tiptap JSON", () => {
     render(
       <TableOfContents
-        content={{
+        headings={extractHeadings({
           content: [
             {
               attrs: { level: 2 },
@@ -328,7 +329,7 @@ describe("TableOfContents", () => {
             },
           ],
           type: "doc",
-        }}
+        })}
       />,
     )
 
@@ -354,7 +355,7 @@ describe("TableOfContents", () => {
     render(
       <TableOfContents
         collapsible
-        content={{
+        headings={extractHeadings({
           content: [
             {
               attrs: { level: 2 },
@@ -363,7 +364,7 @@ describe("TableOfContents", () => {
             },
           ],
           type: "doc",
-        }}
+        })}
       />,
     )
 
@@ -384,7 +385,7 @@ describe("TableOfContents", () => {
   it("keeps desktop TOC scrolling contained", () => {
     render(
       <TableOfContents
-        content={{
+        headings={extractHeadings({
           content: [
             {
               attrs: { level: 2 },
@@ -393,7 +394,7 @@ describe("TableOfContents", () => {
             },
           ],
           type: "doc",
-        }}
+        })}
       />,
     )
 
@@ -417,7 +418,7 @@ describe("TableOfContents", () => {
         <h2 id="first-heading">First heading target</h2>
         <h2 id="second-heading">Second heading target</h2>
         <TableOfContents
-          content={{
+          headings={extractHeadings({
             content: [
               {
                 attrs: { level: 2 },
@@ -431,7 +432,7 @@ describe("TableOfContents", () => {
               },
             ],
             type: "doc",
-          }}
+          })}
         />
       </>,
     )
@@ -484,7 +485,7 @@ describe("TableOfContents", () => {
         <h2 id="first-heading">First heading target</h2>
         <h2 id="second-heading">Second heading target</h2>
         <TableOfContents
-          content={{
+          headings={extractHeadings({
             content: [
               {
                 attrs: { level: 2 },
@@ -498,7 +499,7 @@ describe("TableOfContents", () => {
               },
             ],
             type: "doc",
-          }}
+          })}
         />
       </>,
     )
@@ -705,10 +706,12 @@ describe("TagInput", () => {
 })
 
 describe("PostEditor", () => {
+  const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "Eizou Blog"
+
   beforeEach(() => {
     vi.clearAllMocks()
     vi.useRealTimers()
-    document.title = "Bảng điều khiển | Eizou Blog"
+    document.title = `Bảng điều khiển | ${appName}`
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
@@ -733,13 +736,13 @@ describe("PostEditor", () => {
     )
 
     await waitFor(() => {
-      expect(document.title).toBe("Bài viết mới | Eizou Blog")
+      expect(document.title).toBe(`Bài viết mới | ${appName}`)
     })
 
     await user.type(screen.getByLabelText("Tiêu đề"), "Water Magician")
 
     await waitFor(() => {
-      expect(document.title).toBe("Water Magician | Eizou Blog")
+      expect(document.title).toBe(`Water Magician | ${appName}`)
     })
   })
 

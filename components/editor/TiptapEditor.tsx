@@ -81,12 +81,13 @@ export function TiptapEditor({
   const [localSpellcheckEnabled, setLocalSpellcheckEnabled] = useState(false)
   const [pasteUploadProgress, setPasteUploadProgress] = useState<number | null>(null)
   const [isLinkModifierPressed, setIsLinkModifierPressed] = useState(false)
+  const [emittedContent, setEmittedContent] = useState<JSONContent | null>(null)
   const editorRef = useRef<Editor | null>(null)
   const spellcheckEnabled =
     controlledSpellcheckEnabled ?? localSpellcheckEnabled
   const normalizedContent = useMemo(
-    () => (content ? normalizeEditorContent(content) : ""),
-    [content],
+    () => (content ? content === emittedContent ? content : normalizeEditorContent(content) : ""),
+    [content, emittedContent],
   )
   
   const editor = useEditor({
@@ -217,7 +218,11 @@ export function TiptapEditor({
     ],
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
-      onChange?.(normalizeEditorContent(editor.getJSON()), editor.getText())
+      if (!onChange) return
+      const json = normalizeEditorContent(editor.getJSON())
+      // Parent feedback already passed normalization; external documents still need it.
+      setEmittedContent(json)
+      onChange(json, editor.getText())
     },
   })
 

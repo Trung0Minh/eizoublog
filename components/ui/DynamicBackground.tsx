@@ -12,6 +12,10 @@ import { getCoverStyle } from "@/lib/cover-style"
 
 const emptySubscribe = () => () => undefined
 
+function getBackgroundImageSrc(url: string) {
+  return url.split("?")[0]
+}
+
 export function DynamicBackground({
   customBackgrounds,
   initialSeason,
@@ -93,8 +97,7 @@ export function DynamicBackground({
     }
   }, [])
 
-  // Preload all 8 background images immediately on every device so season
-  // switches are always smooth.
+  // Warm every season for instant switching without competing with the active image.
   useEffect(() => {
     if (typeof window === "undefined") return
 
@@ -105,9 +108,10 @@ export function DynamicBackground({
       seasons.forEach((s) => {
         themes.forEach((t) => {
           const key = `${s}_${t}`
-          const url = resolvedBackgrounds?.[key] || `/bg/${key}.jpg`
+          const url = resolvedBackgrounds?.[key] || `/bg/${key}.webp`
           const img = new window.Image()
-          img.src = url
+          img.fetchPriority = "low"
+          img.src = getBackgroundImageSrc(url)
         })
       })
     }
@@ -121,8 +125,8 @@ export function DynamicBackground({
   const isDark = currentTheme === "dark"
 
   const bgKey = `${season}_${isDark ? "dark" : "light"}`
-  const bgUrl = resolvedBackgrounds?.[bgKey] || `/bg/${bgKey}.jpg`
-  const bgSrc = bgUrl.split("?")[0]
+  const bgUrl = resolvedBackgrounds?.[bgKey] || `/bg/${bgKey}.webp`
+  const bgSrc = getBackgroundImageSrc(bgUrl)
   const backgroundFilter = isHome
     ? "none"
     : shouldReduce ? "none" : "blur(6px)"
@@ -164,6 +168,7 @@ export function DynamicBackground({
             <img
               alt=""
               aria-hidden="true"
+              fetchPriority="high"
               className="absolute inset-0 hidden h-full w-full max-w-none md:block"
               src={bgSrc}
               style={getCoverStyle(bgUrl, "desktop")}
@@ -172,6 +177,7 @@ export function DynamicBackground({
             <img
               alt=""
               aria-hidden="true"
+              fetchPriority="high"
               className="absolute inset-0 h-full w-full max-w-none md:hidden"
               src={bgSrc}
               style={getCoverStyle(bgUrl, "mobile")}

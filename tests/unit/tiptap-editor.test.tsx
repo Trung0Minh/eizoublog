@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react"
+import { act, render } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 interface UseEditorOptions {
@@ -199,7 +199,7 @@ describe("TiptapEditor", () => {
     render(<TiptapEditor editable onChange={onChange} />)
 
     const options = useEditorMock.calls.at(-1) as UseEditorOptions
-    options.onUpdate?.({
+    act(() => options.onUpdate?.({
       editor: {
         getJSON: () => ({
           content: [
@@ -225,7 +225,7 @@ describe("TiptapEditor", () => {
         }),
         getText: () => "Browser color text",
       },
-    })
+    }))
 
     expect(onChange).toHaveBeenCalledWith(
       {
@@ -244,6 +244,27 @@ describe("TiptapEditor", () => {
       },
       "Browser color text",
     )
+  })
+
+  it("reuses normalized parent feedback but normalizes independently supplied content", () => {
+    const onChange = vi.fn()
+    const { rerender } = render(<TiptapEditor onChange={onChange} />)
+    const options = useEditorMock.calls.at(-1) as UseEditorOptions
+    act(() => options.onUpdate?.({
+      editor: {
+        getJSON: () => ({ type: "doc", content: [{ type: "image", attrs: { src: "/frame.webp" } }] }),
+        getText: () => "",
+      },
+    }))
+    const emitted = onChange.mock.calls[0][0]
+    rerender(<TiptapEditor content={emitted} onChange={onChange} />)
+    expect((useEditorMock.calls.at(-1) as UseEditorOptions).content).toBe(emitted)
+    expect(emitted.content[0].type).toBe("customImage")
+
+    const imported = { type: "doc", content: [{ type: "image", attrs: { src: "/new.webp" } }] }
+    rerender(<TiptapEditor content={imported} onChange={onChange} />)
+    expect((useEditorMock.calls.at(-1) as UseEditorOptions).content?.content?.[0]?.type).toBe("customImage")
+    expect(imported.content[0].type).toBe("image")
   })
 
   it("strips text color from pasted HTML before Tiptap parses it", () => {

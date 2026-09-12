@@ -2,37 +2,39 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { MouseEvent as ReactMouseEvent } from "react"
-import type { JSONContent } from "@tiptap/react"
 import { ChevronDown } from "lucide-react"
 
 import { motion } from "motion/react"
 
 import { TableOfContentsHeading } from "@/components/posts/TableOfContentsHeading"
 import { cn } from "@/lib/utils"
-import { extractHeadings } from "@/lib/postHeadings"
+import type { PostHeading } from "@/lib/postHeadings"
 import { resolveActiveHeadingId } from "@/lib/tableOfContents"
 
 export { resolveActiveHeadingId } from "@/lib/tableOfContents"
 
 interface TableOfContentsProps {
   collapsible?: boolean
-  content: JSONContent
+  headings: PostHeading[]
+  responsive?: boolean
 }
 
 const CLICK_LOCK_DURATION_MS = 900
 
 export function TableOfContents({
   collapsible = false,
-  content,
+  headings,
+  responsive = false,
 }: TableOfContentsProps) {
   const [activeId, setActiveId] = useState("")
   const [isOpen, setIsOpen] = useState(false)
-  const headings = useMemo(() => extractHeadings(content), [content])
   const headingIds = useMemo(() => headings.map(({ id }) => id), [headings])
   const clickLockRef = useRef<{ expiresAt: number; id: string } | null>(null)
   const clickLockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const activeLayoutRef = useRef(true)
 
   const updateActiveHeading = useCallback(() => {
+    if (!activeLayoutRef.current) return
     const clickLock = clickLockRef.current
     if (clickLock && Date.now() < clickLock.expiresAt) {
       setActiveId(clickLock.id)
@@ -44,21 +46,49 @@ export function TableOfContents({
   }, [headingIds])
 
   useEffect(() => {
-    updateActiveHeading()
-    window.addEventListener("hashchange", updateActiveHeading)
-    window.addEventListener("resize", updateActiveHeading)
-    window.addEventListener("scroll", updateActiveHeading, { passive: true })
+    const media = responsive ? window.matchMedia("(min-width: 1536px)") : null
+    let stopTracking = () => {}
 
-    const resizeObserver = new ResizeObserver(updateActiveHeading)
-    resizeObserver.observe(document.body)
+    const syncLayout = () => {
+      stopTracking()
+      stopTracking = () => {}
+      activeLayoutRef.current = !media || media.matches !== collapsible
+      if (!activeLayoutRef.current) return
+
+      let frame: number | null = null
+      const scheduleUpdate = () => {
+        if (frame !== null) return
+        frame = requestAnimationFrame(() => {
+          frame = null
+          updateActiveHeading()
+        })
+      }
+
+      updateActiveHeading()
+      window.addEventListener("hashchange", scheduleUpdate)
+      window.addEventListener("resize", scheduleUpdate)
+      window.addEventListener("scroll", scheduleUpdate, { passive: true })
+      const resizeObserver = new ResizeObserver(scheduleUpdate)
+      resizeObserver.observe(document.body)
+
+      stopTracking = () => {
+        if (frame !== null) cancelAnimationFrame(frame)
+        resizeObserver.disconnect()
+        window.removeEventListener("hashchange", scheduleUpdate)
+        window.removeEventListener("resize", scheduleUpdate)
+        window.removeEventListener("scroll", scheduleUpdate)
+      }
+    }
+
+    syncLayout()
+    media?.addEventListener("change", syncLayout)
 
     return () => {
-      resizeObserver.disconnect()
-      window.removeEventListener("hashchange", updateActiveHeading)
-      window.removeEventListener("resize", updateActiveHeading)
-      window.removeEventListener("scroll", updateActiveHeading)
+      activeLayoutRef.current = false
+      stopTracking()
+      media?.removeEventListener("change", syncLayout)
     }
-  }, [updateActiveHeading])
+  }, [collapsible, responsive, updateActiveHeading])
 
   useEffect(() => {
     return () => {

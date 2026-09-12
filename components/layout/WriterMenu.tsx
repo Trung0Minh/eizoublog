@@ -167,8 +167,17 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
     if (!menuUser) return
 
     let isMounted = true
+    let inFlight = false
+    let refreshPending = false
 
-    async function loadNotificationCounts() {
+    async function loadNotificationCounts(invalidate = false) {
+      if (inFlight) {
+        refreshPending = true
+        // An action invalidates the old response; polling may still display it.
+        if (invalidate) notificationRequestRef.current += 1
+        return
+      }
+      inFlight = true
       const requestId = ++notificationRequestRef.current
       try {
         const response = await fetch("/api/user/notification-counts", {
@@ -183,7 +192,14 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
           setUnreadComments(counts?.unreadComments ?? 0)
           setOpenEvents(counts?.openEvents ?? 0)
         }
-      } catch {}
+      } catch {
+      } finally {
+        inFlight = false
+        if (isMounted && refreshPending) {
+          refreshPending = false
+          void loadNotificationCounts()
+        }
+      }
     }
 
     function refreshWhenVisible() {
@@ -194,7 +210,7 @@ export function WriterMenu({ user }: { user?: WriterMenuUser | null }) {
 
     void loadNotificationCounts()
     const unsubscribe = subscribeToNotificationChanges(() => {
-      void loadNotificationCounts()
+      void loadNotificationCounts(true)
     })
     const interval = window.setInterval(
       refreshWhenVisible,

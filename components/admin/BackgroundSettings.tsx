@@ -81,7 +81,7 @@ export function BackgroundSettings() {
                 <h3 className="font-semibold text-lg capitalize">{season} - {mode}</h3>
                 <CoverImageUpload
                   responsiveCrop
-                  value={backgrounds[key] || `/bg/${key}.jpg`}
+                  value={backgrounds[key] || `/bg/${key}.webp`}
                   onChange={(url) => setBackgrounds((prev) => ({ ...prev, [key]: url }))}
                 />
               </div>

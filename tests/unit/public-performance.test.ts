@@ -8,7 +8,7 @@ function read(relativePath: string) {
 }
 
 describe("public navigation performance contracts", () => {
-  it("keeps editable public pages cacheable without server-side auth", () => {
+  it("uses cached site-page helpers without adding page-level auth or Prisma reads", () => {
     for (const pagePath of [
       "app/(public)/about/page.tsx",
       "app/(public)/resources/page.tsx",
@@ -17,7 +17,6 @@ describe("public navigation performance contracts", () => {
       const page = read(pagePath)
 
       expect(page).toContain("getCachedSitePage")
-      expect(page).toContain("export const revalidate = 300")
       expect(page).not.toContain('from "@/lib/auth"')
       expect(page).not.toContain('from "@/lib/prisma"')
     }

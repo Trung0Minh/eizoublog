@@ -7,6 +7,7 @@ import { PostHero } from "@/components/posts/PostHero"
 import { TableOfContents } from "@/components/posts/TableOfContents"
 import { ScrollReveal } from "@/components/ui/ScrollReveal"
 import { extractHeadings } from "@/lib/postHeadings"
+import { pickPostHeroData } from "@/lib/postHero"
 import type { PostHeroPost } from "@/types/posts"
 
 interface PostArticleViewProps {
@@ -23,14 +24,15 @@ export function PostArticleView({
   post,
 }: PostArticleViewProps) {
   const creditAuthors = [post.author, ...post.coAuthors.map(({ user }) => user)]
-  const hasTableOfContents = extractHeadings(content).length > 0
+  const headings = extractHeadings(content)
+  const hasTableOfContents = headings.length > 0
 
   return (
     <div className="contents" data-testid="post-article-view">
       <PostHero
         authorUsernames={authorUsernames}
         hasTableOfContents={hasTableOfContents}
-        post={post}
+        post={pickPostHeroData(post)}
       />
 
       {post.coverUrl && (
@@ -53,7 +55,7 @@ export function PostArticleView({
 
           {hasTableOfContents && (
             <div className="2xl:hidden">
-              <TableOfContents collapsible content={content} />
+              <TableOfContents collapsible headings={headings} responsive />
             </div>
           )}
 
@@ -83,7 +85,7 @@ export function PostArticleView({
         {hasTableOfContents && (
           <aside className="sticky top-24 ml-10 mt-12 hidden w-[200px] shrink-0 self-start 2xl:block">
             <ScrollReveal delay={0.5}>
-              <TableOfContents content={content} />
+              <TableOfContents headings={headings} responsive />
             </ScrollReveal>
           </aside>
         )}

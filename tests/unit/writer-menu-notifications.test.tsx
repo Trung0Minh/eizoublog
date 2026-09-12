@@ -20,6 +20,7 @@ vi.mock("next/link", () => ({
 }))
 
 import { WriterMenu } from "@/components/layout/WriterMenu"
+import { requestNotificationRefresh } from "@/lib/clientNotifications"
 
 describe("WriterMenu notifications", () => {
   beforeEach(() => {
@@ -28,6 +29,65 @@ describe("WriterMenu notifications", () => {
 
   afterEach(() => {
     vi.useRealTimers()
+  })
+
+  it("coalesces a refresh burst and fetches fresh counts after an in-flight invalidation", async () => {
+    const pending: Array<(response: Response) => void> = []
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(() => new Promise(resolve => pending.push(resolve)))
+    const response = (unreadComments: number) => new Response(JSON.stringify({
+      data: { counts: { pendingInvites: 0, responseEvents: 0, openEvents: 0, unreadComments } },
+    }))
+    try {
+      render(<WriterMenu user={{ name: "Mina", username: "mina", role: "WRITER", avatarUrl: null }} />)
+      act(() => {
+        window.dispatchEvent(new Event("focus"))
+        window.dispatchEvent(new Event("online"))
+        requestNotificationRefresh()
+        requestNotificationRefresh()
+      })
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+      await act(async () => { pending[0](response(8)) })
+      expect(fetchMock).toHaveBeenCalledTimes(2)
+      const trigger = screen.getByRole("button", { name: "Mở menu tác giả" })
+      expect(trigger.querySelector(".bg-red-500")).toBeNull()
+      await act(async () => { pending[1](response(1)) })
+      expect(trigger.querySelector(".bg-red-500")).not.toBeNull()
+      expect(fetchMock).toHaveBeenCalledTimes(2)
+    } finally { fetchMock.mockRestore() }
+  })
+
+  it("does not let an old user's pending refresh affect a new user or survive unmount", async () => {
+    const pending: Array<(response: Response) => void> = []
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(() => new Promise(resolve => pending.push(resolve)))
+    try {
+      const { rerender, unmount } = render(<WriterMenu user={{ name: "Mina", username: "mina", role: "WRITER", avatarUrl: null }} />)
+      act(() => requestNotificationRefresh())
+      rerender(<WriterMenu user={{ name: "Ken", username: "ken", role: "WRITER", avatarUrl: null }} />)
+      expect(fetchMock).toHaveBeenCalledTimes(2)
+      await act(async () => { pending[0](new Response(JSON.stringify({ data: { count: 8 } }))) })
+      expect(fetchMock).toHaveBeenCalledTimes(2)
+      expect(screen.getByRole("button", { name: "Mở menu tác giả" }).querySelector(".bg-red-500")).toBeNull()
+      act(() => requestNotificationRefresh())
+      unmount()
+      await act(async () => { pending[1](new Response(JSON.stringify({ data: { count: 1 } }))) })
+      expect(fetchMock).toHaveBeenCalledTimes(2)
+    } finally { fetchMock.mockRestore() }
+  })
+
+  it("keeps displaying completed polls when responses take longer than the polling interval", async () => {
+    vi.useFakeTimers()
+    const pending: Array<(response: Response) => void> = []
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(() => new Promise(resolve => pending.push(resolve)))
+    try {
+      render(<WriterMenu user={{ name: "Mina", username: "mina", role: "WRITER", avatarUrl: null }} />)
+      await act(async () => { await vi.advanceTimersByTimeAsync(5000) })
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+      await act(async () => { pending[0](new Response(JSON.stringify({ data: { count: 1 } }))) })
+      expect(fetchMock).toHaveBeenCalledTimes(2)
+      expect(screen.getByRole("button", { name: "Mở menu tác giả" }).querySelector(".bg-red-500")).not.toBeNull()
+      await act(async () => { await vi.advanceTimersByTimeAsync(5000) })
+      expect(fetchMock).toHaveBeenCalledTimes(2)
+    } finally { fetchMock.mockRestore() }
   })
 
   it("fetches lightweight notification counts even when a user is provided", async () => {
