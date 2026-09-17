@@ -15,7 +15,7 @@ const mocks = vi.hoisted(() => {
 })
 
 vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }))
-vi.mock("@auth/core/jwt", () => ({ encode: mocks.encodeJwt }))
+vi.mock("next-auth/jwt", () => ({ encode: mocks.encodeJwt }))
 
 import { POST as login } from "@/app/api/test/login/route"
 import { GET as getNewsletterToken } from "@/app/api/test/newsletter-token/route"

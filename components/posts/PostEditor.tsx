@@ -13,7 +13,7 @@ import {
   TiptapEditor,
   type JSONContent,
 } from "@/components/editor/TiptapEditor"
-import { AnimatePresence, motion } from "framer-motion"
+import { AnimatePresence, motion } from "motion/react"
 import {
   Select,
   SelectContent,

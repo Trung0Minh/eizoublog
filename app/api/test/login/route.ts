@@ -1,4 +1,4 @@
-import { encode } from "@auth/core/jwt"
+import { encode } from "next-auth/jwt"
 import { NextResponse } from "next/server"
 import { ZodError, z } from "zod"
 
