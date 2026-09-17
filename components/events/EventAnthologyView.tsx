@@ -6,6 +6,7 @@ import { EventCoverParallax } from "@/components/events/EventCoverParallax"
 import { EventAnthologyTableOfContents } from "@/components/events/EventAnthologyTableOfContents"
 import { AuthorCreditList } from "@/components/posts/AuthorCreditList"
 import { PostBody } from "@/components/posts/PostBody"
+import { PostTags } from "@/components/posts/PostTags"
 import {
   buildAwardEventOutline,
   getSubmittedAwardEventRooms,
@@ -227,7 +228,7 @@ export function EventAnthologyView({
         />
         <div
           className={cn(
-            "mx-auto grid min-h-[440px] w-full max-w-[1440px] items-end gap-8 pb-8 pt-12 sm:min-h-[56vh] md:pb-16 md:pt-20 lg:min-h-[64vh] lg:grid-cols-[minmax(0,1100px)] lg:justify-center",
+            "mx-auto grid min-h-[440px] w-full max-w-[1440px] items-start md:items-end gap-8 pb-8 pt-12 sm:min-h-[56vh] md:pb-16 md:pt-20 lg:min-h-[64vh] lg:grid-cols-[minmax(0,1100px)] lg:justify-center",
             hasTableOfContents &&
               "2xl:grid-cols-[minmax(0,1100px)_220px]",
           )}
@@ -266,19 +267,7 @@ export function EventAnthologyView({
                 )}
               </div>
             )}
-            {tags.length > 0 && (
-              <div className="mt-4 flex w-full flex-wrap items-center gap-2">
-                {tags.map((tag) => (
-                  <Link
-                    className="hover-glitch cursor-pointer rounded-full border border-accent/20 bg-accent/10 px-[12px] py-[6px] text-[11px] font-semibold text-accent"
-                    href={`/tag/${tag.slug}`}
-                    key={tag.slug}
-                  >
-                    {tag.name}
-                  </Link>
-                ))}
-              </div>
-            )}
+            <PostTags tags={tags} />
           </div>
         </div>
       </header>

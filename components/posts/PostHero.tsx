@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils"
 import { PostInlineActions } from "@/components/posts/PostInlineActions"
 import type { PostHeroPost } from "@/types/posts"
 import { PostBody } from "@/components/posts/PostBody"
+import { PostTags } from "@/components/posts/PostTags"
 
 function isRichSubtitle(value: unknown): value is JSONContent {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -67,7 +68,7 @@ export function PostHero({
       className={cn(
         "relative -mt-[64px] w-full overflow-hidden pt-[64px] md:-mt-[88px] md:pt-[88px]",
         post.coverUrl
-          ? "h-[calc(50dvh+64px)] min-h-[calc(450px+64px)] md:h-[calc(60vh+88px)] md:min-h-[calc(500px+88px)] lg:h-[calc(70vh+88px)] lg:min-h-[calc(600px+88px)]"
+          ? "min-h-[calc(450px+64px)] md:h-[calc(60vh+88px)] md:min-h-[calc(500px+88px)] lg:h-[calc(70vh+88px)] lg:min-h-[calc(600px+88px)]"
           : "bg-transparent",
       )}
       data-testid={post.coverUrl ? undefined : "post-hero-no-cover"}
@@ -89,7 +90,7 @@ export function PostHero({
         className={cn(
           "flex flex-col",
           post.coverUrl
-            ? "absolute inset-0 justify-end bg-[linear-gradient(to_top,hsl(var(--background))_0%,hsl(var(--background)/0.92)_14%,hsl(var(--background)/0.68)_36%,hsl(var(--background)/0.28)_64%,transparent_100%)] pb-8 md:pb-16"
+            ? "relative pt-24 md:absolute md:inset-0 md:justify-end md:pt-0 bg-[linear-gradient(to_top,hsl(var(--background))_0%,hsl(var(--background)/0.92)_14%,hsl(var(--background)/0.68)_36%,hsl(var(--background)/0.28)_64%,transparent_100%)] pb-8 md:pb-16"
             : "relative justify-center py-10 md:py-12 lg:py-14",
         )}
         data-testid="post-hero-content"
@@ -199,17 +200,7 @@ export function PostHero({
 
             {post.tags.length > 0 && (
               <ScrollReveal delay={0.25}>
-                <div className="mt-4 flex w-full flex-wrap items-center gap-2">
-                  {post.tags.map(({ tag }) => (
-                    <Link
-                      className="hover-glitch cursor-pointer rounded-full border border-accent/20 bg-accent/10 px-[12px] py-[6px] text-[11px] font-semibold text-accent"
-                      href={`/tag/${tag.slug}`}
-                      key={tag.slug}
-                    >
-                      {tag.name}
-                    </Link>
-                  ))}
-                </div>
+                <PostTags tags={post.tags.map(({ tag }) => tag)} />
               </ScrollReveal>
             )}
           </div>

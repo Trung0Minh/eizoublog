@@ -144,7 +144,7 @@ describe("anime-blog-4 appearance parity", () => {
 
     expect(postPage).not.toContain("fallbackTags")
     expect(postPage).not.toContain("post.tags.length > 0")
-    expect(postHero).toContain("post.tags.map(({ tag }) => (")
+    expect(postHero).toContain("<PostTags tags={post.tags.map(({ tag }) => tag)} />")
   })
 
   it("keeps post title and excerpt outside the Tiptap body editor", () => {

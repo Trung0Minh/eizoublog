@@ -1,12 +1,11 @@
 import Link from "next/link"
 import type { Metadata } from "next"
+import { ArrowLeft, ArrowUpRight, MessageCircle } from "lucide-react"
 
 import { PageContainer } from "@/components/layout/PageContainer"
 import { EmptyState } from "@/components/ui/EmptyState"
 import { Pagination } from "@/components/ui/Pagination"
 import { RelativeTime } from "@/components/ui/RelativeTime"
-import { ScrollReveal } from "@/components/ui/ScrollReveal"
-import { TextReveal } from "@/components/ui/TextReveal"
 import { getCachedPublicComments } from "@/lib/queries"
 import { buildMetadata } from "@/lib/seo"
 
@@ -35,48 +34,39 @@ export default async function CommentsPage({
   const { comments, total } = await getCachedPublicComments(page, PAGE_SIZE)
 
   return (
-    <PageContainer className="py-6 md:py-10 lg:py-14">
-      <div className="relative isolate overflow-hidden rounded-[24px] border-2 border-border-default bg-background shadow-[0_24px_80px_rgba(27,20,35,0.16)] ring-1 ring-white/50 dark:ring-white/5 md:rounded-[32px]">
-        <div
-          aria-hidden="true"
-          className="absolute inset-x-0 top-0 h-1.5 bg-accent"
-        />
-        <div
-          aria-hidden="true"
-          className="absolute -right-16 -top-24 h-64 w-64 rounded-full bg-accent/10 blur-3xl"
-        />
-
-        <section className="relative border-b-2 border-border-default px-5 pb-8 pt-10 sm:px-8 md:px-12 md:pb-10 md:pt-12">
-          <ScrollReveal>
-            <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-end md:gap-8">
-              <div className="max-w-3xl">
-                <p className="mb-3 text-xs font-extrabold uppercase tracking-[0.18em] text-accent">
-                  Dòng thảo luận
-                </p>
-                <h1 className="text-[clamp(2.25rem,5vw,4.5rem)] font-extrabold leading-[0.98] tracking-[-0.045em] text-text-primary [font-family:var(--font-display)]">
-                  <TextReveal text="Bình luận gần đây" />
-                </h1>
-                <p className="mt-5 max-w-2xl text-[15px] leading-7 text-text-secondary sm:text-base">
-                  Theo dõi những cuộc trò chuyện mới nhất và tiếp tục đọc từ
-                  đúng nơi mọi người đang bàn luận.
-                </p>
-              </div>
-
-              <div className="flex w-full items-center justify-end gap-3 border-t border-border-default pt-4 md:w-auto md:border-t-0 md:pt-0">
-                <span
-                  className="hidden h-px w-10 bg-accent/60 md:block"
-                  aria-hidden="true"
-                />
-                <p className="text-sm font-bold text-text-secondary">
-                  <span className="text-xl text-text-primary">{total}</span>{" "}
-                  bình luận
-                </p>
-              </div>
+    <PageContainer className="max-w-[960px] py-6 md:py-10 xl:max-w-[960px]">
+      <div className="overflow-hidden rounded-[20px] border border-border-default bg-background/90 shadow-sm backdrop-blur-xl" data-mobile-surface="true">
+        <header className="px-5 pb-7 pt-5 sm:px-8 sm:pb-8 sm:pt-6">
+          <Link
+            className="mb-5 inline-flex min-h-11 items-center gap-2 rounded-sm text-sm font-semibold text-text-secondary transition-colors hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+            href="/"
+          >
+            <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+            Trang chủ
+          </Link>
+          <div className="flex items-start gap-4">
+            <span className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-border-default bg-subtle-bg text-accent sm:flex">
+              <MessageCircle aria-hidden="true" className="h-6 w-6" strokeWidth={1.5} />
+            </span>
+            <div className="min-w-0">
+              <h1 className="font-display text-[28px] font-bold leading-tight tracking-tight text-text-primary sm:text-4xl">
+                Bình luận gần đây
+              </h1>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-text-secondary sm:text-[15px]">
+                Những cuộc trò chuyện mới nhất, từ bài viết đến góc nhìn của bạn.
+              </p>
             </div>
-          </ScrollReveal>
-        </section>
+          </div>
+        </header>
 
-        <ScrollReveal delay={0.2}>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-y border-border-default bg-subtle-bg px-5 py-3 text-xs font-semibold text-text-secondary sm:px-8">
+          <span className="flex items-center gap-2">
+            <MessageCircle aria-hidden="true" className="h-3.5 w-3.5 text-accent" />
+            <span><span className="tabular-nums text-text-primary">{total}</span> bình luận</span>
+          </span>
+          <span>Mới nhất trước</span>
+        </div>
+
           {comments.length === 0 ? (
             <div className="px-5 py-10 sm:px-8 md:px-12">
               <EmptyState
@@ -86,77 +76,61 @@ export default async function CommentsPage({
             </div>
           ) : (
             <section aria-label="Danh sách bình luận gần đây">
-              <div className="divide-y-2 divide-border-default">
+              <div className="divide-y divide-border-default">
                 {comments.map((comment) => (
                   <article
-                    className="group grid grid-cols-[36px_minmax(0,1fr)] gap-3 px-4 py-5 transition-colors duration-200 hover:bg-subtle-bg sm:grid-cols-[44px_minmax(0,1fr)] sm:gap-4 sm:px-8 sm:py-7 md:gap-5 md:px-12 md:py-8"
+                    className="grid grid-cols-[36px_minmax(0,1fr)] gap-x-3 gap-y-2 px-5 py-6 transition-colors duration-200 hover:bg-subtle-bg sm:grid-cols-[40px_minmax(0,1fr)] sm:gap-x-4 sm:px-8 sm:py-7"
                     data-testid={`recent-comment-${comment.id}`}
                     key={comment.id}
                   >
                     <div
                       aria-hidden="true"
-                      className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-accent/30 bg-accent/10 text-xs font-extrabold uppercase text-accent transition-colors duration-200 [font-family:var(--font-display)] group-hover:border-accent/60 group-hover:bg-accent/15 sm:h-11 sm:w-11 sm:text-sm"
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-border-default bg-subtle-bg font-display text-sm font-bold uppercase text-accent sm:h-10 sm:w-10"
                     >
                       {comment.authorName.trim().charAt(0) || "?"}
                     </div>
 
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] leading-5">
-                        <span className="font-extrabold text-text-primary">
-                          {comment.authorName}
-                        </span>
-                        <span className="text-text-tertiary">trong</span>
-                        <Link
-                          className="font-bold text-text-primary decoration-2 underline-offset-4 transition-colors hover:text-accent hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                          href={`/${comment.post.slug}`}
-                        >
-                          {comment.post.title}
-                        </Link>
-                        <span className="text-text-tertiary" aria-hidden="true">
-                          ·
-                        </span>
-                        <RelativeTime
-                          className="font-medium text-text-tertiary"
-                          date={comment.createdAt}
-                        />
-                      </div>
+                    <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm leading-5">
+                      <span className="break-words font-bold text-text-primary [overflow-wrap:anywhere]">
+                        {comment.authorName}
+                      </span>
+                      <RelativeTime
+                        className="shrink-0 text-xs text-text-secondary"
+                        date={comment.createdAt}
+                      />
+                    </div>
 
+                    <div className="col-span-2 min-w-0 sm:col-span-1 sm:col-start-2">
                       <Link
-                        className="relative mt-4 block overflow-hidden rounded-[14px] border-2 border-border-default bg-subtle-bg px-4 py-4 pr-12 shadow-sm transition-[border-color,background-color,box-shadow] duration-200 hover:border-accent/50 hover:bg-background hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:px-5 sm:py-5 sm:pr-14"
+                        className="block rounded-sm py-1 text-text-primary transition-colors hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
                         href={`/${comment.post.slug}#comment-${comment.id}`}
                       >
-                        <span
-                          aria-hidden="true"
-                          className="absolute inset-y-3 left-0 w-1 rounded-r-full bg-accent opacity-50 transition-opacity group-hover:opacity-100"
-                        />
-                        <p className="line-clamp-4 whitespace-pre-wrap break-words text-[15px] font-medium leading-7 text-text-secondary">
+                        <p className="line-clamp-4 whitespace-pre-wrap break-words text-[15px] leading-7 [overflow-wrap:anywhere] sm:text-base">
                           {comment.content}
                         </p>
-                        <svg
-                          aria-hidden="true"
-                          className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-text-tertiary transition-[color,transform] duration-200 group-hover:translate-x-1 group-hover:text-accent"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            d="M5 12h14m-6-6 6 6-6 6"
-                            stroke="currentColor"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="1.8"
-                          />
-                        </svg>
+                      </Link>
+                      <Link
+                        className="mt-2 flex min-h-11 items-center gap-2 rounded-sm text-xs leading-5 text-text-secondary transition-colors hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent sm:text-[13px]"
+                        href={`/${comment.post.slug}`}
+                      >
+                        <MessageCircle aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-accent" />
+                        <span className="min-w-0 break-words [overflow-wrap:anywhere]">
+                          <span className="mr-1 font-normal">Trong bài</span>{" "}
+                          <span className="font-semibold">{comment.post.title}</span>
+                        </span>
+                        <ArrowUpRight aria-hidden="true" className="ml-auto h-4 w-4 shrink-0" />
                       </Link>
                     </div>
                   </article>
                 ))}
               </div>
-              <div className="border-t-2 border-border-default px-5 py-6 sm:px-8 md:px-12">
-                <Pagination page={page} pageSize={PAGE_SIZE} total={total} />
-              </div>
+              {total > PAGE_SIZE && (
+                <div className="border-t border-border-default px-3 py-5 sm:px-8">
+                  <Pagination className="mt-0 flex-wrap md:mt-0" page={page} pageSize={PAGE_SIZE} total={total} />
+                </div>
+              )}
             </section>
           )}
-        </ScrollReveal>
       </div>
     </PageContainer>
   )
