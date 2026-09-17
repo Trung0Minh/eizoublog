@@ -72,6 +72,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@next/env": "^16.2.9",
     "@playwright/test": "^1.60.0",
     "@tailwindcss/typography": "^0.5.20",
     "@testing-library/jest-dom": "^6.9.1",
