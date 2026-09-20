@@ -1,7 +1,7 @@
 "use client"
 
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react"
-import { FlipHorizontal2, FlipVertical2, GalleryHorizontal, Grid2X2, GripVertical, MousePointerClick, RotateCcw, RotateCw, Trash2, Type, ZoomIn } from "lucide-react"
+import { FlipHorizontal2, FlipVertical2, GalleryHorizontal, Grid2X2, GripVertical, MousePointerClick, RotateCcw, RotateCw, Trash2, Type, Ungroup, ZoomIn } from "lucide-react"
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type SyntheticEvent } from "react"
 
 import {
@@ -77,38 +77,51 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
     updateAttributes({ images: serializeGalleryImages(newImages) })
   }
 
-  const replaceGalleryWithImage = useCallback((image: GalleryImage, shouldFocus = false) => {
+  const replaceGalleryWithImages = useCallback((media: GalleryImage[], shouldFocus = false) => {
     const position = typeof getPos === "function" ? getPos() : undefined
-    const imageType = editor.schema.nodes.customImage
+    const mediaTypes = media.map((image) => editor.schema.nodes[
+      isNativeVideo(image.url) || image.url.includes("youtube.com") || image.url.includes("youtu.be")
+        ? "videoEmbed"
+        : "customImage"
+    ])
 
-    if (typeof position !== "number" || !imageType) {
+    if (typeof position !== "number" || mediaTypes.some((type) => !type)) {
       return false
     }
 
-    const captionContent = image.caption
-      ? editor.schema.text(image.caption)
-      : undefined
-    const imageNode = imageType.create(
-      {
-        align: "center",
-        alt: image.alt,
-        flipX: image.flipX,
-        flipY: image.flipY,
-        naturalHeight: image.naturalHeight,
-        naturalWidth: image.naturalWidth,
-        rotation: image.rotation,
-        showCaption: image.showCaption,
-        src: image.url,
-        width: "100%",
-      },
-      captionContent,
-    )
+    const mediaNodes = media.map((image, index) => {
+      const imageType = mediaTypes[index]
+      if (imageType.name === "videoEmbed") {
+        return imageType.create(image)
+      }
+      const captionContent = image.caption
+        ? editor.schema.text(image.caption)
+        : undefined
+      return imageType.create(
+        {
+          align: "center",
+          alt: image.alt,
+          flipX: image.flipX,
+          flipY: image.flipY,
+          naturalHeight: image.naturalHeight,
+          naturalWidth: image.naturalWidth,
+          rotation: image.rotation,
+          showCaption: image.showCaption,
+          src: image.url,
+          width: "100%",
+        },
+        captionContent,
+      )
+    })
+    if (showGalleryCaption && galleryCaption.trim()) {
+      mediaNodes.push(editor.schema.nodes.paragraph.create(null, editor.schema.text(galleryCaption)))
+    }
 
     editor.view.dispatch(
       editor.state.tr.replaceWith(
         position,
         position + node.nodeSize,
-        imageNode,
+        mediaNodes,
       ),
     )
     if (shouldFocus) {
@@ -116,7 +129,7 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
     }
 
     return true
-  }, [editor, getPos, node.nodeSize])
+  }, [editor, getPos, node.nodeSize, galleryCaption, showGalleryCaption])
 
   function removeImage(index: number) {
     const newImages = images.filter((_, i) => i !== index)
@@ -124,7 +137,7 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
       deleteNode()
     } else if (newImages.length === 1) {
       const [image] = newImages
-      if (!replaceGalleryWithImage(image, true)) {
+      if (!replaceGalleryWithImages([image], true)) {
         updateAttributes({ images: serializeGalleryImages(newImages) })
       }
     } else {
@@ -134,9 +147,9 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
 
   useEffect(() => {
     if (images.length === 1) {
-      replaceGalleryWithImage(images[0])
+      replaceGalleryWithImages(images)
     }
-  }, [images, replaceGalleryWithImage])
+  }, [images, replaceGalleryWithImages])
 
   function reorderImage(fromIndex: number, toIndex: number) {
     const reordered = reorderGalleryImages(images, fromIndex, toIndex)
@@ -331,6 +344,27 @@ export function ImageGalleryBlock({ node, updateAttributes, editor, selected, de
               ))}
             </>
           )}
+          <div className="my-1 h-px w-4 bg-border-default" />
+          <button
+            aria-label="Ungroup"
+            className="flex h-6 w-6 items-center justify-center rounded text-text-secondary hover:bg-subtle-bg hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            onClick={() => replaceGalleryWithImages(images, true)}
+            onMouseDown={(event) => event.preventDefault()}
+            title="Ungroup into individual media"
+            type="button"
+          >
+            <Ungroup aria-hidden="true" className="h-4 w-4" />
+          </button>
+          <button
+            aria-label="Remove group"
+            className="flex h-6 w-6 items-center justify-center rounded text-destructive hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            onClick={() => deleteNode()}
+            onMouseDown={(event) => event.preventDefault()}
+            title="Remove group"
+            type="button"
+          >
+            <Trash2 aria-hidden="true" className="h-4 w-4" />
+          </button>
         </div>
       )}
 
